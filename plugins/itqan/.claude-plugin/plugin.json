@@ -1,0 +1,10 @@
+{
+  "name": "itqan",
+  "description": "Nexika itqan: quality workflow without the friction - plan, failing tests first, implement, verify, specialist review; a risk-based guard that only stops dangerous actions; stack checklists loaded only for the stacks a project uses.",
+  "version": "0.2.0",
+  "author": {
+    "name": "Loai Elattar"
+  },
+  "license": "MIT",
+  "keywords": ["nexika", "quality", "review", "tdd", "security", "guard", "workflow"]
+}
