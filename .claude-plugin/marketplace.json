@@ -21,6 +21,11 @@
       "name": "itqan",
       "source": "./plugins/itqan",
       "description": "Quality workflow without the friction: plan, failing tests first, implement, verify, specialist review; a risk-based guard; stack checklists only for the stacks a project uses."
+    },
+    {
+      "name": "siyaq",
+      "source": "./plugins/siyaq",
+      "description": "Project knowledge loaded only when relevant: entries generated from your docs, multilingual matching (Arabic included) with ranking and a token budget, file triggers, usage stats."
     }
   ]
 }

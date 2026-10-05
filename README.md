@@ -12,7 +12,8 @@
 |---|---|---|
 | [**prof**](plugins/prof/README.md) | Turns Claude into a personal programming professor: step-by-step lessons, onboarding juniors to a codebase, a warm-up check at the start of each session, and a learning report at the end | v0.1.0 |
 | [**barq**](plugins/barq/README.md) ⚡ | Many file and project operations in one call: batched and symbol reads, a seen-before cache, short test/build output, git status with next steps, secret masking, savings stats | v0.1.0 |
-| [**itqan**](plugins/itqan/README.md) | Quality workflow without the friction: plan, failing tests first, implement, verify, specialist review; a risk-based guard that only stops dangerous actions; stack checklists loaded only where they apply | v0.1.0 |
+| [**itqan**](plugins/itqan/README.md) | Quality workflow without the friction: plan, failing tests first, implement, verify, specialist review; a risk-based guard that only stops dangerous actions; stack checklists loaded only where they apply; learns project rules from your corrections | v0.2.0 |
+| [**siyaq**](plugins/siyaq/README.md) | Project knowledge loaded only when relevant: entries generated from your docs, multilingual matching (Arabic included) with ranking and a token budget, file triggers, stats on what helped and what is missing | v0.1.0 |
 
 ## Install
 
@@ -21,6 +22,7 @@
 /plugin install prof@nexika
 /plugin install barq@nexika
 /plugin install itqan@nexika
+/plugin install siyaq@nexika
 ```
 
 Restart Claude Code afterwards so the plugin's hooks load.
