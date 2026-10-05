@@ -1,0 +1,10 @@
+{
+  "name": "hafiz",
+  "description": "Nexika hafiz: Claude remembers your work. Decisions, tasks, problems, files and links captured as you work (no AI calls), a short start card, a snapshot restored after compaction, automatic handoff notes, Arabic and English search, secrets replaced before saving, and a detailed session summary naming the issue and branch on request.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Loai Elattar"
+  },
+  "license": "MIT",
+  "keywords": ["nexika", "memory", "handoff", "compaction", "sessions", "summary", "arabic"]
+}
