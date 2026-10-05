@@ -1,0 +1,76 @@
+# siyaq (سياق) - project knowledge, only when it matters
+
+Part of [Nexika](../../README.md). *Siyaq* means context.
+
+CLAUDE.md is loaded into every session, whether the task needs it or not. siyaq keeps project
+knowledge out of the context until a prompt or a file Claude touches makes it relevant, then
+adds just that piece.
+
+## How it works
+
+```
+your docs ─────────► index (automatic): every heading section of docs/**, READMEs, CONTRIBUTING,
+.siyaq/entries/ ───►   ARCHITECTURE, adr/** + your hand-written entries; rebuilt by itself when
+                       a source changes, so there is no index to forget
+prompt ────────────► language-aware words (Arabic included) ─► relevance ranking (BM25)
+                       ─► up to 3 entries within a token budget (summary first, full if strong)
+Read/Edit a file ──► the sections that mention that file or its (specific) folder
+once per session ──► never sent twice; reset after /compact or /clear
+usage ─────────────► shown / opened / no-match events ─► /siyaq:stats
+```
+
+### Matching that understands people
+- **Any language:** Arabic letter variants are unified (أ إ آ → ا, ة → ه, ى → ي), diacritics
+  removed, and light stemming handles both English (`validation` = `validating`) and Arabic
+  (`الخصم` = `خصم`).
+- **Code words:** `OrderService` and `order_service` both become `order service`.
+- **Relevance, not keyword hits:** one shared body word is never enough; a title/keyword hit or
+  two different words are required, and the best matches win.
+- **Bounded cost:** at most `top_k` entries and `budget_tokens` per prompt; big sections are sent
+  as a summary with the exact lines to read for more.
+
+## Skills
+
+| Skill | What it does |
+|---|---|
+| `/siyaq:add [topic]` | Capture knowledge as `.siyaq/entries/<slug>.md`, with synonyms in the team's languages and file paths, then verify it matches |
+| `/siyaq:slim` | Move situational sections of CLAUDE.md into on-demand entries (with your approval) and report the tokens saved per session |
+| `/siyaq:stats [days]` | What was injected, opened, never used, which topics had no knowledge, and dead references in docs |
+
+## Hand-written entries
+
+```markdown
+---
+title: Rolling back a deployment
+keywords: rollback, revert release, تراجع, استرجاع
+paths: deploy/**, .github/workflows/deploy.yml
+inject: full        # optional: summary | full (default: decided by match strength and size)
+---
+1. ...
+```
+
+## The helper
+
+The session note prints its path. `siyaq match "how do we roll back?"` shows scores and exactly
+what would be injected; `siyaq entries`, `siyaq index` (sources, dead references) and
+`siyaq stats` are there too.
+
+## Configuration: `.siyaq.json`
+
+```json
+{
+  "sources": ["docs/**/*.md", "**/README.md", "handbook/**/*.md"],
+  "exclude": ["docs/archive/**"],
+  "top_k": 3, "budget_tokens": 1200, "path_budget_tokens": 600,
+  "min_score": 1.0, "full_max_chars": 1800,
+  "mode": "on"
+}
+```
+
+`"mode": "off"` or `SIYAQ=off` disables it. CLAUDE.md and CHANGELOG.md are never indexed
+(CLAUDE.md is already loaded). Data lives in `~/.claude/nexika/siyaq/` (`SIYAQ_HOME` to move it).
+
+## Limits
+- Matching is lexical (words, stems, synonyms you add), not semantic: a question in Arabic
+  matches English docs only through `keywords` you add (as `/siyaq:add` does).
+- Docs can be wrong; injected text tells Claude to trust the code when they disagree.

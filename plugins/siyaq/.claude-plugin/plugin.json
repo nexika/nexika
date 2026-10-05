@@ -1,0 +1,10 @@
+{
+  "name": "siyaq",
+  "description": "Nexika siyaq: project knowledge loaded only when relevant. Entries generated from your docs (no hand-written index), multilingual matching (Arabic included) with relevance ranking and a token budget, file-based triggers, and stats that show what helped and what is missing.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Loai Elattar"
+  },
+  "license": "MIT",
+  "keywords": ["nexika", "context", "knowledge", "docs", "just-in-time", "tokens", "arabic"]
+}
