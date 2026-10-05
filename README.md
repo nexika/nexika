@@ -1,5 +1,8 @@
 # Nexika
 
+[![CI](https://github.com/nexika/nexika/actions/workflows/ci.yml/badge.svg)](https://github.com/nexika/nexika/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 > **The next wisdom for Claude Code.** *Nex*t + h*ika* (from *hikma*, حكمة - wisdom).
 > Plugins that make Claude work smarter and help people learn deeper.
 
@@ -40,7 +43,19 @@ it to `.claude-plugin/marketplace.json`.
 claude --plugin-dir ./plugins/prof          # run one plugin without installing
 claude plugin validate .                    # check the marketplace
 claude plugin validate ./plugins/prof/.claude-plugin/plugin.json
+pytest                                      # tests (pip install pytest)
+ruff check .                                # lint (pip install ruff)
 ```
+
+## Contributing
+
+`main` is protected: every change goes through a pull request that must pass CI.
+
+1. Branch from `main`: `git switch -c feat/<short-name>` (or `fix/`, `docs/`, `chore/`).
+2. Commit, push the branch, and open a pull request.
+3. CI runs lint, tests (Python 3.10-3.14, Linux and macOS) and `claude plugin validate`.
+   The **CI passed** check must be green before merging.
+4. Squash-merge; the branch is deleted automatically.
 
 ## License
 
