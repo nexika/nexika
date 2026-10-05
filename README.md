@@ -14,6 +14,7 @@
 | [**barq**](plugins/barq/README.md) ⚡ | Many file and project operations in one call: batched and symbol reads, a seen-before cache, short test/build output, git status with next steps, secret masking, savings stats | v0.1.0 |
 | [**itqan**](plugins/itqan/README.md) | Quality workflow without the friction: plan, failing tests first, implement, verify, specialist review; a risk-based guard that only stops dangerous actions; stack checklists loaded only where they apply; learns project rules from your corrections | v0.2.0 |
 | [**siyaq**](plugins/siyaq/README.md) | Project knowledge loaded only when relevant: entries generated from your docs, multilingual matching (Arabic included) with ranking and a token budget, file triggers, stats on what helped and what is missing | v0.1.0 |
+| [**amin**](plugins/amin/README.md) | A repository maintainer that never merges for you: issue triage with approval, issues worked into pull requests in isolated worktrees, change notes enforced in CI, step-by-step releases (versions, CHANGELOG, tags, GitHub Releases) | v0.1.0 |
 
 ## Install
 
@@ -23,6 +24,7 @@
 /plugin install barq@nexika
 /plugin install itqan@nexika
 /plugin install siyaq@nexika
+/plugin install amin@nexika
 ```
 
 Restart Claude Code afterwards so the plugin's hooks load.
@@ -57,10 +59,13 @@ ruff check .                                # lint (pip install ruff)
 `main` is protected: every change goes through a pull request that must pass CI.
 
 1. Branch from `main`: `git switch -c feat/<short-name>` (or `fix/`, `docs/`, `chore/`).
-2. Commit, push the branch, and open a pull request.
-3. CI runs lint, tests (Python 3.10-3.14, Linux and macOS) and `claude plugin validate`.
-   The **CI passed** check must be green before merging.
-4. Squash-merge; the branch is deleted automatically.
+2. If you change a plugin, add a change note for it (see [changelog.d/](changelog.d/README.md)):
+   `python3 plugins/amin/bin/amin fragment add <plugin> <type> "<what changed>" --id <PR>`.
+3. Commit, push the branch, and open a pull request.
+4. CI runs lint, tests (Python 3.10-3.14, Linux and macOS), `claude plugin validate` and the
+   change-notes rule. The **CI passed** check must be green before merging.
+5. Squash-merge; the branch is deleted automatically.
+6. Releases are cut with `/amin:release`: one version, CHANGELOG and tag per plugin.
 
 ## License
 
