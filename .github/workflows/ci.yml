@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches: [main]
 
@@ -58,11 +59,26 @@ jobs:
             claude plugin validate "$manifest"
           done
 
-  # Single required check for branch protection: passes only if every job above passed.
+  changelog:
+    name: change notes
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Each changed plugin has a change note
+        env:
+          BASE: ${{ github.base_ref }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: python3 plugins/amin/bin/amin check-fragment --base "origin/$BASE" --labels "$LABELS"
+
+  # Single required check for branch protection: passes only if every job above passed
+  # (a job skipped on push, like change notes, does not fail it).
   ci-ok:
     name: CI passed
     if: always()
-    needs: [lint, test, validate]
+    needs: [lint, test, validate, changelog]
     runs-on: ubuntu-latest
     steps:
       - run: |

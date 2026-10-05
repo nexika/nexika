@@ -26,6 +26,11 @@
       "name": "siyaq",
       "source": "./plugins/siyaq",
       "description": "Project knowledge loaded only when relevant: entries generated from your docs, multilingual matching (Arabic included) with ranking and a token budget, file triggers, usage stats."
+    },
+    {
+      "name": "amin",
+      "source": "./plugins/amin",
+      "description": "A repository maintainer that never merges for you: issue triage with approval, issues worked into pull requests in isolated worktrees, change notes enforced in CI, step-by-step releases."
     }
   ]
 }
