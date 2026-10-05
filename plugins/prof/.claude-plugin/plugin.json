@@ -1,0 +1,10 @@
+{
+  "name": "prof",
+  "description": "Nexika prof: turns Claude into a personal programming professor: teaches concepts step by step, explains codebases to juniors joining a project, quizzes understanding, and remembers each learner's progress.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Loai Elattar"
+  },
+  "license": "MIT",
+  "keywords": ["nexika", "learning", "tutor", "professor", "onboarding", "education", "junior"]
+}

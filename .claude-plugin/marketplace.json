@@ -1,0 +1,16 @@
+{
+  "name": "nexika",
+  "owner": {
+    "name": "Loai Elattar"
+  },
+  "metadata": {
+    "description": "Nexika - the next wisdom for Claude Code: plugins that make Claude work smarter and help people learn deeper."
+  },
+  "plugins": [
+    {
+      "name": "prof",
+      "source": "./plugins/prof",
+      "description": "Personal programming professor: lessons, project onboarding for juniors, start-of-session warm-ups and end-of-session learning reports."
+    }
+  ]
+}
