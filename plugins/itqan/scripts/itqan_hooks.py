@@ -16,6 +16,7 @@ from pathlib import Path
 
 PLUGIN = Path(__file__).resolve().parent.parent
 PACKS = PLUGIN / "packs"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 SKIP_DIRS = {"node_modules", "bin", "obj", "dist", "build", "venv", "__pycache__", "target", "vendor"}
 MAX_DEPTH = 3
 
@@ -82,11 +83,21 @@ def session_start(hook: dict) -> None:
         lines.append("Before implementing or reviewing code in these stacks, read the checklist:")
         lines += [f"  {s}: {p}" for s, p in packs]
     lines.append("Workflows: /itqan:plan (plan only), /itqan:review (review changes), "
-                 "/itqan:ship (plan -> tests first -> implement -> verify -> review).")
+                 "/itqan:ship (plan -> tests first -> implement -> verify -> review), "
+                 "/itqan:learn (approve rules learned from corrections), /itqan:insights.")
     lines.append("Guard: normal edits are never blocked; only risky actions are refused or need approval.")
+    lines.append(f"itqan helper (for /itqan:learn and /itqan:insights): "
+                 f"python3 {Path(__file__).resolve().parent / 'itqan_learn.py'}")
     note = last_session_note(str(hook.get("session_id") or ""))
     if note:
         lines.append(note)
+    try:
+        import itqan_learn
+        rules = itqan_learn.session_note(itqan_learn.project_root(cwd))
+    except Exception:  # learning data must never break the session note
+        rules = ""
+    if rules:
+        lines.append(rules)
     print("\n".join(lines))
 
 
