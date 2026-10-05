@@ -11,6 +11,11 @@
       "name": "prof",
       "source": "./plugins/prof",
       "description": "Personal programming professor: lessons, project onboarding for juniors, start-of-session warm-ups and end-of-session learning reports."
+    },
+    {
+      "name": "barq",
+      "source": "./plugins/barq",
+      "description": "Many file and project operations in one call: batched and symbol reads, a seen-before cache, short test/build output, git status with next steps, secret masking and savings stats."
     }
   ]
 }
