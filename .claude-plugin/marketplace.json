@@ -16,6 +16,11 @@
       "name": "barq",
       "source": "./plugins/barq",
       "description": "Many file and project operations in one call: batched and symbol reads, a seen-before cache, short test/build output, git status with next steps, secret masking and savings stats."
+    },
+    {
+      "name": "itqan",
+      "source": "./plugins/itqan",
+      "description": "Quality workflow without the friction: plan, failing tests first, implement, verify, specialist review; a risk-based guard; stack checklists only for the stacks a project uses."
     }
   ]
 }
