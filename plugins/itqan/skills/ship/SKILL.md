@@ -1,0 +1,42 @@
+---
+name: ship
+description: Build a change end to end with quality gates - branch check, plan approval, failing tests first, minimal implementation until green, full verification, specialist review, then a commit proposal. Use when the user says "ship", "implement this properly", "build this feature", or "fix this bug with tests".
+argument-hint: "<feature or bug to ship>"
+---
+
+# Ship a change
+
+Task: $ARGUMENTS
+
+Work through the gates in order. Do not skip a gate; if one fails, fix it or stop and ask.
+
+## 0. Preflight
+`barq git-status` (or `git status`).
+- On the default branch → propose `feat/<short-name>` or `fix/<short-name>` and create it
+  after the user agrees.
+- Unrelated uncommitted changes → ask whether to stash, commit or include them.
+
+## 1. Plan (gate: user approval)
+Follow the `itqan:plan` skill. Continue only after the user approves the plan.
+
+## 2. Tests first (gate: red for the right reason)
+Launch `itqan:test-writer` with the approved plan. Check its report: the new tests exist and
+fail because the behaviour is missing.
+
+## 3. Implement (gate: green)
+Implement the plan step by step, smallest change first. After each step run the tests
+(`barq run:test`). On build or type errors, launch `itqan:build-fixer`. Never make a test pass
+by weakening, skipping or deleting it.
+
+## 4. Verify (gate: everything green)
+Run the full checks in one call: `barq run:build run:test run:lint` (or the project's
+commands). All must pass.
+
+## 5. Review (gate: no critical/high findings left)
+Follow the `itqan:review` skill on this branch's diff. Fix critical and high findings, then
+repeat step 4.
+
+## 6. Wrap up
+Summarize: what changed (files), tests added, review result, anything deferred. Propose a
+commit message (imperative subject, body explaining why). **Ask before committing, pushing,
+or opening a pull request.**
