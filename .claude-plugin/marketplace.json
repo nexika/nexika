@@ -41,6 +41,11 @@
       "name": "bayan",
       "source": "./plugins/bayan",
       "description": "Claude writes like a clear, friendly person in English and Arabic: explanations for readers with no coding experience, automatic clean-up of machine habits, and a line-by-line style check."
+    },
+    {
+      "name": "hafiz",
+      "source": "./plugins/hafiz",
+      "description": "Claude remembers your work: decisions, tasks, problems, files and links captured without AI calls, a short start card, a snapshot restored after compaction, handoff notes, Arabic and English search, and a detailed summary on request."
     }
   ]
 }
