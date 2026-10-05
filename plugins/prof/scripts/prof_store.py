@@ -25,7 +25,6 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 HOME = Path(os.environ.get("PROF_HOME") or Path.home() / ".claude" / "nexika" / "prof")
 REPORTS = HOME / "reports"
@@ -138,7 +137,7 @@ def slugify(text: str) -> str:
     return slug[:60] or "general"
 
 
-def report_for_session(sid: str) -> Optional[Path]:
+def report_for_session(sid: str) -> Path | None:
     if not sid or not REPORTS.is_dir():
         return None
     found = sorted(REPORTS.glob(f"*_{sid[:8]}.md"))
@@ -147,10 +146,10 @@ def report_for_session(sid: str) -> Optional[Path]:
 
 # ---------------------------------------------------------------- topic store
 
-Entry = Tuple[str, str, str, str]  # status, concept, evidence, date
+Entry = tuple[str, str, str, str]  # status, concept, evidence, date
 
 
-def load_topic(slug: str) -> Tuple[str, Dict[str, Entry]]:
+def load_topic(slug: str) -> tuple[str, dict[str, Entry]]:
     path = TOPICS / f"{slug}.md"
     title, entries = slug, {}
     if path.is_file():
@@ -165,7 +164,7 @@ def load_topic(slug: str) -> Tuple[str, Dict[str, Entry]]:
     return title, entries
 
 
-def save_topic(slug: str, title: str, entries: Dict[str, Entry]) -> None:
+def save_topic(slug: str, title: str, entries: dict[str, Entry]) -> None:
     TOPICS.mkdir(parents=True, exist_ok=True)
     rank = {s: i for i, s in enumerate(STATUSES)}
     rows = sorted(entries.values(), key=lambda e: (rank[e[0]], e[1].lower()))
@@ -179,7 +178,7 @@ def merge_report(path: Path) -> int:
     text = path.read_text(encoding="utf-8")
     m = REPORT_DATE_RE.match(path.name)
     date = m.group(1) if m else _today()
-    updates: Dict[str, List[Tuple[str, str, str, str]]] = {}
+    updates: dict[str, list[tuple[str, str, str, str]]] = {}
     for line in text.splitlines():
         cm = CHECK_RE.match(line)
         if cm:
@@ -199,7 +198,7 @@ def merge_report(path: Path) -> int:
     return count
 
 
-def topic_summaries() -> List[Tuple[str, str, str, List[Entry], List[Entry]]]:
+def topic_summaries() -> list[tuple[str, str, str, list[Entry], list[Entry]]]:
     """(slug, title, last_date, open_items, stale_items) per topic, most recent first."""
     out = []
     if not TOPICS.is_dir():
@@ -218,7 +217,7 @@ def topic_summaries() -> List[Tuple[str, str, str, List[Entry], List[Entry]]]:
     return out
 
 
-def _section(text: str, heading: str, limit: int) -> List[str]:
+def _section(text: str, heading: str, limit: int) -> list[str]:
     lines, inside = [], False
     for line in text.splitlines():
         if line.startswith("## "):
@@ -267,7 +266,7 @@ def session_start(hook: dict) -> None:
             p(f"- {title} [{slug}], last studied {last}")
             for s, c, ev, d in open_items[:6]:
                 p(f"    - [{s}] {c} — {ev} ({d})")
-            for s, c, ev, d in stale[:2]:
+            for _s, c, _ev, d in stale[:2]:
                 p(f"    - [retention check] {c} — understood on {d}")
 
     if topics:
@@ -295,15 +294,17 @@ def _settings_style_is_professor(cwd: str) -> bool:
     return False
 
 
-def extract_conversation(transcript: Path) -> Tuple[str, bool, int]:
+def extract_conversation(transcript: Path) -> tuple[str, bool, int]:
     """Condensed TUTOR/LEARNER text, whether a tutor skill was used, learner turn count."""
-    parts: List[str] = []
+    parts: list[str] = []
     tutoring, turns = False, 0
     with open(transcript, encoding="utf-8", errors="replace") as fh:
         for raw in fh:
             try:
                 obj = json.loads(raw)
             except ValueError:
+                continue
+            if not isinstance(obj, dict):
                 continue
             kind = obj.get("type")
             if kind not in ("user", "assistant") or obj.get("isMeta"):
@@ -416,7 +417,7 @@ def print_topic(slug: str) -> int:
     return 0
 
 
-def main(argv: List[str]) -> int:
+def main(argv: list[str]) -> int:
     cmd = argv[1] if len(argv) > 1 else ""
     try:
         if cmd == "session-start":
