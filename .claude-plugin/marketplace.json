@@ -31,6 +31,11 @@
       "name": "amin",
       "source": "./plugins/amin",
       "description": "A repository maintainer that never merges for you: issue triage with approval, issues worked into pull requests in isolated worktrees, change notes enforced in CI, step-by-step releases."
+    },
+    {
+      "name": "manar",
+      "source": "./plugins/manar",
+      "description": "Be found by search engines and AI assistants: deterministic audits, fixes written into your code, and measured AI visibility (Gemini, Perplexity, ChatGPT, Claude) compared across releases."
     }
   ]
 }

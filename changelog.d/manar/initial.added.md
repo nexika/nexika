@@ -1,0 +1,1 @@
+manar, be found by search engines and AI assistants: deterministic audits (including every AI crawler, llms.txt and passage citability in English and Arabic), fixes written into Next.js, Astro, ASP.NET Core and static sites, and measured AI visibility in Gemini, Perplexity, ChatGPT and Claude, compared across releases.
