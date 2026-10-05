@@ -1,0 +1,10 @@
+{
+  "name": "barq",
+  "description": "Nexika barq: many file and project operations in one call. Batched reads, symbol and outline reads, a seen-before cache, short test/build output, git status with next steps, secret masking and savings stats.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Loai Elattar"
+  },
+  "license": "MIT",
+  "keywords": ["nexika", "batch", "tokens", "performance", "cache", "file-ops"]
+}

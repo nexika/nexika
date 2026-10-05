@@ -11,13 +11,14 @@
 | Plugin | What it does | Status |
 |---|---|---|
 | [**prof**](plugins/prof/README.md) | Turns Claude into a personal programming professor: step-by-step lessons, onboarding juniors to a codebase, a warm-up check at the start of each session, and a learning report at the end | v0.1.0 |
-| **tools** | Batched, token-saving operations for Claude Code (inspired by claude-supertool) | planned |
+| [**barq**](plugins/barq/README.md) ⚡ | Many file and project operations in one call: batched and symbol reads, a seen-before cache, short test/build output, git status with next steps, secret masking, savings stats | v0.1.0 |
 
 ## Install
 
 ```
 /plugin marketplace add nexika/nexika
 /plugin install prof@nexika
+/plugin install barq@nexika
 ```
 
 Restart Claude Code afterwards so the plugin's hooks load.
