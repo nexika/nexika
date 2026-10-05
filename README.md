@@ -16,6 +16,7 @@
 | [**siyaq**](plugins/siyaq/README.md) | Project knowledge loaded only when relevant: entries generated from your docs, multilingual matching (Arabic included) with ranking and a token budget, file triggers, stats on what helped and what is missing | v0.1.0 |
 | [**amin**](plugins/amin/README.md) | A repository maintainer that never merges for you: issue triage with approval, issues worked into pull requests in isolated worktrees, change notes enforced in CI, step-by-step releases (versions, CHANGELOG, tags, GitHub Releases) | v0.1.0 |
 | [**manar**](plugins/manar/README.md) | Be found by search engines and AI assistants: deterministic SEO and AI-visibility audits, fixes written into your code (Next.js, Astro, ASP.NET Core, static), and measured mentions and citations in Gemini, Perplexity, ChatGPT and Claude, compared across releases | v0.1.0 |
+| [**bayan**](plugins/bayan/README.md) | Claude writes like a clear, friendly person, in English and Arabic: explanations someone with no coding experience can follow, automatic clean-up of machine habits (hidden characters, AI signature lines, filler phrases) and a line-by-line style check | v0.1.0 |
 
 ## Install
 
@@ -27,6 +28,7 @@
 /plugin install siyaq@nexika
 /plugin install amin@nexika
 /plugin install manar@nexika
+/plugin install bayan@nexika
 ```
 
 Restart Claude Code afterwards so the plugin's hooks load.

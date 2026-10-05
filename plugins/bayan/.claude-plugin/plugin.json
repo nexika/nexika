@@ -1,0 +1,10 @@
+{
+  "name": "bayan",
+  "description": "Nexika bayan: Claude writes like a clear, friendly person, in English and Arabic. Plain explanations for readers with no coding experience, automatic clean-up of machine habits (hidden characters, AI signature lines, filler phrases), and a line-by-line style check.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Loai Elattar"
+  },
+  "license": "MIT",
+  "keywords": ["nexika", "writing", "plain-language", "style", "arabic", "readability"]
+}

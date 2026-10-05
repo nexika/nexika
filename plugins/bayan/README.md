@@ -1,0 +1,54 @@
+<!-- bayan: off (this page quotes the phrases bayan removes) -->
+# bayan (بيان): write like a clear, friendly person
+
+Part of [Nexika](../../README.md). *Bayan* means clarity and eloquence.
+
+With bayan installed, Claude explains things so that someone who has never written code can follow,
+in English or Arabic, without getting anything wrong. It also removes the habits that make text
+sound machine-written. This covers everything Claude writes in the session, including the output
+of the other Nexika plugins: prof's lessons and reports, amin's release notes, manar's audits.
+
+| Skill | What it does |
+|---|---|
+| `/bayan:level` | Choose the reader: `no-code`, `junior` or `developer`. Saved for future sessions. |
+| `/bayan:write <file or text>` | Rewrites it for that reader. Facts, numbers, links and code stay exactly as they were. |
+| `/bayan:check <file or text>` | Lists, line by line, what is hard to read or sounds machine-made, with a better wording. |
+
+## What happens on its own
+- **At the start of each session**, Claude gets a short writing guide for your reader level.
+- **After Claude writes or edits a Markdown file** (`.md`, `.mdx`), bayan cleans **only the part
+  Claude just wrote**: it removes hidden characters (zero-width spaces and the like), AI signature
+  lines, filler sentences (`Great question!`, `I hope this helps!`) and wordy phrases (`in order to`,
+  `it's worth noting that`), and turns em dashes between words into commas. Then it tells Claude
+  which of those lines still need rewriting. Text written by people is left alone, and so are code,
+  front matter, HTML, link targets, comments, files outside the project, symlinks and test fixtures.
+  `.txt` and `.rst` files are only checked, never changed.
+- **Before a commit, tag, pull request or release**, bayan stops it if the message (or the message
+  file) carries an AI signature line (`Co-Authored-By: Claude ... <noreply@anthropic.com>`,
+  `Generated with [Claude Code]`) or zero-width characters. Human co-authors are never touched.
+
+Both languages are covered: for example `من الجدير بالذكر أن`, `تجدر الإشارة إلى أن` and
+`علاوة على ذلك` are removed or flagged, and Arabic gets an Arabic comma when a dash is replaced.
+
+## Commands (used by the skills; also handy in CI)
+
+```
+bayan check FILE|- [--level no-code|junior|developer] [--json] [--min-score N]
+bayan clean FILE... [--write] [--keep-dashes]
+bayan level [no-code|junior|developer]
+```
+
+`--min-score` makes `check` exit with 1 below that score, so a CI job can keep docs readable.
+Put `bayan: off` anywhere in a file to leave it alone. Settings live in
+`~/.claude/nexika/bayan/config.json` (`level`, `auto_clean`, `block_signatures`).
+
+## Honest limits
+- The plainness score measures the habits in [the guide](guide/writing.md). It is **not an AI
+  detector**. Nobody can promise what GPTZero, Copyleaks or any other detector will say: they
+  change their models often and also flag text written by people, especially formal writing and
+  writing by non-native speakers.
+- bayan does not rewrite text over and over until a detector says "human". It aims for writing
+  that real readers find clear and natural.
+- A plugin can't edit Claude's chat replies after they are written. Those follow the guide;
+  files are cleaned for certain.
+- Pure Python standard library, nothing sent anywhere.
