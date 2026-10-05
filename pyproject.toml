@@ -19,3 +19,5 @@ select = ["E", "F", "W", "I", "B", "UP"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/test_manar.py" = ["E501"]  # HTML fixtures are naturally long lines
+"plugins/bayan/bayan/rules.py" = ["E501"]  # word lists with long Arabic and English phrases
+"tests/test_bayan.py" = ["E501"]           # sample texts are naturally long lines

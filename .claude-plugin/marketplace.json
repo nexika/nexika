@@ -36,6 +36,11 @@
       "name": "manar",
       "source": "./plugins/manar",
       "description": "Be found by search engines and AI assistants: deterministic audits, fixes written into your code, and measured AI visibility (Gemini, Perplexity, ChatGPT, Claude) compared across releases."
+    },
+    {
+      "name": "bayan",
+      "source": "./plugins/bayan",
+      "description": "Claude writes like a clear, friendly person in English and Arabic: explanations for readers with no coding experience, automatic clean-up of machine habits, and a line-by-line style check."
     }
   ]
 }
