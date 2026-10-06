@@ -147,6 +147,15 @@ def on_user_prompt_submit(event: dict) -> str:
     entry, project, shown = parse_allow(rest, cwd)
     if entry is None:
         return ""
+    tool, key = {"command": ("Bash", "command"), "write": ("Write", "file_path")}.get(entry["kind"],
+                                                                                      ("Read", "file_path"))
+    check = policy.decide({"tool_name": tool, "tool_input": {key: entry["value"].rstrip("/") or "/"},
+                           "cwd": cwd}, cfg)
+    if check.verdict == "deny" and check.cls in c.ALWAYS_NO:
+        why = check.reason.split(". ")[0]
+        return _out("UserPromptSubmit", additionalContext=f"haris: {shown} was NOT approved: haris never "
+                                                          f"lets this through ({why}). Tell the user that "
+                                                          "only they can do it, outside Claude.")
     state.add_approval(session, root, entry, project)
     state.log({"session": session[:8], "project": os.path.basename(root), "tool": "UserPromptSubmit",
                "decision": "approval", "class": entry["kind"], "reason": "typed by the user",

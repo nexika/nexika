@@ -281,18 +281,24 @@ def pre(event):
 def test_only_the_user_can_approve(world):
     home, project = world
     session = "approve-" + "1" * 8
-    command = "echo x >> ~/.bashrc"
-    assert pre(bash_event(project, command, session)) == "deny"
+    command = "rm -rf ~/work/other"
+    assert pre(bash_event(project, command, session)) == "ask"
     assert "approved" in prompt(project, session, f"/haris:allow {command}")
     assert pre(bash_event(project, command, session)) == "allow"
     assert pre(bash_event(project, command + "  ", session)) == "allow"  # spacing does not matter
-    assert pre(bash_event(project, "echo y >> ~/.bashrc", session)) == "deny"  # but only exactly this
+    assert pre(bash_event(project, "rm -rf ~/work/else", session)) == "ask"  # but only exactly this
+    always_no = "echo x >> ~/.bashrc"  # refused in every profile: no approval lifts it
+    assert "NOT approved" in prompt(project, session, f"/haris:allow {always_no}")
+    assert pre(bash_event(project, always_no, session)) == "deny"
+    assert decide(project, "Bash", always_no, approvals=[{"kind": "command", "value": always_no}]).verdict \
+        == "deny"
+    assert "never lets this through" in decide(project, "Bash", "rm -rf ~").reason
     prompt(project, session, "/haris:allow gh pr merge 3")
     assert pre(bash_event(project, "gh pr merge 3", session)) == "ask"  # merges always ask
     prompt(project, session, "/haris:allow rm -rf ~/.claude/nexika")
     assert pre(bash_event(project, "rm -rf ~/.claude/nexika", session)) == "deny"  # haris itself never
     prompt(project, session, f"/haris:allow --remove {command}")
-    assert pre(bash_event(project, command, session)) == "deny"
+    assert pre(bash_event(project, command, session)) == "ask"
 
 
 def test_path_approvals_and_project_scope(world):

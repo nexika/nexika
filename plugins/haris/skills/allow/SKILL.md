@@ -14,6 +14,9 @@ This skill only reports it.
    approved now, with its scope (this session, or this project with `--project`).
 2. Remind them in one line that an approval covers exactly this command or path and nothing
    else, and that merges, releases, publishing and changes to haris still ask or stay refused.
+   If haris answered that it was NOT approved, explain that this action is refused in every
+   profile (deleting home or the system, persistence, sending secrets out, ...) and that only
+   the user can do it, outside Claude.
 3. For a lasting approval (`--project`), offer to record it as a decision in hafiz if it is
    installed (`<hafiz> remember decision "haris: approved <what> because <why>" --project`), so
    later sessions know why it is allowed.

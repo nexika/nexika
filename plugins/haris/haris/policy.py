@@ -31,9 +31,6 @@ MCP_DESTRUCTIVE = re.compile(r"(?i)(?:^|[_-])(?:delete|remove|drop|destroy|purge
                              r"deploy|"
                              r"transfer|revoke|archive|truncate|wipe|reset|terminate|uninstall|pay|charge|refund)"
                              r"(?:[_-]|$)")
-LOCAL_HOSTS = re.compile(r"^(?:localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0|::1|169\.254\.\d+\.\d+|"
-                         r"metadata\.google\.internal|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|"
-                         r"172\.(?:1[6-9]|2\d|3[01])\.\d+\.\d+)$")
 
 
 @dataclass
@@ -156,7 +153,7 @@ def web_fetch(url: str, ctx: c.Ctx) -> None:
         return
     if (parts.query and secrets.has_secret(parts.query)) or parts.password:
         ctx.add("egress-secret", f"The address sends what looks like a secret to {host}.")
-    elif LOCAL_HOSTS.match(host):
+    elif c.LOCAL_HOSTS.match(host):
         ctx.add("risky", f"Fetches {host}, an address on this computer or its private network (where cloud "
                          "login keys can be read).")
     else:
@@ -260,6 +257,9 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
     if verdict == c.DENY and finding.cls == "self":
         reason += (" Only you can change haris, outside Claude: edit ~/.claude/nexika/haris/config.json "
                    "or use /plugin.")
+    elif verdict == c.DENY and finding.cls in c.ALWAYS_NO:
+        reason += (" haris never lets this through, not even with /haris:allow; only you can do it, "
+                   "outside Claude.")
     elif verdict == c.DENY and finding.cls not in c.NOT_APPROVABLE:
         if command:
             reason += (" If the user wants this anyway, they can type: "

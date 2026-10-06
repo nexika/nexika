@@ -68,8 +68,13 @@ TABLE = {
 PROFILES = ("relaxed", "standard", "strict")
 # A tainted session (text that tried to give orders was read) raises these one level.
 TAINT_RAISED = {"egress", "egress-risk", "remote-irreversible", "download-run", "remote-command"}
+# Refused in every profile: no approval lifts these; the user can only do them outside Claude.
+ALWAYS_NO = {cls for cls, verdicts in TABLE.items() if verdicts == (DENY, DENY, DENY)}
 # The user's exact approval never lifts these.
-NOT_APPROVABLE = {"self", "remote-irreversible"}
+NOT_APPROVABLE = {"self", "remote-irreversible"} | ALWAYS_NO
+LOCAL_HOSTS = re.compile(r"^(?:localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0|::1|\[::1\]|169\.254\.\d+\.\d+|"
+                         r"metadata\.google\.internal|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|"
+                         r"172\.(?:1[6-9]|2\d|3[01])\.\d+\.\d+)$")
 
 DEFAULT_PROTECTED = ["main", "master", "develop", "production", "trunk", "release/*"]
 SECRET_VAR = re.compile(r"(?i)(?:token|secret|passw(?:or)?d|passphrase|api_?key|access_?key|private_?key"
@@ -238,6 +243,7 @@ class Ctx:
         self.funcs: dict[str, object] = {}
         self.marks: set[str] = set()
         self.downloaded: set[str] = set()
+        self.written: dict[str, str] = {}  # files this command wrote with known text (scripts it may run)
         self.git_aliases: dict[str, str] = {}
 
     def child(self, marks: bool = False, findings: list | None = None) -> Ctx:
@@ -482,15 +488,22 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
                     ctx.add("secret-read", f"Prints ${name}, which looks like a secret, into the "
                                            f"conversation.")
     stage = run(argv, ctx, stdin)
-    if (stage is not None and stage.downloads) or program in DOWNLOADERS:
-        for r in cmd.redirects:
-            if r.body is None and r.target and r.op in (">", ">>", ">|", "&>", "&>>"):
-                values_ = expand(r.target, ctx)
-                if not values_ or UNKNOWN in values_[0]:
-                    continue
-                path = ctx.where.resolve(values_[0], ctx.cwd)
-                if path:
-                    ctx.downloaded.add(path)  # `curl URL > file` saves a download like `curl -o file`
+    downloads = (stage is not None and stage.downloads) or program in DOWNLOADERS
+    for r in cmd.redirects:
+        if r.body is None and r.target and r.op in (">", ">>", ">|", "&>", "&>>"):
+            values_ = expand(r.target, ctx)
+            if not values_ or UNKNOWN in values_[0]:
+                continue
+            path = ctx.where.resolve(values_[0], ctx.cwd)
+            if not path:
+                continue
+            if downloads:
+                ctx.downloaded.add(path)  # `curl URL > file` saves a download like `curl -o file`
+            elif stage is not None and stage.text is not None and UNKNOWN not in stage.text:
+                before = ctx.written.get(path, "") if r.op in (">>", "&>>") else ""
+                ctx.written[path] = before + stage.text + "\n"
+            else:
+                ctx.written.pop(path, None)
     return stage
 
 
@@ -555,6 +568,9 @@ def run(argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
         if path and path in ctx.downloaded:
             ctx.add("download-run", f"Runs {ctx.show(path)}, which this command just downloaded.")
             return None
+        if path and path in ctx.written:
+            shebang = ctx.written[path].lstrip().split("\n", 1)[0]
+            return written_run(program, path, ctx, argv[1:], shebang if shebang.startswith("#!") else "sh")
         if path and path.startswith(PLUGIN_ROOT + "/"):
             return own_helper(argv, ctx)
     family = program
@@ -1816,6 +1832,8 @@ def script_run(program: str, script: Arg, ctx: Ctx, how: str = "", rest: list | 
     path = ctx.where.resolve(script, ctx.cwd)
     if path and path in ctx.downloaded:
         ctx.add("download-run", f"Runs {ctx.show(path)}, which this command just downloaded.")
+    elif path and path in ctx.written:
+        return written_run(program, path, ctx, rest)
     elif path == PLUGIN_ROOT + "/bin/haris":
         return own_helper([script, *(rest or [])], ctx)
     elif path and path.startswith(PLUGIN_ROOT + "/"):
@@ -1825,6 +1843,17 @@ def script_run(program: str, script: Arg, ctx: Ctx, how: str = "", rest: list | 
                         f"so Claude "
                         "Code's own permission rules apply.")
     return Stage()
+
+
+def written_run(program: str, path: str, ctx: Ctx, rest: list | None = None, lang: str = "") -> Stage:
+    """A script this same command wrote: haris reads what it will run and judges that."""
+    text = ctx.written[path]
+    lang = lang or program
+    via = f"{ctx.show(path)} (written just before)"
+    ctx.add("exec", f"Runs {ctx.show(path)}, which this command writes; haris read it before it runs.")
+    if re.search(r"python|pypy|node|deno|bun|ruby|perl|php", lang):
+        return code_check(arg(text), ctx, via)
+    return shell_string(arg(text), ctx, [str(path), *(str(r) for r in rest or [])], via)
 
 
 def h_node(argv, ctx, stdin):
@@ -1981,10 +2010,25 @@ def h_curl(argv, ctx, stdin):
         if out != "-":
             write_paths([out], ctx)
     egress_payload(ctx, "curl", data, files, urls, stdin, sends)
+    remote_delete(ctx, "curl", method, urls)
     if not sends and (not outputs or "-" in outputs) and not has(opts, "-O", "--remote-name", "-I", "--head"):
         ctx.marks.add("download")
         return Stage(downloads=True)
     return Stage()
+
+
+def remote_delete(ctx: Ctx, program: str, method: str, urls: list[Arg]) -> None:
+    """An HTTP DELETE to another computer removes something there, like `gh api -X DELETE`."""
+    if method != "DELETE":
+        return
+    for u in urls or [arg(UNKNOWN)]:
+        host = re.sub(r"^[a-z+.-]+://", "", str(u)).split("/")[0].split("@")[-1]
+        host = re.sub(r":\d+$", "", host)
+        if UNKNOWN in host or not LOCAL_HOSTS.match(host):
+            where = host if UNKNOWN not in host else "a server"
+            ctx.add("remote-irreversible", f"Deletes something on {where} through its API "
+                                           f"({program} DELETE).")
+            return
 
 
 def save_download(target: Arg, ctx: Ctx) -> None:
@@ -2015,6 +2059,7 @@ def h_wget(argv, ctx, stdin):
             save_download(arg(base.rstrip("/") + "/" + (os.path.basename(u.split("?")[0].rstrip("/"))
                                                         or "index.html")), ctx)
     egress_payload(ctx, "wget", data, files, pos, stdin, sends)
+    remote_delete(ctx, "wget", (values(opts, "--method") or [arg("GET")])[0].upper(), pos)
     if "-" in outputs and not sends:
         ctx.marks.add("download")
         return Stage(downloads=True)
@@ -2040,6 +2085,7 @@ def h_httpie(argv, ctx, stdin):
     write_paths(values(opts, "-o", "--output"), ctx)
     sends = bool(data or files) or method in ("POST", "PUT", "PATCH", "DELETE")
     egress_payload(ctx, argv[0], data, files, urls, stdin, sends)
+    remote_delete(ctx, argv[0], method, urls)
     if not sends:
         ctx.marks.add("download")
         return Stage(downloads=True)

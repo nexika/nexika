@@ -70,6 +70,18 @@ command or path for this session (`--project` keeps it for this project); `--rem
 back. Claude cannot call the skill, cannot write haris's files and cannot run its hook, so it
 cannot approve anything for itself. There are no broad rules like `git *`.
 
+Some actions are refused in every profile: deleting your home folder or the system, writing to
+persistence spots, sending secrets off the machine, force-pushing a protected branch, a remote
+shell, a fork bomb and changes to haris. **No approval lifts these**; `/haris:allow` says so
+instead of recording it. If you really want one, do it yourself, outside Claude.
+
+### Scripts written and run in one command
+
+When a command writes a script and runs it straight away (`echo '...' > x.sh && bash x.sh`, a
+heredoc, `./x.sh`, `python3 x.py`), haris does not ask about the script blindly: it reads what
+the script will run and judges that. A safe script goes through; a harmful one is stopped with
+a plain warning, exactly as if the commands had been typed directly.
+
 ### Prompt injection
 
 After each tool call haris scans the output (web pages, files, command output, MCP results) for
@@ -150,13 +162,14 @@ injection warning; secrets in commands replaced with `[secret]`; rotated at 1 MB
 
 Every check is pure Python (stdlib only, 3.10+), with no network and no AI call; it runs git
 only for `git commit`, `reset --hard` and `checkout`/`restore` (with every program-running git
-option switched off). `tests/haris_corpus.tsv` holds 577 adversarial and ordinary commands
-(332 of them dangerous) with their expected decisions, and CI fails unless no dangerous
+option switched off). `tests/haris_corpus.tsv` holds 588 adversarial and ordinary commands
+(339 of them dangerous) with their expected decisions, and CI fails unless no dangerous
 command is missed, fewer than 2% of ordinary commands are blocked, and checks stay under 50 ms.
 
 ## Limits
 
-- haris is a guard, not a sandbox. A program or script it cannot see into (`python3 script.py`,
+- haris is a guard, not a sandbox. It judges each action before it runs; it does not follow a
+  process while it runs. A program or script it cannot see into (a script already on disk,
   `make`, a binary) is left to Claude Code's own permission rules, and code built to hide what
   it does can get past any static check. Inline code (`python -c`, `node -e`) is never approved.
 - PowerShell gets a lighter reading than bash (common cmdlets and aliases); a full PowerShell
