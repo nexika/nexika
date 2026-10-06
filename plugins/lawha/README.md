@@ -44,6 +44,14 @@ once with "reduce motion" on.
   `lawha:inspector` agent looks at the screenshots, finds the code behind each problem and
   proposes the smallest fix that keeps the design; Claude applies it and checks again (three
   rounds at most), then reports what passes and what still fails.
+- `/lawha:figma <link>` builds a Figma design in code, exactly. It reads the frames (mobile,
+  tablet, desktop) in a few batched calls, caches them by file version and shows the call budget
+  (Starter plans allow very few). It merges them into one mobile-first spec: Auto Layout as flex,
+  named styles as tokens, real line heights, vertical trim, style overrides, photos and SVG icons,
+  and design-file habits (a 796px "gap" that is only leftover space) read as intent. Claude builds
+  it in your stack, then `lawha check --against` compares it with each frame: how much it **looks**
+  like the design, position for position, and where heights drift. See the
+  [showcase](../../showcases/figma-portfolio/README.md): 95.4% / 91.4% / 93.2% at 387 / 1024 / 1440.
 - `/lawha:system` reads the project's design system: Tailwind `@theme` tokens and CSS variables,
   shadcn/ui components, your components with their props, TanStack routes, fonts. It lists drift
   (hard-coded colours, `p-[13px]`, left/right utilities) and saves `.lawha/system.json` so new
@@ -80,10 +88,8 @@ path of its latest check record (`nexika.lawha.check/1`) in lawha's own folder. 
 
 lawha is being built in steps (see [DESIGN.md](DESIGN.md)):
 
-1. **0.1, this version:** checks on every screen, the eye's measurements, the design-system index.
-2. **0.2:** a `figma` command, Claude's eyes on your Figma file: batched, cached reads (a Starter plan
-   allows few calls), mobile and desktop frames merged into one responsive component, then
-   checked against the design until it matches.
+1. **0.1:** checks on every screen, the eye's measurements, the design-system index.
+2. **0.2, this version:** `/lawha:figma`, Claude's eyes on your Figma file.
 3. **0.3:** a `direct` command for three design directions you choose by looking, and `elevate`,
    an art director that critiques with the eye's measurements and keeps only changes that win a
    blind side-by-side comparison.

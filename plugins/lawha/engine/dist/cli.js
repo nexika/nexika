@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 import { audit } from "./audit.js";
 import { closePage, launch, openVariant, variantName } from "./browser.js";
 import { diff } from "./diff.js";
+import { budget, outline, parseUrl } from "./figma.js";
+import { figmaSpec } from "./figma-spec.js";
 import { indexProject } from "./index-project.js";
 import { record } from "./record.js";
 import { groupFindings, writeReport } from "./report.js";
@@ -24,6 +26,12 @@ const HELP = `lawha ${VERSION} - see and check web pages
       --no-record          do not share the result with mizan and itqan (status/lawha.json)
   lawha diff <actual.png> <expected.png> [--scale n] [--heatmap out.png]
   lawha index [project]  [--out <file>]   default <project>/.lawha/system.json
+  lawha figma outline <figma link>           pages and top-level frames (1 call, cached by version)
+  lawha figma spec <figma link> --frames <id,id,...> [--assets public/figma] [--refresh]
+      fetch the frames (cached), merge them by width, write spec.md, theme.css, design images
+      and the photos and icons; the frames are the same page at different widths
+  lawha figma budget                          Figma calls made in the last minute and 30 days
+  (Figma needs FIGMA_TOKEN: a personal access token with read-only file content)
   lawha version
 
 Prints JSON on standard output: for check, the summary and the report path.`;
@@ -77,8 +85,12 @@ async function check(url, a) {
             const heat = join(out, "shots", `${shot.variant}.diff.png`);
             const result = diff(join(out, shot.file), expected, { heatmap: heat, expectedScale: scale });
             run.diffs.push({ ...result, variant: shot.variant, expected: relative(out, expected), actual: shot.file, heatmap: relative(out, heat) });
-            if (result.match < 0.95) {
-                run.findings.push({ check: "design.match", severity: result.match < 0.85 ? "fail" : "warn", message: `Matches the design at ${(result.match * 100).toFixed(1)}%; ${result.regions.length} region(s) differ.`, width: shot.width, theme: shot.theme, dir: shot.dir, motion: shot.motion, box: result.regions[0] });
+            const looks = result.aligned.match;
+            if (looks < 0.95) {
+                run.findings.push({ check: "design.match", severity: looks < 0.85 ? "fail" : "warn", message: `Looks ${(looks * 100).toFixed(1)}% like the design (content aligned; ${(result.match * 100).toFixed(1)}% position for position).`, width: shot.width, theme: shot.theme, dir: shot.dir, motion: shot.motion, box: result.regions[0] });
+            }
+            for (const s of result.aligned.shifts.slice(0, 6)) {
+                run.findings.push({ check: "design.height-drift", severity: "warn", message: `From y=${s.designY}px in the design, the page sits ${Math.abs(s.dy)}px ${s.dy > 0 ? "lower" : "higher"} (a section above is ${s.dy > 0 ? "taller" : "shorter"} than designed).`, width: shot.width, theme: shot.theme, dir: shot.dir, motion: shot.motion, box: { x: 0, y: s.builtY, w: shot.width, h: 4 } });
             }
         }
     }
@@ -108,7 +120,7 @@ async function check(url, a) {
 }
 async function main(argv) {
     const [command, ...rest] = argv;
-    const a = parseArgs(rest, ["expect-rtl", "no-audit", "no-see", "no-record"]);
+    const a = parseArgs(rest, ["expect-rtl", "no-audit", "no-see", "no-record", "refresh"]);
     switch (command) {
         case "check": {
             const url = a._[0];
@@ -131,6 +143,29 @@ async function main(argv) {
             writeJson(target, index);
             process.stdout.write(JSON.stringify({ written: target, tokens: index.tokens.length, components: index.components.length, shadcn: index.shadcn.components.length, routes: index.routes.length, drift: index.drift.length, stack: index.stack }, null, 2) + "\n");
             return 0;
+        }
+        case "figma": {
+            const [sub, link] = a._;
+            if (sub === "budget") {
+                process.stdout.write(JSON.stringify(budget(), null, 2) + "\n");
+                return 0;
+            }
+            if (!link)
+                break;
+            const ref = parseUrl(link);
+            const root = process.cwd();
+            if (sub === "outline") {
+                const o = await outline(root, ref, a.refresh === true);
+                process.stdout.write(JSON.stringify({ ...o, selected: ref.node, budget: budget() }, null, 2) + "\n");
+                return 0;
+            }
+            if (sub === "spec") {
+                const ids = list(a.frames, ref.node ? [ref.node] : []);
+                const result = await figmaSpec(root, ref, ids, { assets: typeof a.assets === "string" ? a.assets : join("public", "figma"), refresh: a.refresh === true, title: typeof a.title === "string" ? a.title : undefined });
+                process.stdout.write(JSON.stringify({ ...result, budget: budget() }, null, 2) + "\n");
+                return 0;
+            }
+            break;
         }
         case "version":
             process.stdout.write(`${VERSION}\n`);

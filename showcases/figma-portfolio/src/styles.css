@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* Design tokens from the Figma file's named styles (lawha figma spec → theme.css). */
+@theme {
+  --color-text-black: #000000;
+  --color-text-headings: #1e2130;
+  --color-text-dark-grey: #323232;
+  --color-text-light-grey: #565656;
+  --color-text-blue: #36009d;
+  --color-buttons-primary: #ac82fc;
+  --color-buttons-secondary: #000000;
+  --color-background-white: #ffffff;
+  --color-background-color-1: #f9dbc1;
+  --color-background-color-2: #fef0e3;
+  --color-background-color-3: #c6c2cd;
+  --color-background-color-4: #ffd7d4;
+  --font-poppins: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-dm-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  /* The design's text uses its fonts' natural line height (Figma "auto"): 1.5 for Poppins. */
+  --text-xs--line-height: 1.5;
+  --text-sm--line-height: 1.5;
+  --text-base--line-height: 1.5;
+  --text-lg--line-height: 1.5;
+  --text-xl--line-height: 1.5;
+  --text-2xl--line-height: 1.5;
+  --text-5xl--line-height: 1.5;
+}
+
+/* Figma's vertical trim: the text box is cut to the capitals' height (Chromium 133+, Safari 18.2+). */
+@utility trim-cap {
+  text-box: trim-both cap alphabetic;
+}
+
+@utility trim-none {
+  text-box: normal;
+}
+
+html {
+  font-family: var(--font-poppins);
+  line-height: 1.5;
+  color: var(--color-text-headings);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+}

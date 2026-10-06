@@ -258,7 +258,7 @@ We run the same cases with the Figma MCP server alone and with frontend-design a
 | Version | Delivers |
 |---|---|
 | **0.1** | engine `shoot`, `audit`, `see` (alignment, rhythm, typography, colour) and `diff`; `/lawha:check` with its report; `/lawha:system` index. This proves every page, including pages lawha did not write. |
-| **0.2** | `/lawha:figma`: batched and cached fetch, normalisation, breakpoint merge, the build and check loop. |
+| **0.2** | `/lawha:figma`: batched and cached fetch, normalisation, breakpoint merge, the build and check loop. Built: see `showcases/figma-portfolio`. |
 | **0.3** | `/lawha:direct`: three rendered directions, the gallery, style history. `/lawha:elevate` (the art director), with saliency, blind A/B and taste learning. |
 | **0.4** | The motion recipe library and Figma motion context; the RTL icon rules; the benchmark published. |
 

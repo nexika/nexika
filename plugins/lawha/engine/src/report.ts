@@ -143,7 +143,7 @@ function seenSection(run: Run): string {
 function diffSection(run: Run): string {
   if (!run.diffs.length) return "";
   const rows = run.diffs
-    .map((d) => `<div class="card"><b>${esc(d.variant)}</b> · match ${(d.match * 100).toFixed(1)}%${d.sizeMismatch ? ` · <span class="sev warn">sizes differ</span> (${d.size.actual.join("×")} vs ${d.size.expected.join("×")})` : ""}
+    .map((d) => `<div class="card"><b>${esc(d.variant)}</b> · looks ${(d.aligned.match * 100).toFixed(1)}% like the design · ${(d.match * 100).toFixed(1)}% position for position${d.aligned.shifts.length ? ` · heights drift at ${d.aligned.shifts.map((s) => `y=${s.designY} (${s.dy > 0 ? "+" : ""}${s.dy}px)`).join(", ")}` : ""}${d.sizeMismatch ? ` · <span class="sev warn">sizes differ</span> (${d.size.actual.join("×")} vs ${d.size.expected.join("×")})` : ""}
       <div class="shots" tabindex="0" role="region" aria-label="${esc(`Built page and design, ${d.variant}`)}" style="margin-top:10px"><figure style="width:260px"><figcaption>Built</figcaption><div class="frame"><img src="${esc(d.actual)}" alt="Built page"></div></figure>
       <figure style="width:260px"><figcaption>Design</figcaption><div class="frame"><img src="${esc(d.expected)}" alt="Design"></div></figure>
       ${d.heatmap ? `<figure style="width:260px"><figcaption>Differences</figcaption><div class="frame"><img src="${esc(d.heatmap)}" alt="Difference heat map"></div></figure>` : ""}</div></div>`)
