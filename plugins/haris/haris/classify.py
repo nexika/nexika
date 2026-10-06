@@ -1717,7 +1717,7 @@ STRING_LITERAL = re.compile(r"'''(.*?)'''|\"\"\"(.*?)\"\"\"|'((?:\\.|[^'\\\n])*)
 SED_EXEC = re.compile(r"(?:^|[;\n{}])\s*(?:\d+|\$|/[^/]*/)?\s*e(?:\s|$|;)|/e\s*$"
                       r"|/[gpiI0-9]*e[gpiI0-9]*\s*$")
 CODE_SELF = re.compile(r"\b(?:from|import)\s+(?:haris|mizan|tabib)\b"
-                       r"|nexika/(?:haris|mizan|itqan|tabib|status)\b"
+                       r"|nexika/(?:haris|mizan|itqan|tabib|lawha|status)\b"
                        r"|haris/(?:bin|haris)"
                        r"|require\(['\"][^'\"]*haris")
 PATH_LIKE = re.compile(r"^(?:~|/|\.{1,2}/|[\w.-]+/)|^\.?[\w-]+\.\w{1,8}$|^\.\w+$")

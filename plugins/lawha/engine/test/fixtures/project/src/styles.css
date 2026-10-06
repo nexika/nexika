@@ -1,0 +1,4 @@
+@import "tailwindcss";
+@theme { --color-brand: #2b2fd6; --font-display: "Fraunces", serif; }
+:root { --background: #ffffff; }
+.dark { --background: #111111; }

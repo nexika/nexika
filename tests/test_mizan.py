@@ -42,7 +42,8 @@ REAL_HOME = os.environ.get("HOME", "")  # the itqan check below runs pytest, whi
 def env(tmp_path, monkeypatch):
     """mizan, the status files, hafiz, itqan and HOME all in tmp_path; no network; English."""
     values = {"MIZAN_HOME": tmp_path / "mizan", "NEXIKA_STATUS_HOME": tmp_path / "status",
-              "HAFIZ_HOME": tmp_path / "hafiz", "ITQAN_HOME": tmp_path / "itqan", "HOME": tmp_path / "home"}
+              "HAFIZ_HOME": tmp_path / "hafiz", "ITQAN_HOME": tmp_path / "itqan", "HOME": tmp_path / "home",
+              "LAWHA_HOME": tmp_path / "lawha"}
     for key, value in values.items():
         monkeypatch.setenv(key, str(value))
     (tmp_path / "home").mkdir()
@@ -603,3 +604,60 @@ def test_mod_resets_on_every_session_end():
     block = MOD[MOD.index("on('session.end'"):]
     block = block[:block.index("return next(e)")]
     assert "e.reason" not in block and "update($, tasks, () => [])" in block
+
+
+def _lawha_check(env, repo, verdict="fail", commit=None, inside=True):
+    folder = (env / "lawha" / "checks" / "abc") if inside else (env / "elsewhere")
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / "latest.json"
+    head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=repo, capture_output=True, text=True,
+                          check=True).stdout.strip()
+    path.write_text(json.dumps({
+        "schema": family.LAWHA_SCHEMA, "commit": commit or head, "verdict": verdict, "url": "http://localhost:5173/",
+        "widths": [360, 390, 768, 1024, 1280, 1536], "themes": ["light"], "dirs": ["ltr", "rtl"],
+        "counts": {"fail": 3 if verdict == "fail" else 0, "warn": 1}, "created": "2026-10-06T18:00:00",
+        "report": "/r/report.html",
+        "problems": [{"message": "The page scrolls sideways: 900px wide in a 390px viewport.", "where": ["390px"]}]}))
+    status.publish("lawha", {"checks": {str(repo): str(path)}})
+
+
+def test_band_shows_lawhas_check_and_offers_fix(env, repo, monkeypatch):
+    _lawha_check(env, repo, verdict="fail")
+    monkeypatch.setattr(family, "find_plugin", lambda name: Path("/x") if name == "lawha" else None)
+    snap = snapshot.build({"session": "s1", "cwd": str(repo)})
+    assert snap["lawha"]["verdict"] == "fail" and snap["lawha"]["current"] and snap["fix"] is True
+    assert "lawha: 3 to fix" in render.plain(snap["band"])
+    pane = render.sections_text(snap["detail"])
+    assert "Pages on every screen (lawha)" in pane and "scrolls sideways" in pane and "/lawha:check --fix" in pane
+    assert snap["labels"]["fix"] == "Fix"
+
+
+def test_band_shows_a_passing_check_and_no_fix(env, repo):
+    _lawha_check(env, repo, verdict="pass")
+    snap = snapshot.build({"session": "s1", "cwd": str(repo)})
+    assert "lawha ✓ 6 widths" in render.plain(snap["band"]) and snap["fix"] is False
+
+
+def test_a_check_of_an_earlier_commit_says_so_and_offers_no_fix(env, repo):
+    _lawha_check(env, repo, verdict="fail", commit="0000000")
+    snap = snapshot.build({"session": "s1", "cwd": str(repo)})
+    assert "earlier commit" in render.plain(snap["band"]) and snap["fix"] is False
+
+
+def test_mizan_shows_only_lawha_checks_in_lawhas_own_folder(env, repo):
+    _lawha_check(env, repo, verdict="pass", inside=False)
+    assert family.lawha_check(str(repo)) == {}
+    assert snapshot.build({"session": "s1", "cwd": str(repo)})["lawha"] == {}
+
+
+def test_proof_view_shows_the_ui_check():
+    proof = {"checks": [{"name": "t", "passed": True, "seconds": 1}], "commit": "abc1234", "created": "x",
+             "ui": {"verdict": "fail", "fail": 2, "warn": 0, "url": "http://localhost/", "widths": [390, 1280],
+                    "problems": ["Text is cut off"]}}
+    text = render.sections_text(render.proof_view(proof, "en", "abc1234999"))
+    assert "Pages on every screen (lawha)" in text and "Text is cut off" in text
+
+
+def test_lawha_strings_exist_in_arabic():
+    for key in ("fix", "lawha_ok", "lawha_bad", "lawha_old", "t_lawha", "d_lawha_ok", "d_lawha_bad", "d_lawha_fix"):
+        assert i18n.t(key, "ar") != i18n.t(key, "en")

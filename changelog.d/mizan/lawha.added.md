@@ -1,0 +1,1 @@
+With lawha installed, mizan's band shows its latest check of the project's pages at this commit (`lawha ✓ 6 widths` or `lawha: 3 to fix`) with a Fix button that puts `/lawha:check --fix` in the prompt, and the pane lists the problems, what was covered and the report; the proof pane shows the pages check itqan recorded.

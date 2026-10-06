@@ -23,6 +23,7 @@ In Arabic (`"lang": "ar"`, or an Arabic system locale):
 | **Branch** | the branch and who started it: the author of its pull request when there is one, else of its first commit of its own, else you |
 | **PRs / MRs** | open pull requests (GitHub, `gh`) or merge requests (GitLab, `glab`) per person |
 | **CI** | the branch's checks: passed, failed with the job's name, or running (checked every 90 s, 45 s while running); with tabib, the kind of failure (`tabib: only py3.10`, `tabib: flaky?`) and a **Why?** button |
+| **Pages** | with lawha, its latest check of the project's pages at this commit: `lawha ✓ 6 widths`, or `lawha: 3 to fix` with a **Fix** button |
 | **RAM, Disk** | in use, yellow from 85 %, red from 95 % with a notice |
 | **Context** | fresh under 40 %, mid 40-75 %, full above 75 % |
 | **Cost** | this session in dollars; with a daily budget set, today's total across sessions |
@@ -107,6 +108,9 @@ With it, the Stop hook refreshes the handoff at mid and, at full, saves it and t
 - **itqan** makes the proof (`/itqan:proof`) that mizan shows.
 - **tabib** sorts a failed CI run once per run (no AI) when mizan sees it; Why? puts
   `/tabib:diagnose` in the prompt, and the pane shows the cause it found.
+- **lawha** checks the project's pages on every screen; the band shows its latest check of this
+  commit, Fix puts `/lawha:check --fix` in the prompt, and the pane lists the problems and the
+  report. mizan reads only checks lawha saved in its own (haris-guarded) folder.
 - All of them share status files under `~/.claude/nexika/status/`, each `nexika.<plugin>/1`
   (see the [root README](../../README.md#status-files-how-the-plugins-talk-to-each-other)).
 

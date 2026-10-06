@@ -17,6 +17,7 @@ const LABELS = {
   proof_missing: 'No proof yet. Press Enter to have Claude make one with /itqan:proof.',
   proof_title: 'Proof',
   why: 'Why?',
+  fix: 'Fix',
 }
 const BAND: RenderPropsOf['AbovePrompt'] = {
   hasSurvey: false,
@@ -35,10 +36,10 @@ const PANE: RenderPropsOf['Pane'] = {
 } as RenderPropsOf['Pane']
 const SUBCOMMANDS = ['status', 'handoff', 'proof']
 
-type World = { level: string; draft?: string; proof?: boolean; saved?: boolean; why?: boolean }
+type World = { level: string; draft?: string; proof?: boolean; saved?: boolean; why?: boolean; fix?: boolean }
 type Calls = { runs: { argv: readonly string[]; stdin: string }[]; fills: string[]; opened: string[]; compacts: number }
 
-function snapshot(level: string, why = false) {
+function snapshot(level: string, why = false, fix = false) {
   return {
     band: [
       [
@@ -55,6 +56,7 @@ function snapshot(level: string, why = false) {
     alerts: [],
     proof: { available: false },
     why,
+    fix,
   }
 }
 
@@ -87,7 +89,7 @@ function world(on: On, w: World): Calls {
     const sub = e.argv[2]
     const out =
       sub === 'status'
-        ? snapshot(w.level, w.why ?? false)
+        ? snapshot(w.level, w.why ?? false, w.fix ?? false)
         : sub === 'handoff'
           ? { saved: w.saved ?? true }
           : { available: w.proof ?? false, sections: [{ title: 'Proof', lines: [{ text: 'All checks passed', tone: 'ok' }] }] }
@@ -216,5 +218,26 @@ test('no Why? while CI is not failing', async ($, on) => {
   await clock.settle()
   const ui = await $.ui.mount({ plugin: 'mizan', surface: 'terminal', component: 'AbovePrompt', props: BAND })
   expect(await ui.find({ key: 'tabib-why' })).toBeUndefined()
+  await ui.unmount()
+})
+
+test('a failing lawha check offers Fix, which puts /lawha:check --fix in the box for the person to send', async ($, on) => {
+  const clock = mock.clock(on)
+  const calls = world(on, { level: 'fresh', fix: true })
+  await $.tool.call({ tool: 'TodoWrite', todos: [...TODOS_HALF] })
+  await clock.settle()
+  const ui = await $.ui.mount({ plugin: 'mizan', surface: 'terminal', component: 'AbovePrompt', props: BAND })
+  await ui.press({ key: 'lawha-fix' })
+  expect(calls.fills).toEqual(['/lawha:check --fix'])
+  await ui.unmount()
+})
+
+test('no Fix when lawha has nothing to fix', async ($, on) => {
+  const clock = mock.clock(on)
+  world(on, { level: 'fresh', fix: false })
+  await $.tool.call({ tool: 'TodoWrite', todos: [...TODOS_HALF] })
+  await clock.settle()
+  const ui = await $.ui.mount({ plugin: 'mizan', surface: 'terminal', component: 'AbovePrompt', props: BAND })
+  expect(await ui.find({ key: 'lawha-fix' })).toBeUndefined()
   await ui.unmount()
 })

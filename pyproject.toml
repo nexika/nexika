@@ -26,3 +26,4 @@ select = ["E", "F", "W", "I", "B", "UP"]
 "plugins/tabib/tabib/i18n.py" = ["E501"]   # English and Arabic phrase table
 "tests/test_mizan.py" = ["E501"]           # sample payloads and band lines are naturally long lines
 "tests/test_tabib.py" = ["E501"]           # sample CI log lines are naturally long lines
+"tests/test_lawha_family.py" = ["E501"]    # sample lawha records are naturally long lines

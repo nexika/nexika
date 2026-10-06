@@ -32,6 +32,12 @@ by weakening, skipping or deleting it.
 Run the full checks in one call: `barq run:build run:test run:lint` (or the project's
 commands). All must pass.
 
+**Pages too, when the change touches the UI** (`.tsx`, `.jsx`, `.vue`, `.svelte`, `.css`, `.html`,
+or the Tailwind theme) and lawha is installed (its session note names the helper): follow
+`/lawha:check --fix` for each page the change affects. It checks every width, light and dark, LTR
+and RTL, and records the result where `itqan:proof` reads it. Its "must fix" problems block this
+gate like a failing test.
+
 ## 5. Review (gate: no critical/high findings left)
 Follow the `itqan:review` skill on this branch's diff. Fix critical and high findings, then
 repeat step 4.

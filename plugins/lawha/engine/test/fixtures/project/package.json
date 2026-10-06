@@ -1,0 +1,1 @@
+{ "name": "fixture", "dependencies": { "react": "19.2.0", "@tanstack/react-router": "1.130.0", "tailwindcss": "4.1.0", "motion": "14.0.0", "@fontsource/inter": "5.2.0" } }

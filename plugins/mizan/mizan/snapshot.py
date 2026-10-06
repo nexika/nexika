@@ -108,6 +108,30 @@ def _tabib(info: dict, ci: dict) -> tuple[dict, bool]:
     return found, family.find_plugin("tabib") is not None
 
 
+def _lawha(info: dict) -> tuple[dict, bool]:
+    """lawha's latest check of this project's pages; Fix is offered when it failed at this commit."""
+    found = family.lawha_check(info.get("repo", "")) if info else {}
+    if not found:
+        return {}, False
+    counts = found.get("counts") or {}
+    commit = str(found.get("commit") or "")
+    head = str(info.get("head") or "")
+    current = bool(commit) and head.startswith(commit)
+    problems = [{"text": render.clean(p.get("message"), 160),
+                 "where": ", ".join(render.clean(w, 30) for w in (p.get("where") or [])[:4])}
+                for p in (found.get("problems") or [])[:5] if isinstance(p, dict)]
+    view = {"verdict": "pass" if found.get("verdict") == "pass" else "fail", "current": current,
+            "fail": int(counts.get("fail") or 0), "warn": int(counts.get("warn") or 0),
+            "widths": len(found.get("widths") or []),
+            "dirs": [str(d) for d in (found.get("dirs") or [])][:2],
+            "themes": [str(t) for t in (found.get("themes") or [])][:2],
+            "url": render.clean(found.get("url"), 200),
+            "report": render.clean(found.get("report"), 300),
+            "created": render.clean(found.get("created"), 20),
+            "problems": problems}
+    return view, view["verdict"] == "fail" and current and family.find_plugin("lawha") is not None
+
+
 def build(raw: dict, publish: bool = False) -> dict:
     p = normalize(raw)
     cwd = p["cwd"] or os.getcwd()
@@ -148,6 +172,7 @@ def build(raw: dict, publish: bool = False) -> dict:
     checks = proof.get("checks") or []
     passed = bool(checks) and all(c.get("passed") for c in checks)
     snap["proof"] = {"available": bool(proof), "passed": passed, "created": proof.get("created", "")}
+    snap["lawha"], snap["fix"] = _lawha(info)
     snap["band"] = render.band(snap, lang)
     snap["detail"] = render.detail(snap, lang)
     snap["alerts"] = [{"key": key, "text": f"{i18n.t(key, lang, p=part['percent'])}: "

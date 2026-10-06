@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Good page</title>
+<style>
+  :root { --spacing: 4px; --ink: #1d1f24; --paper: #ffffff; --brand: #2b2fd6; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.6 system-ui, sans-serif; color: var(--ink); background: var(--paper); }
+  main { max-width: 64rem; margin-inline: auto; padding-inline: 16px; }
+  h1 { font-size: 40px; line-height: 1.15; margin-block: 32px 16px; }
+  p { margin-block: 0 16px; max-width: 60ch; }
+  .cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
+  .card { padding: 16px; border: 1px solid #d0d3da; border-radius: 12px; }
+  a.button { display: inline-block; padding-block: 12px; padding-inline: 20px; min-height: 48px; background: var(--brand); color: var(--paper); border-radius: 8px; text-decoration: none; }
+  @media (prefers-reduced-motion: no-preference) { .card { animation: rise .4s ease-out both; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Learn by building</h1>
+  <p>Short lessons, real exercises and honest feedback, in English, Arabic and French.</p>
+  <p><a class="button" href="#start">Start the first lesson</a></p>
+  <section class="cards" aria-label="Lessons">
+    <article class="card"><h2>Tokens</h2><p>What a model reads and what it costs.</p></article>
+    <article class="card"><h2>Prompts</h2><p>Say what you want, clearly and with examples.</p></article>
+    <article class="card"><h2>Tests</h2><p>Know when a prompt is good enough.</p></article>
+  </section>
+</main>
+</body>
+</html>

@@ -28,7 +28,7 @@ def ids(paths):
     return [str(p.relative_to(REPO)) for p in paths]
 
 
-ALL_JSON = [p for p in REPO.rglob("*.json") if ".git" not in p.parts]
+ALL_JSON = [p for p in REPO.rglob("*.json") if ".git" not in p.parts and "node_modules" not in p.parts]
 
 
 @pytest.mark.parametrize("path", ALL_JSON, ids=ids(ALL_JSON))
@@ -92,6 +92,8 @@ def test_skill_references_resolve(plugin):
     skills = {p.parent.name for p in plugin.glob("skills/*/SKILL.md")}
     agents = {p.stem for p in plugin.glob("agents/*.md")}
     for path in [*plugin.rglob("*.md"), *plugin.rglob("*.py")]:
+        if "node_modules" in path.parts or path.name == "DESIGN.md":  # DESIGN.md describes planned commands
+            continue
         for ref in re.findall(rf"\b{name}:([a-z][a-z-]+)", path.read_text(encoding="utf-8")):
             assert ref in skills | agents, f"{path.relative_to(REPO)} mentions unknown {name}:{ref}"
 

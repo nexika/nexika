@@ -1,0 +1,153 @@
+// lawha engine tests: run the built CLI against fixture pages with known faults.
+import { strict as assert } from "node:assert";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { test } from "node:test";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { PNG } from "pngjs";
+
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
+const CLI = join(ROOT, "dist", "cli.js");
+const FIX = join(ROOT, "test", "fixtures");
+const tmp = () => mkdtempSync(join(tmpdir(), "lawha-test-"));
+// Never touch the real ~/.claude/nexika: every run gets throwaway homes.
+const HOMES = { LAWHA_HOME: tmp(), NEXIKA_STATUS_HOME: tmp() };
+const run = (args, opts = {}) => JSON.parse(execFileSync(process.execPath, [CLI, ...args], { encoding: "utf8", timeout: 240_000, env: { ...process.env, ...HOMES, ...opts.env }, cwd: opts.cwd }));
+const lawha = (...args) => run(args);
+const page = (name) => pathToFileURL(join(FIX, name)).href;
+
+test("a clean page passes with no problems", () => {
+  const out = tmp();
+  const summary = lawha("check", page("good.html"), "--widths", "360,1280", "--out", out);
+  assert.equal(summary.verdict, "pass");
+  assert.deepEqual([summary.fail, summary.warn], [0, 0]);
+  const run = JSON.parse(readFileSync(join(out, "run.json"), "utf8"));
+  assert.equal(run.shots.length, 3); // two widths and one reduced-motion pass
+  assert.match(readFileSync(join(out, "report.html"), "utf8"), /Passes every required check/);
+});
+
+test("every planted fault is found, once per problem", () => {
+  const out = tmp();
+  const summary = lawha("check", page("bad.html"), "--widths", "390,1280", "--out", out);
+  const run = JSON.parse(readFileSync(join(out, "run.json"), "utf8"));
+  const checks = new Set(run.findings.map((f) => `${f.check}:${f.severity}`));
+  for (const expected of [
+    "layout.horizontal-scroll:fail",
+    "layout.clipped-text:fail",
+    "phone.tap-target:fail",
+    "phone.base-font:warn",
+    "a11y.color-contrast:fail",
+    "a11y.image-alt:fail",
+    "motion.reduced:fail",
+    "motion.costly-property:warn",
+    "rtl.physical-class:info",
+    "rtl.physical-css:info",
+  ]) assert.ok(checks.has(expected), `missing ${expected}`);
+  assert.ok(!checks.has("layout.overlapping-text:fail"), "lines that only touch are not overlapping text");
+  assert.equal(summary.verdict, "fail");
+  assert.equal(summary.fail, 6); // grouped across widths
+  assert.equal(run.findings.filter((f) => f.check === "layout.horizontal-scroll").length, 1, "1280px does not scroll sideways");
+});
+
+test("symmetric shorthands are not RTL problems; asymmetric ones are, and fail when RTL is expected", () => {
+  const out = tmp();
+  lawha("check", page("bad.html"), "--widths", "1280", "--expect-rtl", "--no-see", "--out", out);
+  const run = JSON.parse(readFileSync(join(out, "run.json"), "utf8"));
+  const rtl = run.findings.filter((f) => f.check === "rtl.physical-css");
+  assert.ok(rtl.length >= 1 && rtl.every((f) => f.severity === "fail"));
+  assert.ok(rtl.some((f) => f.message.includes("margin-left: 16px")));
+  const clean = tmp();
+  lawha("check", page("good.html"), "--widths", "1280", "--expect-rtl", "--no-see", "--out", clean);
+  const good = JSON.parse(readFileSync(join(clean, "run.json"), "utf8"));
+  assert.equal(good.findings.filter((f) => f.check.startsWith("rtl.")).length, 0, "padding: 16px mirrors fine");
+});
+
+test("the eye measures rhythm, alignment, type and colour", () => {
+  const out = tmp();
+  lawha("check", page("bad.html"), "--widths", "1280", "--no-audit", "--out", out);
+  const [seen] = JSON.parse(readFileSync(join(out, "run.json"), "utf8")).seen;
+  assert.ok(seen.rhythm.offScale.some((o) => o.gap === 13), "13px is off a 4px scale");
+  assert.ok(seen.alignment.nearMisses.some((n) => n.off === 3), "boxes 3px apart are a near-miss");
+  assert.ok(seen.typography.sizes.some((s) => s.px === 13));
+  assert.ok(seen.colour.lowContrast.some((c) => c.ratio < 4.5));
+  assert.ok(seen.colour.palette.length >= 2);
+});
+
+test("lawha's own report passes lawha's check", () => {
+  const first = tmp();
+  lawha("check", page("bad.html"), "--widths", "390", "--out", first);
+  const second = tmp();
+  const summary = lawha("check", pathToFileURL(join(first, "report.html")).href, "--widths", "360,768,1280", "--themes", "light,dark", "--out", second);
+  assert.equal(summary.fail, 0, JSON.stringify(summary.top));
+  assert.equal(summary.warn, 0, JSON.stringify(summary.top));
+});
+
+function png(path, width, height, paint) {
+  const img = new PNG({ width, height });
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    const [r, g, b] = paint(x, y);
+    const i = (y * width + x) * 4;
+    img.data[i] = r; img.data[i + 1] = g; img.data[i + 2] = b; img.data[i + 3] = 255;
+  }
+  writeFileSync(path, PNG.sync.write(img));
+}
+
+test("diff scores identical images 100% and finds the changed region", () => {
+  const dir = tmp();
+  const white = () => [255, 255, 255];
+  png(join(dir, "a.png"), 200, 120, white);
+  png(join(dir, "b.png"), 200, 120, white);
+  png(join(dir, "c.png"), 200, 120, (x, y) => (x >= 100 && x < 150 && y >= 40 && y < 80 ? [0, 0, 0] : [255, 255, 255]));
+  assert.equal(lawha("diff", join(dir, "a.png"), join(dir, "b.png")).match, 1);
+  const changed = lawha("diff", join(dir, "c.png"), join(dir, "a.png"), "--heatmap", join(dir, "heat.png"));
+  assert.ok(changed.match < 1 && changed.match > 0.9);
+  const [region] = changed.regions;
+  assert.ok(region.x <= 100 && region.x + region.w >= 150 && region.y <= 40 && region.y + region.h >= 80, JSON.stringify(region));
+  assert.ok(readFileSync(join(dir, "heat.png")).length > 0);
+});
+
+test("diff handles a 2x design export and different sizes", () => {
+  const dir = tmp();
+  png(join(dir, "built.png"), 100, 50, () => [20, 40, 200]);
+  png(join(dir, "design@2x.png"), 200, 100, () => [20, 40, 200]);
+  assert.equal(lawha("diff", join(dir, "built.png"), join(dir, "design@2x.png"), "--scale", "0.5").match, 1);
+  const taller = lawha("diff", join(dir, "built.png"), join(dir, "design@2x.png"));
+  assert.ok(taller.sizeMismatch && taller.match < 0.5);
+});
+
+test("index reads tokens, shadcn, components with props, routes, fonts and drift", () => {
+  const out = join(tmp(), "system.json");
+  lawha("index", join(FIX, "project"), "--out", out);
+  const s = JSON.parse(readFileSync(out, "utf8"));
+  assert.equal(s.stack.tanstackRouter, "1.130.0");
+  assert.deepEqual(s.shadcn.components, ["button"]);
+  const card = s.components.find((c) => c.name === "LessonCard");
+  assert.deepEqual(card.props.map((p) => [p.name, p.optional]), [["title", false], ["minutes", true], ["status", false]]);
+  assert.ok(s.components.some((c) => c.name === "Badge"));
+  assert.ok(!s.components.some((c) => c.name === "Button"), "shadcn ui components are listed separately");
+  assert.deepEqual(s.routes, ["/index", "/lessons/$id"]);
+  assert.ok(s.tokens.some((t) => t.name === "--color-brand" && t.value === "#2b2fd6"));
+  assert.deepEqual(new Set(s.drift.map((d) => d.kind)), new Set(["hard-coded colour", "arbitrary size", "physical utility"]));
+});
+
+test("a check is recorded in lawha's folder and announced in the shared status file", () => {
+  const homes = { LAWHA_HOME: tmp(), NEXIKA_STATUS_HOME: tmp() };
+  const project = tmp();
+  execFileSync("git", ["init", "-q", project]);
+  const summary = run(["check", page("bad.html"), "--widths", "390", "--no-see", "--out", join(project, ".lawha", "runs", "x")], { env: homes, cwd: project });
+  assert.ok(summary.recorded.startsWith(homes.LAWHA_HOME), summary.recorded);
+  const rec = JSON.parse(readFileSync(summary.recorded, "utf8"));
+  assert.equal(rec.schema, "nexika.lawha.check/1");
+  assert.equal(rec.verdict, "fail");
+  assert.equal(rec.counts.fail, summary.fail);
+  assert.ok(rec.problems.length > 0 && rec.problems.every((p) => p.severity !== "info"));
+  assert.ok(rec.project.endsWith(project.split("/").pop()));
+  const status = JSON.parse(readFileSync(join(homes.NEXIKA_STATUS_HOME, "lawha.json"), "utf8"));
+  assert.equal(status.schema, "nexika.lawha/1");
+  assert.equal(Object.values(status.checks)[0], summary.recorded);
+  assert.equal(statSync(summary.recorded).mode & 0o777, 0o600, "records are owner-only");
+  const quiet = run(["check", page("good.html"), "--widths", "390", "--no-see", "--no-record", "--out", tmp()], { env: homes, cwd: project });
+  assert.equal(quiet.recorded, null);
+});

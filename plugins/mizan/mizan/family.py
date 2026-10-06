@@ -3,6 +3,7 @@
     hafiz  saves the handoff note (`hafiz handoff --save`), when it is installed
     haris  publishes status/haris/<session>.json: its profile and mode for this session
     itqan  publishes status/itqan.json: the latest proof file per project
+    lawha  publishes status/lawha.json: the latest check of the project's pages on every screen
 """
 from __future__ import annotations
 
@@ -16,6 +17,7 @@ from . import status
 
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 PROOF_SCHEMA = "nexika.itqan.proof/1"
+LAWHA_SCHEMA = "nexika.lawha.check/1"
 
 
 def _versions(folder: Path) -> list[Path]:
@@ -84,3 +86,20 @@ def proof(repo: str) -> dict:
         return {}  # only a proof itqan saved in its own (haris-guarded) folder
     data = status.read_json(Path(path))
     return data if data.get("schema") == PROOF_SCHEMA else {}
+
+
+def lawha_home() -> Path:
+    return Path(os.path.expanduser(os.environ.get("LAWHA_HOME") or "~/.claude/nexika/lawha")).resolve()
+
+
+def lawha_check(repo: str) -> dict:
+    """lawha's latest check of this repository's pages, or {}. Only a record in lawha's own
+    (haris-guarded) folder counts, like itqan's proofs."""
+    checks = status.read("lawha").get("checks") or {}
+    if not isinstance(checks, dict) or not repo:
+        return {}
+    path = checks.get(repo) or checks.get(os.path.realpath(repo))
+    if not path or not _under(path, lawha_home() / "checks"):
+        return {}
+    data = status.read_json(Path(path))
+    return data if data.get("schema") == LAWHA_SCHEMA else {}
