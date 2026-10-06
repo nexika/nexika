@@ -37,6 +37,8 @@ The helper is named in the session note ("Helper: .../bin/lawha"); below it is w
    shadcn variables, light and `.dark`) into the app (the folder with `package.json`), and
    `.lawha/design.json`. Import it from the main CSS, install the fonts it names (`@fontsource/...`
    or Google Fonts), and build with the tokens only: no raw hex colours in components.
+   For motion, copy the recipes from `${CLAUDE_PLUGIN_ROOT}/recipes/motion/` (`tokens.ts` first): they
+   read the direction's timing from the theme, and the signature components match its `motif`.
 
 6. **Remember.** With hafiz: `hafiz remember decision "design: direction <name> - <why they chose it>" --project`.
    Then suggest `/lawha:check` on the first built screen and `/lawha:elevate` once it works.

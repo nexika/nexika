@@ -54,6 +54,12 @@
   --input: #DDD6CB;
   --ring: #1F3A5F;
   --radius: 4px;
+  --lawha-motion: calm;
+  --lawha-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --lawha-fast: 220;
+  --lawha-base: 420;
+  --lawha-slow: 700;
+  --lawha-distance: 10;
 }
 
 .dark {

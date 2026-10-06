@@ -33,7 +33,7 @@ once with "reduce motion" on.
 | **Layout** | sideways scrolling and the element causing it; text cut off by its box; text overlapping text; layout shift while loading |
 | **Phones** | tap targets (24×24 required by WCAG 2.2 AA, 44×44 comfortable); body text under 16px; text under 12px |
 | **Accessibility** | axe-core (WCAG 2.2 A and AA): contrast, names, labels, landmarks, keyboard access; the contrast of text over images, video and 3D, read from the real pixels behind it (axe cannot) |
-| **Motion** | animations that keep running with "reduce motion" on, including 3D scenes (Three.js, WebGL) drawn on a canvas; animating width, height or top instead of transform and opacity |
+| **Motion** | animations that keep running with "reduce motion" on, including 3D scenes (Three.js, WebGL) drawn on a canvas; motion that never stops (WCAG 2.2.2); interface motion slower than a second; animating width, height or top instead of transform and opacity |
 | **RTL** | left/right CSS and utilities (`ml-4`, `text-left`, `rounded-l`) that will not mirror in Arabic; symmetric values like `padding: 16px` are fine |
 | **The eye** | where the eye lands first above the fold; alignment near-misses, off-scale gaps, uneven lists, type sizes and scale ratio, long lines, tight leading, palette shares, colours outside the tokens, low contrast |
 | **Design** | with Figma exports, a pixel diff per width with a heat map and the regions that differ |
@@ -73,6 +73,15 @@ once with "reduce motion" on.
   - Each change is kept only if the `lawha:judge` agent prefers it in a blind side-by-side (`lawha ab`), where it never knows which side is new.
   - Your own picks are kept as your taste and used the next time.
   - There is no "beauty score".
+
+**Motion recipes** (`recipes/motion/`):
+- entrances in reading order and number count-ups;
+- page cross-fades and the shared-layout tab mark;
+- press feedback, a sheet on the native dialog, toasts, and skeleton to content without a jump;
+- the six signature movements.
+
+All are timed by your direction (calm, lively or precise), mirror in Arabic and respect reduced
+motion. See the [showcase](../../showcases/motion-recipes/README.md).
 
 **Three.js recipes** (`recipes/three/`): `WaveField`, `GradientFlow` and `FloatingShapes` for React
 Three Fiber, inside a `Scene3D` wrapper that:

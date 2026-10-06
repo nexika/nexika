@@ -46,7 +46,16 @@ Never show or invent a "beauty score": a change is better only when it wins a bl
   - an entrance that sets the reading order;
   - a hover that says "this is clickable";
   - one signature movement per page.
-- **Code:** use Motion (`motion/react`), transform and opacity only, with `useReducedMotion()`.
+- **Code:** use the recipes in `${CLAUDE_PLUGIN_ROOT}/recipes/motion/`:
+  - entrances: `Reveal`, `RevealGroup`;
+  - numbers: `CountUp`;
+  - tabs: `ActiveMark`;
+  - feedback: `usePress`;
+  - panels and messages: `Sheet`, `Toasts`;
+  - loading: `Swap`;
+  - the direction's signature, matching its `motif`: `Underline`, `Rule`, `Cells`, `Dots`, `Stamp`, `Outline`.
+
+  They take their timing from the theme and respect reduced motion and RTL.
 - **Three.js** suits one hero or backdrop, never behind long text:
   - Use the recipes in `${CLAUDE_PLUGIN_ROOT}/recipes/three/` (`WaveField`, `GradientFlow`, `FloatingShapes`), always inside `Scene3D`.
   - Text on a scene uses the full text colour.

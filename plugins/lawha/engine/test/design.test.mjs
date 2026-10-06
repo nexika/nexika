@@ -53,7 +53,7 @@ test("a direction too close to a recent choice fails", () => {
 
 test("the chosen direction becomes Tailwind and shadcn tokens, light and dark", () => {
   const css = themeCss(direction("a"));
-  for (const want of ["@theme inline", "--background: #FAF7F2", ".dark", "--background: #12161D", "--font-display", "Fraunces"]) assert.ok(css.includes(want), `missing ${want}`);
+  for (const want of ["@theme inline", "--background: #FAF7F2", ".dark", "--background: #12161D", "--font-display", "Fraunces", "--lawha-motion: calm;", "--lawha-base: 420;"]) assert.ok(css.includes(want), `missing ${want}`);
   // Text on the accent reads in both themes: dark text on saffron even in dark mode.
   for (const block of [css.split(".dark")[0], css.split(".dark")[1]]) {
     const on = block.match(/--accent-foreground: (#[0-9A-Fa-f]{6})/)[1];

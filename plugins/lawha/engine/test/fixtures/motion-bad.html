@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Motion, bad</title>
+<style>
+  body { margin: 0; font: 18px/1.5 system-ui, sans-serif; background: #fff; color: #111; padding: 24px; }
+  .banner { width: 320px; height: 180px; background: #1f3a5f; border-radius: 12px; animation: drift 6s linear infinite; }
+  @keyframes drift { 50% { transform: translateX(40px); } }
+  h1 { font-size: 40px; margin: 24px 0; }
+</style></head>
+<body>
+  <!-- A banner that drifts forever, and a heading that takes 2.4 seconds to arrive. -->
+  <div class="banner" aria-hidden="true"></div>
+  <h1 id="title">A very slow entrance</h1>
+  <p>Body text.</p>
+  <script>document.getElementById("title").animate([{ opacity: 0, transform: "translateY(30px)" }, { opacity: 1, transform: "none" }], { duration: 2400, easing: "ease-out" });</script>
+</body></html>

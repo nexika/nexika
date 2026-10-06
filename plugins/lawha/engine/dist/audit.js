@@ -160,11 +160,14 @@ function collect() {
                     props.add(key);
         }
         const timing = effect?.getComputedTiming();
+        const r = target?.getBoundingClientRect();
         return {
             selector: target ? sel(target) : "(unknown)",
             props: [...props],
             duration: Number(timing?.duration) || 0,
             running: a.playState === "running",
+            iterations: timing?.iterations === Infinity ? -1 : Number(timing?.iterations) || 1,
+            area: r ? Math.round(r.width * r.height) : 0,
         };
     });
     return {
@@ -179,6 +182,7 @@ function collect() {
         physicalCss: [...physicalCss].slice(0, 30),
         physicalClasses,
         cls: window.__lawhaCls ?? 0,
+        started: window.__lawhaAnims ?? [],
         shifted: Object.entries(window.__lawhaShifts ?? {}).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([n]) => n),
         animations,
     };
@@ -363,6 +367,26 @@ export async function audit(page, v, opts) {
         }
         for (const p of facts.physicalClasses) {
             add({ check: "rtl.physical-class", severity: rtlSeverity, message: `Use logical utilities (ms-/me-/ps-/pe-/start-/end-/text-start) instead of: ${p.classes.join(" ")}`, selector: p.selector });
+        }
+    }
+    // Motion that never stops: WCAG 2.2.2 asks for a way to pause anything that moves on its own for
+    // more than 5 seconds next to other content. Small loading indicators (under 64x64) are exempt.
+    if (v.motion === "full" && v.theme === "light" && v.dir === "ltr") {
+        const loops = new Map();
+        for (const a of facts.animations)
+            if (a.running && a.iterations === -1 && a.area >= 64 * 64 && a.props.some((p) => p !== "opacity" || a.area >= 200 * 200))
+                loops.set(a.selector, a.area);
+        for (const [selector] of [...loops].slice(0, 5)) {
+            add({ check: "motion.endless", severity: "warn", message: "This keeps moving forever. Anything that moves on its own for more than 5 seconds needs a pause button, or should stop after a few cycles (WCAG 2.2.2).", selector });
+        }
+        // UI motion over a second feels sluggish: entrances and feedback are usually 150-600ms.
+        const slow = new Map();
+        for (const a of facts.started) {
+            if (a.iterations !== -1 && a.duration > 1000 && a.area > 0 && !a.props.every((p) => p === "opacity" && a.duration <= 1500))
+                slow.set(a.selector, Math.max(slow.get(a.selector) ?? 0, a.duration));
+        }
+        for (const [selector, ms] of [...slow].slice(0, 5)) {
+            add({ check: "motion.slow", severity: "warn", message: `An animation takes ${(ms / 1000).toFixed(1)}s; interface motion over a second feels sluggish (entrances and feedback are usually 150-600ms).`, selector });
         }
     }
     for (const a of facts.animations) {

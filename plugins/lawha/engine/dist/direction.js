@@ -165,7 +165,12 @@ export function themeCss(d) {
         `  --duration-fast: ${m.fast}ms;`, `  --duration-base: ${m.base}ms;`, `  --duration-slow: ${m.slow}ms;`,
         "}",
         "",
-        ":root {", ...vars(l), `  --radius: ${Math.max(2, Math.round(d.radius * 0.6))}px;`, "}",
+        ":root {", ...vars(l), `  --radius: ${Math.max(2, Math.round(d.radius * 0.6))}px;`,
+        // Motion timing as plain variables, always present (Tailwind only emits the @theme ones a class
+        // uses): lawha's motion recipes read these, so every animation follows the direction.
+        `  --lawha-motion: ${d.motion};`, `  --lawha-ease: ${m.ease};`,
+        `  --lawha-fast: ${m.fast};`, `  --lawha-base: ${m.base};`, `  --lawha-slow: ${m.slow};`, `  --lawha-distance: ${m.distance};`,
+        "}",
         "",
         ".dark {", ...vars(k), "}",
         "",
