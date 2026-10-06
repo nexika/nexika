@@ -1,1 +1,0 @@
-haris also guards mizan (its code, its folder and settings) and the shared Nexika status files under ~/.claude/nexika/status, refuses running mizan's hooks or publishing its status by hand, and publishes its own profile and mode for mizan's band.

@@ -1,1 +1,0 @@
-`hafiz handoff --save --session ID --transcript PATH` captures the session and writes the handoff note on demand; mizan uses it as the context fills. Only a session transcript under ~/.claude/projects is read.
