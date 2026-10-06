@@ -106,6 +106,8 @@ evidence). In the project: `.itqan/rules.md` (approved rules, meant to be commit
   proof in its pane. itqan announces it in `~/.claude/nexika/status/itqan.json` (schema
   `nexika.itqan/1`); the proof itself is `nexika.itqan.proof/1`, under
   `~/.claude/nexika/itqan/proofs/<project>/latest.json`.
+- **tabib**: a proof made after `/tabib:diagnose` names the CI failure it answers and whether it
+  was reproduced before the fix.
 
 ## Try it
 

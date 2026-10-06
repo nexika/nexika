@@ -17,15 +17,16 @@ import collections
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import time
 from pathlib import Path
 
-from . import config, status
+from . import config, family, status
 from .gitinfo import first_name
 
-PR_TTL, CI_TTL, CI_RUNNING_TTL, LOCK_TTL = 300, 90, 45, 120
+PR_TTL, CI_TTL, CI_RUNNING_TTL, LOCK_TTL = 300, 90, 45, 360  # a refresh may wait up to 180 s for tabib
 BIN = Path(__file__).resolve().parent.parent / "bin" / "mizan"
 TOOL = {"github": "gh", "gitlab": "glab"}
 
@@ -68,7 +69,8 @@ def per_user(names: list[str]) -> list[list]:
 def parse_gh_prs(text: str, branch: str) -> dict:
     items = json.loads(text or "[]")
     names = [author_name(pr.get("author")) for pr in items]
-    mine = next((pr for pr in items if pr.get("headRefName") == branch), None)
+    mine = next((pr for pr in items
+                 if pr.get("headRefName") == branch and not pr.get("isCrossRepository")), None)
     found = {"state": "ok", "tool": "gh", "total": len(items), "per_user": per_user(names),
              "branch_pr": None}
     if mine:
@@ -89,11 +91,16 @@ def parse_glab_mrs(text: str, branch: str) -> dict:
     return found
 
 
+RUN_LINK = re.compile(r"/actions/runs/(\d+)")
+
+
 def parse_gh_checks(text: str) -> dict:
     checks = json.loads(text or "[]")
-    failed = [c.get("name", "?") for c in checks if c.get("bucket") in ("fail", "cancel")]
-    if failed:
-        return {"state": "failed", "failed": failed}
+    bad = [c for c in checks if c.get("bucket") in ("fail", "cancel")]
+    if bad:
+        link = next((m.group(1) for c in bad if (m := RUN_LINK.search(c.get("link") or ""))), None)
+        return {"state": "failed", "failed": [c.get("name", "?") for c in bad],
+                "run": int(link) if link else None}
     if any(c.get("bucket") == "pending" for c in checks):
         return {"state": "running", "failed": []}
     if any(c.get("bucket") == "pass" for c in checks):
@@ -136,7 +143,7 @@ def parse_glab_pipeline(text: str) -> dict:
     failed = [j.get("name", "?") for j in jobs if (j.get("status") or "").lower() in ("failed", "canceled")]
     url = pipeline.get("web_url", "")
     if status in ("failed", "canceled") or failed:
-        return {"state": "failed", "failed": failed, "url": url}
+        return {"state": "failed", "failed": failed, "url": url, "run": pipeline.get("id")}
     if status in ("running", "pending", "created", "preparing", "waiting_for_resource", "scheduled"):
         return {"state": "running", "failed": [], "url": url}
     if status == "success":
@@ -177,12 +184,36 @@ def fetch_prs(info: dict) -> dict:
     try:
         if tool == "glab":
             return parse_glab_mrs(run_tool(["glab", "mr", "list", "--output", "json"], cwd), branch)
-        return parse_gh_prs(run_tool(["gh", "pr", "list", "--state", "open", "--json",
-                                      "number,author,headRefName,url", "--limit", "200"], cwd), branch)
+        argv = ["gh", "pr", "list", "--state", "open", "--json",
+                "number,author,headRefName,url,isCrossRepository", "--limit", "200"]
+        return parse_gh_prs(run_tool(argv, cwd), branch)
     except Off as off:
         return {"state": "off", "why": off.reason, "tool": off.tool}
     except ValueError:
         return {"state": "off", "why": "off_error", "tool": tool}
+
+
+def on_remote_branch(repo: str, sha: str, branch: str) -> bool:
+    """The commit is in origin's branch as this clone last saw it (local git, no network)."""
+    if not (re.match(r"^[0-9a-f]{7,64}$", sha or "") and re.match(r"^[\w][\w./-]*$", branch or "")):
+        return False
+    try:
+        done = subprocess.run(["git", "merge-base", "--is-ancestor", sha, f"refs/remotes/origin/{branch}"],
+                              cwd=repo, capture_output=True, timeout=10, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return done.returncode == 0
+
+
+def ours(info: dict, runs: list[dict]) -> list[dict]:
+    """Runs of this branch's own commits: a fork's pull request may share the branch's name."""
+    head, repo, branch = info.get("head", ""), info["repo"], info.get("branch", "")
+    keep = []
+    for r in runs:
+        sha = r.get("headSha", "")
+        if sha == head or on_remote_branch(repo, sha, branch):
+            keep.append(r)
+    return keep
 
 
 def fetch_ci(info: dict, pr: dict | None) -> dict:
@@ -199,8 +230,10 @@ def fetch_ci(info: dict, pr: dict | None) -> dict:
                 return found
         argv = ["gh", "run", "list", f"--branch={branch}", "--json",
                 "databaseId,status,conclusion,name,headSha,url", "--limit", "20"]
-        found = parse_gh_runs(run_tool(argv, cwd), info.get("head", ""))
+        mine = ours(info, json.loads(run_tool(argv, cwd) or "[]"))
+        found = parse_gh_runs(json.dumps(mine), info.get("head", ""))
         run_id = found.pop("failed_run", None)
+        found["run"] = run_id
         if run_id:
             jobs = parse_gh_jobs(run_tool(["gh", "run", "view", str(int(run_id)), "--json", "jobs"], cwd))
             found["failed"] = jobs or found["failed"]
@@ -242,11 +275,32 @@ def refresh(info: dict) -> dict:
     data = load_cache(info["repo"])
     prs = {**fetch_prs(info), "fetched": time.time()}
     ci = {**fetch_ci(info, prs.get("branch_pr")), "fetched": time.time(), "head": info.get("head")}
+    ci = with_triage(info, ci, (data.get("ci") or {}).get(info.get("branch", "")))
     data["prs"] = prs
     data["ci"] = {**{k: v for k, v in (data.get("ci") or {}).items()
                      if time.time() - float(v.get("fetched") or 0) < 86400}, info.get("branch", ""): ci}
     save_cache(info["repo"], data)
     return data
+
+
+def with_triage(info: dict, ci: dict, before: dict | None) -> dict:
+    """A newly failed run gets tabib's triage (no AI, no code run), once per run: what kind of failure."""
+    if ci.get("state") != "failed" or not ci.get("run"):
+        return ci
+    tabib = family.find_plugin("tabib")  # tabib keeps one reading per run and attempt: asking again is cheap
+    if tabib is None:
+        return ci
+    argv = [sys.executable, str(tabib / "bin" / "tabib"), "triage", "--run", str(int(ci["run"])), "--json",
+            "--cwd", info["repo"]]
+    try:
+        done = subprocess.run(argv, cwd=info["repo"], capture_output=True, text=True, timeout=180,
+                              check=False)
+        found = json.loads(done.stdout or "{}")
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return ci
+    if not isinstance(found, dict) or "kind" not in found:
+        return ci
+    return {**ci, "tabib": {k: found.get(k) for k in ("run", "kind", "detail", "confidence")}}
 
 
 def _take_lock(repo: str) -> bool:

@@ -60,7 +60,8 @@ hide the target.
   file the same command just downloaded: ask (refused in strict).
 - **haris itself:** its code, data, settings and the repo's `.haris.json` cannot be changed by
   Claude, `claude plugin disable haris` is refused, and running its hook by hand is refused.
-- **What haris guards beside itself:** mizan (its code, `~/.claude/nexika/mizan`) and the shared
+- **What haris guards beside itself:** mizan (its code, `~/.claude/nexika/mizan`), itqan's proofs,
+  tabib's diagnoses (`~/.claude/nexika/tabib`) and the shared
   Nexika status files (`~/.claude/nexika/status`), so what mizan shows you and what siyaq reads come
   from the plugins, never from Claude. Running mizan's hook or publishing its status by hand is
   refused; `mizan report`, `status` and `proof` are fine.

@@ -94,6 +94,20 @@ def _cost(session: str, usd: float | None, start: float = 0.0) -> dict:
     return found
 
 
+def _tabib(info: dict, ci: dict) -> tuple[dict, bool]:
+    """tabib's word on the failed run: the triage mizan's refresh asked for, updated by a diagnosis."""
+    if not info or ci.get("state") != "failed" or ci.get("stale"):
+        return {}, False
+    found = dict(ci.get("tabib") or {})
+    runs = status.read("tabib").get("runs") or {}
+    mine = (runs.get(info.get("repo", "")) or {}) if isinstance(runs, dict) else {}
+    entry = mine.get(info.get("branch", "")) if isinstance(mine, dict) else None
+    if isinstance(entry, dict) and entry.get("run") and entry.get("run") == ci.get("run"):
+        keys = ("run", "kind", "detail", "confidence", "cause_found", "cause")
+        found.update({k: entry.get(k) for k in keys})
+    return found, family.find_plugin("tabib") is not None
+
+
 def build(raw: dict, publish: bool = False) -> dict:
     p = normalize(raw)
     cwd = p["cwd"] or os.getcwd()
@@ -129,6 +143,7 @@ def build(raw: dict, publish: bool = False) -> dict:
         "cost": _cost(session, _number((p["cost"] or {}).get("usd")), start), "agents": agents,
         "tasks": tasks.summarize(items or []), "haris": family.haris_status(session),
     }
+    snap["tabib"], snap["why"] = _tabib(info, ci)
     proof = family.proof(info.get("repo", "")) if info else {}
     checks = proof.get("checks") or []
     passed = bool(checks) and all(c.get("passed") for c in checks)
