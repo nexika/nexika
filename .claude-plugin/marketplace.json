@@ -61,6 +61,11 @@
       "name": "tabib",
       "source": "./plugins/tabib",
       "description": "Finds out why CI failed, with evidence: the failing tests from the log, the kind of failure (code, one Python or OS only, flaky, infrastructure, dependencies), the commits since the last green run, the failing tests run again in a throwaway worktree, and the cause backed by the code. Diagnoses only; never edits, pushes or re-runs CI. English and Arabic."
+    },
+    {
+      "name": "lawha",
+      "source": "./plugins/lawha",
+      "description": "Frontend you can see: checks every page at six widths, light and dark, LTR and RTL and with reduced motion (sideways scrolling, clipped text, tap targets, accessibility, layout shift, motion, CSS that breaks Arabic), measures alignment, spacing rhythm, type and colour, diffs against design exports, fixes from the screenshots, and indexes your Tailwind, shadcn and TanStack design system."
     }
   ]
 }

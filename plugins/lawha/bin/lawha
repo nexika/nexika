@@ -1,0 +1,45 @@
+#!/bin/sh
+# lawha launcher. Skills and agents call it as "lawha <command>"; see `lawha help`.
+#   lawha setup                  install the engine (Playwright + Chromium) once, outside the project
+#   lawha hook session-start     the short note Claude gets at the start of a session
+#   lawha <engine command> ...   check, diff, index, version (run by the engine)
+set -eu
+
+here=$(cd "$(dirname "$0")/.." && pwd)
+src="$here/engine"
+version=$(sed -n 's/^  "version": "\(.*\)",$/\1/p' "$src/package.json")
+home="${LAWHA_HOME:-$HOME/.claude/nexika/lawha}"
+installed="$home/engine/$version"
+
+engine_dir() {
+  if [ -n "${LAWHA_ENGINE:-}" ]; then echo "$LAWHA_ENGINE"; return; fi
+  if [ -d "$src/node_modules/playwright" ]; then echo "$src"; return; fi       # developing lawha itself
+  if [ -d "$installed/node_modules/playwright" ]; then echo "$installed"; return; fi
+  echo ""
+}
+
+case "${1:-help}" in
+  setup)
+    command -v node >/dev/null 2>&1 || { echo '{"error": "Node.js 20 or newer is needed: https://nodejs.org"}'; exit 3; }
+    major=$(node -p 'process.versions.node.split(".")[0]')
+    [ "$major" -ge 20 ] || { echo "{\"error\": \"Node.js $major is too old; lawha needs 20 or newer\"}"; exit 3; }
+    mkdir -p "$installed/dist"
+    cp "$src/package.json" "$src/package-lock.json" "$installed/"
+    cp -R "$src/dist/." "$installed/dist/"
+    (cd "$installed" && npm ci --omit=dev --no-audit --no-fund --loglevel=error >&2 \
+      && node node_modules/playwright/cli.js install chromium >&2)
+    echo "{\"installed\": \"$installed\", \"version\": \"$version\"}"
+    ;;
+  hook)
+    if [ -n "$(engine_dir)" ]; then state="ready"; else state="not installed (run: lawha setup, after asking the user)"; fi
+    echo "lawha: frontend design, Figma to code and checks on every screen. Helper: $here/bin/lawha · engine $version $state."
+    ;;
+  *)
+    dir=$(engine_dir)
+    if [ -z "$dir" ]; then
+      echo "{\"error\": \"lawha's engine is not installed\", \"fix\": \"$here/bin/lawha setup\", \"needs\": \"Node.js 20+, about 300 MB for Chromium, installed in $installed (nothing is added to the project)\"}"
+      exit 3
+    fi
+    exec node "$dir/dist/cli.js" "$@"
+    ;;
+esac

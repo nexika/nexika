@@ -1,0 +1,10 @@
+{
+  "name": "lawha",
+  "description": "Nexika lawha: frontend you can see. Checks every page at six screen widths, light and dark, LTR and RTL, with reduced motion: sideways scrolling, clipped and overlapping text, tap targets, accessibility (axe), layout shift, motion, physical CSS that breaks Arabic, plus an artistic eye that measures alignment, spacing rhythm, type scale and colour. Indexes the project's design system (Tailwind tokens, shadcn, components with props, TanStack routes). Built for React, TanStack, Tailwind and shadcn/ui. English and Arabic.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Loai Elattar"
+  },
+  "license": "MIT",
+  "keywords": ["nexika", "frontend", "design", "responsive", "mobile", "accessibility", "rtl", "arabic", "playwright", "tailwind", "shadcn", "tanstack"]
+}

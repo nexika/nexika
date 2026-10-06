@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bad page</title>
+<style>
+  body { margin: 0; font: 13px/1.2 system-ui, sans-serif; color: #222; background: #fff; }
+  .wide { width: 900px; height: 40px; background: #eee; }
+  .clip { width: 120px; height: 20px; overflow: hidden; white-space: nowrap; }
+  .tiny { display: inline-block; width: 16px; height: 16px; background: #333; }
+  .faint { color: #bbbbbb; }
+  .ml-4 { margin-left: 16px; }
+  .grow { width: 50px; height: 20px; background: tomato; animation: grow 2s linear infinite; }
+  @keyframes grow { to { width: 200px; } }
+  .stack > div { height: 20px; background: #ddd; }
+  .stack > div + div { margin-top: 13px; }
+  .a { margin-left: 20px; width: 200px; } .b { margin-left: 23px; width: 200px; }
+</style>
+</head>
+<body>
+  <div class="wide">Too wide for a phone</div>
+  <div class="clip">This sentence is far too long to fit inside its little box</div>
+  <a class="tiny" href="#x" aria-label="Close"></a>
+  <p class="faint">This grey text is hard to read on white.</p>
+  <p class="ml-4">Indented with a physical margin.</p>
+  <div class="grow"></div>
+  <div class="stack"><div></div><div></div><div></div></div>
+  <div class="a">Aligned box</div>
+  <div class="b">Almost aligned box</div>
+  <img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" width="40" height="40">
+</body>
+</html>
