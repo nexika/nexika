@@ -105,6 +105,9 @@ test("ab hides which side is which, and reveal turns a pick back into a version"
   assert.deepEqual(readdirSync(out).filter((f) => !f.startsWith(".")), ["pair-390.png"], "only the pair is visible");
   const pair = PNG.sync.read(readFileSync(made.pairs[0]));
   assert.equal(pair.width, 390 * 2 + 32);
+  // Both pages to the end: the pair is as tall as the taller one, never cut short.
+  const tall = Math.max(...["a", "b"].map((v) => PNG.sync.read(readFileSync(join(out, ".key", `${v}-390.png`))).height));
+  assert.equal(pair.height, tall);
   const key = JSON.parse(readFileSync(join(out, ".key", "key.json"), "utf8"));
   const left = lawha("ab", "reveal", out, "--pick", "left");
   assert.equal(left.winner, key.left);

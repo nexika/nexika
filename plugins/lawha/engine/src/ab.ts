@@ -3,6 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { chromium } from "playwright";
 import { PNG } from "pngjs";
+import { revealAll } from "./browser.js";
 import { appRoot, lawhaHome } from "./record.js";
 
 /**
@@ -28,6 +29,7 @@ async function shoot(url: string, width: number, path: string): Promise<PNG> {
     await page.goto(url, { waitUntil: "networkidle", timeout: 60_000 }).catch(() => undefined);
     await page.evaluate(() => (document as Document & { fonts?: FontFaceSet }).fonts?.ready);
     await page.waitForTimeout(600);
+    await revealAll(page);
     await page.screenshot({ path, fullPage: true, animations: "disabled" });
   } finally {
     await browser.close();
@@ -35,8 +37,11 @@ async function shoot(url: string, width: number, path: string): Promise<PNG> {
   return PNG.sync.read(readFileSync(path));
 }
 
-/** Two images side by side on a neutral ground, with a gutter; the taller sets the height. */
-function sideBySide(left: PNG, right: PNG, maxHeight = 4000): PNG {
+/**
+ * Two images side by side on a neutral ground, with a gutter; the taller sets the height, so a longer
+ * page is never cut short (a judge must see both pages to the end). 16000px is only a safety limit.
+ */
+function sideBySide(left: PNG, right: PNG, maxHeight = 16000): PNG {
   const gutter = 32;
   const h = Math.min(maxHeight, Math.max(left.height, right.height));
   const out = new PNG({ width: left.width + right.width + gutter, height: h });

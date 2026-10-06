@@ -1,0 +1,78 @@
+{
+ "task": "brief",
+ "scored": "2026-10-06T23:10:39.261Z",
+ "widths": [
+  360,
+  390,
+  768,
+  1024,
+  1280,
+  1536
+ ],
+ "results": [
+  {
+   "tool": "frontend-design",
+   "build": true,
+   "problems": {
+    "phone": {
+     "fail": 0,
+     "warn": 6
+    }
+   },
+   "looks": {},
+   "hardcodedColours": 0,
+   "notes": [],
+   "report": "runs/brief/frontend-design/.lawha/score/report.html",
+   "complete": {
+    "sections": 13,
+    "h1": 1,
+    "height": 4936,
+    "parts": {
+     "pricing": true,
+     "testimonial": true,
+     "howItWorks": true,
+     "cta": true
+    },
+    "arabic": {
+     "rtl": true,
+     "arabicShare": 0.94
+    },
+    "dark": {
+     "changes": true
+    }
+   }
+  },
+  {
+   "tool": "lawha",
+   "build": true,
+   "problems": {
+    "layout": {
+     "fail": 0,
+     "warn": 1
+    }
+   },
+   "looks": {},
+   "hardcodedColours": 3,
+   "notes": [],
+   "report": "runs/brief/lawha/.lawha/score/report.html",
+   "complete": {
+    "sections": 14,
+    "h1": 1,
+    "height": 4178,
+    "parts": {
+     "pricing": true,
+     "testimonial": true,
+     "howItWorks": true,
+     "cta": true
+    },
+    "arabic": {
+     "rtl": true,
+     "arabicShare": 0.89
+    },
+    "dark": {
+     "changes": true
+    }
+   }
+  }
+ ]
+}

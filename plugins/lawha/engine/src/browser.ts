@@ -91,7 +91,28 @@ export async function openVariant(browser: Browser, opts: LoadOptions, v: Varian
   // Let fonts, images and entrance animations settle before measuring.
   await page.evaluate(() => (document as Document & { fonts?: FontFaceSet }).fonts?.ready);
   await page.waitForTimeout(opts.settleMs ?? 800);
+  await revealAll(page);
   return page;
+}
+
+/**
+ * Scroll through the whole page once, so sections that appear when scrolled to (whileInView,
+ * IntersectionObserver, lazy images) are shown before anything is measured or photographed, then go
+ * back to the top. Without this, a full-page screenshot shows those sections blank.
+ */
+export async function revealAll(page: Page): Promise<void> {
+  const step = Math.round((page.viewportSize()?.height ?? 900) * 0.8);
+  for (let i = 0; i < 40; i++) {
+    const done = await page.evaluate((s) => {
+      window.scrollBy(0, s);
+      return window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+    }, step);
+    await page.waitForTimeout(120);
+    if (done) break;
+  }
+  await page.waitForTimeout(900); // the last entrances finish (lawha's slowest token is 700ms)
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(300);
 }
 
 export async function closePage(page: Page): Promise<void> {
