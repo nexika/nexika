@@ -313,7 +313,9 @@ def test_status_line_shows_the_same_line_as_the_mod(repo, env):
     done = run("statusline", stdin=line)
     assert done.returncode == 0
     printed = ANSI.sub("", done.stdout).strip().splitlines()
-    assert printed[0] == render.plain(mod["band"]).splitlines()[0]
+    # The two runs read the machine's live RAM and disk a moment apart: compare all but those numbers.
+    live = re.compile(r"(RAM|Disk) \d+%")
+    assert live.sub(r"\1 #%", printed[0]) == live.sub(r"\1 #%", render.plain(mod["band"]).splitlines()[0])
     assert printed[1].startswith("Context mid 52% · $1.84")
     assert status.read("mizan", "s2")["mod"] is False
 
