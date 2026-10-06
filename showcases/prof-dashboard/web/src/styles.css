@@ -1,0 +1,47 @@
+@import "tailwindcss";
+@import "./lawha-theme.css";
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Status colours: each also has its own shape and label, so colour is never the only signal. */
+:root {
+  --status-missed: #A23B2A;
+  --status-shaky: #8A5A00;
+  --status-stale: #566070;
+  --status-understood: #1F3A5F;
+  --status-not-checked: #566070;
+  --paper-line: #EDE6DA;
+}
+.dark {
+  --status-missed: #F08C78;
+  --status-shaky: #E5A93B;
+  --status-stale: #A7B0BE;
+  --status-understood: #8DB3E2;
+  --status-not-checked: #A7B0BE;
+  --paper-line: #222A35;
+}
+@theme inline {
+  --color-missed: var(--status-missed);
+  --color-shaky: var(--status-shaky);
+  --color-stale: var(--status-stale);
+  --color-understood: var(--status-understood);
+  --color-not-checked: var(--status-not-checked);
+  --color-paper-line: var(--paper-line);
+}
+
+html {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+body { margin: 0; min-height: 100dvh; }
+:lang(ar) { line-height: 1.75; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; font-optical-sizing: auto; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; border-radius: 2px; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* Bars and underlines grow from where reading starts. */
+[dir="rtl"] { --origin: right; }

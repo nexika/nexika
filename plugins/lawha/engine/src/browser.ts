@@ -28,7 +28,18 @@ const CLS_SCRIPT = `
   window.__lawhaCls = 0;
   try {
     new PerformanceObserver((list) => {
-      for (const e of list.getEntries()) { if (!e.hadRecentInput) window.__lawhaCls += e.value; }
+      for (const e of list.getEntries()) {
+        if (e.hadRecentInput) continue;
+        window.__lawhaCls += e.value;
+        // Which elements moved, so the fix can name them.
+        window.__lawhaShifts = window.__lawhaShifts || {};
+        for (const s of e.sources || []) {
+          const n = s.node && s.node.nodeType === 1 ? s.node : s.node && s.node.parentElement;
+          if (!n) continue;
+          const name = n.tagName.toLowerCase() + (n.id ? "#" + n.id : "") + [...n.classList].slice(0, 2).map((c) => "." + c).join("");
+          window.__lawhaShifts[name] = (window.__lawhaShifts[name] || 0) + e.value;
+        }
+      }
     }).observe({ type: "layout-shift", buffered: true });
   } catch (e) {}
 `;

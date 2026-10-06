@@ -1,0 +1,77 @@
+/* lawha direction "Ink and saffron": A well-made notebook: calm serif headings, ink-blue structure and one warm saffron highlight for what to review today. Feels like studying at a good desk. */
+/* Signature: A saffron underline that draws itself under the one concept to review first */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-display: "Fraunces", "IBM Plex Sans Arabic", ui-serif, Georgia, serif;
+  --font-sans: "Source Sans 3", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --radius-card: 6px;
+  --radius-control: 4px;
+  --spacing: 0.25rem;
+  --text-display: 51.9px;
+  --text-h1: 41.5px;
+  --text-h2: 33.2px;
+  --text-h3: 26.6px;
+  --text-lead: 21.3px;
+  --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 220ms;
+  --duration-base: 420ms;
+  --duration-slow: 700ms;
+}
+
+:root {
+  --background: #FAF7F2;
+  --foreground: #1B2330;
+  --card: #FFFFFF;
+  --card-foreground: #1B2330;
+  --popover: #FFFFFF;
+  --popover-foreground: #1B2330;
+  --primary: #1F3A5F;
+  --primary-foreground: #FFFFFF;
+  --secondary: #FFFFFF;
+  --secondary-foreground: #1B2330;
+  --muted: #FFFFFF;
+  --muted-foreground: #566070;
+  --accent: #E5A93B;
+  --accent-foreground: #1B2330;
+  --border: #DDD6CB;
+  --input: #DDD6CB;
+  --ring: #1F3A5F;
+  --radius: 4px;
+}
+
+.dark {
+  --background: #12161D;
+  --foreground: #EEF1F5;
+  --card: #1A2029;
+  --card-foreground: #EEF1F5;
+  --popover: #1A2029;
+  --popover-foreground: #EEF1F5;
+  --primary: #8DB3E2;
+  --primary-foreground: #0E1A2B;
+  --secondary: #1A2029;
+  --secondary-foreground: #EEF1F5;
+  --muted: #1A2029;
+  --muted-foreground: #A7B0BE;
+  --accent: #E5A93B;
+  --accent-foreground: #12161D;
+  --border: #2C3542;
+  --input: #2C3542;
+  --ring: #8DB3E2;
+}

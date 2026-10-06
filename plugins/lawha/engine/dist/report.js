@@ -91,7 +91,8 @@ function seenSection(run) {
             .map((t) => `<div style="display:flex;gap:10px;align-items:center;font-size:13px"><code style="width:56px">${t.px}px</code><div class="bar" style="flex:1"><span style="width:${Math.round(t.share * 100)}%"></span></div></div>`)
             .join("");
         const list = (items) => (items.length ? `<ul>${items.map((i) => `<li>${i}</li>`).join("")}</ul>` : `<p class="muted">None.</p>`);
-        return `<h3>${esc(s.variant)}</h3><div class="grid">
+        const focus = s.focus.length ? `<div class="card"><b>Where the eye lands first</b><p class="muted">Above the fold, heaviest first (size, contrast, weight, colour).</p><ol>${s.focus.map((f) => `<li>${esc(f.label)} <span class="muted">${f.kind} · ${Math.round(f.weight * 100)}</span></li>`).join("")}</ol></div>` : "";
+        return `<h3>${esc(s.variant)}</h3><div class="grid">${focus}
         <div class="card"><b>Colour</b><p class="muted">Harmony: ${esc(s.colour.harmony)}</p><div class="swatches">${palette}</div>
           <p class="muted">Colours outside the tokens: ${s.colour.offToken.length ? s.colour.offToken.map((c) => `<code>${esc(c)}</code>`).join(" ") : "none"}</p>
           ${list(s.colour.lowContrast.map((c) => `Low contrast ${c.ratio}:1 (needs ${c.needs}:1) <code>${esc(c.selector)}</code>`))}</div>

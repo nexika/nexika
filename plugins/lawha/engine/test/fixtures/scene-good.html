@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Scene, good</title>
+<style>
+  body { margin: 0; font: 18px/1.5 system-ui, sans-serif; background: #fff; color: #111; }
+  .hero { position: relative; height: 420px; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero h1 { position: relative; margin: 0; padding: 120px 24px 0; font-size: 44px; color: #ffffff; }
+  main { padding: 24px; }
+</style></head>
+<body>
+  <!-- The same scene: one still frame under "reduce motion", and white text on a dark sky. -->
+  <section class="hero"><canvas id="scene" aria-hidden="true" width="800" height="420"></canvas><h1>White words on a dark sky</h1></section>
+  <main><p>Below the hero.</p></main>
+  <script>
+    const c = document.getElementById("scene"), g = c.getContext("2d");
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let t = 0;
+    function draw() {
+      const grad = g.createLinearGradient(0, 0, 800, 0);
+      grad.addColorStop(0, "#0b1530"); grad.addColorStop(1, `hsl(${220 + (t % 40)} 60% 18%)`);
+      g.fillStyle = grad; g.fillRect(0, 0, 800, 420);
+      g.fillStyle = "#1d2c55"; g.beginPath(); g.arc(400 + Math.sin(t / 10) * 200, 210, 60, 0, 7); g.fill();
+    }
+    (function frame() { t += 1; draw(); if (!still) requestAnimationFrame(frame); })();
+  </script>
+</body></html>

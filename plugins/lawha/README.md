@@ -32,10 +32,10 @@ once with "reduce motion" on.
 |---|---|
 | **Layout** | sideways scrolling and the element causing it; text cut off by its box; text overlapping text; layout shift while loading |
 | **Phones** | tap targets (24×24 required by WCAG 2.2 AA, 44×44 comfortable); body text under 16px; text under 12px |
-| **Accessibility** | axe-core (WCAG 2.2 A and AA): contrast, names, labels, landmarks, keyboard access |
-| **Motion** | animations that keep running with "reduce motion" on; animating width, height or top instead of transform and opacity |
+| **Accessibility** | axe-core (WCAG 2.2 A and AA): contrast, names, labels, landmarks, keyboard access; the contrast of text over images, video and 3D, read from the real pixels behind it (axe cannot) |
+| **Motion** | animations that keep running with "reduce motion" on, including 3D scenes (Three.js, WebGL) drawn on a canvas; animating width, height or top instead of transform and opacity |
 | **RTL** | left/right CSS and utilities (`ml-4`, `text-left`, `rounded-l`) that will not mirror in Arabic; symmetric values like `padding: 16px` are fine |
-| **The eye** | alignment near-misses, off-scale gaps, uneven lists, type sizes and scale ratio, long lines, tight leading, palette shares, colours outside the tokens, low contrast |
+| **The eye** | where the eye lands first above the fold; alignment near-misses, off-scale gaps, uneven lists, type sizes and scale ratio, long lines, tight leading, palette shares, colours outside the tokens, low contrast |
 | **Design** | with Figma exports, a pixel diff per width with a heat map and the regions that differ |
 
 ## Commands
@@ -56,6 +56,35 @@ once with "reduce motion" on.
   shadcn/ui components, your components with their props, TanStack routes, fonts. It lists drift
   (hard-coded colours, `p-[13px]`, left/right utilities) and saves `.lawha/system.json` so new
   pages reuse what exists.
+- `/lawha:direct` gives a project a design when you cannot picture one.
+  - The `lawha:director` agent proposes three complete directions: fonts, light and dark palettes, scale, corners, motion and one signature element.
+  - lawha checks them: contrast, the known "AI look", sameness with each other and with your recent projects.
+  - It renders them as real screens at phone and desktop size, so you choose by looking.
+  - The one you pick becomes the project's Tailwind and shadcn tokens.
+- `/lawha:inspire <url>` learns a design from a site you like:
+  - fonts, with whether they are free and a free look-alike for paid ones;
+  - the palette by area, type scale, spacing, corners and shadows;
+  - section patterns, transitions, keyframes and scroll reveals;
+  - the animation libraries it uses (GSAP, Lenis, Motion, Three.js, Spline, Lottie, Rive).
+
+  It is used as inspiration for `direct` or the page you build, never copied.
+- `/lawha:elevate` makes a working page more beautiful:
+  - The `lawha:art-director` agent looks at the page and its measurements and proposes at most three bold changes.
+  - Each change is kept only if the `lawha:judge` agent prefers it in a blind side-by-side (`lawha ab`), where it never knows which side is new.
+  - Your own picks are kept as your taste and used the next time.
+  - There is no "beauty score".
+
+**Three.js recipes** (`recipes/three/`): `WaveField`, `GradientFlow` and `FloatingShapes` for React
+Three Fiber, inside a `Scene3D` wrapper that:
+- shows one still frame under "reduce motion";
+- pauses off screen;
+- caps the pixel density;
+- falls back without WebGL;
+- hides the scene from screen readers.
+
+Colours come from the design tokens. See the
+[showcase](../../showcases/three-recipes/README.md), and the
+[prof dashboard](../../showcases/prof-dashboard/README.md) built with `direct`, `check` and `elevate`.
 
 Built for **React, TanStack (Router, Query, Start), Tailwind CSS 4 and shadcn/ui**; the checks work
 on any web page, including plain HTML.
@@ -89,9 +118,8 @@ path of its latest check record (`nexika.lawha.check/1`) in lawha's own folder. 
 lawha is being built in steps (see [DESIGN.md](DESIGN.md)):
 
 1. **0.1:** checks on every screen, the eye's measurements, the design-system index.
-2. **0.2, this version:** `/lawha:figma`, Claude's eyes on your Figma file.
-3. **0.3:** a `direct` command for three design directions you choose by looking, and `elevate`,
-   an art director that critiques with the eye's measurements and keeps only changes that win a
-   blind side-by-side comparison.
+2. **0.2:** `/lawha:figma`, Claude's eyes on your Figma file.
+3. **0.3, this version:** `/lawha:direct`, `/lawha:inspire`, `/lawha:elevate` with blind A/B and
+   taste, the Three.js recipes, and checks for 3D motion and text over media.
 4. **0.4:** motion recipes built on Motion, Figma motion, RTL icon rules, and a public benchmark
    against the leading tools.

@@ -16,6 +16,9 @@ interface El {
   background: string; // own background colour, "" when transparent
   effectiveBackground: string; // nearest opaque background behind it
   display: string;
+  label: string; // its own text (first characters), for naming it
+  media: boolean; // image, video, canvas, svg
+  interactive: boolean; // link, button, form control
 }
 
 interface Raw {
@@ -97,6 +100,9 @@ function collect(): Raw {
       background: transparent(s.backgroundColor) ? "" : s.backgroundColor,
       effectiveBackground: bg || "rgb(255, 255, 255)",
       display: s.display,
+      label: own.slice(0, 48),
+      media: ["IMG", "VIDEO", "CANVAS", "PICTURE"].includes(el.tagName) || (el.tagName === "svg" && r.width * r.height > 2500),
+      interactive: el.matches("a[href], button, [role=button], input, select, textarea"),
     });
     if (elements.length >= 3000) break;
   }
@@ -147,6 +153,8 @@ function hex(c: string): string {
 
 export interface Seen {
   variant: string;
+  /** Where the eye lands first, above the fold: the heaviest elements by size, contrast and weight. */
+  focus: { selector: string; label: string; kind: "text" | "media" | "action"; weight: number; box: Box }[];
   alignment: { columns: number[]; nearMisses: { a: string; b: string; edge: string; off: number }[] };
   rhythm: { base: number | null; gaps: { value: number; count: number }[]; offScale: { between: string; gap: number }[]; uneven: { list: string; gaps: number[] }[] };
   typography: { sizes: { px: number; share: number }[]; ratio: number | null; families: string[]; weights: string[]; longLines: { selector: string; chars: number }[]; tightLeading: { selector: string; ratio: number }[] };
@@ -276,8 +284,40 @@ export function analyse(raw: Raw, variant: string): Seen {
     .map((c) => ({ ...c, ratio: round(c.ratio, 2) }))
     .slice(0, 15);
 
+  // Visual weight above the fold: big, contrasting, bold or saturated things pull the eye first.
+  // A heuristic ranking (not an eye tracker): good enough to say whether the call to action or the
+  // logo wins the first glance.
+  const fold = raw.vh;
+  const weighted: Seen["focus"] = [];
+  for (const e of els) {
+    if (e.box.y > fold || e.box.y + e.box.h < 0 || e.box.w * e.box.h < 120) continue;
+    const visibleH = Math.min(e.box.y + e.box.h, fold) - Math.max(e.box.y, 0);
+    const area = Math.max(0, visibleH) * e.box.w;
+    let weight = 0;
+    let kind: Seen["focus"][number]["kind"] = "text";
+    if (e.media) {
+      weight = area * 0.35;
+      kind = "media";
+    } else if (e.text > 0) {
+      const c = contrast(e.color, e.effectiveBackground) ?? 4.5;
+      weight = e.fontSize ** 2 * Math.sqrt(e.text) * Math.min(c, 12) * (Number(e.fontWeight) / 400) * 0.6;
+    }
+    if (e.interactive && e.background) {
+      const rgbBg = parseRgb(e.background);
+      const sat = rgbBg ? hsl(rgbBg).s : 0;
+      const c = contrast(e.background, e.effectiveBackground === e.background ? "rgb(255, 255, 255)" : e.effectiveBackground) ?? 1;
+      weight = Math.max(weight, area * (0.6 + sat) * Math.min(c, 6) * 0.5);
+      kind = "action";
+    }
+    if (weight > 0) weighted.push({ selector: e.selector, label: e.label || e.selector, kind, weight, box: e.box });
+  }
+  weighted.sort((a, b) => b.weight - a.weight);
+  const top = weighted[0]?.weight || 1;
+  const focus = weighted.slice(0, 6).map((f) => ({ ...f, weight: round(f.weight / top, 2) }));
+
   return {
     variant,
+    focus,
     alignment: { columns, nearMisses },
     rhythm: { base: raw.spacingBase, gaps: cluster(gaps, 0.5).sort((a, b) => b.count - a.count).slice(0, 10), offScale, uneven: uneven.slice(0, 10) },
     typography: {

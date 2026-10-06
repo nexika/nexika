@@ -1,0 +1,182 @@
+[
+  {
+    "id": "a",
+    "name": "Ink and saffron",
+    "mood": "A well-made notebook: calm serif headings, ink-blue structure and one warm saffron highlight for what to review today. Feels like studying at a good desk.",
+    "fonts": {
+      "display": {
+        "family": "Fraunces",
+        "weights": [
+          500,
+          600
+        ]
+      },
+      "text": {
+        "family": "Source Sans 3",
+        "weights": [
+          400,
+          600
+        ]
+      },
+      "arabic": {
+        "family": "IBM Plex Sans Arabic",
+        "weights": [
+          400,
+          600
+        ]
+      }
+    },
+    "scale": {
+      "base": 17,
+      "ratio": 1.25
+    },
+    "radius": 6,
+    "spacing": 4,
+    "palette": {
+      "light": {
+        "background": "#FAF7F2",
+        "surface": "#FFFFFF",
+        "text": "#1B2330",
+        "muted": "#566070",
+        "primary": "#1F3A5F",
+        "primaryText": "#FFFFFF",
+        "accent": "#E5A93B",
+        "border": "#DDD6CB"
+      },
+      "dark": {
+        "background": "#12161D",
+        "surface": "#1A2029",
+        "text": "#EEF1F5",
+        "muted": "#A7B0BE",
+        "primary": "#8DB3E2",
+        "primaryText": "#0E1A2B",
+        "accent": "#E5A93B",
+        "border": "#2C3542"
+      }
+    },
+    "signature": "A saffron underline that draws itself under the one concept to review first",
+    "motion": "calm",
+    "layout": "editorial",
+    "motif": "underline"
+  },
+  {
+    "id": "b",
+    "name": "Lab bench",
+    "mood": "Precise and quick, like a good developer tool: a grotesk with character, a teal signal colour and tidy bento panels for topics and sessions.",
+    "fonts": {
+      "display": {
+        "family": "Space Grotesk",
+        "weights": [
+          500,
+          700
+        ]
+      },
+      "text": {
+        "family": "IBM Plex Sans",
+        "weights": [
+          400,
+          500
+        ]
+      },
+      "arabic": {
+        "family": "Noto Kufi Arabic",
+        "weights": [
+          400,
+          600
+        ]
+      }
+    },
+    "scale": {
+      "base": 16,
+      "ratio": 1.2
+    },
+    "radius": 14,
+    "spacing": 4,
+    "palette": {
+      "light": {
+        "background": "#F4F6F8",
+        "surface": "#FFFFFF",
+        "text": "#111827",
+        "muted": "#4B5563",
+        "primary": "#0F6E66",
+        "primaryText": "#FFFFFF",
+        "accent": "#F2784B",
+        "border": "#D9DEE5"
+      },
+      "dark": {
+        "background": "#0B0F14",
+        "surface": "#141A21",
+        "text": "#E6EAF0",
+        "muted": "#9AA4B2",
+        "primary": "#4FD1C0",
+        "primaryText": "#06201D",
+        "accent": "#F2784B",
+        "border": "#253041"
+      }
+    },
+    "signature": "Mastery shown as a row of small filled cells, like a test grid turning green",
+    "motion": "precise",
+    "layout": "bento",
+    "motif": "cells"
+  },
+  {
+    "id": "c",
+    "name": "Plum garden",
+    "mood": "Encouraging and a little playful: a rounded grotesk, deep plum with a fresh mint, soft big corners. Progress feels like something growing.",
+    "fonts": {
+      "display": {
+        "family": "Bricolage Grotesque",
+        "weights": [
+          600,
+          800
+        ]
+      },
+      "text": {
+        "family": "Nunito Sans",
+        "weights": [
+          400,
+          700
+        ]
+      },
+      "arabic": {
+        "family": "Tajawal",
+        "weights": [
+          400,
+          700
+        ]
+      }
+    },
+    "scale": {
+      "base": 16,
+      "ratio": 1.333
+    },
+    "radius": 22,
+    "spacing": 8,
+    "palette": {
+      "light": {
+        "background": "#F6F3F7",
+        "surface": "#FFFFFF",
+        "text": "#22172A",
+        "muted": "#5E5368",
+        "primary": "#7B2C63",
+        "primaryText": "#FFFFFF",
+        "accent": "#3FA796",
+        "border": "#E3DAE6"
+      },
+      "dark": {
+        "background": "#160F1A",
+        "surface": "#211827",
+        "text": "#F3EDF6",
+        "muted": "#B7A9BF",
+        "primary": "#E59AC9",
+        "primaryText": "#2A0E20",
+        "accent": "#5CC4B2",
+        "border": "#3A2E42"
+      }
+    },
+    "signature": "Topic cards that grow a leaf for each concept understood",
+    "motion": "lively",
+    "layout": "asymmetric",
+    "motif": "dots"
+  }
+]

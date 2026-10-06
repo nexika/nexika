@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Scene, bad</title>
+<style>
+  body { margin: 0; font: 18px/1.5 system-ui, sans-serif; background: #fff; color: #111; }
+  .hero { position: relative; height: 420px; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero h1 { position: relative; margin: 0; padding: 120px 24px 0; font-size: 44px; color: #c9c9c9; }
+  main { padding: 24px; }
+</style></head>
+<body>
+  <!-- A scene that never stops, and pale text over a pale part of it. -->
+  <section class="hero"><canvas id="scene" data-engine="three.js r180" width="800" height="420"></canvas><h1>Pale words on a moving sky</h1></section>
+  <main><p>Below the hero.</p></main>
+  <script>
+    const c = document.getElementById("scene"), g = c.getContext("2d");
+    let t = 0;
+    (function frame() {
+      t += 1;
+      const grad = g.createLinearGradient(0, 0, 800, 0);
+      grad.addColorStop(0, "#ffffff"); grad.addColorStop(1, `hsl(${(t * 3) % 360} 70% 85%)`);
+      g.fillStyle = grad; g.fillRect(0, 0, 800, 420);
+      g.fillStyle = "#e8eef8"; g.beginPath(); g.arc(400 + Math.sin(t / 10) * 200, 210, 60, 0, 7); g.fill();
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body></html>

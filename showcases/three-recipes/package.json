@@ -1,0 +1,31 @@
+{
+  "name": "lawha-showcase-three-recipes",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "lawha's Three.js recipes (WaveField, GradientFlow, FloatingShapes) in the prof 'Ink and saffron' tokens, checked with lawha check including reduced motion.",
+  "scripts": {
+    "recipes": "mkdir -p src/three && cp ../../plugins/lawha/recipes/three/*.tsx src/three/",
+    "build": "npm run recipes && tsc --noEmit && vite build",
+    "preview": "vite preview --port 4174 --strictPort"
+  },
+  "dependencies": {
+    "@react-three/fiber": "9.8.1",
+    "@fontsource/fraunces": "5.3.0",
+    "@fontsource/source-sans-3": "5.3.0",
+    "motion": "14.0.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/three": "0.186.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "vite": "8.3.3"
+  }
+}

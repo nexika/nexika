@@ -4,7 +4,10 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { audit } from "./audit.js";
 import { closePage, launch, openVariant, variantName } from "./browser.js";
+import { ab, readTaste, reveal } from "./ab.js";
 import { diff } from "./diff.js";
+import { choose, preview, readHistory } from "./direct.js";
+import { inspire } from "./inspire.js";
 import { budget, outline, parseUrl } from "./figma.js";
 import { figmaSpec } from "./figma-spec.js";
 import { indexProject } from "./index-project.js";
@@ -31,6 +34,19 @@ const HELP = `lawha ${VERSION} - see and check web pages
       fetch the frames (cached), merge them by width, write spec.md, theme.css, design images
       and the photos and icons; the frames are the same page at different widths
   lawha figma budget                          Figma calls made in the last minute and 30 days
+  lawha direct preview <directions.json> [--kind landing|dashboard] --product <name> --audience <who> --feeling <word>
+      [--headline <text>] [--sub <text>] [--lang en|ar|fr] [--out <dir>]
+      check the directions (contrast, known AI looks, sameness) and render them; writes gallery.html
+  lawha direct choose <directions.json> <id> [--theme-out src/lawha-theme.css]
+      the chosen direction becomes the project's tokens (Tailwind @theme + shadcn variables)
+  lawha direct history                        the directions chosen recently (kept to avoid repeats)
+  lawha ab <url A> <url B> [--a-label <text>] [--b-label <text>] [--widths 390,1280] [--out <dir>]
+      both versions side by side in a random order (pair-<width>.png); the key stays hidden in <dir>/.key/
+  lawha ab reveal <dir> --pick left|right [--by judge|user] [--note <why>]
+      which version won; a person's pick is kept as their taste (~/.claude/nexika/lawha/taste.json)
+  lawha ab taste                              the picks kept so far
+  lawha inspire <url> [--out <dir>]           a live site's design DNA: fonts, colours, scale, spacing,
+      shapes, sections, motion (incl. GSAP, Lenis, Framer Motion, Three.js) and assets; dna.md + screenshots
   (Figma needs FIGMA_TOKEN: a personal access token with read-only file content)
   lawha version
 
@@ -166,6 +182,65 @@ async function main(argv) {
                 return 0;
             }
             break;
+        }
+        case "direct": {
+            const [sub, file, id] = a._;
+            if (sub === "history") {
+                process.stdout.write(JSON.stringify(readHistory().slice(-10), null, 2) + "\n");
+                return 0;
+            }
+            if (sub === "preview" && file) {
+                const str = (k) => (typeof a[k] === "string" ? a[k] : undefined);
+                const brief = { kind: (str("kind") ?? "landing"), product: str("product") ?? "Your product", audience: str("audience") ?? "the people who use it", feeling: str("feeling") ?? "clear", headline: str("headline"), sub: str("sub"), lang: (str("lang") ?? "en") };
+                const out = resolve(str("out") ?? join(".lawha", "directions", stamp()));
+                const result = await preview(file, brief, out);
+                process.stdout.write(JSON.stringify({ gallery: result.gallery, fail: result.problems.filter((p) => p.severity === "fail").length, problems: result.problems, previews: result.previews.map((p) => p.name) }, null, 2) + "\n");
+                return 0;
+            }
+            if (sub === "choose" && file && id) {
+                const result = choose(file, id, process.cwd(), typeof a["theme-out"] === "string" ? a["theme-out"] : join("src", "lawha-theme.css"));
+                process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+                return 0;
+            }
+            break;
+        }
+        case "ab": {
+            const [first, second] = a._;
+            if (first === "taste") {
+                process.stdout.write(JSON.stringify(readTaste().slice(-20), null, 2) + "\n");
+                return 0;
+            }
+            if (first === "reveal" && second) {
+                const pick = a.pick === "left" || a.pick === "right" ? a.pick : null;
+                if (!pick)
+                    break;
+                const result = reveal(resolve(second), pick, a.by === "user" ? "user" : "judge", typeof a.note === "string" ? a.note : "", process.cwd());
+                process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+                return 0;
+            }
+            if (first && second) {
+                const widths = list(a.widths, ["390", "1280"]).map(Number);
+                const out = resolve(typeof a.out === "string" ? a.out : join(".lawha", "ab", stamp()));
+                const result = await ab({ url: first, label: typeof a["a-label"] === "string" ? a["a-label"] : "current" }, { url: second, label: typeof a["b-label"] === "string" ? a["b-label"] : "candidate" }, widths, out);
+                process.stdout.write(JSON.stringify({ ...result, note: "Give the judge only the pair images, never the folder's .key/ (it says which is which)." }, null, 2) + "\n");
+                return 0;
+            }
+            break;
+        }
+        case "inspire": {
+            const url = a._[0];
+            if (!url)
+                break;
+            const host = (() => { try {
+                return new URL(url).hostname.replace(/^www\./, "");
+            }
+            catch {
+                return "page";
+            } })();
+            const out = resolve(typeof a.out === "string" ? a.out : join(".lawha", "inspire", `${host}-${stamp()}`));
+            const result = await inspire(url, out);
+            process.stdout.write(JSON.stringify({ dna: result.json, report: result.md, fonts: result.dna.fonts.map((f) => f.family), libraries: result.dna.motion.libraries, sections: result.dna.sections.length }, null, 2) + "\n");
+            return 0;
         }
         case "version":
             process.stdout.write(`${VERSION}\n`);

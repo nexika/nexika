@@ -11,7 +11,7 @@ The server listens on 127.0.0.1 only, on a free port. Each run has a random toke
 in the URL fragment it is opened with (never sent over the network) and sends it back on every API
 request (header X-Lawha-Token); /api/* requests without it are refused, and so is any request whose
 Host header is not this server's (DNS rebinding). Nothing is ever written to prof's files.
-State: ~/.claude/nexika/lawha/server.json.
+State: ~/.claude/nexika/prof-dashboard/server.json.
 """
 from __future__ import annotations
 
@@ -38,7 +38,8 @@ PLUGIN = Path(__file__).resolve().parent.parent
 DIST = PLUGIN / "web" / "dist"
 DEMO = PLUGIN / "demo" / "prof"
 DEMO_TODAY = datetime.date(2026, 10, 6)  # the demo data's dates are relative to this day
-STATE = Path(os.environ.get("LAWHA_HOME") or Path.home() / ".claude" / "nexika" / "lawha")
+# Not lawha's own folder (LAWHA_HOME): this dashboard is a showcase app built with lawha.
+STATE = Path(os.environ.get("PROF_DASHBOARD_HOME") or Path.home() / ".claude" / "nexika" / "prof-dashboard")
 SERVER_JSON = STATE / "server.json"
 IDLE_SECONDS = int(os.environ.get("LAWHA_IDLE_SECONDS") or 2 * 3600)
 

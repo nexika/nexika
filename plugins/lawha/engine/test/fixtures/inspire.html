@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>A reference site</title>
+<style>
+  :root { --ink: #0d1117; --paper: #f5f1e8; --signal: #e4572e; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.6 "Inter Variable", "Inter", system-ui, sans-serif; }
+  h1, h2 { font-family: "Söhne", "Inter", sans-serif; letter-spacing: -0.02em; }
+  h1 { font-size: 64px; line-height: 1.05; margin: 0 0 24px; }
+  h2 { font-size: 32px; margin: 0 0 16px; }
+  section { padding: 96px 48px; border-bottom: 1px solid #ddd5c4; }
+  .cta { display: inline-block; padding: 12px 24px; border-radius: 999px; background: var(--signal); color: #fff; transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s ease; }
+  .card { border-radius: 12px; box-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 8px 24px rgb(0 0 0 / 0.06); padding: 24px; background: #fff; }
+  .pulse { animation: pulse-3 2s ease-in-out infinite; width: 12px; height: 12px; border-radius: 50%; background: var(--signal); }
+  @keyframes pulse-3 { 50% { opacity: 0.3; transform: scale(0.8); } }
+  canvas { width: 320px; height: 160px; display: block; }
+</style></head>
+<body>
+  <section><h1>Ship calmer software</h1><p>A reference page with known fonts, tokens, motion and a 3D canvas.</p><a class="cta" href="#start">Start now</a><div class="pulse"></div></section>
+  <section><h2>Built for teams</h2><div class="card">A card with a layered shadow.</div><canvas data-engine="three.js r180" width="320" height="160"></canvas></section>
+</body></html>
