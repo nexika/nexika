@@ -259,7 +259,7 @@ We run the same cases with the Figma MCP server alone and with frontend-design a
 |---|---|
 | **0.1** | engine `shoot`, `audit`, `see` (alignment, rhythm, typography, colour) and `diff`; `/lawha:check` with its report; `/lawha:system` index. This proves every page, including pages lawha did not write. |
 | **0.2** | `/lawha:figma`: batched and cached fetch, normalisation, breakpoint merge, the build and check loop. Built: see `showcases/figma-portfolio`. |
-| **0.3** | `/lawha:direct`: three rendered directions, the gallery, style history. `/lawha:elevate` (the art director), with saliency, blind A/B and taste learning. |
+| **0.3** | `/lawha:direct`: three rendered directions, the gallery, style history. `/lawha:inspire`: design DNA from live sites, with font licences. `/lawha:elevate` (the art director), with a visual-weight ranking, blind A/B (`lawha ab`) and taste learning. Three.js recipes; checks for 3D under reduced motion and for text over media. Built: see `showcases/prof-dashboard` and `showcases/three-recipes`. |
 | **0.4** | The motion recipe library and Figma motion context; the RTL icon rules; the benchmark published. |
 
 The **prof learner dashboard** (designed earlier, kept in `showcases/prof-dashboard/`) is the first real app built with lawha. It goes through `/lawha:direct`, then `/lawha:check` in English, Arabic and French.

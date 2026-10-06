@@ -33,6 +33,18 @@ function git(cwd, ...args) {
 export function projectRoot(cwd) {
     return resolve(git(cwd, "rev-parse", "--show-toplevel") || cwd);
 }
+/** The app a design belongs to: the nearest folder with a package.json (a monorepo has several), else the current folder. */
+export function appRoot(cwd) {
+    const top = projectRoot(cwd);
+    for (let dir = resolve(cwd);; dir = dirname(dir)) {
+        if (existsSync(join(dir, "package.json")))
+            return dir;
+        // No app folder up to the repository's root: the folder the person is working in, not the root
+        // of a monorepo full of other projects.
+        if (dir === top || dirname(dir) === dir)
+            return resolve(cwd);
+    }
+}
 /** Owner-only folders, as every Nexika plugin creates them. */
 function ensureDir(folder) {
     const missing = [];

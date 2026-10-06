@@ -109,7 +109,7 @@ Concept = { "topic", "concept", "status", "evidence", "date", "stale": bool }
 - **The `Host` header must be `127.0.0.1:PORT`.** This blocks DNS-rebinding attacks.
 - The server sends no CORS headers, so other origins get nothing.
 - **Read-only.** There are no write routes, and paths are resolved inside prof's folder only, so a slug like `../x` is refused.
-- The server stops when `/lawha stop` runs or after 2 hours idle. Its port and pid are in `~/.claude/nexika/lawha/server.json`, and the file is removed on exit.
+- The server stops when `/lawha stop` runs or after 2 hours idle. Its port and pid are in `~/.claude/nexika/prof-dashboard/server.json` (not lawha's own folder: this dashboard is now an app built with lawha), and the file is removed on exit.
 
 ## Files
 

@@ -11,9 +11,24 @@ from http.server import ThreadingHTTPServer
 from pathlib import Path
 
 import pytest
-from conftest import PLUGINS
 
-LAWHA = PLUGINS / "lawha"
+# This showcase (the dashboard app built with lawha); prof's plugin for the format-pinning test.
+LAWHA = Path(__file__).resolve().parent
+PLUGINS = LAWHA.parent.parent / "plugins"
+
+
+@pytest.fixture
+def store(tmp_path, monkeypatch):
+    """prof's real store module, its data in tmp_path/prof (the same fixture as tests/conftest.py)."""
+    monkeypatch.setenv("PROF_HOME", str(tmp_path / "prof"))
+    monkeypatch.delenv("PROF_REPORTING", raising=False)
+    path = PLUGINS / "prof" / "scripts" / "prof_store.py"
+    spec = importlib.util.spec_from_file_location("prof_store", path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["prof_store"] = module
+    spec.loader.exec_module(module)
+    yield module
+    sys.modules.pop("prof_store", None)
 TODAY = datetime.date(2026, 10, 6)
 
 

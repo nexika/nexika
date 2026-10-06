@@ -1,5 +1,6 @@
 import { AxeBuilder } from "@axe-core/playwright";
 import type { Page } from "playwright";
+import { PNG } from "pngjs";
 import type { Variant } from "./browser.js";
 import { PHONE_MAX, type Box, type Finding, round } from "./util.js";
 
@@ -16,6 +17,7 @@ interface PageFacts {
   physicalCss: string[];
   physicalClasses: { selector: string; classes: string[] }[];
   cls: number;
+  shifted: string[];
   animations: { selector: string; props: string[]; duration: number; running: boolean }[];
 }
 
@@ -45,6 +47,18 @@ function collect(): PageFacts {
     const r = el.getBoundingClientRect();
     return s.visibility !== "hidden" && s.display !== "none" && Number(s.opacity) > 0 && r.width > 0 && r.height > 0;
   };
+  // Hidden for the eye but kept for screen readers (Tailwind's sr-only, a skip link before it gets
+  // focus): not cut-off text and not a tiny tap target, it is meant to be invisible.
+  const screenReaderOnly = (el: Element) => {
+    for (let e: Element | null = el; e && e !== document.body; e = e.parentElement) {
+      const s = getComputedStyle(e);
+      const r = e.getBoundingClientRect();
+      const clipRect = s.clip.startsWith("rect(") && /rect\(0(px)?,? 0(px)?,? 0(px)?,? 0(px)?\)/.test(s.clip.replace(/\s+/g, " "));
+      const clipPath = /inset\(50%\)/.test(s.clipPath);
+      if ((s.position === "absolute" || s.position === "fixed") && r.width <= 1 && r.height <= 1 && (clipRect || clipPath || s.overflow === "hidden")) return true;
+    }
+    return false;
+  };
   const all = [...document.body.querySelectorAll("*")].filter((el) => !["SCRIPT", "STYLE", "NOSCRIPT", "TEMPLATE"].includes(el.tagName));
 
   // Horizontal overflow: elements reaching past the viewport while the page scrolls sideways.
@@ -63,7 +77,7 @@ function collect(): PageFacts {
 
   // Text cut off by overflow hidden/clip.
   const clipped: PageFacts["clipped"] = [];
-  const textEls = all.filter((el) => visible(el) && [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent!.trim()));
+  const textEls = all.filter((el) => visible(el) && !screenReaderOnly(el) && [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent!.trim()));
   for (const el of textEls) {
     const s = getComputedStyle(el);
     const hides = [s.overflowX, s.overflowY].some((o) => o === "hidden" || o === "clip");
@@ -96,7 +110,7 @@ function collect(): PageFacts {
   }
 
   // Tap targets.
-  const interactive = all.filter((el) => visible(el) && el.matches("a[href], button, input:not([type=hidden]), select, textarea, summary, [role=button], [role=link], [role=checkbox], [role=switch], [role=tab], [onclick], [tabindex]:not([tabindex='-1'])"));
+  const interactive = all.filter((el) => visible(el) && !screenReaderOnly(el) && el.matches("a[href], button, input:not([type=hidden]), select, textarea, summary, [role=button], [role=link], [role=checkbox], [role=switch], [role=tab], [onclick], [tabindex]:not([tabindex='-1'])"));
   const targets = interactive.map((el) => ({
     selector: sel(el),
     box: boxOf(el.getBoundingClientRect()),
@@ -170,6 +184,7 @@ function collect(): PageFacts {
     physicalCss: [...physicalCss].slice(0, 30),
     physicalClasses,
     cls: (window as unknown as { __lawhaCls?: number }).__lawhaCls ?? 0,
+    shifted: Object.entries((window as unknown as { __lawhaShifts?: Record<string, number> }).__lawhaShifts ?? {}).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([n]) => n),
     animations,
   };
 }
@@ -179,6 +194,111 @@ const SAFE_PROPS = new Set(["transform", "opacity", "translate", "scale", "rotat
 export interface AuditResult {
   findings: Finding[];
   facts: { cls: number; targets: number; axeViolations: number };
+}
+
+/**
+ * Text drawn over an image, a video or a canvas: axe cannot see those colours, so it compares the text
+ * with the page background behind the media. Here the real pixels behind each such text are read from
+ * a screenshot, and the contrast is taken against the worst tenth of them.
+ */
+async function textOverMedia(page: Page): Promise<{ selector: string; box: Box; ratio: number; needs: number; text: string }[]> {
+  // Media below the first screen only draws once scrolled to (lazy images, paused 3D scenes): check
+  // the page one screen at a time, then scroll back.
+  const height = await page.evaluate(() => document.documentElement.scrollHeight);
+  const view = page.viewportSize()?.height ?? 900;
+  const found: { selector: string; box: Box; ratio: number; needs: number; text: string }[] = [];
+  for (let top = 0; top < Math.min(height, view * 8); top += view) {
+    await page.evaluate((y) => window.scrollTo(0, y), top);
+    await page.waitForTimeout(top === 0 ? 0 : 450);
+    const scrolled = await page.evaluate(() => scrollY);
+    for (const f of await textOverMediaInView(page)) {
+      if (!found.some((g) => g.selector === f.selector && g.text === f.text)) found.push({ ...f, box: { ...f.box, y: f.box.y + scrolled } });
+    }
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
+  return found;
+}
+
+async function textOverMediaInView(page: Page): Promise<{ selector: string; box: Box; ratio: number; needs: number; text: string }[]> {
+  const items = await page.evaluate(() => {
+    const media = [...document.querySelectorAll("img, video, canvas, picture, svg image")].map((m) => m.getBoundingClientRect()).filter((r) => r.width * r.height > 20_000);
+    const bgImage = [...document.querySelectorAll("*")].filter((el) => getComputedStyle(el).backgroundImage !== "none").map((el) => el.getBoundingClientRect()).filter((r) => r.width * r.height > 20_000);
+    const zones = [...media, ...bgImage];
+    const out: { selector: string; x: number; y: number; w: number; h: number; color: string; size: number; weight: number; text: string }[] = [];
+    if (!zones.length) return out;
+    for (const el of document.body.querySelectorAll("*")) {
+      const own = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent ?? "").join("").trim();
+      if (!own) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width < 4 || r.height < 4 || r.bottom < 0 || r.top > innerHeight) continue;
+      const overlaps = zones.some((z) => r.left < z.right && r.right > z.left && r.top < z.bottom && r.bottom > z.top);
+      if (!overlaps) continue;
+      // An opaque background between the text and the media hides the media: nothing to check.
+      let opaque = false;
+      for (let p: Element | null = el; p && p !== document.body; p = p.parentElement) {
+        const s = getComputedStyle(p);
+        const m = s.backgroundColor.match(/rgba?\(([^)]+)\)/);
+        const alpha = m ? Number(m[1]!.split(",")[3] ?? 1) : 0;
+        if (alpha >= 0.95 && s.backgroundImage === "none") { const pr = p.getBoundingClientRect(); if (pr.width * pr.height < 600_000) { opaque = true; break; } }
+        if (p.matches("img, video, canvas")) break;
+      }
+      if (opaque) continue;
+      const s = getComputedStyle(el);
+      out.push({ selector: el.id ? `#${el.id}` : `${el.tagName.toLowerCase()}${el.classList[0] ? "." + el.classList[0] : ""}`, x: r.x, y: r.y, w: r.width, h: r.height, color: s.color, size: parseFloat(s.fontSize), weight: Number(s.fontWeight), text: own.slice(0, 50) });
+      if (out.length >= 40) break;
+    }
+    return out;
+  });
+  if (!items.length) return [];
+  const shot = PNG.sync.read(await page.screenshot({ animations: "disabled" }));
+  const lum = (r: number, g: number, b: number) => {
+    const f = (v: number) => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+  };
+  const found: { selector: string; box: Box; ratio: number; needs: number; text: string }[] = [];
+  for (const it of items) {
+    const m = it.color.match(/[\d.]+/g)?.map(Number) ?? [0, 0, 0];
+    const lt = lum(m[0]!, m[1]!, m[2]!);
+    const ratios: number[] = [];
+    const x0 = Math.max(0, Math.floor(it.x)), x1 = Math.min(shot.width, Math.ceil(it.x + it.w));
+    const y0 = Math.max(0, Math.floor(it.y)), y1 = Math.min(shot.height, Math.ceil(it.y + it.h));
+    for (let y = y0; y < y1; y += 2) {
+      for (let x = x0; x < x1; x += 2) {
+        const i = (y * shot.width + x) * 4;
+        const lb = lum(shot.data[i]!, shot.data[i + 1]!, shot.data[i + 2]!);
+        const ratio = (Math.max(lt, lb) + 0.05) / (Math.min(lt, lb) + 0.05);
+        ratios.push(ratio);
+      }
+    }
+    if (ratios.length < 10) continue;
+    ratios.sort((a, b) => a - b);
+    // Pixels close to the text colour are the glyphs themselves: the background is the rest. Take its
+    // worst tenth.
+    const background = ratios.filter((r) => r > 1.25);
+    if (background.length < 5) continue;
+    const worst = background[Math.floor(background.length * 0.1)]!;
+    const large = it.size >= 24 || (it.size >= 18.66 && it.weight >= 700);
+    const needs = large ? 3 : 4.5;
+    if (worst < needs) found.push({ selector: it.selector, box: { x: Math.round(it.x), y: Math.round(it.y), w: Math.round(it.w), h: Math.round(it.h) }, ratio: Math.round(worst * 100) / 100, needs, text: it.text });
+  }
+  return found;
+}
+
+/** Large canvases (WebGL scenes: Three.js, R3F, Spline...) that keep drawing under "reduce motion". */
+async function movingCanvases(page: Page): Promise<{ selector: string; box: Box; engine: string }[]> {
+  const canvases = await page.evaluate(() => [...document.querySelectorAll("canvas")].map((c, i) => {
+    const r = c.getBoundingClientRect();
+    return { i, x: r.x, y: r.y, w: r.width, h: r.height, engine: c.getAttribute("data-engine") ?? "", id: c.id };
+  }).filter((c) => c.w * c.h > 40_000 && c.y < innerHeight && c.x < innerWidth));
+  const moving: { selector: string; box: Box; engine: string }[] = [];
+  for (const c of canvases.slice(0, 4)) {
+    const clip = { x: Math.max(0, c.x), y: Math.max(0, c.y), width: Math.min(c.w, 600), height: Math.min(c.h, 400) };
+    const a = await page.screenshot({ clip, animations: "allow" });
+    await page.waitForTimeout(700);
+    const b = await page.screenshot({ clip, animations: "allow" });
+    if (!a.equals(b)) moving.push({ selector: c.id ? `#${c.id}` : `canvas:nth-of-type(${c.i + 1})`, box: { x: Math.round(c.x), y: Math.round(c.y), w: Math.round(c.w), h: Math.round(c.h) }, engine: c.engine });
+  }
+  return moving;
 }
 
 export async function audit(page: Page, v: Variant, opts: { expectRtl: boolean }): Promise<AuditResult> {
@@ -192,6 +312,9 @@ export async function audit(page: Page, v: Variant, opts: { expectRtl: boolean }
       if (a.running && a.duration > 50 && a.props.some((p) => p !== "opacity")) {
         add({ check: "motion.reduced", severity: "fail", message: `An animation (${a.props.join(", ")}) still runs with "reduce motion" on.`, selector: a.selector });
       }
+    }
+    for (const c of await movingCanvases(page)) {
+      add({ check: "motion.webgl-reduced", severity: "fail", message: `A ${c.engine || "canvas"} scene keeps animating with "reduce motion" on: render one still frame instead (R3F: frameloop="demand").`, selector: c.selector, box: c.box });
     }
     return { findings, facts: { cls: round(facts.cls, 3), targets: facts.targets.length, axeViolations: 0 } };
   }
@@ -229,7 +352,7 @@ export async function audit(page: Page, v: Variant, opts: { expectRtl: boolean }
   }
 
   if (facts.cls > 0.1) {
-    add({ check: "layout.shift", severity: facts.cls > 0.25 ? "fail" : "warn", message: `Layout shifts while loading (CLS ${round(facts.cls, 3)}; good is 0.1 or less).` });
+    add({ check: "layout.shift", severity: facts.cls > 0.25 ? "fail" : "warn", message: `Layout shifts while loading (CLS ${round(facts.cls, 3)}; good is 0.1 or less)${facts.shifted.length ? `; what moved: ${facts.shifted.join(", ")}` : ""}. Reserve the space (fixed heights, aspect-ratio, a skeleton the same size as the content).` });
   }
 
   const rtlSeverity = opts.expectRtl ? "fail" : "info";
@@ -247,6 +370,10 @@ export async function audit(page: Page, v: Variant, opts: { expectRtl: boolean }
     if (costly.length && v.width === 1280 && v.theme === "light" && v.dir === "ltr") {
       add({ check: "motion.costly-property", severity: "warn", message: `Animates ${costly.join(", ")}, which forces layout or paint; animate transform and opacity instead.`, selector: a.selector });
     }
+  }
+
+  for (const t of await textOverMedia(page)) {
+    add({ check: "a11y.contrast-over-media", severity: "fail", message: `Text over an image, video or 3D scene is hard to read: "${t.text}" has ${t.ratio}:1 against the darkest or lightest part behind it (needs ${t.needs}:1). Add a veil or scrim, move the text, or change its colour.`, selector: t.selector, box: t.box });
   }
 
   let axeViolations = 0;

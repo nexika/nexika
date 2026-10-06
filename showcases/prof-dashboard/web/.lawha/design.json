@@ -1,0 +1,64 @@
+{
+ "schema": "nexika.lawha.design/1",
+ "chosen": "2026-10-06T21:11:49.292Z",
+ "direction": {
+  "id": "a",
+  "name": "Ink and saffron",
+  "mood": "A well-made notebook: calm serif headings, ink-blue structure and one warm saffron highlight for what to review today. Feels like studying at a good desk.",
+  "fonts": {
+   "display": {
+    "family": "Fraunces",
+    "weights": [
+     500,
+     600
+    ]
+   },
+   "text": {
+    "family": "Source Sans 3",
+    "weights": [
+     400,
+     600
+    ]
+   },
+   "arabic": {
+    "family": "IBM Plex Sans Arabic",
+    "weights": [
+     400,
+     600
+    ]
+   }
+  },
+  "scale": {
+   "base": 17,
+   "ratio": 1.25
+  },
+  "radius": 6,
+  "spacing": 4,
+  "palette": {
+   "light": {
+    "background": "#FAF7F2",
+    "surface": "#FFFFFF",
+    "text": "#1B2330",
+    "muted": "#566070",
+    "primary": "#1F3A5F",
+    "primaryText": "#FFFFFF",
+    "accent": "#E5A93B",
+    "border": "#DDD6CB"
+   },
+   "dark": {
+    "background": "#12161D",
+    "surface": "#1A2029",
+    "text": "#EEF1F5",
+    "muted": "#A7B0BE",
+    "primary": "#8DB3E2",
+    "primaryText": "#0E1A2B",
+    "accent": "#E5A93B",
+    "border": "#2C3542"
+   }
+  },
+  "signature": "A saffron underline that draws itself under the one concept to review first",
+  "motion": "calm",
+  "layout": "editorial",
+  "motif": "underline"
+ }
+}

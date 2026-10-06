@@ -1,0 +1,44 @@
+<!doctype html><html lang="en" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Plum garden</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Nunito+Sans:wght@400;700&family=Tajawal:wght@400;700&display=block"><style>
+:root{--bg:#F6F3F7;--surface:#FFFFFF;--text:#22172A;--muted:#5E5368;--primary:#7B2C63;--on-primary:#FFFFFF;--accent:#3FA796;--border:#E3DAE6;--ease:cubic-bezier(0.34, 1.56, 0.64, 1)}
+*{box-sizing:border-box}html{background:var(--bg);color:var(--text);font:400 16px/1.6 "Nunito Sans", "Tajawal", system-ui, sans-serif;-webkit-font-smoothing:antialiased}body{margin:0}
+h1,h2,h3{font-family:"Bricolage Grotesque", "Tajawal", system-ui, sans-serif;line-height:1.12;margin:0;letter-spacing:-0.015em;font-weight:800}
+a{color:inherit}.wrap{max-width:74rem;margin-inline:auto;padding-inline:24px}
+.top{border-bottom:1px solid var(--border);background:var(--bg)}.top nav{display:flex;align-items:center;gap:24px;min-height:64px}
+.brand{font-family:"Bricolage Grotesque", "Tajawal", system-ui, sans-serif;font-size:21.3px;font-weight:800;margin-inline-end:auto;text-decoration:none}
+.links{display:flex;gap:24px;color:var(--muted)}.links a{text-decoration:none;padding-block:8px}.links a[aria-current]{color:var(--text);box-shadow:inset 0 -2px var(--primary)}
+.avatar{inline-size:36px;block-size:36px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:#F6F3F7;font-weight:700}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 24px;border-radius:13px;font-weight:600;text-decoration:none;border:1px solid transparent;cursor:pointer;font:inherit;font-weight:600;transition:transform 160ms var(--ease),background-color 160ms}
+.btn.primary{background:var(--primary);color:var(--on-primary)}.btn.ghost{border-color:var(--border);color:var(--text);background:transparent}.btn:active{transform:scale(.97)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:24px}
+.muted{color:var(--muted)}.eyebrow{color:var(--muted);font-size:.95rem}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 10px;font-size:.85rem;font-weight:600;border:1px solid var(--border)}
+.chip.missed{color:#22172A;background:color-mix(in srgb,var(--accent) 35%,transparent);border-color:transparent}
+.chip.shaky{background:color-mix(in srgb,var(--primary) 14%,transparent);border-color:transparent}
+.bar,.rule{display:block;block-size:8px;border-radius:99px;background:color-mix(in srgb,var(--muted) 22%,transparent);overflow:hidden}.bar i,.rule i{display:block;block-size:100%;background:var(--primary);border-radius:inherit}
+.rule{block-size:4px;border-radius:0}.rule i{background:var(--accent)}
+.cells{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}.cells i{block-size:12px;border-radius:3px;background:color-mix(in srgb,var(--muted) 20%,transparent)}.cells i.on{background:var(--primary)}
+.dots{display:flex;gap:6px}.dots i{inline-size:12px;block-size:12px;border-radius:50%;border:2px solid var(--primary)}.dots i.on{background:var(--primary)}
+.stamp{display:inline-grid;place-items:center;inline-size:56px;block-size:56px;border-radius:50%;border:2px dashed var(--primary);color:var(--primary);font-weight:700;transform:rotate(-8deg)}
+.mark{background-image:linear-gradient(var(--accent),var(--accent));background-repeat:no-repeat;background-position:0 92%;background-size:100% .22em;padding-inline:2px}
+@media (prefers-reduced-motion:no-preference){.rise{animation:rise 520ms var(--ease) both}.rise:nth-child(2){animation-delay:107ms}.rise:nth-child(3){animation-delay:213ms}.mark{animation:mark 520ms var(--ease) 320ms both}}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}}@keyframes mark{from{background-size:0 .22em}}
+footer.site{padding-block:32px;color:var(--muted);border-top:1px solid var(--border);margin-top:48px}
+input,select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:13px;min-height:44px;padding:0 16px}
+form{display:grid;gap:16px}label{display:grid;gap:8px;font-weight:600}.check{display:flex;align-items:center;gap:16px;font-weight:400}.check input{min-height:auto;inline-size:20px;block-size:20px;accent-color:var(--primary)}
+@media (max-width:767px){.links{display:none}}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.45fr);gap:32px}.grid>.side{order:-1}
+.page{padding-block:40px}.page h1{font-size:clamp(37.9px,5vw,50.5px);margin-bottom:8px}
+.items{list-style:none;margin:24px 0 24px;padding:0;display:grid;gap:16px}.item{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:16px;border-bottom:1px solid var(--border)}
+.topics{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:16px;margin-top:16px}.topic h3{font-size:21.3px;margin-bottom:16px}.topic p{margin:16px 0 0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.stats b{display:block;font-family:"Bricolage Grotesque", "Tajawal", system-ui, sans-serif;font-size:37.9px;line-height:1;font-weight:800}
+.side{display:grid;gap:24px;align-content:start}.side h2{font-size:21.3px;margin-bottom:8px}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}.grid>.main,.grid>.side{grid-column:auto}.grid>.side{order:0}}
+</style></head><body>
+<header class="top"><div class="wrap"><nav aria-label="Main"><a class="brand" href="#">prof</a><div class="links"><a href="#" aria-current="page">Today</a><a href="#">Topics</a><a href="#">Course</a><a href="#">Sessions</a></div><span class="avatar" aria-hidden="true">L</span></nav></div></header>
+<main class="wrap page"><div class="grid">
+<section class="main card" aria-labelledby="t"><p class="eyebrow">Today</p><h1 id="t">Three things to review today</h1><p class="muted">Start with what you missed; the rest can wait.</p><ul class="items"><li class="rise item"><div><b>Output tokens cost more</b><div class="muted">Tokens and cost</div></div><span class="chip missed">missed</span></li><li class="rise item"><div><b>Training data cutoff</b><div class="muted">LLM basics</div></div><span class="chip shaky">shaky</span></li><li class="rise item"><div><b>List comprehensions</b><div class="muted">Python basics</div></div><span class="chip ">to refresh</span></li></ul><div style="display:flex;flex-wrap:wrap;gap:16px"><a class="btn primary" href="#">Start the warm-up</a><a class="btn ghost" href="#">Review now</a></div></section>
+<aside class="side"><div class="card stats"><div><b>3</b><span class="muted">to review</span></div><div><b>4</b><span class="muted">topics</span></div><div><b>12</b><span class="muted">sessions</span></div></div>
+<div class="card"><h2>Last session</h2><p class="muted" style="margin:0">Made a first call from Python, then a follow-up that resends the whole history.</p></div>
+<form class="card" onsubmit="return false"><label>Your name<input autocomplete="name"></label><label>Level<select><option>Beginner</option><option>Junior</option></select></label><label class="check"><input type="checkbox" checked>Remind me to review</label><button class="btn primary" type="submit">Save</button></form></aside>
+</div><section aria-label="Topics" class="topics"><article class="card topic rise"><h3>Claude API</h3><span class="dots" role="img" aria-label="67% mastery"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i></span><p class="muted">67% mastery</p></article><article class="card topic rise"><h3>Tokens and cost</h3><span class="dots" role="img" aria-label="33% mastery"><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span><p class="muted">33% mastery</p></article><article class="card topic rise"><h3>LLM basics</h3><span class="dots" role="img" aria-label="33% mastery"><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span><p class="muted">33% mastery</p></article><article class="card topic rise"><h3>Python basics</h3><span class="dots" role="img" aria-label="50% mastery"><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><i class=""></i></span><p class="muted">50% mastery</p></article></section></main>
+<footer class="site"><div class="wrap">Made with care.</div></footer></body></html>
