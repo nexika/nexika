@@ -65,6 +65,18 @@ def _ci(ci: dict, lang: str) -> dict | None:
     return None
 
 
+def tabib_label(found: dict, lang: str) -> str:
+    """tabib's kind of failure in a couple of words: '3 failing test(s)', 'only py3.10', 'flaky?'."""
+    kind, detail = found.get("kind", ""), found.get("detail") or {}
+    if kind == "code":
+        return t(f"tk_code_{detail.get('what', '')}", lang, count=detail.get("count", 0))
+    if kind == "matrix":
+        return t("tk_matrix", lang, value=clean(detail.get("value"), 30))
+    if kind == "infra":
+        return t(f"ts_{detail.get('signal', 'runner')}", lang)
+    return t(f"tk_{kind or 'unknown'}", lang)
+
+
 def band(snap: dict, lang: str) -> list[list[dict]]:
     first, second = [], []
     git = snap.get("git") or {}
@@ -72,6 +84,11 @@ def band(snap: dict, lang: str) -> list[list[dict]]:
         who = f" ({clean(git['creator'], 20)})" if git.get("creator") else ""
         first.append(seg(f"⎇ {clean(git['branch'], 50)}{who}", "info"))
         first += [s for s in (_prs(snap.get("prs") or {}, lang), _ci(snap.get("ci") or {}, lang)) if s]
+        found = snap.get("tabib") or {}
+        if found.get("cause_found"):
+            first.append(seg(t("tabib_cause", lang), "info"))
+        elif found.get("kind"):
+            first.append(seg(t("tabib", lang, label=tabib_label(found, lang)), "warn"))
     for key in ("ram", "disk"):
         part = (snap.get("device") or {}).get(key) or {}
         if part.get("percent") is not None:
@@ -153,6 +170,14 @@ def detail(snap: dict, lang: str) -> list[dict]:
         lines += [seg(t("d_ci_job", lang, job=clean(job, 80)), "bad") for job in more_jobs]
         if ci.get("url"):
             lines.append(seg(t("d_ci_url", lang, url=clean(ci["url"], 200)), "dim"))
+        found = snap.get("tabib") or {}
+        if found.get("kind"):
+            lines.append(seg(t("d_tabib", lang, label=tabib_label(found, lang),
+                               confidence=clean(found.get("confidence"), 10)), "warn"))
+        if found.get("cause"):
+            lines.append(seg(t("d_tabib_cause", lang, cause=clean(found["cause"], 200)), "info"))
+        elif snap.get("why"):
+            lines.append(seg(t("d_tabib_ask", lang), "dim"))
         sections.append(_section(t("t_ci", lang), lines))
     else:
         sections.append(_section(t("t_branch", lang), [seg(t("d_no_repo", lang), "dim")]))
@@ -237,6 +262,15 @@ def proof_view(proof: dict, lang: str, head: str = "") -> list[dict]:
     for c in checks:
         if not c.get("passed") and c.get("tail"):
             sections[-1]["lines"] += [seg("  " + clean(line, 160), "dim") for line in c["tail"][-6:]]
+    failure = proof.get("ci_failure") or {}
+    if failure.get("run"):
+        reproduced = failure.get("reproduced") == "reproduced"
+        lines = [seg(t("proof_ci", lang, run=clean(failure["run"], 20)), "info")]
+        if reproduced:
+            lines.append(seg(t("proof_ci_reproduced", lang), "ok"))
+        if failure.get("cause"):
+            lines.append(seg(clean(failure["cause"], 200), "dim"))
+        sections.append(_section(t("proof_ci_title", lang), lines))
     review = proof.get("review") or {}
     if review.get("verdict"):
         tone = "ok" if review["verdict"] == "approve" else "warn"
@@ -261,5 +295,5 @@ def sections_text(sections: list[dict]) -> str:
 
 def labels(lang: str) -> dict:
     keys = ("full_saved", "full_type", "full_nosave", "full_type_nosave", "proof_ask", "yes", "no", "close",
-            "details", "proof_missing", "proof_title")
+            "details", "proof_missing", "proof_title", "why")
     return {key: t(key, lang) for key in keys}

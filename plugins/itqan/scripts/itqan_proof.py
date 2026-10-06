@@ -187,6 +187,27 @@ def clean(text: str) -> str:
     return " ".join(redact(re.sub(r"[\x00-\x1f\x7f]", " ", text)).split())[:500]
 
 
+def ci_failure(root: Path, branch: str) -> dict:
+    """The CI failure tabib diagnosed on this branch (status/tabib.json), so the proof shows it was
+    reproduced before the fix; {} when there is none."""
+    try:
+        data = json.loads((status_path().parent / "tabib.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(data, dict) or data.get("schema") != "nexika.tabib/1":
+        return {}
+    entry = ((data.get("runs") or {}).get(str(root)) or {}).get(branch) or {}
+    if not isinstance(entry, dict) or not entry.get("run"):
+        return {}
+    sha = str(entry.get("sha") or "")
+    if not re.match(r"^[0-9a-f]{7,64}$", sha) or subprocess.run(
+            ["git", "merge-base", "--is-ancestor", sha, "HEAD"], cwd=root, capture_output=True,
+            timeout=10, check=False).returncode != 0:
+        return {}  # a failure of another line of work is not what this change answers
+    return {"run": entry.get("run"), "kind": entry.get("kind", ""), "reproduced": entry.get("reproduced", ""),
+            "cause": clean(str(entry.get("cause") or ""))}
+
+
 def make(root: Path, args) -> dict:
     kinds = set(args.only.split(",")) if args.only else set(KINDS)
     checks = [run_check(c, root, args.timeout) for c in detect(root) if c["kind"] in kinds]
@@ -194,8 +215,9 @@ def make(root: Path, args) -> dict:
         if args.review else {}
     requirements = [{"text": clean(t), "done": True} for t in args.done] + \
                    [{"text": clean(t), "done": False} for t in args.open]
+    branch = _git(root, "rev-parse", "--abbrev-ref", "HEAD")
     return {"schema": SCHEMA, "created": datetime.datetime.now().isoformat(timespec="seconds"),
-            "project": str(root), "branch": _git(root, "rev-parse", "--abbrev-ref", "HEAD"),
+            "project": str(root), "branch": branch, "ci_failure": ci_failure(root, branch),
             "commit": _git(root, "rev-parse", "--short", "HEAD"),
             "dirty": bool(_git(root, "status", "--porcelain")), "checks": checks, "review": review,
             "requirements": requirements,

@@ -1,0 +1,10 @@
+{
+  "name": "tabib",
+  "description": "Nexika tabib: finds out why CI failed, with evidence. Reads the failed run (GitHub Actions or GitLab CI), pulls out the failing tests and errors, sorts the failure (code, one Python or OS only, flaky, infrastructure, dependencies), compares with the last green run, reproduces the failing tests in a throwaway git worktree, and reports the cause with its evidence. Diagnoses only: it never edits code, pushes or re-runs CI. English and Arabic.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Loai Elattar"
+  },
+  "license": "MIT",
+  "keywords": ["nexika", "ci", "debugging", "github-actions", "gitlab-ci", "flaky-tests", "arabic"]
+}

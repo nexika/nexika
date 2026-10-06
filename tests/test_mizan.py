@@ -164,7 +164,9 @@ def test_glab_merge_requests():
 def test_checks_and_runs():
     assert forge.parse_gh_checks(json.dumps([{"name": "lint", "bucket": "pass"},
                                              {"name": "test (py3.10)", "bucket": "fail"}])) == \
-        {"state": "failed", "failed": ["test (py3.10)"]}
+        {"state": "failed", "failed": ["test (py3.10)"], "run": None}
+    linked = json.dumps([{"name": "t", "bucket": "fail", "link": "https://github.com/a/b/actions/runs/42/job/7"}])
+    assert forge.parse_gh_checks(linked)["run"] == 42
     assert forge.parse_gh_checks(json.dumps([{"name": "a", "bucket": "pass"}, {"name": "b", "bucket": "pending"}]))[
         "state"] == "running"
     assert forge.parse_gh_checks(json.dumps([{"name": "a", "bucket": "pass"}]))["state"] == "passed"

@@ -1,7 +1,7 @@
 """Where a path lives, which decides what touching it means.
 
     self         haris's own code, data and settings (and the repo's .haris.json), and what haris guards
-                 beside itself: mizan's code and data, itqan's proofs, and the Nexika status files
+                 beside itself: mizan's code and data, itqan's proofs, tabib's diagnoses, the status files
     persistence  files that run code later: shell profiles, cron, launchd, systemd, git hooks,
                  Claude Code settings and plugins, PATH folders, PowerShell profiles
     secret       keys, tokens and credential stores (.env.example and *.pub are fine)
@@ -93,10 +93,12 @@ GUARDED_PLUGINS = ("haris", "mizan")
 
 
 def guarded_homes() -> tuple[str, ...]:
-    """mizan's data, itqan's proofs and the shared status files (~/.claude/nexika/status): what the
-    band shows and what siyaq and mizan read must come from the plugins, never from Claude."""
+    """mizan's data, itqan's proofs, tabib's diagnoses and the shared status files
+    (~/.claude/nexika/status): what the band shows and what siyaq and mizan read must come from the
+    plugins, never from Claude."""
     return (norm(os.path.expanduser(os.environ.get("MIZAN_HOME") or "~/.claude/nexika/mizan")),
             norm(os.path.expanduser(os.environ.get("ITQAN_HOME") or "~/.claude/nexika/itqan")),
+            norm(os.path.expanduser(os.environ.get("TABIB_HOME") or "~/.claude/nexika/tabib")),
             norm(os.path.expanduser(os.environ.get("NEXIKA_STATUS_HOME") or "~/.claude/nexika/status")))
 
 

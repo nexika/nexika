@@ -413,6 +413,11 @@ deny	cd ~/.claude/plugins/cache/nexika/mizan/0.1.0 && python3 -m mizan.cli statu
 deny	python3 -c 'from mizan import status; status.publish("mizan", {"level": "fresh"}, "abc")'
 deny	echo '{"schema": "nexika.itqan.proof/1"}' > ~/.claude/nexika/itqan/proofs/abc/latest.json
 deny	@Write	~/.claude/nexika/itqan/proofs/abc/latest.json
+deny	echo '{"schema": "nexika.tabib/1"}' > ~/.claude/nexika/tabib/abc/123.json
+deny	rm -rf ~/.claude/nexika/tabib
+deny	python3 -c 'from tabib import diagnosis; diagnosis.save({})'
+pass	python3 ~/.claude/plugins/cache/nexika/tabib/0.1.0/bin/tabib diagnose --json
+pass	python3 ~/.claude/plugins/cache/nexika/tabib/0.1.0/bin/tabib record --run 5 --cause "a typo" --confidence high
 
 # ---------------------------------------------------------------- dangerous: history and remote actions
 deny	git push --force origin main

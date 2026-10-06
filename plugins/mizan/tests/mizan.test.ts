@@ -16,6 +16,7 @@ const LABELS = {
   details: 'Details',
   proof_missing: 'No proof yet. Press Enter to have Claude make one with /itqan:proof.',
   proof_title: 'Proof',
+  why: 'Why?',
 }
 const BAND: RenderPropsOf['AbovePrompt'] = {
   hasSurvey: false,
@@ -34,10 +35,10 @@ const PANE: RenderPropsOf['Pane'] = {
 } as RenderPropsOf['Pane']
 const SUBCOMMANDS = ['status', 'handoff', 'proof']
 
-type World = { level: string; draft?: string; proof?: boolean; saved?: boolean }
+type World = { level: string; draft?: string; proof?: boolean; saved?: boolean; why?: boolean }
 type Calls = { runs: { argv: readonly string[]; stdin: string }[]; fills: string[]; opened: string[]; compacts: number }
 
-function snapshot(level: string) {
+function snapshot(level: string, why = false) {
   return {
     band: [
       [
@@ -53,6 +54,7 @@ function snapshot(level: string) {
     context: { level, percent: 80 },
     alerts: [],
     proof: { available: false },
+    why,
   }
 }
 
@@ -85,7 +87,7 @@ function world(on: On, w: World): Calls {
     const sub = e.argv[2]
     const out =
       sub === 'status'
-        ? snapshot(w.level)
+        ? snapshot(w.level, w.why ?? false)
         : sub === 'handoff'
           ? { saved: w.saved ?? true }
           : { available: w.proof ?? false, sections: [{ title: 'Proof', lines: [{ text: 'All checks passed', tone: 'ok' }] }] }
@@ -193,5 +195,26 @@ test('full context with a draft in the box: the draft stays, the band says to ty
   expect(calls.fills).toEqual([])
   const ui = await $.ui.mount({ plugin: 'mizan', surface: 'terminal', component: 'AbovePrompt', props: BAND })
   expect(await ui.find({ type: 'Text', text: /Type \/clear and press Enter/ })).toBeDefined()
+  await ui.unmount()
+})
+
+test('a failed CI run offers Why?, which puts /tabib:diagnose in the box for the person to send', async ($, on) => {
+  const clock = mock.clock(on)
+  const calls = world(on, { level: 'fresh', why: true })
+  await $.tool.call({ tool: 'TodoWrite', todos: [...TODOS_HALF] })
+  await clock.settle()
+  const ui = await $.ui.mount({ plugin: 'mizan', surface: 'terminal', component: 'AbovePrompt', props: BAND })
+  await ui.press({ key: 'tabib-why' })
+  expect(calls.fills).toEqual(['/tabib:diagnose'])
+  await ui.unmount()
+})
+
+test('no Why? while CI is not failing', async ($, on) => {
+  const clock = mock.clock(on)
+  world(on, { level: 'fresh', why: false })
+  await $.tool.call({ tool: 'TodoWrite', todos: [...TODOS_HALF] })
+  await clock.settle()
+  const ui = await $.ui.mount({ plugin: 'mizan', surface: 'terminal', component: 'AbovePrompt', props: BAND })
+  expect(await ui.find({ key: 'tabib-why' })).toBeUndefined()
   await ui.unmount()
 })

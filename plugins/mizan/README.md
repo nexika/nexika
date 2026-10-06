@@ -22,7 +22,7 @@ In Arabic (`"lang": "ar"`, or an Arabic system locale):
 |---|---|
 | **Branch** | the branch and who started it: the author of its pull request when there is one, else of its first commit of its own, else you |
 | **PRs / MRs** | open pull requests (GitHub, `gh`) or merge requests (GitLab, `glab`) per person |
-| **CI** | the branch's checks: passed, failed with the job's name, or running (checked every 90 s, 45 s while running) |
+| **CI** | the branch's checks: passed, failed with the job's name, or running (checked every 90 s, 45 s while running); with tabib, the kind of failure (`tabib: only py3.10`, `tabib: flaky?`) and a **Why?** button |
 | **RAM, Disk** | in use, yellow from 85 %, red from 95 % with a notice |
 | **Context** | fresh under 40 %, mid 40-75 %, full above 75 % |
 | **Cost** | this session in dollars; with a daily budget set, today's total across sessions |
@@ -105,6 +105,8 @@ With it, the Stop hook refreshes the handoff at mid and, at full, saves it and t
 - **siyaq** reads mizan's level and loads less project knowledge as the context fills: normal,
   half at mid, only the strongest match as a summary when full.
 - **itqan** makes the proof (`/itqan:proof`) that mizan shows.
+- **tabib** sorts a failed CI run once per run (no AI) when mizan sees it; Why? puts
+  `/tabib:diagnose` in the prompt, and the pane shows the cause it found.
 - All of them share status files under `~/.claude/nexika/status/`, each `nexika.<plugin>/1`
   (see the [root README](../../README.md#status-files-how-the-plugins-talk-to-each-other)).
 

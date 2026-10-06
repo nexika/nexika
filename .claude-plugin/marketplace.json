@@ -56,6 +56,11 @@
       "name": "mizan",
       "source": "./plugins/mizan",
       "description": "Keeps your session in balance: a band above the prompt with the branch and who started it, open PRs or MRs per person, the branch's CI, RAM and disk warnings, the context level (fresh, mid, full), the running agent, the current task step and the cost; at full context a hafiz handoff and /clear ready for you to send. English and Arabic."
+    },
+    {
+      "name": "tabib",
+      "source": "./plugins/tabib",
+      "description": "Finds out why CI failed, with evidence: the failing tests from the log, the kind of failure (code, one Python or OS only, flaky, infrastructure, dependencies), the commits since the last green run, the failing tests run again in a throwaway worktree, and the cause backed by the code. Diagnoses only; never edits, pushes or re-runs CI. English and Arabic."
     }
   ]
 }

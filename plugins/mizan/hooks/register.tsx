@@ -85,6 +85,7 @@ function toView(out: Json): MizanView | null {
     level: LEVELS.includes(level) ? level : '',
     alerts: Array.isArray(alerts) ? (alerts as MizanAlert[]) : [],
     proofAvailable: (out.proof as { available?: boolean } | undefined)?.available === true,
+    why: out.why === true,
   }
 }
 
@@ -308,6 +309,9 @@ export const register: Register = on => {
                 {part.text}
               </Text>
             ))}
+            {row === 0 && now.why && (
+              <Button key="tabib-why" label={now.labels.why} plain onPress={() => offer($, '/tabib:diagnose')} />
+            )}
           </Box>
         ))}
         {question.kind === 'proof' && (
