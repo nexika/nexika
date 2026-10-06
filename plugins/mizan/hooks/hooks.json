@@ -1,0 +1,27 @@
+{
+  "modules": ["./register.tsx"],
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/bin/mizan\" hook session-start",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/bin/mizan\" hook stop",
+            "timeout": 70
+          }
+        ]
+      }
+    ]
+  }
+}

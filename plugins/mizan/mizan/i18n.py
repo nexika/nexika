@@ -1,0 +1,126 @@
+"""mizan's words in English and Arabic.
+
+The language is MIZAN_LANG, else "lang" in ~/.claude/nexika/mizan/config.json, else Arabic when the
+system locale is Arabic, else English. Plugin names (haris, hafiz, itqan) and numbers stay as they are.
+"""
+from __future__ import annotations
+
+import os
+
+from . import config
+
+TEXT = {
+    "en": {
+        "prs": "PRs", "mrs": "MRs", "prs_none": "no open PRs", "mrs_none": "no open MRs",
+        "ci_passed": "CI passed", "ci_failed": "CI failed: {job}", "ci_failed_plain": "CI failed",
+        "ci_running": "CI running", "ci_none": "no CI yet", "ci_loading": "CI …",
+        "ram": "RAM {p}%", "disk": "Disk {p}%",
+        "ctx_fresh": "Context fresh {p}%", "ctx_mid": "Context mid {p}%", "ctx_full": "Context full {p}%",
+        "cost": "${usd}", "cost_budget": "${usd} · ${today} of ${budget} today",
+        "agent": "Agent {type}: {desc}", "agents_more": "+{n} more",
+        "task": "Task {step}/{total}: {text}", "tasks_done": "All {total} tasks done",
+        "haris": "haris {profile}", "haris_watch": "haris watching",
+        "full_saved": "Context full: your work is saved. Press Enter to start fresh.",
+        "full_type": "Context full: your work is saved. Type /clear and press Enter to start fresh.",
+        "full_nosave": "Context full. Press Enter to start fresh (install hafiz to keep a handoff note).",
+        "full_type_nosave": "Context full. Type /clear and press Enter to start fresh "
+                            "(install hafiz to keep a handoff note).",
+        "proof_ask": "Done. Show me the proof?", "yes": "Yes", "no": "No", "close": "Close", "details": "Details",
+        "proof_missing": "No proof yet. Press Enter to have Claude make one with /itqan:proof.",
+        "proof_title": "Proof", "proof_none": "No proof saved for this project yet.",
+        "proof_checks": "Checks run by itqan", "proof_review": "Review (reported by Claude)",
+        "proof_reqs": "Requirements (reported by Claude)", "proof_ok": "All checks passed",
+        "proof_bad": "Some checks failed", "proof_stale": "Made for an earlier commit than the one checked out now.",
+        "proof_made": "Made {when} on {branch} at {commit}",
+        "t_branch": "Branch", "t_prs": "Pull requests", "t_mrs": "Merge requests", "t_ci": "CI",
+        "t_device": "Device", "t_context": "Context", "t_cost": "Cost", "t_agents": "Agents",
+        "t_tasks": "Tasks", "t_guard": "Guard",
+        "d_branch": "{branch}, started by {creator} ({source})", "d_branch_plain": "{branch}",
+        "src_pr": "author of its pull request", "src_commit": "author of its first commit",
+        "src_user": "you; no commits of its own yet", "d_no_repo": "Not a git repository.",
+        "d_prs": "{total} open: {list}", "d_prs_off": "Unavailable: {why}", "d_loading": "Loading …",
+        "d_ci_job": "failed: {job}", "d_ci_url": "Details: {url}",
+        "d_ram": "Memory {p}% used ({used} of {total} GB)", "d_disk": "Disk {p}% used ({free} GB free)",
+        "d_device_warn": "Above {p}%: close what you do not need before the machine slows down or stops.",
+        "d_context": "{p}% of {window} tokens: {level}",
+        "d_levels": "fresh under 40%, mid 40-75%, full above 75%",
+        "d_level_fresh": "fresh", "d_level_mid": "mid", "d_level_full": "full",
+        "d_context_mid": "hafiz refreshes the handoff note every few turns.",
+        "d_context_full": "Save and start fresh: mizan puts /clear in the prompt; you press Enter.",
+        "d_cost": "This session: ${usd}", "d_cost_today": "Today, all sessions: ${today}",
+        "d_budget": "Daily budget: ${budget} ({p}% used)", "d_no_agents": "No agent is running.",
+        "d_agent": "{type}: {desc}", "d_no_tasks": "No task list in this session.",
+        "d_task_done": "done", "d_task_now": "now", "d_task_open": "to do",
+        "d_haris": "haris guards this session (profile {profile}, {mode}).",
+        "d_haris_off": "haris is not running.",
+        "mode_enforce": "it stops dangerous actions", "mode_watch": "watch mode: it records but stops nothing",
+        "off_tool": "{tool} is not installed", "off_auth": "{tool} is not signed in",
+        "off_remote": "no GitHub or GitLab remote", "off_offline": "network reads are off",
+        "off_error": "{tool} failed", "unknown": "unknown",
+    },
+    "ar": {
+        "prs": "طلبات الدمج", "mrs": "طلبات الدمج", "prs_none": "لا طلبات دمج مفتوحة",
+        "mrs_none": "لا طلبات دمج مفتوحة",
+        "ci_passed": "الفحص ناجح", "ci_failed": "فشل الفحص: {job}", "ci_failed_plain": "فشل الفحص",
+        "ci_running": "الفحص جارٍ", "ci_none": "لا فحص بعد", "ci_loading": "الفحص …",
+        "ram": "الذاكرة {p}%", "disk": "القرص {p}%",
+        "ctx_fresh": "السياق جديد {p}%", "ctx_mid": "السياق متوسط {p}%", "ctx_full": "السياق ممتلئ {p}%",
+        "cost": "${usd}", "cost_budget": "${usd} · ${today} من ${budget} اليوم",
+        "agent": "الوكيل {type}: {desc}", "agents_more": "+{n} غيره",
+        "task": "المهمة {step}/{total}: {text}", "tasks_done": "اكتملت المهام كلها ({total})",
+        "haris": "حارس {profile}", "haris_watch": "حارس يراقب فقط",
+        "full_saved": "السياق ممتلئ: حُفظ عملك. اضغط Enter لتبدأ من جديد.",
+        "full_type": "السياق ممتلئ: حُفظ عملك. اكتب ‎/clear واضغط Enter لتبدأ من جديد.",
+        "full_nosave": "السياق ممتلئ. اضغط Enter لتبدأ من جديد (ثبّت hafiz ليحفظ ملاحظة التسليم).",
+        "full_type_nosave": "السياق ممتلئ. اكتب ‎/clear واضغط Enter لتبدأ من جديد (ثبّت hafiz ليحفظ ملاحظة التسليم).",
+        "proof_ask": "انتهى. هل أعرض الدليل؟", "yes": "نعم", "no": "لا", "close": "إغلاق", "details": "التفاصيل",
+        "proof_missing": "لا يوجد دليل بعد. اضغط Enter ليصنعه Claude عبر ‎/itqan:proof.",
+        "proof_title": "الدليل", "proof_none": "لم يُحفظ دليل لهذا المشروع بعد.",
+        "proof_checks": "فحوص شغّلها itqan", "proof_review": "المراجعة (كما أبلغ Claude)",
+        "proof_reqs": "المتطلبات (كما أبلغ Claude)", "proof_ok": "نجحت كل الفحوص",
+        "proof_bad": "فشل بعض الفحوص", "proof_stale": "صُنع لتعديل أقدم من التعديل الحالي.",
+        "proof_made": "صُنع {when} على {branch} عند {commit}",
+        "t_branch": "الفرع", "t_prs": "طلبات الدمج", "t_mrs": "طلبات الدمج", "t_ci": "الفحص",
+        "t_device": "الجهاز", "t_context": "السياق", "t_cost": "التكلفة", "t_agents": "الوكلاء",
+        "t_tasks": "المهام", "t_guard": "الحماية",
+        "d_branch": "{branch}، أنشأه {creator} ({source})", "d_branch_plain": "{branch}",
+        "src_pr": "صاحب طلب الدمج", "src_commit": "صاحب أول تعديل فيه",
+        "src_user": "أنت؛ لا تعديلات خاصة به بعد", "d_no_repo": "ليس مستودع git.",
+        "d_prs": "{total} مفتوحة: {list}", "d_prs_off": "غير متاح: {why}", "d_loading": "جارٍ التحميل …",
+        "d_ci_job": "فشل: {job}", "d_ci_url": "التفاصيل: {url}",
+        "d_ram": "الذاكرة مستخدمة {p}% ({used} من {total} غيغابايت)",
+        "d_disk": "القرص مستخدم {p}% ({free} غيغابايت متاحة)",
+        "d_device_warn": "فوق {p}%: أغلق ما لا تحتاجه قبل أن يبطؤ الجهاز أو يتوقف.",
+        "d_context": "{p}% من {window} رمز: {level}",
+        "d_levels": "جديد تحت 40%، متوسط 40-75%، ممتلئ فوق 75%",
+        "d_level_fresh": "جديد", "d_level_mid": "متوسط", "d_level_full": "ممتلئ",
+        "d_context_mid": "يحدّث hafiz ملاحظة التسليم كل بضع جولات.",
+        "d_context_full": "احفظ وابدأ من جديد: يضع mizan الأمر ‎/clear في خانة الكتابة، وأنت تضغط Enter.",
+        "d_cost": "هذه الجلسة: ${usd}", "d_cost_today": "اليوم، كل الجلسات: ${today}",
+        "d_budget": "الميزانية اليومية: ${budget} (استُخدم {p}%)", "d_no_agents": "لا وكيل يعمل الآن.",
+        "d_agent": "{type}: {desc}", "d_no_tasks": "لا قائمة مهام في هذه الجلسة.",
+        "d_task_done": "تمّت", "d_task_now": "الآن", "d_task_open": "لم تبدأ",
+        "d_haris": "حارس يحمي هذه الجلسة (الملف {profile}، {mode}).", "d_haris_off": "حارس لا يعمل.",
+        "mode_enforce": "يوقف الأفعال الخطرة", "mode_watch": "وضع المراقبة: يسجّل ولا يوقف شيئًا",
+        "off_tool": "{tool} غير مثبّت", "off_auth": "لم يُسجَّل الدخول في {tool}",
+        "off_remote": "لا يوجد مستودع بعيد على GitHub أو GitLab", "off_offline": "القراءة من الشبكة متوقفة",
+        "off_error": "فشل {tool}", "unknown": "غير معروف",
+    },
+}
+
+
+def lang() -> str:
+    chosen = (os.environ.get("MIZAN_LANG") or config.load().get("lang") or "auto").lower()
+    if chosen in TEXT:
+        return chosen
+    locale = os.environ.get("LC_ALL") or os.environ.get("LC_MESSAGES") or os.environ.get("LANG") or ""
+    return "ar" if locale.lower().startswith("ar") else "en"
+
+
+def t(key: str, language: str = "", **values) -> str:
+    table = TEXT.get(language or lang(), TEXT["en"])
+    template = table.get(key) or TEXT["en"].get(key, key)
+    try:
+        return template.format(**values)
+    except (KeyError, IndexError, ValueError):
+        return template

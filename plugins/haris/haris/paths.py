@@ -1,6 +1,7 @@
 """Where a path lives, which decides what touching it means.
 
-    self         haris's own code, data and settings (and the repo's .haris.json)
+    self         haris's own code, data and settings (and the repo's .haris.json), and what haris guards
+                 beside itself: mizan's code and data, itqan's proofs, and the Nexika status files
     persistence  files that run code later: shell profiles, cron, launchd, systemd, git hooks,
                  Claude Code settings and plugins, PATH folders, PowerShell profiles
     secret       keys, tokens and credential stores (.env.example and *.pub are fine)
@@ -88,6 +89,17 @@ def data_home() -> str:
     return norm(os.path.expanduser(os.environ.get("HARIS_HOME") or "~/.claude/nexika/haris"))
 
 
+GUARDED_PLUGINS = ("haris", "mizan")
+
+
+def guarded_homes() -> tuple[str, ...]:
+    """mizan's data, itqan's proofs and the shared status files (~/.claude/nexika/status): what the
+    band shows and what siyaq and mizan read must come from the plugins, never from Claude."""
+    return (norm(os.path.expanduser(os.environ.get("MIZAN_HOME") or "~/.claude/nexika/mizan")),
+            norm(os.path.expanduser(os.environ.get("ITQAN_HOME") or "~/.claude/nexika/itqan")),
+            norm(os.path.expanduser(os.environ.get("NEXIKA_STATUS_HOME") or "~/.claude/nexika/status")))
+
+
 class Where:
     """Places paths for one project: its root, the home folder and any extra secret globs."""
 
@@ -97,7 +109,7 @@ class Where:
         self.secret_globs = list(secret_globs or [])
         temp = norm(os.path.realpath(tempfile.gettempdir()))
         self.temps = tuple(sorted({*TEMP_DIRS, temp}))
-        self.self_paths = (PLUGIN_ROOT, data_home(), norm(self.root + "/.haris.json"))
+        self.self_paths = (PLUGIN_ROOT, data_home(), *guarded_homes(), norm(self.root + "/.haris.json"))
 
     def resolve(self, value: str, cwd: str | None) -> str | None:
         """An absolute, normalized path with symlinks followed; None when it is not known."""
@@ -124,7 +136,8 @@ class Where:
         if any(under(path, p) for p in self.self_paths):
             return True
         rel = self.home_rel(path)
-        return bool(rel and rel.startswith(".claude/plugins/") and "/haris" in rel[len(".claude/plugins"):])
+        return bool(rel and rel.startswith(".claude/plugins/") and
+                    any(f"/{name}" in rel[len(".claude/plugins"):] for name in GUARDED_PLUGINS))
 
     def is_persistence(self, path: str) -> bool:
         rel = self.home_rel(path)

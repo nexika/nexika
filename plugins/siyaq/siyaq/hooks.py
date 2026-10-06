@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import time
 from pathlib import Path
 
 from . import index as idx
@@ -19,6 +21,24 @@ def _context(event: dict) -> tuple[Path, dict] | None:
     if os.environ.get("SIYAQ", "").lower() == "off" or config.get("mode") == "off":
         return None
     return root, config
+
+
+def context_level(session: str) -> str:
+    """mizan's context level for this session (fresh, mid, full), from its status file
+    (~/.claude/nexika/status/mizan/<session>.json, schema nexika.mizan/1); '' when unknown or stale."""
+    if not re.match(r"^[A-Za-z0-9_-]{1,80}$", session or ""):
+        return ""
+    home = Path(os.path.expanduser(os.environ.get("NEXIKA_STATUS_HOME") or "~/.claude/nexika/status"))
+    try:
+        data = json.loads((home / "mizan" / f"{session}.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""
+    if not isinstance(data, dict) or data.get("schema") != "nexika.mizan/1":
+        return ""
+    if time.time() - float(data.get("updated") or 0) > 600:
+        return ""
+    level = data.get("level")
+    return level if level in ("fresh", "mid", "full") else ""
 
 
 def _output(event_name: str, context: str) -> str:
@@ -49,7 +69,7 @@ def on_prompt(event: dict) -> str | None:
     index = idx.load(root, config)
     if not index["n"]:
         return None
-    cfg = rank.settings(config)
+    cfg = rank.squeeze(rank.settings(config), context_level(session))
     picked = rank.select_for_prompt(index, prompt, cfg, state.load_session(session)["shown"])
     if not picked:
         unknown = [t for t in dict.fromkeys(text.tokens(prompt)) if t not in index["df"]]
@@ -84,7 +104,8 @@ def on_tool(event: dict) -> str | None:
             state.log_event(root, {"session": session[:8], "type": "opened", "id": entry_id})
         if opened:
             state.save_session(session, data)
-    picked = rank.select_for_path(index, rel, rank.settings(config), data["shown"])
+    picked = rank.select_for_path(index, rel, rank.squeeze(rank.settings(config), context_level(session)),
+                                  data["shown"])
     if not picked:
         return None
     _remember(root, session, picked, "path")

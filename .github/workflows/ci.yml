@@ -58,6 +58,13 @@ jobs:
           for manifest in plugins/*/.claude-plugin/plugin.json; do
             claude plugin validate "$manifest"
           done
+      - name: Mod tests (claude plugin test)
+        run: |
+          for plugin in plugins/*/; do
+            if [ -n "$(find "$plugin" -name '*.test.ts' -o -name '*.test.tsx' | head -1)" ]; then
+              claude plugin test "$plugin"
+            fi
+          done
 
   changelog:
     name: change notes

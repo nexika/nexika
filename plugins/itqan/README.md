@@ -12,7 +12,8 @@ heavy: it stays out of the way until something is actually risky.
 |---|---|---|
 | Skill | `/itqan:plan <task>` | A verified plan: acceptance criteria, existing code (file:line), tests first, steps, risks. No code edits |
 | Skill | `/itqan:review [PR \| base \| paths]` | Code + security reviewers in parallel; every serious finding is re-checked against the code before it is reported |
-| Skill | `/itqan:ship <task>` | The full pipeline with gates: branch check → plan approval → red tests → green → build/test/lint → review → commit proposal |
+| Skill | `/itqan:ship <task>` | The full pipeline with gates: branch check → plan approval → red tests → green → build/test/lint → review → proof → commit proposal |
+| Skill | `/itqan:proof` | The proof a change is done, saved as JSON: itqan runs the project's own tests, lint and build checks itself (found from its files, never a command Claude passes in), and records the review verdict and the requirement checklist, marked as reported by Claude |
 | Skill | `/itqan:learn` | Approve, reword or reject rules learned from your repeated corrections → `.itqan/rules.md` |
 | Skill | `/itqan:insights [days]` | What is actually used and whether each rule works |
 | Agents | `planner`, `code-reviewer`, `security-reviewer`, `test-writer`, `build-fixer` | Specialists the skills launch |
@@ -101,6 +102,10 @@ evidence). In the project: `.itqan/rules.md` (approved rules, meant to be commit
 - **barq**: agents and skills use `barq` for cheap, batched context and short test/build output
   when it is installed (they fall back to normal tools otherwise).
 - **prof**: after a review, juniors can ask `prof:walkthrough` to explain a finding.
+- **mizan**: when every task is done, mizan asks "Done. Show me the proof?" and shows the latest
+  proof in its pane. itqan announces it in `~/.claude/nexika/status/itqan.json` (schema
+  `nexika.itqan/1`); the proof itself is `nexika.itqan.proof/1`, under
+  `~/.claude/nexika/itqan/proofs/<project>/latest.json`.
 
 ## Try it
 

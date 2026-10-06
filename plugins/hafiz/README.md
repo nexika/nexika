@@ -75,6 +75,10 @@ The session card prints its path. `hafiz recall "argon2"`, `hafiz list --type de
 
 ## Working with the other Nexika plugins
 
+mizan asks hafiz to save the handoff as the context fills (every few replies at mid, and before it
+offers `/clear` at full) with `hafiz handoff --save --session <id> --transcript <path>`, which reads
+only a session transcript under `~/.claude/projects`.
+
 hafiz publishes one stable contract, schema `nexika.hafiz/1`:
 
 - `hafiz export --json`: the latest session, newest memories by type, counts.

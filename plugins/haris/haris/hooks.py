@@ -45,6 +45,7 @@ def on_pre_tool_use(event: dict) -> str:
     if cfg["mode"] == "off":
         return ""
     state.mark_active(session)
+    state.publish_status(session, cfg)  # a mode changed mid-session reaches mizan's band (written on change)
     try:
         decision = policy.decide(event, cfg, state.load_session(session), state.approvals(session, root))
     except Exception as exc:  # haris must never wave a call through because it failed
@@ -174,6 +175,7 @@ def on_session_start(event: dict, helper: str) -> str:
         return ""
     state.gc()
     state.mark_active(session)
+    state.publish_status(session, cfg)
     watch = cfg["mode"] == "watch"
     mode = " It is in watch mode: it records what it would do but stops nothing." if watch else ""
     note = (f"haris guards this session (profile {cfg['profile']}).{mode} Risky actions are asked about or "

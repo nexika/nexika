@@ -28,6 +28,9 @@ usage ─────────────► shown / opened / no-match event
   two different words are required, and the best matches win.
 - **Bounded cost:** at most `top_k` entries and `budget_tokens` per prompt; big sections are sent
   as a summary with the exact lines to read for more.
+- **Less as the context fills:** with mizan installed, siyaq reads its context level: normal when
+  fresh, half the budget and one entry fewer at mid, only the strongest match as a summary when
+  full.
 
 ## Skills
 

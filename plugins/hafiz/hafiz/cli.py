@@ -118,6 +118,11 @@ def cmd_forget(args) -> int:
 def cmd_handoff(args) -> int:
     cwd, root = _where()
     folder = store.project_dir(root)
+    if args.save:
+        if not hooks.save_now(args.session or "", args.transcript or "", str(cwd)):
+            print("Nothing saved: give --session and the session's --transcript (a .jsonl under "
+                  "~/.claude/projects).", file=sys.stderr)
+            return 1
     if args.note is not None:
         state = card.current_state(folder, store.branch(cwd))
         if not state:
@@ -234,6 +239,10 @@ def parser() -> argparse.ArgumentParser:
     p = sub.add_parser("handoff", help="show the handoff note, or say where you stopped with --note")
     p.add_argument("--note")
     p.add_argument("--branch")
+    p.add_argument("--save", action="store_true",
+                   help="capture the session now and write the note (mizan uses it)")
+    p.add_argument("--session")
+    p.add_argument("--transcript")
     p.set_defaults(run=cmd_handoff)
 
     p = sub.add_parser("summary", help="detailed session summary written by Claude (Sonnet by default)")
