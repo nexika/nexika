@@ -1,1 +1,0 @@
-amin, a repository maintainer that never merges for you: issue triage with approval, issues worked in isolated worktrees into pull requests, change notes enforced in CI, and step-by-step releases with versions, CHANGELOGs, tags and GitHub Releases.

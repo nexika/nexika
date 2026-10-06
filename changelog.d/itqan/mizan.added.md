@@ -1,1 +1,0 @@
-/itqan:proof: itqan runs the project's own tests, lint and build checks itself and saves the proof as JSON with the review verdict and the requirement checklist (marked as reported by Claude); mizan shows it when you say yes to "Done. Show me the proof?". /itqan:ship now ends with the proof.

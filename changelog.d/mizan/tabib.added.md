@@ -1,1 +1,0 @@
-When CI fails, mizan asks tabib for a quick triage (no AI, once per run) and the band shows the kind of failure, like `tabib: only py3.10` or `tabib: flaky?`, with a Why? button that puts /tabib:diagnose in the prompt; the pane shows tabib's cause, and the proof pane shows the CI failure a change answers.
