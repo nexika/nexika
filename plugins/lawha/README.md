@@ -34,7 +34,7 @@ once with "reduce motion" on.
 | **Phones** | tap targets (24×24 required by WCAG 2.2 AA, 44×44 comfortable); body text under 16px; text under 12px |
 | **Accessibility** | axe-core (WCAG 2.2 A and AA): contrast, names, labels, landmarks, keyboard access; the contrast of text over images, video and 3D, read from the real pixels behind it (axe cannot) |
 | **Motion** | animations that keep running with "reduce motion" on, including 3D scenes (Three.js, WebGL) drawn on a canvas; motion that never stops (WCAG 2.2.2); interface motion slower than a second; animating width, height or top instead of transform and opacity |
-| **RTL** | left/right CSS and utilities (`ml-4`, `text-left`, `rounded-l`) that will not mirror in Arabic; symmetric values like `padding: 16px` are fine |
+| **RTL** | left/right CSS and utilities (`ml-4`, `text-left`, `rounded-l`) that will not mirror in Arabic (symmetric values like `padding: 16px` are fine); icons that show direction (arrows, chevrons, send, reply, undo, log-out, lists) and still point the same way in Arabic, and media controls, clocks and logos that were mirrored by mistake |
 | **The eye** | where the eye lands first above the fold; alignment near-misses, off-scale gaps, uneven lists, type sizes and scale ratio, long lines, tight leading, palette shares, colours outside the tokens, low contrast |
 | **Design** | with Figma exports, a pixel diff per width with a heat map and the regions that differ |
 
@@ -49,7 +49,8 @@ once with "reduce motion" on.
   (Starter plans allow very few). It merges them into one mobile-first spec: Auto Layout as flex,
   named styles as tokens, real line heights, vertical trim, style overrides, photos and SVG icons,
   and design-file habits (a 796px "gap" that is only leftover space) read as intent. Claude builds
-  it in your stack, then `lawha check --against` compares it with each frame: how much it **looks**
+  it in your stack, with the prototype's motion read too (click, hover, Smart Animate, springs, as
+  exact Motion transitions), then `lawha check --against` compares it with each frame: how much it **looks**
   like the design, position for position, and where heights drift. See the
   [showcase](../../showcases/figma-portfolio/README.md): 95.4% / 91.4% / 93.2% at 387 / 1024 / 1440.
 - `/lawha:system` reads the project's design system: Tailwind `@theme` tokens and CSS variables,

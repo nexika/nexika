@@ -203,7 +203,14 @@ Every recipe follows the same rules:
 - it respects `useReducedMotion`;
 - it is mirrored in RTL (a "slide in from the start" respects `dir`).
 
-From Figma, lawha uses the motion context (CSS keyframes or Motion code) when the MCP budget allows. Prototype interactions are not available through Figma's API, so lawha asks for them or proposes a recipe instead.
+From Figma, lawha reads the prototype through the REST API, in the same call that fetches the frames.
+- **What it reads:** each layer's `interactions`, meaning the trigger, the action (go to, change to a variant, overlay, scroll to) and the transition (Smart Animate, dissolve, move in, slide, push), with its duration and easing.
+- **What it writes** (the `## Motion` section of `spec.md`):
+  - the exact Motion transition: a Figma curve becomes a cubic Bézier, and a Figma spring preset or a custom spring becomes a spring;
+  - the slide direction, written logically;
+  - the recipe that builds it;
+  - when the destination was fetched too, what changes between the two states.
+- **No prototype:** lawha proposes recipes timed by the direction.
 
 ## RTL and languages
 

@@ -36,3 +36,16 @@ test("a small spinner and a quick entrance that respects reduce motion pass", ()
   assert.deepEqual(findings.filter((f) => f.check.startsWith("motion.")), []);
   assert.equal(summary.verdict, "pass");
 });
+
+test("RTL icons: arrows must mirror, media controls must not; swapping the icon counts as mirroring", () => {
+  const out = tmp();
+  execFileSync(process.execPath, [CLI, "check", pathToFileURL(join(FIX, "icons.html")).href, "--widths", "1280", "--expect-rtl", "--no-see", "--no-record", "--out", out], { encoding: "utf8", timeout: 240_000, env: { ...process.env, ...HOMES } });
+  const icons = JSON.parse(readFileSync(join(out, "run.json"), "utf8")).findings.filter((f) => f.check.startsWith("rtl.icon"));
+  const said = icons.map((f) => `${f.check}: ${f.message}`);
+  assert.ok(said.some((m) => m.startsWith("rtl.icon-not-mirrored") && m.includes('"Next"')), said.join("\n"));
+  assert.ok(said.some((m) => m.startsWith("rtl.icon-not-mirrored") && m.includes("text →")), said.join("\n"));
+  assert.ok(said.some((m) => m.startsWith("rtl.icon-mirrored") && m.includes('"Play"')), said.join("\n"));
+  for (const fine of ['"Back"', '"Forward"', '"Continue"', '"All topics', '"Send']) assert.ok(!said.some((m) => m.includes(fine)), `${fine} is right: ${said.join("\n")}`);
+  assert.equal(icons.length, 3);
+  assert.ok(icons.filter((f) => f.check === "rtl.icon-not-mirrored").every((f) => f.severity === "fail"), "RTL is expected, so they must be fixed");
+});

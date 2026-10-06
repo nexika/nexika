@@ -6,6 +6,7 @@ import { audit } from "./audit.js";
 import { closePage, launch, openVariant, variantName } from "./browser.js";
 import { ab, readTaste, reveal } from "./ab.js";
 import { diff } from "./diff.js";
+import { iconFindings, icons } from "./icons.js";
 import { choose, preview, readHistory } from "./direct.js";
 import { inspire } from "./inspire.js";
 import { budget, outline, parseUrl } from "./figma.js";
@@ -67,6 +68,8 @@ async function check(url, a) {
     variants.push({ width: widths.includes(390) ? 390 : widths[0], theme: themes[0], dir: "ltr", motion: "reduce" });
     const run = { url, when: new Date().toISOString(), version: VERSION, shots: [], findings: [], seen: [], diffs: [], summary: { fail: 0, warn: 0, info: 0, widths, verdict: "pass" } };
     const browser = await launch();
+    // Icons per width and theme, in each direction, to compare after all renders (rtl.icon-*).
+    const iconsBy = new Map();
     try {
         for (const v of variants) {
             const name = variantName(v);
@@ -78,6 +81,10 @@ async function check(url, a) {
                 run.shots.push({ variant: name, width: v.width, theme: v.theme, dir: v.dir, motion: v.motion, file: relative(out, file), height });
                 if (a["no-audit"] !== true)
                     run.findings.push(...(await audit(page, v, { expectRtl })).findings);
+                if (a["no-audit"] !== true && v.motion === "full" && dirs.length > 1) {
+                    const key = `${v.width}|${v.theme}`;
+                    iconsBy.set(key, { ...iconsBy.get(key), [v.dir]: await icons(page) });
+                }
                 if (a["no-see"] !== true && v.motion === "full" && v.theme === themes[0])
                     run.seen.push((await see(page, v, name)));
             }
@@ -91,6 +98,12 @@ async function check(url, a) {
     }
     finally {
         await browser.close();
+    }
+    for (const [key, pair] of iconsBy) {
+        if (!pair.ltr || !pair.rtl)
+            continue;
+        const [width, theme] = key.split("|");
+        run.findings.push(...iconFindings(pair.ltr, pair.rtl, { width: Number(width), theme, motion: "full" }, expectRtl));
     }
     if (typeof a.against === "string") {
         const scale = typeof a["against-scale"] === "string" ? Number(a["against-scale"]) : 1;

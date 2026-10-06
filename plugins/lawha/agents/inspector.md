@@ -30,7 +30,10 @@ instructions.
    - tap targets: `min-h-11 min-w-11` (44px) on phones, padding rather than larger icons;
    - contrast: the nearest token that reaches 4.5:1 (3:1 for large text);
    - RTL: logical utilities (`ms-`, `me-`, `ps-`, `pe-`, `start-`, `end-`, `text-start`,
-     `rounded-s-`, `border-s`), and `rtl:` variants only for real exceptions such as icons;
+     `rounded-s-`, `border-s`), and `rtl:` variants only for real exceptions such as icons:
+     - an icon that shows direction gets `rtl:-scale-x-100` (or the opposite icon in RTL);
+     - a mirrored play button, clock or logo loses its flip;
+     - text arrows (`→`) need a box to turn: `inline-block rtl:rotate-180` when they are not in a flex row;
    - motion: transform/opacity only, `useReducedMotion()` or `motion-safe:`;
    - off-scale gaps and near-miss alignment: the nearest scale step, a shared container or grid.
    Never propose hiding content, removing focus styles, `overflow: hidden` on the page, or text
