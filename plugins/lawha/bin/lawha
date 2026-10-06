@@ -28,6 +28,7 @@ case "${1:-help}" in
     cp -R "$src/dist/." "$installed/dist/"
     (cd "$installed" && npm ci --omit=dev --no-audit --no-fund --loglevel=error >&2 \
       && node node_modules/playwright/cli.js install chromium >&2)
+    cat "$src"/dist/*.js | cksum > "$installed/.dist-sum"
     echo "{\"installed\": \"$installed\", \"version\": \"$version\"}"
     ;;
   hook)
@@ -36,6 +37,18 @@ case "${1:-help}" in
     ;;
   *)
     dir=$(engine_dir)
+    # An installed engine follows the plugin's code: a plugin update with the same version must not
+    # leave an old engine running. New code is copied in; new dependencies need `lawha setup` again.
+    if [ -n "$dir" ] && [ "$dir" = "$installed" ]; then
+      if ! cmp -s "$src/package-lock.json" "$installed/package-lock.json"; then
+        echo "{\"error\": \"lawha's engine dependencies changed\", \"fix\": \"$here/bin/lawha setup\"}"
+        exit 3
+      fi
+      sum=$(cat "$src"/dist/*.js | cksum)
+      if [ "$sum" != "$(cat "$installed/.dist-sum" 2>/dev/null)" ]; then
+        cp -R "$src/dist/." "$installed/dist/" && cp "$src/package.json" "$installed/" && echo "$sum" > "$installed/.dist-sum"
+      fi
+    fi
     if [ -z "$dir" ]; then
       echo "{\"error\": \"lawha's engine is not installed\", \"fix\": \"$here/bin/lawha setup\", \"needs\": \"Node.js 20+, about 300 MB for Chromium, installed in $installed (nothing is added to the project)\"}"
       exit 3
