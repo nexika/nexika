@@ -262,7 +262,26 @@ def check_edit(tool_input: dict):
 # ---------------------------------------------------------------- entry point
 
 
+def haris_active(event: dict) -> bool:
+    """haris, Nexika's protection plugin, guards this session; it covers this guard's rules and more."""
+    session = str(event.get("session_id") or "")
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", session):
+        return False
+    home = Path(os.environ.get("HARIS_HOME") or Path.home() / ".claude" / "nexika" / "haris").expanduser()
+    if not (home / "active" / session).is_file():
+        return False
+    try:
+        mode = json.loads((home / "config.json").read_text(encoding="utf-8")).get("mode", "on")
+    except FileNotFoundError:
+        return True
+    except (OSError, ValueError, AttributeError):
+        return False
+    return mode not in ("off", "watch")  # haris is only watching or switched off: keep this guard on
+
+
 def decide(event: dict) -> tuple[str, str, str] | None:
+    if haris_active(event):
+        return None
     cwd = Path(event.get("cwd") or os.getcwd())
     config = load_config(cwd)
     if os.environ.get("ITQAN_GUARD", "").lower() == "off" or (config.get("guard") or {}).get("mode") == "off":

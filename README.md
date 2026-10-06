@@ -18,6 +18,7 @@
 | [**manar**](plugins/manar/README.md) | Be found by search engines and AI assistants: deterministic SEO and AI-visibility audits, fixes written into your code (Next.js, Astro, ASP.NET Core, static), and measured mentions and citations in Gemini, Perplexity, ChatGPT and Claude, compared across releases | v0.1.0 |
 | [**bayan**](plugins/bayan/README.md) | Claude writes like a clear, friendly person, in English and Arabic: explanations someone with no coding experience can follow, automatic clean-up of machine habits (hidden characters, AI signature lines, filler phrases) and a line-by-line style check | v0.1.0 |
 | [**hafiz**](plugins/hafiz/README.md) | Claude remembers your work: decisions, tasks, problems, files and links captured as you work (no AI calls, secrets replaced before saving), a short start card, a snapshot restored after compaction, automatic handoff notes, Arabic and English search, and a detailed session summary naming the issue and branch (Sonnet by default) | v0.1.0 |
+| [**haris**](plugins/haris/README.md) | Guards your machine and your accounts from harmful agent actions: every tool call read by a real shell parser (wrappers, pipes, substitutions, heredocs) and judged by action and target, so safe reads and project runs pass, risky actions ask and dangerous ones are refused with a plain reason; secrets, persistence spots and haris itself protected, secrets never sent off the machine, prompt-injection warnings, approvals only from what you type | v0.1.0 |
 
 ## Install
 
@@ -31,6 +32,7 @@
 /plugin install manar@nexika
 /plugin install bayan@nexika
 /plugin install hafiz@nexika
+/plugin install haris@nexika
 ```
 
 Restart Claude Code afterwards so the plugin's hooks load.

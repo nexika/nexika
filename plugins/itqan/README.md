@@ -79,7 +79,10 @@ A plugin with hundreds of skills of which you used one is a context cost worth q
   `kubectl delete`, publishing a package
 - editing `.env` / key files or lock files; writing content that contains a secret token
 
-Everything else passes silently. Configure per project in `.itqan.json`:
+Everything else passes silently. When [haris](../haris/README.md) is installed, this guard steps
+aside in the sessions haris guards: haris covers these rules and more.
+
+Configure per project in `.itqan.json`:
 
 ```json
 { "guard": { "protected_branches": ["main", "release/*"], "mode": "on" } }
