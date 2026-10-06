@@ -61,6 +61,21 @@ nothing added to your project. Needs Node.js 20 or newer.
 Everything stays on your machine: pages, screenshots and reports are local (`.lawha/runs/`; add
 it to `.gitignore`).
 
+## Working with the Nexika family
+
+- **mizan** shows lawha's latest check of this commit in its band (`lawha ✓ 6 widths` or
+  `lawha: 3 to fix`) with a **Fix** button, and the problems and report in its pane.
+- **itqan** checks the changed pages during `/itqan:ship` when a change touches the UI, and its
+  proof shows the pages check of the commit it proves; a failing one fails the proof.
+- **haris** guards lawha's records (`~/.claude/nexika/lawha`), so a passing check in mizan or a
+  proof always comes from lawha, never from Claude.
+- **hafiz** remembers design decisions and problems that keep coming back ("wide tables scroll the
+  page sideways on phones"), and lawha reads them before checking or building.
+
+lawha publishes `~/.claude/nexika/status/lawha.json` (schema `nexika.lawha/1`): for each project, the
+path of its latest check record (`nexika.lawha.check/1`) in lawha's own folder. Run `lawha check
+--no-record` for a check you do not want to share.
+
 ## Coming next
 
 lawha is being built in steps (see [DESIGN.md](DESIGN.md)):

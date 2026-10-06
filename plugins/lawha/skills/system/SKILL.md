@@ -25,5 +25,9 @@ The helper is named in the session note ("Helper: .../bin/lawha"); below it is w
    reuse existing components and tokens, add shadcn components with the shadcn CLI instead of
    writing new ones, and keep new code logical (start/end) and on the spacing scale.
 
-5. Suggest adding `.lawha/runs/` to `.gitignore` (screenshots are large); `.lawha/system.json`
+5. **Remember the rules.** With hafiz installed, save the design-system rules the user confirms
+   (`hafiz remember decision "colours come only from @theme tokens; spacing on the 4px scale" --project`),
+   so every later session builds with them.
+
+6. Suggest adding `.lawha/runs/` to `.gitignore` (screenshots are large); `.lawha/system.json`
    can be committed so the whole team shares it.

@@ -20,6 +20,11 @@ The helper is named in the session note ("itqan proof (for /itqan:proof): python
    - The requirements: each thing the user asked for (from the plan or the task list), and
      whether it is met. Mark one done only when you can point to the code or test that shows it.
 
+   - Pages: when the change touched the UI and lawha is installed, run `/lawha:check` on the
+     changed pages first, at the commit you are proving. The proof picks up lawha's latest check of
+     this project at this commit by itself (shown as "pages on every screen"); a failing one fails
+     the proof. Never claim pages were checked when the proof shows no lawha check.
+
 3. **Run it.**
    `itqan_proof.py run --review approve --done "<requirement met>" --open "<requirement not met>" --note "<open finding>"`
    Repeat `--done`, `--open` and `--note` as needed. It exits 1 when a check failed.

@@ -89,6 +89,14 @@ def band(snap: dict, lang: str) -> list[list[dict]]:
             first.append(seg(t("tabib_cause", lang), "info"))
         elif found.get("kind"):
             first.append(seg(t("tabib", lang, label=tabib_label(found, lang)), "warn"))
+    page = snap.get("lawha") or {}
+    if page:
+        if not page.get("current"):
+            first.append(seg(t("lawha_old", lang), "dim"))
+        elif page.get("verdict") == "pass":
+            first.append(seg(t("lawha_ok", lang, n=page.get("widths", 0)), "ok"))
+        else:
+            first.append(seg(t("lawha_bad", lang, n=page.get("fail", 0)), "bad"))
     for key in ("ram", "disk"):
         part = (snap.get("device") or {}).get(key) or {}
         if part.get("percent") is not None:
@@ -182,6 +190,25 @@ def detail(snap: dict, lang: str) -> list[dict]:
     else:
         sections.append(_section(t("t_branch", lang), [seg(t("d_no_repo", lang), "dim")]))
 
+    page = snap.get("lawha") or {}
+    if page:
+        passed = page.get("verdict") == "pass"
+        covered = t("d_lawha_covered", lang, n=page.get("widths", 0),
+                    themes="/".join(page.get("themes") or []),
+                    dirs="/".join(d.upper() for d in page.get("dirs") or []))
+        verdict = t("d_lawha_ok" if passed else "d_lawha_bad", lang,
+                    n=page.get("fail", 0), warn=page.get("warn", 0))
+        lines = [seg(verdict, "ok" if passed else "bad"),
+                 seg(f"{page.get('url', '')} · {covered}", "dim")]
+        lines += [seg(f"{p['text']} ({p['where']})", "bad") for p in page.get("problems") or []]
+        if not page.get("current"):
+            lines.append(seg(t("d_lawha_old", lang, when=page.get("created", "").replace("T", " ")), "warn"))
+        if page.get("report"):
+            lines.append(seg(t("d_lawha_report", lang, path=page["report"]), "dim"))
+        if snap.get("fix"):
+            lines.append(seg(t("d_lawha_fix", lang), "dim"))
+        sections.append(_section(t("t_lawha", lang), lines))
+
     device = snap.get("device") or {}
     lines = []
     ram, disk = device.get("ram") or {}, device.get("disk") or {}
@@ -271,6 +298,14 @@ def proof_view(proof: dict, lang: str, head: str = "") -> list[dict]:
         if failure.get("cause"):
             lines.append(seg(clean(failure["cause"], 200), "dim"))
         sections.append(_section(t("proof_ci_title", lang), lines))
+    ui = proof.get("ui") or {}
+    if ui:
+        ok = ui.get("verdict") == "pass"
+        verdict = t("d_lawha_ok" if ok else "d_lawha_bad", lang, n=ui.get("fail", 0), warn=ui.get("warn", 0))
+        lines = [seg(verdict, "ok" if ok else "bad"),
+                 seg(f"{clean(ui.get('url'), 160)} · {len(ui.get('widths') or [])} widths", "dim")]
+        lines += [seg(clean(p, 160), "bad") for p in (ui.get("problems") or [])[:5]]
+        sections.append(_section(t("t_lawha", lang), lines))
     review = proof.get("review") or {}
     if review.get("verdict"):
         tone = "ok" if review["verdict"] == "approve" else "warn"
@@ -295,5 +330,5 @@ def sections_text(sections: list[dict]) -> str:
 
 def labels(lang: str) -> dict:
     keys = ("full_saved", "full_type", "full_nosave", "full_type_nosave", "proof_ask", "yes", "no", "close",
-            "details", "proof_missing", "proof_title", "why")
+            "details", "proof_missing", "proof_title", "why", "fix")
     return {key: t(key, lang) for key in keys}

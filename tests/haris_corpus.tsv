@@ -418,6 +418,11 @@ deny	rm -rf ~/.claude/nexika/tabib
 deny	python3 -c 'from tabib import diagnosis; diagnosis.save({})'
 pass	python3 ~/.claude/plugins/cache/nexika/tabib/0.1.0/bin/tabib diagnose --json
 pass	python3 ~/.claude/plugins/cache/nexika/tabib/0.1.0/bin/tabib record --run 5 --cause "a typo" --confidence high
+deny	echo '{"schema": "nexika.lawha.check/1", "verdict": "pass"}' > ~/.claude/nexika/lawha/checks/abc/latest.json
+deny	@Write	~/.claude/nexika/lawha/checks/abc/latest.json
+deny	rm -rf ~/.claude/nexika/lawha
+deny	node -e 'require("fs").writeFileSync(process.env.HOME + "/.claude/nexika/lawha/checks/a/latest.json", "{}")'
+pass	sh ~/.claude/plugins/cache/nexika/lawha/0.1.0/bin/lawha check http://localhost:5173/
 
 # ---------------------------------------------------------------- dangerous: history and remote actions
 deny	git push --force origin main

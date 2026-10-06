@@ -86,6 +86,7 @@ function toView(out: Json): MizanView | null {
     alerts: Array.isArray(alerts) ? (alerts as MizanAlert[]) : [],
     proofAvailable: (out.proof as { available?: boolean } | undefined)?.available === true,
     why: out.why === true,
+    fix: out.fix === true,
   }
 }
 
@@ -311,6 +312,9 @@ export const register: Register = on => {
             ))}
             {row === 0 && now.why && (
               <Button key="tabib-why" label={now.labels.why} plain onPress={() => offer($, '/tabib:diagnose')} />
+            )}
+            {row === 0 && now.fix && (
+              <Button key="lawha-fix" label={now.labels.fix} plain onPress={() => offer($, '/lawha:check --fix')} />
             )}
           </Box>
         ))}

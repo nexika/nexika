@@ -1,7 +1,7 @@
 // lawha engine tests: run the built CLI against fixture pages with known faults.
 import { strict as assert } from "node:assert";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -11,8 +11,11 @@ import { PNG } from "pngjs";
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const CLI = join(ROOT, "dist", "cli.js");
 const FIX = join(ROOT, "test", "fixtures");
-const lawha = (...args) => JSON.parse(execFileSync(process.execPath, [CLI, ...args], { encoding: "utf8", timeout: 240_000 }));
 const tmp = () => mkdtempSync(join(tmpdir(), "lawha-test-"));
+// Never touch the real ~/.claude/nexika: every run gets throwaway homes.
+const HOMES = { LAWHA_HOME: tmp(), NEXIKA_STATUS_HOME: tmp() };
+const run = (args, opts = {}) => JSON.parse(execFileSync(process.execPath, [CLI, ...args], { encoding: "utf8", timeout: 240_000, env: { ...process.env, ...HOMES, ...opts.env }, cwd: opts.cwd }));
+const lawha = (...args) => run(args);
 const page = (name) => pathToFileURL(join(FIX, name)).href;
 
 test("a clean page passes with no problems", () => {
@@ -127,4 +130,24 @@ test("index reads tokens, shadcn, components with props, routes, fonts and drift
   assert.deepEqual(s.routes, ["/index", "/lessons/$id"]);
   assert.ok(s.tokens.some((t) => t.name === "--color-brand" && t.value === "#2b2fd6"));
   assert.deepEqual(new Set(s.drift.map((d) => d.kind)), new Set(["hard-coded colour", "arbitrary size", "physical utility"]));
+});
+
+test("a check is recorded in lawha's folder and announced in the shared status file", () => {
+  const homes = { LAWHA_HOME: tmp(), NEXIKA_STATUS_HOME: tmp() };
+  const project = tmp();
+  execFileSync("git", ["init", "-q", project]);
+  const summary = run(["check", page("bad.html"), "--widths", "390", "--no-see", "--out", join(project, ".lawha", "runs", "x")], { env: homes, cwd: project });
+  assert.ok(summary.recorded.startsWith(homes.LAWHA_HOME), summary.recorded);
+  const rec = JSON.parse(readFileSync(summary.recorded, "utf8"));
+  assert.equal(rec.schema, "nexika.lawha.check/1");
+  assert.equal(rec.verdict, "fail");
+  assert.equal(rec.counts.fail, summary.fail);
+  assert.ok(rec.problems.length > 0 && rec.problems.every((p) => p.severity !== "info"));
+  assert.ok(rec.project.endsWith(project.split("/").pop()));
+  const status = JSON.parse(readFileSync(join(homes.NEXIKA_STATUS_HOME, "lawha.json"), "utf8"));
+  assert.equal(status.schema, "nexika.lawha/1");
+  assert.equal(Object.values(status.checks)[0], summary.recorded);
+  assert.equal(statSync(summary.recorded).mode & 0o777, 0o600, "records are owner-only");
+  const quiet = run(["check", page("good.html"), "--widths", "390", "--no-see", "--no-record", "--out", tmp()], { env: homes, cwd: project });
+  assert.equal(quiet.recorded, null);
 });

@@ -6,6 +6,7 @@ import { audit } from "./audit.js";
 import { closePage, launch, openVariant, type Variant, variantName } from "./browser.js";
 import { diff } from "./diff.js";
 import { indexProject } from "./index-project.js";
+import { record } from "./record.js";
 import { groupFindings, type Run, type Shot, writeReport } from "./report.js";
 import { type Seen, see } from "./see.js";
 import { DEFAULT_WIDTHS, type Finding, list, parseArgs, stamp, writeJson } from "./util.js";
@@ -22,6 +23,7 @@ const HELP = `lawha ${VERSION} - see and check web pages
       --against <dir>      compare with design images named <width>.png (Figma exports)
       --against-scale <n>  scale of those images (Figma 2x exports: 0.5)
       --no-audit --no-see  skip parts      --out <dir>   default .lawha/runs/<time>
+      --no-record          do not share the result with mizan and itqan (status/lawha.json)
   lawha diff <actual.png> <expected.png> [--scale n] [--heatmap out.png]
   lawha index [project]  [--out <file>]   default <project>/.lawha/system.json
   lawha version
@@ -83,15 +85,28 @@ async function check(url: string, a: ReturnType<typeof parseArgs>): Promise<numb
   run.summary.verdict = run.summary.fail ? "fail" : "pass";
   writeJson(join(out, "run.json"), run);
   writeReport(join(out, "report.html"), run);
+  // Tell the other Nexika plugins (mizan's band, itqan's proof); --no-record for throwaway checks.
+  let recorded: string | null = null;
+  if (a["no-record"] !== true) {
+    try {
+      recorded = record(process.cwd(), {
+        url, widths, themes, dirs, verdict: run.summary.verdict,
+        counts: { fail: run.summary.fail, warn: run.summary.warn, info: run.summary.info },
+        problems, report: join(out, "report.html"), run: join(out, "run.json"),
+      });
+    } catch {
+      recorded = null; // the check itself succeeded; sharing it is best effort
+    }
+  }
 
   const top = problems.filter((p) => p.severity !== "info").slice(0, 15).map((p) => `[${p.severity}] ${p.message} (${p.check} at ${p.where.join(", ")})`);
-  process.stdout.write(JSON.stringify({ verdict: run.summary.verdict, fail: run.summary.fail, warn: run.summary.warn, info: run.summary.info, report: join(out, "report.html"), run: join(out, "run.json"), top }, null, 2) + "\n");
+  process.stdout.write(JSON.stringify({ verdict: run.summary.verdict, fail: run.summary.fail, warn: run.summary.warn, info: run.summary.info, report: join(out, "report.html"), run: join(out, "run.json"), recorded, top }, null, 2) + "\n");
   return 0;
 }
 
 async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
-  const a = parseArgs(rest, ["expect-rtl", "no-audit", "no-see"]);
+  const a = parseArgs(rest, ["expect-rtl", "no-audit", "no-see", "no-record"]);
   switch (command) {
     case "check": {
       const url = a._[0];

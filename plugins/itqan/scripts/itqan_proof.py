@@ -13,6 +13,10 @@ when the user asks for it.
 
 Saved in ~/.claude/nexika/itqan/proofs/<project>/ (latest.json and the last 20), and announced in
 the shared status file ~/.claude/nexika/status/itqan.json (schema nexika.itqan/1).
+
+When lawha checked the project's pages at this commit (status/lawha.json, a record in lawha's own
+haris-guarded folder), the proof includes that check as "ui": its verdict, the widths, themes and
+directions it covered, and the problems it found. A failing UI check fails the proof.
 """
 from __future__ import annotations
 
@@ -208,6 +212,45 @@ def ci_failure(root: Path, branch: str) -> dict:
             "cause": clean(str(entry.get("cause") or ""))}
 
 
+def lawha_home() -> Path:
+    return Path(os.path.expanduser(os.environ.get("LAWHA_HOME") or "~/.claude/nexika/lawha")).resolve()
+
+
+def ui_check(root: Path) -> dict:
+    """lawha's latest check of this project at this commit (status/lawha.json), or {}. Only a record
+    in lawha's own folder counts: haris guards it, so Claude cannot write a passing one."""
+    try:
+        data = json.loads((status_path().parent / "lawha.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(data, dict) or data.get("schema") != "nexika.lawha/1":
+        return {}
+    path = (data.get("checks") or {}).get(str(root))
+    if not isinstance(path, str):
+        return {}
+    try:
+        record_path = Path(path).resolve()
+        if lawha_home() / "checks" not in record_path.parents:
+            return {}
+        rec = json.loads(record_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(rec, dict) or rec.get("schema") != "nexika.lawha.check/1":
+        return {}
+    if rec.get("commit") != _git(root, "rev-parse", "--short", "HEAD"):
+        return {}  # a check of another commit says nothing about this change
+    counts = rec.get("counts") or {}
+    problems = [p for p in (rec.get("problems") or [])[:8] if isinstance(p, dict)]
+    return {"verdict": "pass" if rec.get("verdict") == "pass" else "fail",
+            "url": clean(str(rec.get("url") or "")),
+            "widths": [w for w in rec.get("widths") or [] if isinstance(w, int)][:12],
+            "themes": [str(t) for t in rec.get("themes") or []][:2],
+            "dirs": [str(d) for d in rec.get("dirs") or []][:2],
+            "fail": int(counts.get("fail") or 0), "warn": int(counts.get("warn") or 0),
+            "problems": [clean(str(p.get("message") or "")) for p in problems],
+            "created": str(rec.get("created") or ""), "dirty": bool(rec.get("dirty")), "by": "lawha"}
+
+
 def make(root: Path, args) -> dict:
     kinds = set(args.only.split(",")) if args.only else set(KINDS)
     checks = [run_check(c, root, args.timeout) for c in detect(root) if c["kind"] in kinds]
@@ -216,12 +259,14 @@ def make(root: Path, args) -> dict:
     requirements = [{"text": clean(t), "done": True} for t in args.done] + \
                    [{"text": clean(t), "done": False} for t in args.open]
     branch = _git(root, "rev-parse", "--abbrev-ref", "HEAD")
+    ui = ui_check(root)
     return {"schema": SCHEMA, "created": datetime.datetime.now().isoformat(timespec="seconds"),
             "project": str(root), "branch": branch, "ci_failure": ci_failure(root, branch),
             "commit": _git(root, "rev-parse", "--short", "HEAD"),
             "dirty": bool(_git(root, "status", "--porcelain")), "checks": checks, "review": review,
-            "requirements": requirements,
-            "summary": {"checks_passed": bool(checks) and all(c["passed"] for c in checks),
+            "requirements": requirements, "ui": ui,
+            "summary": {"checks_passed": bool(checks) and all(c["passed"] for c in checks)
+                        and ui.get("verdict", "pass") == "pass",
                         "requirements_done": f"{len(args.done)}/{len(args.done) + len(args.open)}"}}
 
 
@@ -235,6 +280,15 @@ def describe(proof: dict) -> str:
         out.append(f"  {check['name']}: {mark} in {check['seconds']} s  ({check['command']})")
         if not check["passed"]:
             out += [f"      {line}" for line in check["tail"][-8:]]
+    ui = proof.get("ui") or {}
+    if ui:
+        themes = "/".join(ui.get("themes") or [])
+        dirs = "/".join(d.upper() for d in ui.get("dirs") or [])
+        covered = f"{len(ui.get('widths') or [])} widths, {themes}, {dirs}"
+        mark = "passed" if ui["verdict"] == "pass" else f"FAILED ({ui.get('fail', 0)} to fix)"
+        out.append(f"  pages on every screen (lawha): {mark} - {covered} - {ui.get('url', '')}")
+        if ui["verdict"] != "pass":
+            out += [f"      {p}" for p in ui.get("problems", [])[:5]]
     review = proof.get("review") or {}
     if review:
         out.append(f"  review (reported by Claude): {review['verdict']}")

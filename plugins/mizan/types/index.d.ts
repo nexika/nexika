@@ -17,6 +17,7 @@ export type MizanLabels = {
   proof_missing: string
   proof_title: string
   why: string
+  fix: string
 }
 export type MizanAlert = { key: string; text: string }
 export type MizanView = {
@@ -27,6 +28,7 @@ export type MizanView = {
   alerts: MizanAlert[]
   proofAvailable: boolean
   why: boolean
+  fix: boolean
 }
 export type MizanAsk = { kind: 'none' | 'proof' | 'full' | 'missing'; text: string }
 export type MizanTask = { id: string; text: string; active: string; status: 'pending' | 'in_progress' | 'completed' }

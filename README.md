@@ -21,6 +21,7 @@
 | [**haris**](plugins/haris/README.md) | Guards your machine and your accounts from harmful agent actions: every tool call read by a real shell parser (wrappers, pipes, substitutions, heredocs) and judged by action and target, so safe reads and project runs pass, risky actions ask and dangerous ones are refused with a plain reason; secrets, persistence spots and haris itself protected, secrets never sent off the machine, prompt-injection warnings, approvals only from what you type | v0.1.0 |
 | [**mizan**](plugins/mizan/README.md) | Keeps your session in balance: a band above the prompt shows the branch and who started it, open PRs or MRs per person like `Loai(7) Jean(3)`, the branch's CI (passed, failed with the job, running), RAM and disk with warnings, the context level (fresh, mid, full), the running agent, the current task step and the cost; `/mizan` opens the details and the itqan proof. At full context it saves a hafiz handoff and puts `/clear` in the prompt for you to send. English and Arabic | v0.1.0 |
 | [**tabib**](plugins/tabib/README.md) | Finds out why CI failed, with evidence: the failing tests and errors from the log, the kind of failure (code, one Python or OS only, flaky, infrastructure, dependencies), the commits since the last green run, the failing tests run again in a throwaway git worktree, and the cause backed by the code; mizan's band shows the kind as soon as CI fails and a "Why?" button. Diagnoses only: never edits code, pushes or re-runs CI. English and Arabic | v0.1.0 |
+| [**lawha**](plugins/lawha/README.md) | Frontend you can see: every page checked in a real browser at six widths, light and dark, LTR and RTL and with reduced motion (sideways scrolling, clipped text, tap targets, accessibility, layout shift, motion, CSS that breaks Arabic), an eye that measures alignment, spacing rhythm, type and colour, a diff against design exports, fixes found from the screenshots, and your Tailwind, shadcn and TanStack design system indexed; mizan's band shows the result with a Fix button and itqan's proof includes it. React, TanStack, Tailwind, shadcn/ui. English and Arabic | v0.1.0 |
 
 ## Install
 
@@ -37,6 +38,7 @@
 /plugin install haris@nexika
 /plugin install mizan@nexika
 /plugin install tabib@nexika
+/plugin install lawha@nexika
 ```
 
 Restart Claude Code afterwards so the plugin's hooks load.
@@ -71,6 +73,7 @@ folder, so only the plugins write there, never Claude.
 | `haris/<session>.json` | haris: profile and mode | mizan's band |
 | `itqan.json` | itqan: the latest proof per project | mizan's proof pane |
 | `tabib.json` | tabib: the latest CI diagnosis per project and branch | mizan's band and pane, itqan's proof |
+| `lawha.json` | lawha: the latest check of each project's pages on every screen (a pointer into lawha's own folder) | mizan's band and pane, itqan's proof |
 
 ## Develop locally
 
