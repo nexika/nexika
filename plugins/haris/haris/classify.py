@@ -573,6 +573,8 @@ def run(argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
             return written_run(program, path, ctx, argv[1:], shebang if shebang.startswith("#!") else "sh")
         if path and path.startswith(PLUGIN_ROOT + "/"):
             return own_helper(argv, ctx)
+        if path and MIZAN_HELPER.search(path):
+            return mizan_helper(argv, ctx)
     family = program
     m = re.match(r"^(python|pypy|pip|ruby|perl|php|node)[\d.]+$", program)
     if m:
@@ -726,9 +728,9 @@ def read_paths(values_: list[Arg], ctx: Ctx, verb: str = "reads", meta: bool = F
 
 
 WRITE_REASONS = {
-    "self": ("self", "{verb} {path}, which is part of haris itself. haris does not let Claude change or "
-                     "switch "
-                     "off its own protection; you can do that yourself."),
+    "self": ("self", "{verb} {path}, which is part of haris itself or of what it guards (mizan and the "
+                     "Nexika status files). haris does not let Claude change or switch off this protection; "
+                     "you can do that yourself."),
     "persistence": ("persistence", "{verb} {path}, which runs code later on its own (at login, on a "
                                    "schedule, "
                                    "in git or in Claude Code). That is how harmful changes stay hidden."),
@@ -1714,7 +1716,8 @@ STRING_LITERAL = re.compile(r"'''(.*?)'''|\"\"\"(.*?)\"\"\"|'((?:\\.|[^'\\\n])*)
                             re.S)
 SED_EXEC = re.compile(r"(?:^|[;\n{}])\s*(?:\d+|\$|/[^/]*/)?\s*e(?:\s|$|;)|/e\s*$"
                       r"|/[gpiI0-9]*e[gpiI0-9]*\s*$")
-CODE_SELF = re.compile(r"\b(?:from|import)\s+haris\b|nexika/haris|haris/(?:bin|haris)"
+CODE_SELF = re.compile(r"\b(?:from|import)\s+(?:haris|mizan)\b|nexika/(?:haris|mizan|itqan|status)\b"
+                       r"|haris/(?:bin|haris)"
                        r"|require\(['\"][^'\"]*haris")
 PATH_LIKE = re.compile(r"^(?:~|/|\.{1,2}/|[\w.-]+/)|^\.?[\w-]+\.\w{1,8}$|^\.\w+$")
 
@@ -1799,6 +1802,10 @@ def h_python(argv, ctx, stdin):
     module = values(opts, "-m")
     if module:
         name = module[0]
+        if re.match(r"(?:haris|mizan)(?:\.|$)", str(name)):
+            ctx.add("self", f"Runs python -m {name}: the code of haris or of mizan, which haris guards, "
+                            "outside their helpers.")
+            return Stage()
         if name in PYTHON_MODULES_RUN:
             return project_run(ctx, f"Runs python -m {name} in the project.")
         if name == "pip":
@@ -1836,6 +1843,8 @@ def script_run(program: str, script: Arg, ctx: Ctx, how: str = "", rest: list | 
         return written_run(program, path, ctx, rest)
     elif path == PLUGIN_ROOT + "/bin/haris":
         return own_helper([script, *(rest or [])], ctx)
+    elif path and MIZAN_HELPER.search(path):
+        return mizan_helper([script, *(rest or [])], ctx)
     elif path and path.startswith(PLUGIN_ROOT + "/"):
         ctx.add("self", "Runs haris's own code directly instead of through its helper.")
     else:
@@ -3027,8 +3036,9 @@ def h_claude(argv, ctx, stdin):
     if pos[:1] in (["plugin"], ["plugins"]) and len(pos) > 1:
         action = pos[1]
         if action in ("disable", "uninstall", "remove",
-                      "rm") and any("haris" in p or "nexika" in p for p in pos[2:]):
-            ctx.add("self", "Turns off or removes haris. You can do that yourself if you want it.")
+                      "rm") and any(n in p for p in pos[2:] for n in ("haris", "mizan", "nexika")):
+            ctx.add("self", "Turns off or removes haris or a plugin it guards (mizan). You can do that "
+                            "yourself if you want it.")
         elif action == "marketplace" and len(pos) > 2 and pos[2] in ("remove", "rm") and \
                 any("nexika" in p for p in pos[3:]):
             ctx.add("self", "Removes the marketplace haris comes from. You can do that yourself if you "
@@ -3070,6 +3080,23 @@ def own_helper(argv: list[Arg], ctx: Ctx) -> Stage:
 
 def h_haris(argv, ctx, stdin):
     return own_helper(argv, ctx)
+
+
+MIZAN_HELPER = re.compile(r"/mizan(?:/[\w.+-]+)?/bin/mizan$")  # a checkout, or the cache's mizan/<version>
+
+
+def mizan_helper(argv: list[Arg], ctx: Ctx) -> Stage:
+    """The mizan helper: reports are fine; playing its hooks or publishing its status by hand is not."""
+    words = [a for a in argv[1:] if not a.startswith("-")]
+    publishes = any(len(a) >= 4 and "--publish".startswith(a) for a in argv[1:])  # --pub, --publ ...
+    if words[:1] in (["hook"], ["statusline"]) or publishes:
+        ctx.add("self", "Runs mizan's hook or publishes its status by hand, which could fake what mizan "
+                        "shows you. Only Claude Code and the mizan display run these.")
+    elif words[:1] and words[0] in ("status", "report", "export", "proof"):
+        ctx.add("read", f"Shows mizan information (mizan {words[0]}).")
+    else:
+        ctx.add("exec", "Runs the mizan helper.")
+    return Stage()
 
 
 def h_open(argv, ctx, stdin):

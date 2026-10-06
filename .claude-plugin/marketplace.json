@@ -51,6 +51,11 @@
       "name": "haris",
       "source": "./plugins/haris",
       "description": "Guards your machine and your accounts from harmful agent actions: a real shell parser, decisions by action and target (allow, ask or deny with a plain reason), protected secrets, persistence spots and haris itself, secret checks on data leaving the machine, prompt-injection warnings, and approvals only from what you type."
+    },
+    {
+      "name": "mizan",
+      "source": "./plugins/mizan",
+      "description": "Keeps your session in balance: a band above the prompt with the branch and who started it, open PRs or MRs per person, the branch's CI, RAM and disk warnings, the context level (fresh, mid, full), the running agent, the current task step and the cost; at full context a hafiz handoff and /clear ready for you to send. English and Arabic."
     }
   ]
 }

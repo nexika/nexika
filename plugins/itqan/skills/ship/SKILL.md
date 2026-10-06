@@ -36,7 +36,11 @@ commands). All must pass.
 Follow the `itqan:review` skill on this branch's diff. Fix critical and high findings, then
 repeat step 4.
 
-## 6. Wrap up
-Summarize: what changed (files), tests added, review result, anything deferred. Propose a
+## 6. Proof
+Follow the `itqan:proof` skill: itqan runs the checks itself and saves the proof with the review
+verdict and the requirements met.
+
+## 7. Wrap up
+Summarize: what changed (files), tests added, review result, the proof, anything deferred. Propose a
 commit message (imperative subject, body explaining why). **Ask before committing, pushing,
 or opening a pull request.**

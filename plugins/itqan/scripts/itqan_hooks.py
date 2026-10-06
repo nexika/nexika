@@ -88,6 +88,8 @@ def session_start(hook: dict) -> None:
     lines.append("Guard: normal edits are never blocked; only risky actions are refused or need approval.")
     lines.append(f"itqan helper (for /itqan:learn and /itqan:insights): "
                  f"python3 {Path(__file__).resolve().parent / 'itqan_learn.py'}")
+    lines.append(f"itqan proof (for /itqan:proof): "
+                 f"python3 {Path(__file__).resolve().parent / 'itqan_proof.py'}")
     note = last_session_note(str(hook.get("session_id") or ""))
     if note:
         lines.append(note)

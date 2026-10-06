@@ -60,6 +60,10 @@ hide the target.
   file the same command just downloaded: ask (refused in strict).
 - **haris itself:** its code, data, settings and the repo's `.haris.json` cannot be changed by
   Claude, `claude plugin disable haris` is refused, and running its hook by hand is refused.
+- **What haris guards beside itself:** mizan (its code, `~/.claude/nexika/mizan`) and the shared
+  Nexika status files (`~/.claude/nexika/status`), so what mizan shows you and what siyaq reads come
+  from the plugins, never from Claude. Running mizan's hook or publishing its status by hand is
+  refused; `mizan report`, `status` and `proof` are fine.
 
 ### No self-approval
 
@@ -156,6 +160,8 @@ injection warning; secrets in commands replaced with `[secret]`; rotated at 1 MB
   `haris export --json` (schema `nexika.haris/1`: profile, mode, session taint, the last week's
   asks, refusals and approvals) is there for hafiz and the others to read, and `/haris:allow`
   offers to record a lasting approval as a hafiz decision.
+- **mizan:** haris publishes its profile and mode per session in
+  `~/.claude/nexika/status/haris/<session>.json` (schema `nexika.haris/1`) for mizan's band.
 - **Shared startup budget:** haris's start note is under 600 bytes.
 
 ## Speed and testing
@@ -172,6 +178,9 @@ command is missed, fewer than 2% of ordinary commands are blocked, and checks st
   process while it runs. A program or script it cannot see into (a script already on disk,
   `make`, a binary) is left to Claude Code's own permission rules, and code built to hide what
   it does can get past any static check. Inline code (`python -c`, `node -e`) is never approved.
+  The same holds for what haris guards beside itself: inline code that builds a status-file
+  path from pieces, or a copy of mizan's helper run from elsewhere, is left to Claude Code's
+  rules (never approved by haris), not refused.
 - PowerShell gets a lighter reading than bash (common cmdlets and aliases); a full PowerShell
   parser is planned.
 - Prompt-injection scanning matches known patterns; it cannot understand every way text can

@@ -22,3 +22,5 @@ select = ["E", "F", "W", "I", "B", "UP"]
 "plugins/bayan/bayan/rules.py" = ["E501"]  # word lists with long Arabic and English phrases
 "tests/test_bayan.py" = ["E501"]           # sample texts are naturally long lines
 "tests/test_hafiz.py" = ["E501"]           # sample transcripts are naturally long lines
+"plugins/mizan/mizan/i18n.py" = ["E501"]   # English and Arabic phrase table
+"tests/test_mizan.py" = ["E501"]           # sample payloads and band lines are naturally long lines

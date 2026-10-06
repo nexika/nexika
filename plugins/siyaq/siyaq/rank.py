@@ -27,6 +27,19 @@ def settings(config: dict) -> dict:
     return {**DEFAULTS, **{k: config[k] for k in DEFAULTS if k in config}}
 
 
+def squeeze(cfg: dict, level: str) -> dict:
+    """Load less as the context window fills (mizan's level): normal when fresh, half at mid, only
+    the strongest match as a summary when full. An entry marked `inject: full` keeps its level."""
+    share = {"mid": 2, "full": 4}.get(level)
+    if not share:
+        return cfg
+    out = {**cfg, "budget_tokens": cfg["budget_tokens"] // share,
+           "path_budget_tokens": cfg["path_budget_tokens"] // share, "top_k": max(1, cfg["top_k"] - 1)}
+    if level == "full":
+        out.update(top_k=1, full_max_chars=0, min_score=cfg["min_score"] * 2)
+    return out
+
+
 def score(index: dict, query: list[str]) -> list[tuple[float, dict, list[str]]]:
     n, avg, df = index["n"], index["avglen"] or 1.0, index["df"]
     q = list(dict.fromkeys(query))
@@ -121,7 +134,7 @@ def select_for_path(index: dict, rel_path: str, cfg: dict, shown: dict) -> list[
         if entry["source"] == rel_path or not entry["paths"]:
             continue
         if idx.matches_any(rel_path, entry["paths"]):
-            small = len(entry["body"]) <= cfg["summary_chars"] * 2
+            small = len(entry["body"]) <= min(cfg["summary_chars"] * 2, cfg["full_max_chars"])
             level = entry["inject"] if entry["inject"] != "auto" else ("full" if small else "summary")
             specificity = 0 if entry["kind"] == "manual" else 1
             candidates.append((specificity, len(entry["paths"]), entry, level))

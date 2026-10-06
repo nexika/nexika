@@ -110,7 +110,9 @@ def is_active(session: str) -> bool:
 
 def gc() -> None:
     cutoff = time.time() - KEEP_DAYS * 86400
-    for folder in (home() / "sessions", home() / "active"):
+    status_home = os.environ.get("NEXIKA_STATUS_HOME") or "~/.claude/nexika/status"
+    status = Path(os.path.expanduser(status_home)) / "haris"
+    for folder in (home() / "sessions", home() / "active", status):
         try:
             entries = list(folder.iterdir())
         except OSError:
@@ -173,6 +175,23 @@ def remove_approval(session: str, root: str, value: str) -> int:
 
 
 # ---------------------------------------------------------------- audit log
+
+
+def publish_status(session: str, cfg: dict) -> None:
+    """status/haris/<session>.json (schema nexika.haris/1): the profile and mode, for mizan's band."""
+    if not safe_session(session):
+        return
+    folder = Path(os.path.expanduser(os.environ.get("NEXIKA_STATUS_HOME") or "~/.claude/nexika/status"))
+    path = folder / "haris" / f"{safe_session(session)}.json"
+    before = load_json(path, {})
+    if before.get("profile") == cfg.get("profile", "") and before.get("mode") == cfg.get("mode", ""):
+        return
+    try:
+        save_json(path,
+                  {"schema": "nexika.haris/1", "updated": int(time.time()), "session": session,
+                   "profile": cfg.get("profile", ""), "mode": cfg.get("mode", "")})
+    except OSError:
+        pass
 
 
 def log(entry: dict) -> None:

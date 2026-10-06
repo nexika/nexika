@@ -19,6 +19,7 @@
 | [**bayan**](plugins/bayan/README.md) | Claude writes like a clear, friendly person, in English and Arabic: explanations someone with no coding experience can follow, automatic clean-up of machine habits (hidden characters, AI signature lines, filler phrases) and a line-by-line style check | v0.1.0 |
 | [**hafiz**](plugins/hafiz/README.md) | Claude remembers your work: decisions, tasks, problems, files and links captured as you work (no AI calls, secrets replaced before saving), a short start card, a snapshot restored after compaction, automatic handoff notes, Arabic and English search, and a detailed session summary naming the issue and branch (Sonnet by default) | v0.1.0 |
 | [**haris**](plugins/haris/README.md) | Guards your machine and your accounts from harmful agent actions: every tool call read by a real shell parser (wrappers, pipes, substitutions, heredocs) and judged by action and target, so safe reads and project runs pass, risky actions ask and dangerous ones are refused with a plain reason; secrets, persistence spots and haris itself protected, secrets never sent off the machine, prompt-injection warnings, approvals only from what you type | v0.1.0 |
+| [**mizan**](plugins/mizan/README.md) | Keeps your session in balance: a band above the prompt shows the branch and who started it, open PRs or MRs per person like `Loai(7) Jean(3)`, the branch's CI (passed, failed with the job, running), RAM and disk with warnings, the context level (fresh, mid, full), the running agent, the current task step and the cost; `/mizan` opens the details and the itqan proof. At full context it saves a hafiz handoff and puts `/clear` in the prompt for you to send. English and Arabic | v0.1.0 |
 
 ## Install
 
@@ -33,6 +34,7 @@
 /plugin install bayan@nexika
 /plugin install hafiz@nexika
 /plugin install haris@nexika
+/plugin install mizan@nexika
 ```
 
 Restart Claude Code afterwards so the plugin's hooks load.
@@ -52,12 +54,28 @@ nexika/
 To add a plugin: create `plugins/<name>/` with its own `.claude-plugin/plugin.json`, then add
 it to `.claude-plugin/marketplace.json`.
 
+### Status files: how the plugins talk to each other
+
+A plugin that knows something the others can use publishes it as a small JSON file under
+`~/.claude/nexika/status/` (`NEXIKA_STATUS_HOME` moves it): `<plugin>.json` for what holds across
+sessions, `<plugin>/<session>.json` for one session. Every file carries
+`"schema": "nexika.<plugin>/1"` and `"updated"` (seconds since the epoch); a reader ignores a file
+with another schema or one too old, and a missing file means "nothing known". haris protects the
+folder, so only the plugins write there, never Claude.
+
+| File | Written by | Read by |
+|---|---|---|
+| `mizan/<session>.json` | mizan: context level, cost, device, tasks | siyaq (loads less as the context fills), mizan's daily cost |
+| `haris/<session>.json` | haris: profile and mode | mizan's band |
+| `itqan.json` | itqan: the latest proof per project | mizan's proof pane |
+
 ## Develop locally
 
 ```bash
 claude --plugin-dir ./plugins/prof          # run one plugin without installing
 claude plugin validate .                    # check the marketplace
 claude plugin validate ./plugins/prof/.claude-plugin/plugin.json
+claude plugin test ./plugins/mizan          # a mod's own tests (*.test.ts)
 pytest                                      # tests (pip install pytest)
 ruff check .                                # lint (pip install ruff)
 ```
@@ -70,8 +88,9 @@ ruff check .                                # lint (pip install ruff)
 2. If you change a plugin, add a change note for it (see [changelog.d/](changelog.d/README.md)):
    `python3 plugins/amin/bin/amin fragment add <plugin> <type> "<what changed>" --id <PR>`.
 3. Commit, push the branch, and open a pull request.
-4. CI runs lint, tests (Python 3.10-3.14, Linux and macOS), `claude plugin validate` and the
-   change-notes rule. The **CI passed** check must be green before merging.
+4. CI runs lint, tests (Python 3.10-3.14, Linux and macOS), `claude plugin validate`, the mod
+   tests (`claude plugin test`) and the change-notes rule. The **CI passed** check must be green
+   before merging.
 5. Squash-merge; the branch is deleted automatically.
 6. Releases are cut with `/amin:release`: one version, CHANGELOG and tag per plugin.
 

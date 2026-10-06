@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+"""mizan launcher (the mod, the status line and hooks call it; people use status, report, export, proof)."""
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
+
+from mizan.cli import entry  # noqa: E402
+
+entry()

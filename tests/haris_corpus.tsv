@@ -396,6 +396,24 @@ deny	{PLUGIN}/bin/haris hook pre-tool-use
 deny	python3 -c "from haris import state; state.add_approval('x', 'y', {}, True)"
 deny	sed -i 's/deny/allow/' {PLUGIN}/haris/policy.py
 
+# ---------------------------------------------------------------- dangerous: what haris guards beside itself (mizan, status files)
+deny	echo '{"lang": "en"}' > ~/.claude/nexika/mizan/config.json
+deny	rm -rf ~/.claude/nexika/mizan
+deny	rm -rf ~/.claude/nexika/status
+deny	echo '{"level": "fresh"}' > ~/.claude/nexika/status/mizan/abc.json
+deny	@Write	~/.claude/nexika/status/haris/abc.json
+deny	claude plugin disable mizan@nexika
+deny	python3 ~/.claude/plugins/cache/nexika/mizan/0.1.0/bin/mizan hook stop
+deny	~/.claude/plugins/cache/nexika/mizan/0.1.0/bin/mizan status --json --stdin --publish
+deny	python3 -c "open('/tmp/x').read(); import json; p='~/.claude/nexika/status/mizan/a.json'"
+allow	python3 ~/.claude/plugins/cache/nexika/mizan/0.1.0/bin/mizan report
+deny	echo '{}' | python3 ~/.claude/plugins/cache/nexika/mizan/0.1.0/bin/mizan status --json --stdin --pub
+deny	python3 ~/.claude/plugins/cache/nexika/mizan/0.1.0/bin/mizan status --stdin --publi
+deny	cd ~/.claude/plugins/cache/nexika/mizan/0.1.0 && python3 -m mizan.cli status --stdin --publish
+deny	python3 -c 'from mizan import status; status.publish("mizan", {"level": "fresh"}, "abc")'
+deny	echo '{"schema": "nexika.itqan.proof/1"}' > ~/.claude/nexika/itqan/proofs/abc/latest.json
+deny	@Write	~/.claude/nexika/itqan/proofs/abc/latest.json
+
 # ---------------------------------------------------------------- dangerous: history and remote actions
 deny	git push --force origin main
 deny	git push -f origin main

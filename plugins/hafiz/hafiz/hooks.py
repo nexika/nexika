@@ -43,6 +43,22 @@ def _publish(root: Path, state: dict) -> None:
     export.write_latest(root, state)
 
 
+def save_now(session: str, transcript: str, cwd: str) -> bool:
+    """Capture now and write the handoff note, as after a reply (mizan asks for it as context fills).
+
+    Only a session transcript (a .jsonl file under Claude Code's projects folder) is read.
+    """
+    config_dir = os.environ.get("CLAUDE_CONFIG_DIR") or "~/.claude"
+    projects = (Path(os.path.expanduser(config_dir)) / "projects").resolve()
+    path = Path(transcript).resolve() if transcript else None
+    if not path or path.suffix != ".jsonl" or projects not in path.parents or not path.is_file():
+        return False
+    done = _capture({"session_id": session, "transcript_path": str(path), "cwd": cwd})
+    if done:
+        _publish(*done)
+    return bool(done)
+
+
 def on_session_start(event: dict, helper: str) -> str:
     ctx = _context(event)
     if not ctx:
