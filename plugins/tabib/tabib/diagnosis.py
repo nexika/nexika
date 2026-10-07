@@ -98,7 +98,7 @@ def triage(info: dict, run_id: int | None = None, refresh: bool = False) -> dict
     run = forge.find_run(info, run_id)
     existing = load(path_for(info["repo"], run["id"]))
     same = bool(existing) and existing["run"].get("attempt") == run.get("attempt") \
-        and existing["run"].get("updated", "") == run.get("updated", "")
+        and (existing["run"].get("updated") or "") == (run.get("updated") or "")   # saved as None when absent
     if same and not refresh:
         return existing
     if not same:
