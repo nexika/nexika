@@ -125,6 +125,22 @@ def _from_config(entries: list[dict]) -> list[Project]:
     return projects
 
 
+NAME_FIELD = {".json": re.compile(r'"name"\s*:\s*"([^"]+)"'),
+              ".toml": re.compile(r'(?m)^name\s*=\s*"([^"]+)"')}
+
+
+def _manifest_name(root: Path, rel: str) -> str:
+    """The project's own name; the folder name is a worktree's issue number inside `amin work`."""
+    if rel.endswith((".csproj", ".fsproj", ".vbproj")):
+        return Path(rel).stem
+    pattern = NAME_FIELD.get(Path(rel).suffix)
+    try:
+        m = pattern.search((root / rel).read_text(encoding="utf-8")) if pattern else None
+    except OSError:
+        m = None
+    return m.group(1) if m else root.name
+
+
 def detect(root: Path) -> list[Project]:
     config = load_config(root)
     if config.get("projects"):
@@ -147,7 +163,8 @@ def detect(root: Path) -> list[Project]:
     candidates += sorted(p.relative_to(root).as_posix() for p in root.glob("src/*/*.csproj"))
     for rel in candidates:
         if (root / rel).is_file() and read_version(root, rel):
-            return [Project(root.name, ".", [rel], "CHANGELOG.md", "v{version}", "changelog.d")]
+            name = _manifest_name(root, rel)
+            return [Project(name, ".", [rel], "CHANGELOG.md", "v{version}", "changelog.d")]
     return []
 
 

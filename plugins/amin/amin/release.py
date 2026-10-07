@@ -270,14 +270,24 @@ def publish(root: Path, runner: gitops.Runner, project: proj.Project, dry_run: b
     return report + ([] if pushed else [f"tag {tag} pushed"]) + [f"release published: {url}"]
 
 
+def _when(stamp: str) -> datetime.datetime | None:
+    try:
+        return datetime.datetime.fromisoformat(stamp.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
 def history(root: Path, runner: gitops.Runner, project: proj.Project, tag: str | None) -> list[str]:
     """Merged PRs that touched the project since tag (to write first-release notes)."""
-    since = runner.git("log", "-1", "--format=%cI", tag, check=False).strip() if tag else ""
-    prs = runner.gh_json("pr", "list", "--state", "merged", "--limit", "200",
+    since = _when(runner.git("log", "-1", "--format=%cI", tag, check=False)) if tag else None
+    search = ["--search", f"merged:>={since.astimezone(datetime.timezone.utc).date()}"] if since else []
+    prs = runner.gh_json("pr", "list", "--state", "merged", "--limit", "5000", *search,
                          "--json", "number,title,mergedAt,files") or []
     out = []
-    for pr in sorted(prs, key=lambda x: x.get("mergedAt", "")):
-        if since and pr.get("mergedAt", "") <= since:
+    for pr in sorted(prs, key=lambda x: _when(x.get("mergedAt", "")) or datetime.datetime.min.replace(
+            tzinfo=datetime.timezone.utc)):
+        merged = _when(pr.get("mergedAt", ""))
+        if since and (merged is None or merged <= since):
             continue
         paths = [f.get("path", "") for f in pr.get("files") or []]
         if project.path == "." or any(x == project.path or x.startswith(project.path + "/") for x in paths):

@@ -92,6 +92,8 @@ class FakeRunner(gitops.Runner):
         return json.dumps(self.gh_json(*args))
 
     def gh_json(self, *args):
+        if not self.gh_calls or self.gh_calls[-1] != args:
+            self.gh_calls.append(args)
         if args[:2] == ("repo", "view"):
             return {"nameWithOwner": "o/r"}
         if args[0] == "api" and args[1].endswith("/pulls"):
@@ -543,6 +545,36 @@ def test_history_filters_by_project_path(market):
             "files": [{"path": "plugins/beta/main.py"}]}]
     lines = release.history(market, FakeRunner(market, prs=prs), projects_of(market)["alpha"], None)
     assert lines == ["#3 Alpha thing (2026-10-01)"]
+
+
+def test_history_compares_real_times_and_asks_github_for_every_pr_since_the_tag(market):
+    # issue #85: a +03:00 tag date compared as text against GitHub's UTC dropped PRs; only 200 were read
+    import os
+    write(market, "plugins/alpha/main.py", "x = 9\n")
+    _git(market, "add", "-A")
+    env = {**os.environ, "GIT_COMMITTER_DATE": "2026-10-01T12:00:00+03:00"}
+    subprocess.run(["git", "commit", "-q", "-m", "x"], cwd=market, env=env, check=True)
+    _git(market, "tag", "-a", "alpha-v0.1.0", "-m", "x")
+    prs = [{"number": 5, "title": "After the tag", "mergedAt": "2026-10-01T10:00:00Z",   # 13:00 +03:00
+            "files": [{"path": "plugins/alpha/main.py"}]},
+           {"number": 6, "title": "Before the tag", "mergedAt": "2026-10-01T08:59:00Z",
+            "files": [{"path": "plugins/alpha/main.py"}]}]
+    runner = FakeRunner(market, prs=prs)
+    lines = release.history(market, runner, projects_of(market)["alpha"], "alpha-v0.1.0")
+    assert lines == ["#5 After the tag (2026-10-01)"]
+    call = next(c for c in runner.gh_calls if c[:2] == ("pr", "list"))
+    assert "merged:>=2026-10-01" in " ".join(call)   # the date filter runs on GitHub, so no PR is cut off
+
+
+def test_single_project_name_comes_from_the_manifest_not_the_folder(tmp_path):
+    # issue #85: inside an amin work worktree (<repo>-amin/42) the project was named "42"
+    for rel, content in (("package.json", '{"name": "@acme/app", "version": "1.0.0"}'),
+                         ("pyproject.toml", '[project]\nname = "app"\nversion = "1.0.0"\n'),
+                         ("App.csproj", "<Project><PropertyGroup><Version>1.0.0</Version>"
+                                        "</PropertyGroup></Project>")):
+        root = tmp_path / rel.replace(".", "-") / "repo-amin" / "42"
+        write(root, rel, content)
+        assert proj.detect(root)[0].name in ("@acme/app", "app", "App"), rel
 
 
 def test_work_start_creates_branch_and_worktree(market):
