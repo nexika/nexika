@@ -60,6 +60,7 @@ REASON = re.compile(r"\s*(?:,\s*)?\b(?:because|since|as it|so that)\b\s*|\s*(?:�
 REASON_NEXT = re.compile(r"^(?:because|that way|this way|it|this|لأن|لان|عشان|كذا|بهذا)\b,?\s*", re.I)
 SENTENCE_END = re.compile(r"(?<=[.!?؟])\s+|\n+")
 CODE_BLOCK = re.compile(r"```.*?(?:```|\Z)|<pasted_content\b.*?(?:</pasted_content[^>]*>|\Z)", re.S | re.I)
+PASTE_TAG = re.compile(r"</?pasted_content\b[^>]*>", re.I)
 MAX_DECISIONS_PER_PROMPT = 3
 QUESTION = re.compile(r"^(why|what|which|how|should|shall|could|can|would|do|does|did|is|are|"
                       r"هل|ليش|لماذا|ليه|كيف|ايش|شو|ماذا)\b", re.I)
@@ -103,20 +104,27 @@ def _first_error(text: str) -> str:
     return lines[-1] if lines else ""
 
 
+_TOPS: dict[str, Path] = {}
+
+
 def _rel(path: str, cwd: str, root: Path) -> str:
+    """The path relative to the repository (this worktree or the main one); "" when outside it."""
     if not path:
         return ""
     p = Path(path)
     if not p.is_absolute() and cwd:
         p = Path(cwd) / p
-    for base in (Path(cwd) if cwd else None, root):
-        if base is None:
-            continue
+    bases = [root]
+    if cwd:
+        if cwd not in _TOPS:
+            _TOPS[cwd] = store.worktree_root(Path(cwd))
+        bases.insert(0, _TOPS[cwd])
+    for base in bases:
         try:
             return p.resolve().relative_to(base.resolve()).as_posix()
         except (ValueError, OSError):
             continue
-    return p.as_posix()
+    return ""
 
 
 def new_state(session: str, transcript_path: str) -> dict:
@@ -124,7 +132,7 @@ def new_state(session: str, transcript_path: str) -> dict:
             "started": store.now(), "updated": "", "ended": "", "branch": "", "cwd": "",
             "first_prompt": "", "prompts": [], "prompt_count": 0, "files": {}, "commits": [],
             "tasks": {}, "task_ids": {}, "problems": {}, "decisions": [], "links": [], "pending": {},
-            "proposal": {},
+            "proposal": {}, "touched": {},
             "note": "", "compactions": 0, "private_salt": "", "private": []}
 
 
@@ -184,9 +192,10 @@ class Capture:
             return
         state = self.state
         state["prompt_count"] += 1
+        shown = _short(PASTE_TAG.sub(" ", text), PROMPT_CHARS)
         if not state["first_prompt"]:
-            state["first_prompt"] = _short(text, PROMPT_CHARS)
-        state["prompts"] = (state["prompts"] + [_short(text, PROMPT_CHARS)])[-KEEP_PROMPTS:]
+            state["first_prompt"] = shown
+        state["prompts"] = (state["prompts"] + [shown])[-KEEP_PROMPTS:]
         for url in dict.fromkeys(URL.findall(text)):
             url = url.rstrip(".,;:")
             if url not in state["links"]:
@@ -285,6 +294,7 @@ class Capture:
             if rel:
                 count = self.state["files"].get(rel, 0) + 1
                 self.state["files"][rel] = count
+                self.state["touched"][rel] = event["line"]
                 self._add("file", f"Changed {rel} ({count} edit{'s' if count > 1 else ''})", event,
                           key=f"file|{self.sid}|{rel}")
         elif name == "Bash":

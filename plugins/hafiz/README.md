@@ -20,7 +20,8 @@ every reply (Stop) ──► read only the new part of the transcript ─► fix
                          file      files Claude changed
                          link      URLs you share, pull requests and issues created
                        ─► memories + the handoff note for this branch (always fresh)
-before compaction ───► snapshot: goal, latest requests, open tasks, decisions, problems, files
+before compaction ───► snapshot: what you are working on now (the note or latest request), open tasks,
+                       decisions, problems, files (most recently touched first, only inside the repo)
 after compaction ────► the snapshot is given back to Claude (up to ~3 KB)
 session start ───────► a short card (under 1.5 KB): last session, open tasks, problems, decisions
                        (open tasks and problems untouched for 14 days are marked expired)

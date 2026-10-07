@@ -736,3 +736,42 @@ def test_a_stated_decision_keeps_its_reason(log, capsys, repo):
     stop(log.user("Let's use pnpm because it is faster on CI."), capsys)
     [decision] = decisions_of(repo)
     assert decision["reason"] == "it is faster on CI"
+
+
+# ---------------------------------------------------------------- restore follows recent work (#58)
+
+
+def restored(log, capsys, repo):
+    hook("pre-compact", {"session_id": SESSION, "transcript_path": log.write(), "cwd": str(repo)}, capsys)
+    return hook("session-start", {"session_id": SESSION, "source": "compact", "cwd": str(repo)}, capsys)
+
+
+def test_restore_uses_the_latest_request_as_the_goal(log, capsys, repo):
+    log.user("Build the login page with a remember-me checkbox").say("Done.")
+    log.user("Now fix the flaky payment test in the checkout suite").say("Looking.").user("yes")
+    text = restored(log, capsys, repo)
+    assert "Working on: Now fix the flaky payment test" in text
+    assert "Build the login page" not in text.split("Working on:")[1].split("\n")[0]
+
+
+def test_restore_ranks_files_by_last_touch(log, capsys, repo):
+    for _ in range(3):
+        log.tool("Edit", {"file_path": str(repo / "src" / "auth.py")})
+    log.tool("Write", {"file_path": str(repo / "src" / "pay.py")})
+    log.user("Go")
+    text = restored(log, capsys, repo)
+    files_line = next(line for line in text.splitlines() if line.startswith("Files changed:"))
+    assert files_line.index("src/pay.py") < files_line.index("src/auth.py")
+
+
+def test_pasted_content_wrappers_are_stripped(log, capsys, repo):
+    stop(log.user('<pasted_content id="ab12">Fix the checkout totals rounding</pasted_content> please'), capsys)
+    state = capture.load_state(store.project_dir(repo), SESSION)
+    assert "pasted_content" not in state["first_prompt"] and "checkout totals" in state["first_prompt"]
+
+
+def test_files_outside_the_repo_are_dropped(log, capsys, repo, tmp_path):
+    outside = tmp_path / "elsewhere" / "notes.md"
+    log.user("Go").tool("Write", {"file_path": str(outside)}).tool("Edit", {"file_path": "src/auth.py"})
+    stop(log, capsys)
+    assert capture.load_state(store.project_dir(repo), SESSION)["files"] == {"src/auth.py": 1}
