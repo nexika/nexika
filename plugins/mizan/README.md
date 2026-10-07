@@ -112,6 +112,9 @@ With it, the Stop hook refreshes the handoff at mid and, at full, saves it and t
 - **lawha** checks the project's pages on every screen; the band shows its latest check of this
   commit, Fix puts `/lawha:check --fix` in the prompt, and the pane lists the problems and the
   report. mizan reads only checks lawha saved in its own (haris-guarded) folder.
+- **amin**, **manar**, **barq** and **prof** each say one thing: the band shows how many projects
+  amin found ready to release and how many prof reviews are due; the pane adds manar's last
+  checklist score and what barq saved today (or cost more, when it did).
 - All of them share status files under `~/.claude/nexika/status/`, each `nexika.<plugin>/1`
   (see the [root README](../../README.md#status-files-how-the-plugins-talk-to-each-other)).
 

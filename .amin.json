@@ -12,7 +12,11 @@
     ],
     "common/status.py": [
       "plugins/mizan/mizan/status.py",
-      "plugins/tabib/tabib/status.py"
+      "plugins/tabib/tabib/status.py",
+      "plugins/amin/amin/status.py",
+      "plugins/manar/manar/status.py",
+      "plugins/barq/barq/status.py",
+      "plugins/prof/scripts/prof_status.py"
     ],
     "common/gitinfo.py": [
       "plugins/mizan/mizan/gitinfo.py",

@@ -16,6 +16,12 @@ if str(BARQ_ROOT) not in sys.path:
     sys.path.insert(0, str(BARQ_ROOT))
 
 
+@pytest.fixture(autouse=True)
+def _status_home(tmp_path, monkeypatch):
+    """Plugins publish status files as they run: keep them out of the real ~/.claude."""
+    monkeypatch.setenv("NEXIKA_STATUS_HOME", str(tmp_path / "status"))
+
+
 @pytest.fixture
 def store(tmp_path, monkeypatch):
     """A fresh prof_store module whose data lives in tmp_path/prof (never ~/.claude)."""

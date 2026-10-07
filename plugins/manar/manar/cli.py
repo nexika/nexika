@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import datetime
 import json
+import os
 import re
 import subprocess
 import sys
 import urllib.parse
 from pathlib import Path
 
-from . import __version__, aibots, checks, citability, crawl, fetch, framework, generate, visibility
+from . import __version__, aibots, checks, citability, crawl, fetch, framework, generate, status, visibility
 from .checks import ORDER
 
 USAGE = f"""manar {__version__} - be found by search engines and AI assistants, and measure it (Nexika)
@@ -116,6 +117,15 @@ def render(audit: dict) -> str:
     return "\n".join(lines)
 
 
+def publish_score(root: Path, audit: dict, path: Path) -> None:
+    """status/manar.json (nexika.manar/1): the last audit score per project, for mizan."""
+    audits = status.read("manar").get("audits")
+    audits = {k: v for k, v in audits.items() if os.path.isdir(k)} if isinstance(audits, dict) else {}
+    audits[str(root)] = {"target": audit["target"], "score": audit["score"], "date": audit["date"],
+                         "path": str(path)}
+    status.publish("manar", {"audits": audits})
+
+
 def cmd_audit(args: list[str]) -> int:
     as_json = "--json" in args
     args = [a for a in args if a != "--json"]
@@ -140,6 +150,7 @@ def cmd_audit(args: list[str]) -> int:
     while path.exists():  # two audits in the same second must not overwrite each other
         path, n = folder / f"{stem}-{n}.json", n + 1
     path.write_text(json.dumps(audit, indent=1, ensure_ascii=False), encoding="utf-8")
+    publish_score(project_root(), audit, path)
     print(json.dumps(audit, ensure_ascii=False) if as_json else render(audit) + f"\n\nsaved: {path}")
     if fail_on:   # CI mode: fail on findings this severe or worse
         worse = ORDER[: ORDER.index(fail_on) + 1]

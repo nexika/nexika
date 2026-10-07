@@ -30,6 +30,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import prof_status  # noqa: E402  (copy of common/status.py)
+
 HOME = Path(os.environ.get("PROF_HOME") or Path.home() / ".claude" / "nexika" / "prof")
 REPORTS = HOME / "reports"
 TOPICS = HOME / "topics"
@@ -306,6 +309,7 @@ def merge_report(path: Path) -> int:
     REPORTS.mkdir(parents=True, exist_ok=True)
     with open(MERGED, "a", encoding="utf-8") as fh:
         fh.write(path.name + "\n")
+    publish_due()
     return count
 
 
@@ -341,6 +345,13 @@ def topic_summaries() -> list[tuple[str, str, str, list[Entry], list[Entry]]]:
     return out
 
 
+def publish_due(topics: list | None = None) -> None:
+    """status/prof.json (nexika.prof/1): retention checks due and open items, for mizan."""
+    topics = topic_summaries() if topics is None else topics
+    prof_status.publish("prof", {"due": sum(len(t[4]) for t in topics),
+                                 "open": sum(len(t[3]) for t in topics), "topics": len(topics)})
+
+
 def _section(text: str, heading: str, limit: int) -> list[str]:
     lines, inside = [], False
     for line in text.splitlines():
@@ -361,6 +372,7 @@ def session_start(hook: dict) -> None:
     script = Path(__file__).resolve()
     p = print
     topics = topic_summaries()
+    publish_due(topics)
     pending = [t for t in topics if t[3] or t[4]]
     ask = "" if auto_report_setting() is not None else " " + AUTO_REPORT_NOTE[None].format(script=script)
     if not pending:

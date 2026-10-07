@@ -4,9 +4,14 @@
     haris  publishes status/haris/<session>.json: its profile and mode for this session
     itqan  publishes status/itqan.json: the latest proof file per project
     lawha  publishes status/lawha.json: the latest check of the project's pages on every screen
+    amin   publishes status/amin.json: the projects of each repository ready to release
+    manar  publishes status/manar.json: the last audit score per project
+    barq   publishes status/barq.json: today's savings, bytes it cost more counted too
+    prof   publishes status/prof.json: retention checks due and open items
 """
 from __future__ import annotations
 
+import datetime
 import json
 import os
 import subprocess
@@ -103,3 +108,55 @@ def lawha_check(repo: str) -> dict:
         return {}
     data = status.read_json(Path(path))
     return data if data.get("schema") == LAWHA_SCHEMA else {}
+
+
+def _entry(plugin: str, key: str, repo: str) -> dict:
+    entries = status.read(plugin, max_age=status.KEEP_SECONDS).get(key) or {}
+    if not isinstance(entries, dict) or not repo:
+        return {}
+    found = entries.get(repo) or entries.get(os.path.realpath(repo))
+    return found if isinstance(found, dict) else {}
+
+
+def amin_ready(repo: str) -> list[dict]:
+    """The projects of this repository amin found ready to release (from its last plan)."""
+    ready = _entry("amin", "repos", repo).get("ready") or []
+    return [{"name": str(r.get("name") or ""), "next": str(r.get("next") or "")}
+            for r in ready if isinstance(r, dict) and r.get("name")]
+
+
+def manar_audit(repo: str) -> dict:
+    """manar's last audit of this project: its checklist score, site and date."""
+    found = _entry("manar", "audits", repo)
+    score = found.get("score")
+    if not isinstance(score, (int, float)) or isinstance(score, bool):
+        return {}
+    return {"score": int(score), "target": str(found.get("target") or ""),
+            "date": str(found.get("date") or "")}
+
+
+def _int(value) -> int:
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def barq_savings() -> dict:
+    """What barq saved today, and what it cost more; {} on a day it was not used."""
+    found = status.read("barq")
+    if found.get("date") != datetime.date.today().isoformat() or not _int(found.get("calls")):
+        return {}
+    return {k: _int(found.get(k)) for k in ("calls", "saved_bytes", "avoided_bytes", "extra_bytes")}
+
+
+def prof_due() -> dict:
+    """prof's retention checks due and open items (counted when its last session started)."""
+    found = status.read("prof", max_age=status.KEEP_SECONDS)
+    return {k: _int(found.get(k)) for k in ("due", "open", "topics")} if found else {}
+
+
+def view(repo: str) -> dict:
+    """What amin, manar, barq and prof published, for the band and the pane."""
+    found = {"amin": amin_ready(repo), "manar": manar_audit(repo), "barq": barq_savings(), "prof": prof_due()}
+    return {k: v for k, v in found.items() if v}
