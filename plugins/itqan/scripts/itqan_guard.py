@@ -19,6 +19,10 @@ import subprocess
 import sys
 from pathlib import Path, PurePath
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import itqan_files  # noqa: E402
+import itqan_secrets  # noqa: E402
+
 DEFAULT_PROTECTED = ["main", "master", "develop", "production", "release/*"]
 
 SECRET_PATTERNS = [re.compile(p) for p in (
@@ -297,17 +301,15 @@ def decide(event: dict) -> tuple[str, str, str] | None:
 
 def log_decision(event: dict, decision: tuple[str, str, str]) -> None:
     try:
-        home = data_home()
-        home.mkdir(parents=True, exist_ok=True)
         tool_input = event.get("tool_input") or {}
-        detail = str(tool_input.get("command") or tool_input.get("file_path") or "")[:200]
+        detail = str(tool_input.get("command") or tool_input.get("file_path") or "")
+        detail = itqan_secrets.redact(detail)[:200]
         entry = {
             "ts": datetime.datetime.now().isoformat(timespec="seconds"),
             "session": str(event.get("session_id") or "")[:8],
             "rule": decision[1], "decision": decision[0], "detail": detail,
         }
-        with open(home / "guard.jsonl", "a", encoding="utf-8") as fh:
-            fh.write(json.dumps(entry) + "\n")
+        itqan_files.append_jsonl(data_home() / "guard.jsonl", entry)
     except OSError:
         pass
 

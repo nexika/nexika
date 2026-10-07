@@ -29,6 +29,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import itqan_files  # noqa: E402
+import itqan_secrets  # noqa: E402
+
 PROPOSE_AT = 2
 MAX_EXCHANGES = 15
 RULES_START = "<!-- itqan rules start -->"
@@ -113,33 +117,19 @@ def load_store(root: Path) -> dict:
 
 def save_store(root: Path, store: dict) -> None:
     path = _store_path(root)
-    path.parent.mkdir(parents=True, exist_ok=True)
+    itqan_files.private_dir(data_home())
+    itqan_files.private_dir(path.parent.parent)
     tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(store, indent=1, ensure_ascii=False), encoding="utf-8")
+    itqan_files.write_private(tmp, json.dumps(store, indent=1, ensure_ascii=False))
     tmp.replace(path)
 
 
 def _append(name: str, entry: dict) -> None:
-    home = data_home()
-    home.mkdir(parents=True, exist_ok=True)
-    with open(home / name, "a", encoding="utf-8") as fh:
-        fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    itqan_files.private_dir(data_home())
+    itqan_files.append_jsonl(data_home() / name, entry)
 
 
-def read_jsonl(path: Path) -> list[dict]:
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return []
-    out = []
-    for line in lines:
-        try:
-            item = json.loads(line)
-        except ValueError:
-            continue
-        if isinstance(item, dict):
-            out.append(item)
-    return out
+read_jsonl = itqan_files.read_jsonl
 
 
 def learning_enabled(root: Path) -> bool:
@@ -241,7 +231,7 @@ def hook_signal(hook: dict) -> None:
     if not learning_enabled(cwd):
         return
     _append("signals.jsonl", {"ts": _now(), "session": str(hook.get("session_id") or ""),
-                              "cwd": str(cwd), "prompt": prompt[:1000]})
+                              "cwd": str(cwd), "prompt": itqan_secrets.redact(prompt)[:1000]})
 
 
 def hook_usage(hook: dict) -> None:
@@ -303,13 +293,13 @@ def hook_extract(hook: dict) -> None:
     pairs = correction_exchanges(transcript)
     if not pairs:
         return
-    payload = "\n\n".join(f"ASSISTANT: {a}\nUSER: {u}" for a, u in pairs)
-    tmp = data_home() / "tmp"
-    tmp.mkdir(parents=True, exist_ok=True)
-    payload_path = tmp / f"{session[:8]}.txt"
-    payload_path.write_text(payload, encoding="utf-8")
+    payload = itqan_secrets.redact("\n\n".join(f"ASSISTANT: {a}\nUSER: {u}" for a, u in pairs))
+    itqan_files.private_dir(data_home())
+    payload_path = itqan_files.private_dir(data_home() / "tmp") / f"{session[:8]}.txt"
+    itqan_files.write_private(payload_path, payload)
     script = str(Path(__file__).resolve())
-    with open(data_home() / "learn.log", "a", encoding="utf-8") as log:
+    fd = os.open(data_home() / "learn.log", os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+    with os.fdopen(fd, "a", encoding="utf-8") as log:
         subprocess.Popen(
             [sys.executable, script, "run-extract", session, str(payload_path), str(root)],
             stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True,

@@ -299,3 +299,52 @@ def test_hook_commands_never_fail(tmp_path):
     for cmd in ("signal", "usage", "extract"):
         res = run_script("itqan_learn.py", [cmd], tmp_path, tmp_path / "h", "{broken")
         assert res.returncode == 0 and res.stdout == ""
+
+
+# ---------------------------------------------------------------- private storage (#23)
+
+
+def test_signal_redacts_secrets_and_is_private(learn, repo):
+    prompt = "no, use the key AKIAIOSFODNN7EXAMPLE and ghp_" + "a" * 36 + " instead"
+    learn.hook_signal({"prompt": prompt, "cwd": str(repo), "session_id": "s1"})
+    path = learn.data_home() / "signals.jsonl"
+    text = path.read_text()
+    assert "AKIAIOSFODNN7EXAMPLE" not in text and "ghp_" not in text
+    assert "[secret]" in text
+    assert path.stat().st_mode & 0o777 == 0o600
+    assert learn.data_home().stat().st_mode & 0o777 == 0o700
+
+
+def test_usage_and_guard_logs_are_private(learn, repo):
+    learn.hook_usage({"tool_name": "Skill", "tool_input": {"skill": "itqan:ship"}, "cwd": str(repo)})
+    assert (learn.data_home() / "usage.jsonl").stat().st_mode & 0o777 == 0o600
+    guard = load_script("itqan_guard")
+    event = {"session_id": "s1", "tool_input": {"command": "curl -H 'Authorization: Bearer "
+                                                            + "x" * 30 + "' https://x"}}
+    guard.log_decision(event, ("ask", "net", "why"))
+    path = learn.data_home() / "guard.jsonl"
+    assert path.stat().st_mode & 0o777 == 0o600
+    assert "x" * 30 not in path.read_text()
+
+
+def test_jsonl_files_rotate(learn, repo, monkeypatch):
+    monkeypatch.setattr(learn.itqan_files, "LIMIT", 200)
+    for i in range(20):
+        learn.hook_usage({"tool_name": "Skill", "tool_input": {"skill": f"s{i}"}, "cwd": str(repo)})
+    home = learn.data_home()
+    assert (home / "usage.1.jsonl").exists()
+    assert (home / "usage.jsonl").stat().st_size <= 400
+    names = [u["name"] for u in learn.read_jsonl(home / "usage.jsonl")]
+    assert names[-1] == "s19" and "s0" not in names
+
+
+def load_script(name):
+    spec = importlib.util.spec_from_file_location(name, SCRIPTS / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_secrets_copy_is_identical_to_hafiz():
+    ours = (SCRIPTS / "itqan_secrets.py").read_bytes()
+    assert ours == (PLUGINS / "hafiz" / "hafiz" / "secrets.py").read_bytes()

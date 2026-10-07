@@ -97,6 +97,8 @@ In `~/.claude/nexika/itqan/` (`ITQAN_HOME` to move it): `guard.jsonl` (guard dec
 `sessions.jsonl` (per-session guard summary), `signals.jsonl` (messages flagged as corrections),
 `usage.jsonl` (skills/agents used), `projects/<name>-<hash>/learn.json` (lessons and their
 evidence). In the project: `.itqan/rules.md` (approved rules, meant to be committed).
+Files are readable only by you (0600 in a 0700 folder), known secret shapes are replaced with
+`[secret]` before anything is written, and each `.jsonl` file is rotated to `<name>.1.jsonl` at 1 MB.
 
 ## Works with the family
 - **barq**: agents and skills use `barq` for cheap, batched context and short test/build output

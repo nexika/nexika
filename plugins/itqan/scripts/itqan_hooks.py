@@ -17,6 +17,8 @@ from pathlib import Path
 PLUGIN = Path(__file__).resolve().parent.parent
 PACKS = PLUGIN / "packs"
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import itqan_files  # noqa: E402
+
 SKIP_DIRS = {"node_modules", "bin", "obj", "dist", "build", "venv", "__pycache__", "target", "vendor"}
 MAX_DEPTH = 3
 
@@ -46,18 +48,7 @@ def detect_stacks(root: Path) -> list[str]:
     return [s for s in STACK_MARKERS if s in found]
 
 
-def _read_jsonl(path: Path) -> list[dict]:
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return []
-    out = []
-    for line in lines:
-        try:
-            out.append(json.loads(line))
-        except ValueError:
-            continue
-    return out
+_read_jsonl = itqan_files.read_jsonl
 
 
 def last_session_note(current: str) -> str:
@@ -116,10 +107,7 @@ def session_end(hook: dict) -> None:
         "ask": counts.get("ask", 0),
         "rules": sorted({e.get("rule", "?") for e in events}),
     }
-    home = data_home()
-    home.mkdir(parents=True, exist_ok=True)
-    with open(home / "sessions.jsonl", "a", encoding="utf-8") as fh:
-        fh.write(json.dumps(entry) + "\n")
+    itqan_files.append_jsonl(data_home() / "sessions.jsonl", entry)
 
 
 def main(argv: list[str]) -> int:
