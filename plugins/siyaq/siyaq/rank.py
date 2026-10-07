@@ -1,7 +1,9 @@
 """Relevance ranking (BM25), the match rule, summary-vs-full, and the token budget.
 
-An entry matches a prompt when its score passes min_score AND either a title/keyword term
-matched or at least two different terms matched: one shared body word is never enough.
+An entry matches a prompt when its score passes min_score AND either a term of its own heading
+or keywords matched or at least two different terms matched: one shared body word is never
+enough. A short prompt needs two matched terms (or a hand-written keyword), and an
+acknowledgement ("ok thanks", "تمام") matches nothing.
 """
 from __future__ import annotations
 
@@ -60,9 +62,25 @@ def score(index: dict, query: list[str]) -> list[tuple[float, dict, list[str]]]:
 
 
 BODY_ONLY_FACTOR = 3  # without a title/keyword hit, the score must clear a higher bar
+SHORT_PROMPT = 3      # prompts with at most this many meaningful terms need two hits
+ACK_WORDS = set("""
+ok okay k yes yep yeah yup sure fine good great nice perfect cool awesome thanks thank thx ty done
+merged lgtm continue proceed go ahead sounds right correct exactly agreed approved np alright
+تمام شكرا اوكي اوك ممتاز نعم ايوه اكيد طيب حلو كمل تابع موافق صح
+""".split())
+ACK_MAX_WORDS = 6
 
 
-def qualifies(entry: dict, matched: list[str], value: float, cfg: dict) -> bool:
+def is_acknowledgement(prompt: str) -> bool:
+    words = text.normalize(prompt).replace("،", " ").split()
+    words = [w.strip(".,!?;:()'\"؟") for w in words]
+    words = [w for w in words if w]
+    return bool(words) and len(words) <= ACK_MAX_WORDS and words[0] in ACK_WORDS
+
+
+def qualifies(entry: dict, matched: list[str], value: float, cfg: dict, short: bool = False) -> bool:
+    if short and len(matched) < 2 and not any(t in entry.get("key_terms", ()) for t in matched):
+        return False
     if any(t in entry["head"] for t in matched):
         return value >= cfg["min_score"]
     return len(matched) >= 2 and value >= cfg["min_score"] * BODY_ONLY_FACTOR
@@ -93,8 +111,9 @@ def _level(entry: dict, strong: bool, cfg: dict) -> str:
 
 def _pack(candidates: list[tuple[dict, str, float, list[str]]], shown: dict, budget_chars: int,
           top_k: int, cfg: dict) -> list[dict]:
+    """The top `top_k` candidates, less those Claude already has: a repeat never pulls in weaker ones."""
     picked, used = [], 0
-    for entry, level, value, matched in candidates:
+    for entry, level, value, matched in candidates[:top_k]:
         before = shown.get(entry["id"])
         if before == "full" or (before == "summary" and level == "summary"):
             continue  # Claude already has it
@@ -108,19 +127,18 @@ def _pack(candidates: list[tuple[dict, str, float, list[str]]], shown: dict, bud
         picked.append({"entry": entry, "level": level, "score": round(value, 2), "matched": matched,
                        "text": body})
         used += len(body)
-        if len(picked) >= top_k:
-            break
     return picked
 
 
 def select_for_prompt(index: dict, prompt: str, cfg: dict, shown: dict) -> list[dict]:
     query = text.tokens(prompt)
-    if not query:
+    if not query or is_acknowledgement(prompt):
         return []
     unique_q = set(query)
+    short = len(unique_q) <= SHORT_PROMPT
     candidates = []
     for value, entry, matched in score(index, query):
-        if not qualifies(entry, matched, value, cfg):
+        if not qualifies(entry, matched, value, cfg, short):
             continue
         head_hits = sum(1 for t in matched if t in entry["head"])
         strong = head_hits >= 1 and len(matched) >= max(1, math.ceil(len(unique_q) * 0.5))

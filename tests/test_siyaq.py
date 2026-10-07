@@ -222,9 +222,9 @@ def test_prompt_hook_injects_once_per_session(repo):
     assert "### Deployment > Rollback  (docs/deploy.md:4-" in data["additionalContext"]
     assert "(more: read docs/deploy.md" in data["additionalContext"]  # weak match: summary first
     assert hooks.on_prompt(prompt_event(repo, "how do we roll back a release?")) is None  # already sent
-    upgraded = hooks.on_prompt(prompt_event(repo, "rollback again please"))  # strong match: full, once
+    upgraded = hooks.on_prompt(prompt_event(repo, "rollback the release again"))  # strong: full, once
     assert "ask the DBA first" in context_of(upgraded)
-    assert hooks.on_prompt(prompt_event(repo, "rollback again please")) is None
+    assert hooks.on_prompt(prompt_event(repo, "rollback the release again")) is None
     assert hooks.on_prompt(prompt_event(repo, "how do we roll back?", session="other")) is not None
 
 
@@ -312,3 +312,45 @@ def test_hook_entry_point_never_fails(tmp_path):
     res = subprocess.run([sys.executable, str(SIYAQ_ROOT / "bin" / "siyaq"), "hook", "prompt"], input="{bad",
                          capture_output=True, text=True, cwd=tmp_path)
     assert res.returncode == 0 and res.stdout == ""
+
+
+# ---------------------------------------------------------------- relevance (#38)
+
+
+def test_only_a_sections_own_heading_counts(repo):
+    (repo / "docs" / "hafiz.md").write_text(
+        "# Hafiz\n\nHafiz keeps the memory of a project between sessions, with nothing sent anywhere.\n\n"
+        "## Storage\nMemories are JSON lines in the data folder, owner-only, capped at three thousand.\n\n"
+        "## Search\nSearch ranks memories by words, branch and date, in Arabic and in English.\n")
+    picked = picked_titles(repo, "what does hafiz remember between sessions?")
+    assert "Hafiz" in picked and "Hafiz > Storage" not in picked and "Hafiz > Search" not in picked
+
+
+def test_a_short_prompt_needs_more_than_one_hit(repo):
+    (repo / "docs" / "amin.md").write_text(
+        "# Amin\n\n## Merges\nAmin prepares the release notes and the version but never merges a pull "
+        "request by itself; a person merges after review.\n")
+    assert picked_titles(repo, "merged") == []
+    assert picked_titles(repo, "عندي مشكلة في الكوبون") == ["Coupon codes"]  # a written keyword still counts
+
+
+@pytest.mark.parametrize("prompt", ["ok thanks", "yes, rollback it", "great, merged", "تمام شكرا",
+                                    "lgtm, go ahead"])
+def test_acknowledgements_inject_nothing(repo, prompt):
+    assert hooks.on_prompt(prompt_event(repo, prompt)) is None
+
+
+def test_back_links_are_not_triggers(repo):
+    (repo / "README.md").write_text("# Shop\n")
+    (repo / "docs" / "guide.md").write_text("# Guide\n\n## Links\nPart of [Shop](../README.md). The deploy "
+                                           "notes are in deploy.md, worth reading before a release.\n")
+    guide = entries_by_title(idx.build(repo))["Guide > Links"]
+    assert "README.md" in guide["refs"] and "README.md" not in guide["paths"]
+    assert "docs/deploy.md" in guide["paths"]
+
+
+def test_top_results_are_picked_before_dropping_ones_already_shown(repo):
+    prompt = "roll back the release from production staging"
+    assert picked_titles(repo, prompt, top_k=2) == ["Deployment > Rollback", "Deployment > Environments"]
+    shown = {"docs/deploy.md#deployment-rollback": "full"}
+    assert picked_titles(repo, "roll back the release from production staging", shown=shown, top_k=1) == []
