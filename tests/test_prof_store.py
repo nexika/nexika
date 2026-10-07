@@ -36,6 +36,12 @@ def text(t):
     return {"type": "text", "text": t}
 
 
+def slash(command, args=""):
+    """How Claude Code records a slash command the user ran."""
+    return user(f"<command-message>{command[1:]} is running…</command-message>\n"
+                f"<command-name>{command}</command-name>\n<command-args>{args}</command-args>")
+
+
 # ---------------------------------------------------------------- slugify
 
 
@@ -164,7 +170,7 @@ def test_session_start_silent_inside_background_report(store, capsys, monkeypatc
 
 def test_extract_conversation_detects_tutoring_and_counts_turns(store, tmp_path):
     path = write_transcript(tmp_path / "t.jsonl", [
-        user("/prof:learn generators"),
+        slash("/prof:learn", "generators"),
         assistant({"type": "tool_use", "name": "Skill", "input": {"skill": "prof:warmup", "args": "py"}}),
         assistant(text("Q1: what does yield do?")),
         user("it returns a value"),
@@ -199,11 +205,12 @@ def popen_calls(store, monkeypatch):
 
 def tutoring_transcript(tmp_path):
     return write_transcript(tmp_path / "t.jsonl", [
-        user("/prof:learn loops"), assistant(text("Q1?")), user("a"), user("b"), user("bye"),
+        slash("/prof:learn", "loops"), assistant(text("Q1?")), user("a"), user("b"), user("bye"),
     ])
 
 
 def test_session_end_spawns_background_report(store, tmp_path, popen_calls):
+    store.set_auto_report(True)
     store.session_end({"session_id": "abcd1234zz", "transcript_path": str(tutoring_transcript(tmp_path))})
     assert len(popen_calls) == 1
     args, kwargs = popen_calls[0]
@@ -220,7 +227,7 @@ def test_session_end_skips_plain_session(store, tmp_path, popen_calls):
 
 
 def test_session_end_skips_short_session(store, tmp_path, popen_calls):
-    path = write_transcript(tmp_path / "t.jsonl", [user("/prof:learn x"), user("bye")])
+    path = write_transcript(tmp_path / "t.jsonl", [slash("/prof:learn", "x"), user("bye")])
     store.session_end({"session_id": "s1", "transcript_path": str(path)})
     assert popen_calls == []
 
@@ -232,11 +239,42 @@ def test_session_end_skips_when_report_exists(store, tmp_path, popen_calls):
 
 
 def test_session_end_professor_style_counts_as_tutoring(store, tmp_path, popen_calls):
+    store.set_auto_report(True)
     (tmp_path / ".claude").mkdir()
     (tmp_path / ".claude" / "settings.local.json").write_text('{"outputStyle": "Professor"}')
     rows = [user("what is a loop"), user("ok"), user("why"), user("bye")]
     path = write_transcript(tmp_path / "t.jsonl", rows)
     store.session_end({"session_id": "s1", "transcript_path": str(path), "cwd": str(tmp_path)})
+    assert len(popen_calls) == 1
+
+
+# issue #43: any message mentioning /prof: started a paid background report without asking
+
+
+def test_mentioning_prof_in_a_message_is_not_tutoring(store, tmp_path, popen_calls):
+    store.set_auto_report(True)
+    rows = [user("how do I turn off /prof:report?"), user("ok"), user("and /prof:learn?"), user("bye")]
+    path = write_transcript(tmp_path / "t.jsonl", rows)
+    assert store.extract_conversation(path)[1] is False
+    store.session_end({"session_id": "s1", "transcript_path": str(path), "cwd": str(tmp_path)})
+    assert popen_calls == []
+
+
+def test_no_background_report_until_the_learner_agrees(store, tmp_path, popen_calls, capsys):
+    hook = {"session_id": "abcd1234zz", "transcript_path": str(tutoring_transcript(tmp_path))}
+    assert store.auto_report_setting() is None
+    store.session_end(hook)
+    assert popen_calls == []
+    assert "not enabled" in store.LOG.read_text()
+    store.session_start({"session_id": "s2"})
+    assert "auto-report on" in capsys.readouterr().out          # Claude is told to ask once
+    assert store.main(["prof_store.py", "auto-report", "off"]) == 0
+    store.session_end(hook)
+    assert popen_calls == [] and store.auto_report_setting() is False
+    store.session_start({"session_id": "s3"})
+    assert "auto-report on" not in capsys.readouterr().out      # asked once, never again
+    store.main(["prof_store.py", "auto-report", "on"])
+    store.session_end(hook)
     assert len(popen_calls) == 1
 
 

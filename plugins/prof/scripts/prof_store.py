@@ -4,14 +4,17 @@
 Commands:
   session-start            SessionStart hook. Prints the learner context: profile, what to
                            review from past sessions, and the warm-up rule. (stdin: hook JSON)
-  session-end              SessionEnd hook. If this session was a tutoring session and no
-                           report was written, generates one in the background. (stdin: hook JSON)
+  session-end              SessionEnd hook. If this session was a tutoring session, no report
+                           was written and the learner agreed to automatic reports, generates
+                           one in the background. (stdin: hook JSON)
   merge-report FILE        Apply a report's "Concept checklist" to the per-topic files.
   topic SLUG               Print everything known about one topic (used by the warmup skill).
+  auto-report on|off|status    The learner's answer to "write reports automatically?" (asked once).
   write-auto-report SID CONVO   Internal: runs detached, asks `claude -p` for the report.
 
 Data lives in ~/.claude/nexika/prof (override with PROF_HOME):
   profile.md                 learner profile (managed by the progress skill)
+  settings.json              {"auto_report": true|false}; missing = not asked yet (no auto reports)
   reports/DATE_HHMM_SID8.md  one report per session
   topics/SLUG.md             concept checklist per topic, merged from the reports
 """
@@ -32,6 +35,7 @@ TOPICS = HOME / "topics"
 TMP = HOME / "tmp"
 PROFILE = HOME / "profile.md"
 LOG = HOME / "hook.log"
+SETTINGS = HOME / "settings.json"
 MERGED = REPORTS / ".merged"
 
 # Set on the background `claude -p` run so its own hooks don't recurse.
@@ -101,6 +105,17 @@ Rules:
 """
 
 
+AUTO_REPORT_NOTE = {
+    True: "If a tutoring session ends without a report, one is written automatically in the background "
+          "(turn off: python3 {script} auto-report off).",
+    False: "Automatic reports are off (the learner said no); only prof:report writes one.",
+    None: "Automatic reports are off until the learner agrees. In the first tutoring session, ask once: "
+          "\"When a study session ends without a report, should I write one in the background? It runs "
+          "Claude (Sonnet) on the session text, which uses your plan or API credits.\" Store the answer "
+          "with python3 {script} auto-report on (or auto-report off), and don't ask again.",
+}
+
+
 def known_topics_text() -> str:
     lines = []
     for slug, title, _last, _open, _stale in topic_summaries():
@@ -135,6 +150,26 @@ def _read_hook_input() -> dict:
 def slugify(text: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
     return slug[:60] or "general"
+
+
+def auto_report_setting() -> bool | None:
+    """True/False once the learner answered; None = never asked (automatic reports stay off)."""
+    try:
+        value = json.loads(SETTINGS.read_text(encoding="utf-8")).get("auto_report")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return value if isinstance(value, bool) else None
+
+
+def set_auto_report(on: bool) -> None:
+    try:
+        data = json.loads(SETTINGS.read_text(encoding="utf-8"))
+        data = data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        data = {}
+    data["auto_report"] = on
+    HOME.mkdir(parents=True, exist_ok=True)
+    SETTINGS.write_text(json.dumps(data, indent=1) + "\n", encoding="utf-8")
 
 
 def report_for_session(sid: str) -> Path | None:
@@ -276,8 +311,8 @@ def session_start(hook: dict) -> None:
           f"{TOPICS}. Test the open items and retention checks, estimate the level, and if "
           "the learner missed something from earlier sessions, re-teach it before any new "
           "concept. Do the warm-up once per topic per session.")
-    p("\nAt the end of a tutoring session (learner says bye/done/that's all), run "
-      "prof:report. If the session ends without one, a report is generated automatically.")
+    p("\nAt the end of a tutoring session (learner says bye/done/that's all), run prof:report.")
+    p(AUTO_REPORT_NOTE[auto_report_setting()].format(script=script))
 
 
 def _settings_style_is_professor(cwd: str) -> bool:
@@ -328,7 +363,8 @@ def extract_conversation(transcript: Path) -> tuple[str, bool, int]:
             if not text:
                 continue
             if kind == "user":
-                if "/prof:" in text:
+                # a /prof: command the user ran (not a message that merely mentions one)
+                if re.search(r"<command-name>/?prof:", text):
                     tutoring = True
                 if not text.startswith("<system-reminder>"):
                     turns += 1
@@ -349,6 +385,9 @@ def session_end(hook: dict) -> None:
     if not tutoring:
         tutoring = _settings_style_is_professor(hook.get("cwd") or os.getcwd())
     if not tutoring or turns < 3:
+        return
+    if auto_report_setting() is not True:
+        _log(f"auto-report for {sid[:8]} skipped: not enabled (prof_store.py auto-report on)")
         return
     TMP.mkdir(parents=True, exist_ok=True)
     convo_path = TMP / f"{sid[:8]}.txt"
@@ -429,6 +468,11 @@ def main(argv: list[str]) -> int:
             print(f"merged {n} concepts from {argv[2]} into {TOPICS}")
         elif cmd == "topic" and len(argv) > 2:
             return print_topic(argv[2])
+        elif cmd == "auto-report" and len(argv) > 2 and argv[2] in ("on", "off", "status"):
+            if argv[2] != "status":
+                set_auto_report(argv[2] == "on")
+            state = {True: "on", False: "off", None: "not asked yet (off)"}[auto_report_setting()]
+            print(f"automatic reports: {state}")
         elif cmd == "write-auto-report" and len(argv) > 3:
             return write_auto_report(argv[2], Path(argv[3]))
         else:
