@@ -5,7 +5,10 @@ Rules, in order:
 - only when the dependency files match your checkout; otherwise "dependencies differ", never an install
 - only the failing tests, with the project's own test tool and its existing environment (venv,
   node_modules), names checked so nothing from the log can become an option
-- your working tree is never touched; the worktree is removed afterwards
+- your working tree is never touched; the worktree is removed afterwards, also when tabib is
+  stopped (SIGTERM, SIGHUP), and a worktree left by a run that died is swept on the next one
+- the tests run in their own process group, killed as a whole, and stop before the Bash tool's
+  120 s limit
 """
 from __future__ import annotations
 
@@ -13,15 +16,17 @@ import os
 import platform
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from pathlib import Path
 
 from . import compare, secrets
 
-TIMEOUT = 600
+TIMEOUT = 90  # under the Bash tool's 120 s, which stops tabib without warning
 SAFE_NAME = re.compile(r"^[\w][\w./:@\[\]=,+-]*$")
 SAFE_PATH = re.compile(r"^[\w][\w./@+-]*$")
 GO_NAME = re.compile(r"^[A-Za-z_]\w*(?:/[\w-]+)*$")
@@ -116,6 +121,57 @@ FORK = ("the commit is not on a branch of this repository (a fork's pull request
         "on your machine, so tabib does not run it: run it yourself only if you trust it")
 
 
+class Stopped(Exception):
+    """tabib was asked to stop (SIGTERM, SIGHUP) while a worktree existed."""
+
+
+def _stop(signum, _frame):
+    raise Stopped(signum)
+
+
+def _alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except (PermissionError, OSError):
+        return True
+    return True
+
+
+def sweep(repo: str) -> None:
+    """Remove tabib worktrees whose run died before cleaning up (its owner process is gone)."""
+    _, listing = compare.git(repo, "worktree", "list", "--porcelain", timeout=30)
+    temp = Path(tempfile.gettempdir()).resolve()
+    for line in listing.splitlines():
+        if not line.startswith("worktree "):
+            continue
+        place = Path(line[len("worktree "):])
+        parent = place.parent
+        if place.name != "worktree" or not parent.name.startswith("tabib-") or parent.parent.resolve() != temp:
+            continue
+        try:
+            owner = int((parent / "owner").read_text().strip())
+        except (OSError, ValueError):
+            owner = 0
+        if owner and _alive(owner):
+            continue  # another tabib run is still using it
+        compare.git(repo, "worktree", "remove", "--force", str(place), timeout=60)
+        shutil.rmtree(parent, ignore_errors=True)
+    compare.git(repo, "worktree", "prune", timeout=30)
+
+
+def _kill(proc: subprocess.Popen) -> None:
+    """Stop the test command and everything it started (pytest-xdist workers, node, go test binaries)."""
+    try:
+        if hasattr(os, "killpg"):
+            os.killpg(proc.pid, signal.SIGKILL)
+        else:
+            proc.kill()
+    except (ProcessLookupError, PermissionError, OSError):
+        pass
+
+
 def run(repo: str, sha: str, branch: str, failures: list[dict], jobs: list[dict],
         fork: bool | None = False) -> dict:
     """`fork` is what the CI service says about the run's origin: only False (this repository) runs."""
@@ -135,16 +191,22 @@ def run(repo: str, sha: str, branch: str, failures: list[dict], jobs: list[dict]
         return {"status": "skipped",
                 "why": "dependencies differ from your checkout: " + ", ".join(differ[:5])}
     argv, label = picked
-    parent = Path(tempfile.mkdtemp(prefix="tabib-"))  # 0700: nobody else can swap the folder
-    place = parent / "worktree"
-    code, _ = compare.git(repo, "worktree", "add", "--detach", "--quiet", str(place), sha, timeout=300)
-    if code != 0:
-        compare.git(repo, "worktree", "remove", "--force", str(place), timeout=60)
-        shutil.rmtree(parent, ignore_errors=True)
-        compare.git(repo, "worktree", "prune", timeout=30)
-        return {"status": "error", "why": "could not create a worktree for the failing commit"}
-    shown = " ".join([Path(argv[0]).name if os.path.isabs(argv[0]) else argv[0], *argv[1:]])
+    sweep(repo)
+    # SIGTERM and SIGHUP become an exception, so the worktree is removed on the way out.
+    handled = [sig for sig in (getattr(signal, "SIGTERM", None), getattr(signal, "SIGHUP", None)) if sig]
+    previous = {}
+    if threading.current_thread() is threading.main_thread():
+        previous = {sig: signal.signal(sig, _stop) for sig in handled}
+    parent = place = None
+    proc = None
     try:
+        parent = Path(tempfile.mkdtemp(prefix="tabib-"))  # 0700: nobody else can swap the folder
+        (parent / "owner").write_text(str(os.getpid()))
+        place = parent / "worktree"
+        code, _ = compare.git(repo, "worktree", "add", "--detach", "--quiet", str(place), sha, timeout=300)
+        if code != 0:
+            return {"status": "error", "why": "could not create a worktree for the failing commit"}
+        shown = " ".join([Path(argv[0]).name if os.path.isabs(argv[0]) else argv[0], *argv[1:]])
         if (root / "node_modules").is_dir() and not (place / "node_modules").exists():
             (place / "node_modules").symlink_to(root / "node_modules", target_is_directory=True)
         env = {**os.environ, "CI": "1"}
@@ -153,18 +215,33 @@ def run(repo: str, sha: str, branch: str, failures: list[dict], jobs: list[dict]
             env["PYTHONPATH"] = os.pathsep.join([*paths, env.get("PYTHONPATH", "")]).rstrip(os.pathsep)
         start = time.monotonic()
         try:
-            done = subprocess.run(argv, cwd=place, capture_output=True, text=True, timeout=TIMEOUT,
-                                  check=False, stdin=subprocess.DEVNULL, env=env)
-            exit_code, output = done.returncode, (done.stdout or "") + (done.stderr or "")
-        except subprocess.TimeoutExpired:
-            exit_code, output = 124, f"stopped after {TIMEOUT} s"
+            proc = subprocess.Popen(argv, cwd=place, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                    text=True, stdin=subprocess.DEVNULL, env=env,
+                                    start_new_session=True)
         except OSError as error:
             return {"status": "error", "why": f"{argv[0]}: {error}", "command": shown}
+        try:
+            output, _ = proc.communicate(timeout=TIMEOUT)
+            exit_code, output = proc.returncode, output or ""
+        except subprocess.TimeoutExpired:
+            _kill(proc)
+            proc.communicate()
+            exit_code, output = 124, f"stopped after {TIMEOUT} s"
         seconds = round(time.monotonic() - start, 1)
+    except Stopped as stop:
+        raise SystemExit(128 + stop.args[0]) from None
     finally:
-        compare.git(repo, "worktree", "remove", "--force", str(place), timeout=60)
-        shutil.rmtree(parent, ignore_errors=True)
+        for sig in previous:  # a second signal must not cut the cleanup short
+            signal.signal(sig, signal.SIG_IGN)
+        if proc is not None and proc.poll() is None:
+            _kill(proc)
+        if place is not None:
+            compare.git(repo, "worktree", "remove", "--force", str(place), timeout=60)
+        if parent is not None:
+            shutil.rmtree(parent, ignore_errors=True)
         compare.git(repo, "worktree", "prune", timeout=30)
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
     tail = [line[:300] for line in secrets.redact(output).splitlines() if line.strip()][-30:]
     if label == "pytest" and exit_code in (4, 5):
         status, why = "error", "pytest could not collect the failing tests at that commit"

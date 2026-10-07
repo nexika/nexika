@@ -246,6 +246,66 @@ def test_does_not_run_when_dependencies_differ(project):
     assert found["status"] == "skipped" and "pyproject.toml" in found["why"]
 
 
+def _alive(pid):
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    # A zombie still answers kill(0); it is gone once its state is Z.
+    try:
+        return Path(f"/proc/{pid}/stat").read_text().split(")")[-1].split()[0] != "Z"
+    except OSError:
+        return True
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX signals")
+def test_sigterm_removes_the_worktree_and_stops_the_tests(project, tmp_path):
+    import signal
+    import time
+    marker = tmp_path / "test-pid"
+    git(project, "switch", "-q", "feat/x")
+    (project / "tests" / "test_a.py").write_text(
+        "import os, time\n"
+        f"def test_a():\n    open({str(marker)!r}, 'w').write(str(os.getpid()))\n    time.sleep(60)\n")
+    git(project, "commit", "-qam", "slow test")
+    git(project, "push", "-q", "origin", "feat/x")
+    sha = git(project, "rev-parse", "HEAD")
+    git(project, "switch", "-q", "main")
+    script = ("import sys; sys.path.insert(0, sys.argv[1]); from tabib import reproduce; "
+              "reproduce.run(sys.argv[2], sys.argv[3], 'feat/x', "
+              "[{'framework': 'pytest', 'kind': 'tests', 'test': 'tests/test_a.py::test_a', "
+              "'file': 'tests/test_a.py', 'line': 2, 'message': 'x'}], [])")
+    runner = subprocess.Popen([sys.executable, "-c", script, str(TABIB_ROOT), str(project), sha])
+    deadline = time.monotonic() + 60
+    while not marker.exists() and time.monotonic() < deadline:
+        time.sleep(0.1)
+    assert marker.exists(), "the test never started"
+    time.sleep(0.2)
+    test_pid = int(marker.read_text())
+    runner.send_signal(signal.SIGTERM)
+    runner.wait(timeout=30)
+    deadline = time.monotonic() + 10
+    while _alive(test_pid) and time.monotonic() < deadline:
+        time.sleep(0.1)
+    assert not _alive(test_pid), "the test process outlived tabib"
+    assert git(project, "worktree", "list").count("\n") == 0
+
+
+def test_stale_worktrees_of_a_dead_run_are_swept(project, tmp_path):
+    import tempfile
+    parent = Path(tempfile.mkdtemp(prefix="tabib-"))
+    git(project, "worktree", "add", "--detach", "--quiet", str(parent / "worktree"), "main")
+    dead = subprocess.Popen([sys.executable, "-c", "pass"])
+    dead.wait()
+    (parent / "owner").write_text(str(dead.pid))
+    reproduce.sweep(str(project))
+    assert git(project, "worktree", "list").count("\n") == 0
+    assert not parent.exists()
+    assert reproduce.TIMEOUT < 120  # the Bash tool gives up at 120 s
+
+
 def test_compare_marks_suspects(project):
     green, bad = git(project, "rev-parse", "main"), git(project, "rev-parse", "feat/x")
     found = compare.compare(str(project), green, bad, ["tests/test_a.py"])
