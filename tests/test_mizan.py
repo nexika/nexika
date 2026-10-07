@@ -283,6 +283,52 @@ def test_tasks_from_transcript(tmp_path):
     assert tasks.from_transcript(str(tmp_path / "missing.jsonl")) == []
 
 
+def _agent_transcript(tmp_path):
+    def use(i, desc, kind="Explore"):
+        return {"type": "assistant", "message": {"content": [{"type": "tool_use", "id": f"toolu_{i}", "name": "Agent",
+                                                              "input": {"description": desc, "subagent_type": kind,
+                                                                        "prompt": "..."}}]}}
+
+    def result(i, launched=True):
+        return {"type": "user", "toolUseResult": {"status": "async_launched" if launched else "completed"},
+                "message": {"content": [{"type": "tool_result", "tool_use_id": f"toolu_{i}",
+                                         "content": [{"type": "text", "text": "Async agent launched successfully."
+                                                      if launched else "Found it."}]}]}}
+
+    def notified(i, state="completed"):
+        return {"type": "user", "message": {"content": f"<task-notification>\n<task-id>a{i}</task-id>\n"
+                                                       f"<tool-use-id>toolu_{i}</tool-use-id>\n"
+                                                       f"<status>{state}</status>\n</task-notification>"}}
+
+    rows = [{"type": "user", "message": {"content": "an older request"}}, use(0, "old work"), result(0, False),
+            {"type": "user", "message": {"content": [{"type": "text", "text": "review the branch"}]}},
+            use(1, "code review", "general-purpose"), result(1), use(2, "security review"), result(2),
+            use(3, "find the tests"), result(3, False), notified(1)]
+    path = tmp_path / "agents.jsonl"
+    path.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+    return path
+
+
+def test_agents_give_the_task_step_without_todowrite(tmp_path):
+    # Real sessions: hundreds of Agent calls and no TodoWrite, so the step and the proof question never ran.
+    path = _agent_transcript(tmp_path)
+    found = tasks.agents_from_transcript(str(path))
+    assert [(a["description"], a["status"]) for a in found] == [
+        ("code review", "completed"), ("security review", "running"), ("find the tests", "completed")]
+    items = tasks.from_agents(found)
+    summary = tasks.summarize(items)
+    assert (summary["total"], summary["done"], summary["step"], summary["current"]) == (3, 2, 2, "security review")
+    assert tasks.summarize(tasks.from_agents([{**a, "status": "completed"} for a in found]))["all_done"]
+
+
+def test_status_line_fallback_shows_agents_and_their_step(tmp_path, env):
+    path = _agent_transcript(tmp_path)
+    snap = snapshot.build({"session_id": "s9", "transcript_path": str(path), "workspace": {"current_dir": str(env)}})
+    assert snap["agents"] == [{"type": "Explore", "description": "security review"}]
+    assert (snap["tasks"]["total"], snap["tasks"]["step"]) == (3, 2)
+    assert "Agent Explore: security review" in render.plain(snap["band"])
+
+
 # ---------------------------------------------------------------- the helper: status, statusline, report, export
 
 MOD_PAYLOAD = {"session": "s1", "context": {"percent": 52, "tokens": 104000, "window": 200000},

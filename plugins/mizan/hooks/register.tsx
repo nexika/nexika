@@ -56,6 +56,10 @@ let lastTick = 0
 let transcript = ''
 let alerted = new Set<string>()
 let wasAllDone: boolean | undefined
+// Without TodoWrite or TaskCreate, the main loop's agents are the task list: one item an agent,
+// kept after the engine drops a finished one, until the person's next message starts a new batch.
+const agentTasks = new Map<string, MizanTask>()
+let agentsWereDone = false
 
 async function helper($: EngineInterface, which: Helper, input: Json): Promise<Json | null> {
   const argv = ['python3', `${$.plugin.root}/bin/mizan`, ...HELPER[which]]
@@ -102,9 +106,12 @@ async function tick($: EngineInterface): Promise<MizanView | null> {
   busy = true
   try {
     const usage = await $.session.usage()
-    const agents = (await $.agent.list())
+    const listed = await $.agent.list()
+    const agents = listed
       .filter(agent => agent.status === 'running')
       .map(agent => ({ type: agent.type, description: agent.description }))
+    const own = await read($, tasks)
+    const items = own.length > 0 ? own : fromAgents(listed.filter(agent => agent.parentId === undefined))
     const out = await helper($, 'status', {
       session: await $.session.id(),
       cwd: await $.session.cwd(),
@@ -117,17 +124,38 @@ async function tick($: EngineInterface): Promise<MizanView | null> {
       },
       cost: { usd: usage.cost?.usd ?? null },
       agents,
-      tasks: { items: await read($, tasks) },
+      tasks: { items },
     })
     const next = out === null ? null : toView(out)
     if (next === null) return read($, view)
     await update($, view, () => next)
     alert($, next)
+    if (own.length === 0 && items.length > 0) {
+      const allDone = items.every(task => task.status === 'completed')
+      if (allDone && !agentsWereDone) await askForProof($)
+      agentsWereDone = allDone
+    }
     return next
   } finally {
     busy = false
     lastTick = await $.clock.now()
   }
+}
+
+const FINISHED = new Set(['completed', 'failed', 'killed', 'idle'])
+
+function fromAgents(listed: readonly { id: string; description: string; type: string; status: string }[]): MizanTask[] {
+  const present = new Set<string>()
+  for (const agent of listed) {
+    present.add(agent.id)
+    const text = agent.description || agent.type
+    agentTasks.set(agent.id, { id: agent.id, text, active: text, status: FINISHED.has(agent.status) ? 'completed' : 'in_progress' })
+  }
+  // The engine drops a finished agent from its list: gone means done.
+  for (const [id, task] of agentTasks) {
+    if (!present.has(id) && task.status !== 'completed') agentTasks.set(id, { ...task, status: 'completed' })
+  }
+  return [...agentTasks.values()]
 }
 
 function soon($: EngineInterface): void {
@@ -174,15 +202,17 @@ async function balance($: EngineInterface): Promise<void> {
 async function afterTasks($: EngineInterface): Promise<void> {
   const list = await read($, tasks)
   const allDone = list.length > 0 && list.every(task => task.status === 'completed')
-  if (allDone && wasAllDone === false) {
-    const question: MizanAsk = {
-      kind: 'proof',
-      text: (await read($, view))?.labels.proof_ask ?? 'Done. Show me the proof?',
-    }
-    await update($, ask, current => (current.kind === 'full' ? current : question))
-  }
+  if (allDone && wasAllDone === false) await askForProof($)
   wasAllDone = allDone
   soon($)
+}
+
+async function askForProof($: EngineInterface): Promise<void> {
+  const question: MizanAsk = {
+    kind: 'proof',
+    text: (await read($, view))?.labels.proof_ask ?? 'Done. Show me the proof?',
+  }
+  await update($, ask, current => (current.kind === 'full' ? current : question))
 }
 
 async function loadProof($: EngineInterface): Promise<boolean> {
@@ -232,6 +262,13 @@ export const register: Register = on => {
     return next(e)
   }).catch(($, e, next) => next(e))
 
+  // The person's next message starts a new batch of agents; the finished ones leave the list.
+  on('prompt.submit', ($, e, next) => {
+    for (const [id, task] of agentTasks) if (task.status === 'completed') agentTasks.delete(id)
+    agentsWereDone = false
+    return next(e)
+  }).catch(($, e, next) => next(e))
+
   on('session.measure', async ($, e, next) => {
     if ((await $.clock.now()) - lastTick > MIN_GAP_MS) soon($)
     return next(e)
@@ -241,6 +278,8 @@ export const register: Register = on => {
   on('session.end', async ($, e, next) => {
     transcript = ''
     wasAllDone = undefined
+    agentTasks.clear()
+    agentsWereDone = false
     await update($, ask, () => NO_ASK)
     await update($, flow, () => ({ fullDone: false, midTurns: 0 }))
     await update($, tasks, () => [])

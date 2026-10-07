@@ -28,7 +28,7 @@ In Arabic (`"lang": "ar"`, or an Arabic system locale):
 | **Context** | fresh under 40 %, mid 40-75 %, full above 75 % |
 | **Cost** | this session in dollars; with a daily budget set, today's total across sessions |
 | **Agent** | the running agent and its task, `+n more` when several run |
-| **Task** | where Claude stands in its task list, like `3/7: Writing tests` |
+| **Task** | where Claude stands in its task list, like `3/7: Writing tests`; without one, its agents are the list (started since your last message, done when they finish) |
 | **haris** | its profile, or `haris watching` in watch mode |
 
 `/mizan` opens the details in a pane; `/mizan proof` opens itqan's proof.

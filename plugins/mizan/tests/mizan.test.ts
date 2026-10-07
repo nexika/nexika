@@ -36,7 +36,8 @@ const PANE: RenderPropsOf['Pane'] = {
 } as RenderPropsOf['Pane']
 const SUBCOMMANDS = ['status', 'handoff', 'proof']
 
-type World = { level: string; draft?: string; proof?: boolean; saved?: boolean; why?: boolean; fix?: boolean }
+type Agent = { id: string; type: string; description: string; status: 'running' | 'completed' | 'failed' }
+type World = { level: string; draft?: string; proof?: boolean; saved?: boolean; why?: boolean; fix?: boolean; agents?: Agent[] }
 type Calls = { runs: { argv: readonly string[]; stdin: string }[]; fills: string[]; opened: string[]; compacts: number }
 
 function snapshot(level: string, why = false, fix = false) {
@@ -65,7 +66,7 @@ function world(on: On, w: World): Calls {
   on('session.usage', () => ({
     value: { startedAt: 0, context: { window: 200_000, percent: 80, tokens: 160_000 }, rateLimits: [], cost: { usd: 1.5 } },
   }))
-  on('agent.list', () => ({ value: [] }))
+  on('agent.list', () => ({ value: [...(w.agents ?? [])] }))
   on('session.id', () => ({ value: 'test-session' }))
   on('session.cwd', () => ({ value: '/work/repo' }))
   on('prompt.read', () => ({ value: { text: w.draft ?? '', cursor: 0 } }))
@@ -240,4 +241,38 @@ test('no Fix when lawha has nothing to fix', async ($, on) => {
   const ui = await $.ui.mount({ plugin: 'mizan', surface: 'terminal', component: 'AbovePrompt', props: BAND })
   expect(await ui.find({ key: 'lawha-fix' })).toBeUndefined()
   await ui.unmount()
+})
+
+test('without a task list, the agents give the step and all of them done asks for the proof', async ($, on) => {
+  const clock = mock.clock(on)
+  const w: World = {
+    level: 'fresh',
+    proof: true,
+    agents: [
+      { id: 'a1', type: 'general-purpose', description: 'code review', status: 'running' },
+      { id: 'a2', type: 'Explore', description: 'find the tests', status: 'completed' },
+    ],
+  }
+  const calls = world(on, w)
+  await $.classic.Stop({ stop_hook_active: false })
+  await clock.settle()
+  const first = JSON.parse(calls.runs.filter(run => run.argv[2] === 'status').at(-1)?.stdin ?? '{}')
+  expect(first.tasks.items.map((t: { text: string; status: string }) => [t.text, t.status])).toEqual([
+    ['code review', 'in_progress'],
+    ['find the tests', 'completed'],
+  ])
+  expect(first.agents).toEqual([{ type: 'general-purpose', description: 'code review' }])
+  let ui = await $.ui.mount({ plugin: 'mizan', surface: 'terminal', component: 'AbovePrompt', props: BAND })
+  expect(await ui.find({ key: 'proof-yes' })).toBeUndefined()
+  await ui.unmount()
+  // The engine drops a finished agent from its list a little later: it still counts as done.
+  w.agents = []
+  await $.classic.Stop({ stop_hook_active: false })
+  await clock.settle()
+  const last = JSON.parse(calls.runs.filter(run => run.argv[2] === 'status').at(-1)?.stdin ?? '{}')
+  expect(last.tasks.items.every((t: { status: string }) => t.status === 'completed')).toBe(true)
+  ui = await $.ui.mount({ plugin: 'mizan', surface: 'terminal', component: 'AbovePrompt', props: BAND })
+  expect(await ui.find({ type: 'Text', text: 'Done. Show me the proof?' })).toBeDefined()
+  await ui.unmount()
+  onlyTheHelper(calls)
 })
