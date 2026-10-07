@@ -1,9 +1,9 @@
 """One reading of the session's balance: the nexika.mizan/1 snapshot.
 
 The input is what only the session knows (context, cost, running agents, tasks), either from the
-mod or from Claude Code's status line JSON; mizan adds git, gh/glab (cached), the device, haris and
-itqan. Context levels: fresh under 40 %, mid 40-75 %, full above 75 % (context_mid and context_full
-in config.json move them).
+mod or from Claude Code's status line JSON; mizan adds git, gh/glab (cached), the device, and what
+the other plugins published (haris, itqan, tabib, lawha, amin, manar, barq, prof). Context levels:
+fresh under 40 %, mid 40-75 %, full above 75 % (context_mid and context_full in config.json move them).
 """
 from __future__ import annotations
 
@@ -180,6 +180,7 @@ def build(raw: dict, publish: bool = False) -> dict:
     passed = bool(checks) and all(c.get("passed") for c in checks)
     snap["proof"] = {"available": bool(proof), "passed": passed, "created": proof.get("created", "")}
     snap["lawha"], snap["fix"] = _lawha(info)
+    snap["family"] = family.view(info.get("repo", "") if info else "")
     snap["band"] = render.band(snap, lang)
     snap["detail"] = render.detail(snap, lang)
     snap["alerts"] = [{"key": key, "text": f"{i18n.t(key, lang, p=part['percent'])}: "

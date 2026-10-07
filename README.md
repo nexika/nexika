@@ -82,6 +82,10 @@ folder, so only the plugins write there, never Claude.
 | `itqan.json` | itqan: the latest proof per project | mizan's proof pane |
 | `tabib.json` | tabib: the latest CI diagnosis per project and branch | mizan's band and pane, itqan's proof |
 | `lawha.json` | lawha: the latest check of each project's pages on every screen (a pointer into lawha's own folder) | mizan's band and pane, itqan's proof |
+| `amin.json` | amin: the projects of each repository ready to release (after plan, a note, prepare or publish) | mizan's band and pane |
+| `manar.json` | manar: the last audit's checklist score per project | mizan's pane |
+| `barq.json` | barq: today's calls and bytes saved, with the bytes it sent beyond the built-in tools kept apart | mizan's pane |
+| `prof.json` | prof: retention checks due and open items (at session start and after a report) | mizan's band and pane |
 
 ## Develop locally
 

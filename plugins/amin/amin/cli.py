@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
 
-from . import __version__, check, fragments, gitops, release, triage
+from . import __version__, check, fragments, gitops, release, status, triage
 from . import project as proj
 
 USAGE = f"""amin {__version__} - repository maintainer; you always merge (Nexika)
@@ -41,6 +42,20 @@ def find_project(root: Path, projects: list[proj.Project], name: str) -> proj.Pr
     if whole and whole.name == name and name not in {p.name for p in projects}:
         return whole
     return proj.find(projects, name)
+
+
+def publish_ready(root: Path, runner: gitops.Runner, plans: list[release.Plan] | None = None) -> None:
+    """status/amin.json (nexika.amin/1): the projects of each repo ready to release, for mizan."""
+    try:
+        plans = plans if plans is not None else release.plan(root, runner, proj.detect(root))
+    except (gitops.CommandError, OSError, ValueError):
+        return
+    ready = [{"name": pl.project.name, "next": pl.next} for pl in plans
+             if pl.status in ("release", "first-release")]
+    repos = status.read("amin").get("repos")
+    repos = {k: v for k, v in repos.items() if os.path.isdir(k)} if isinstance(repos, dict) else {}
+    repos[str(root)] = {"ready": ready}
+    status.publish("amin", {"repos": repos})
 
 
 def cmd_projects(root: Path, runner: gitops.Runner) -> str:
@@ -131,9 +146,12 @@ def run(argv: list[str]) -> int:
     if cmd == "projects":
         print(cmd_projects(root, runner))
     elif cmd == "plan":
-        print(release.render_plan(release.plan(root, runner, projects)))
+        plans = release.plan(root, runner, projects)
+        print(release.render_plan(plans))
+        publish_ready(root, runner, plans)
     elif cmd == "prepare":
         print(cmd_prepare(root, runner, argv[1:]))
+        publish_ready(root, runner)
     elif cmd == "copies":
         check_only = "--check" in argv[1:]
         changed = release.stale_copies(root) if check_only else release.sync_copies(root)
@@ -147,6 +165,7 @@ def run(argv: list[str]) -> int:
     elif cmd == "publish" and len(argv) > 1:
         print("\n".join(release.publish(root, runner, find_project(root, projects, argv[1]),
                                         "--dry-run" in argv)))
+        publish_ready(root, runner)
     elif cmd == "fragment" and argv[1:2] == ["add"] and len(argv) >= 5:
         rest = argv[2:]
         note_id = "note"
@@ -156,6 +175,7 @@ def run(argv: list[str]) -> int:
             rest = rest[:i] + rest[i + 2:]
         path = fragments.add(root, proj.find(projects, rest[0]), rest[1], " ".join(rest[2:]), note_id)
         print(f"added {path.relative_to(root).as_posix()}")
+        publish_ready(root, runner)
     elif cmd == "fragment" and argv[1:2] == ["list"]:
         for p in projects:
             notes, problems = fragments.pending(root, p)

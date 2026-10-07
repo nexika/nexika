@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import __version__, family, forge, gitinfo, hooks, i18n, render, snapshot
+from . import __version__, doctor, family, forge, gitinfo, hooks, i18n, render, snapshot
 
 STDIN_LIMIT = 1_000_000
 HOOKS = {"session-start": lambda event: hooks.on_session_start(event, helper_path()), "stop": hooks.on_stop}
@@ -95,6 +95,15 @@ def cmd_proof(args) -> int:
     return 0
 
 
+def cmd_doctor(args) -> int:
+    found = doctor.run(Path(args.cwd or os.getcwd()), latency=not args.no_latency)
+    if args.json:
+        emit(found)
+    else:
+        print(doctor.text(found))
+    return doctor.exit_code(found)
+
+
 def cmd_hook(args) -> int:
     out = HOOKS[args.event](read_stdin())
     if out:
@@ -140,6 +149,13 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true")
     p.add_argument("--cwd")
     p.set_defaults(run=cmd_proof)
+
+    p = sub.add_parser("doctor", allow_abbrev=False,
+                       help="the Nexika plugins installed together: hooks, conflicts, status files, latency")
+    p.add_argument("--json", action="store_true")
+    p.add_argument("--no-latency", action="store_true", help="do not run the hooks to time them")
+    p.add_argument("--cwd")
+    p.set_defaults(run=cmd_doctor)
 
     p = sub.add_parser("hook", help=argparse.SUPPRESS)
     p.add_argument("event", choices=sorted(HOOKS))

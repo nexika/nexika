@@ -6,6 +6,7 @@ import json
 from collections import Counter
 from pathlib import Path
 
+from . import status
 from .cache import data_home
 from .core import READ, Context, OpError, OpSpec, Result
 
@@ -26,6 +27,26 @@ def record(ops: list[dict], ms: int, session: str, cwd: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "a", encoding="utf-8") as fh:
         fh.write(json.dumps(entry) + "\n")
+    publish_today(ops)
+
+
+def publish_today(ops: list[dict]) -> None:
+    """status/barq.json (nexika.barq/1): today's savings for mizan, losses included. Bytes avoided
+    and bytes sent beyond what the built-in tool would have sent are kept apart, so a day where barq
+    cost more shows that; tokens are only an estimate (BYTES_PER_TOKEN)."""
+    today = datetime.date.today().isoformat()
+    found = status.read("barq")
+    keys = ("calls", "ops", "hits", "avoided_bytes", "extra_bytes")
+    day = {k: int(found.get(k) or 0) for k in keys} if found.get("date") == today else dict.fromkeys(keys, 0)
+    day["calls"] += 1
+    day["ops"] += len(ops)
+    for op in ops:
+        day["hits"] += bool(op.get("hit"))
+        if op.get("baseline") is not None:
+            gain = op["baseline"] - op.get("out", 0)
+            day["avoided_bytes" if gain > 0 else "extra_bytes"] += abs(gain)
+    day["saved_bytes"] = day["avoided_bytes"] - day["extra_bytes"]
+    status.publish("barq", {"date": today, **day, "bytes_per_token": BYTES_PER_TOKEN, "estimated": True})
 
 
 def _since(period: str) -> str:

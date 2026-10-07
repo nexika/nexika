@@ -82,7 +82,8 @@ With it, the Stop hook refreshes the handoff at mid and, at full, saves it and t
 | `/mizan proof` | the latest itqan proof in the pane |
 | `/mizan:report` | the same as text, for any host |
 | `/mizan:statusline` | set up the status line fallback |
-| `mizan status [--json]`, `report`, `export --json`, `proof [--json]`, `refresh` | the helper itself |
+| `/mizan:doctor` | the Nexika plugins installed together: hooks, latency, conflicts, status files |
+| `mizan status [--json]`, `report`, `export --json`, `proof [--json]`, `refresh`, `doctor [--json] [--no-latency]` | the helper itself |
 
 `export --json` prints the whole snapshot (schema `nexika.mizan/1`).
 
@@ -112,6 +113,13 @@ With it, the Stop hook refreshes the handoff at mid and, at full, saves it and t
 - **lawha** checks the project's pages on every screen; the band shows its latest check of this
   commit, Fix puts `/lawha:check --fix` in the prompt, and the pane lists the problems and the
   report. mizan reads only checks lawha saved in its own (haris-guarded) folder.
+- **amin**, **manar**, **barq** and **prof** each say one thing: the band shows how many projects
+  amin found ready to release and how many prof reviews are due; the pane adds manar's last
+  checklist score and what barq saved today (or cost more, when it did).
+- `mizan doctor` (or `/mizan:doctor`) looks at the installed Nexika plugins as a group: their
+  hooks and how long each takes (run once with a dummy event in a throwaway home), known
+  conflicts (bayan with Claude Code's signature line on, itqan without haris) and status files
+  that are stale, of an unknown schema or readable by others. It exits 1 when something needs fixing.
 - All of them share status files under `~/.claude/nexika/status/`, each `nexika.<plugin>/1`
   (see the [root README](../../README.md#status-files-how-the-plugins-talk-to-each-other)).
 

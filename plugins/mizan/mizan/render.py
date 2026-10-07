@@ -109,6 +109,9 @@ def band(snap: dict, lang: str) -> list[list[dict]]:
             first.append(seg(t("lawha_ok", lang, n=page.get("widths", 0)), "ok"))
         else:
             first.append(seg(t("lawha_bad", lang, n=page.get("fail", 0)), "bad"))
+    ready = (snap.get("family") or {}).get("amin") or []
+    if ready:
+        first.append(seg(t("fam_amin", lang, n=len(ready)), "info"))
     for key in ("ram", "disk"):
         part = (snap.get("device") or {}).get(key) or {}
         if part.get("percent") is not None:
@@ -142,6 +145,9 @@ def band(snap: dict, lang: str) -> list[list[dict]]:
         watch = haris.get("mode") == "watch"
         words = t("haris_watch", lang) if watch else t("haris", lang, profile=clean(haris["profile"], 16))
         second.append(seg(words, "warn" if watch else "dim"))
+    due = ((snap.get("family") or {}).get("prof") or {}).get("due")
+    if due:
+        second.append(seg(t("fam_prof", lang, n=due), "info"))
     return [line for line in (first, second) if line]
 
 
@@ -163,6 +169,37 @@ def _section(title: str, lines: list[dict]) -> dict:
 
 def _off(entry: dict, lang: str) -> str:
     return t("d_prs_off", lang, why=t(entry.get("why") or "unknown", lang, tool=entry.get("tool") or "gh"))
+
+
+def _size(n: int) -> str:
+    return f"{n / 1024 / 1024:.1f} MB" if n >= 1024 * 1024 else f"{n / 1024:.1f} KB"
+
+
+def _family(found: dict, lang: str) -> list[dict]:
+    """amin, manar, barq and prof, from their status files: one line each, when there is news."""
+    lines = []
+    ready = found.get("amin") or []
+    if ready:
+        names = ", ".join(f"{clean(r['name'], 20)} {clean(r['next'], 16)}".strip() for r in ready[:8])
+        lines.append(seg(t("d_fam_amin", lang, list=names), "info"))
+    audit = found.get("manar") or {}
+    if audit:
+        score = audit["score"]
+        lines.append(seg(t("d_fam_manar", lang, score=score, target=clean(audit.get("target"), 80),
+                           when=clean(audit.get("date"), 20).replace("T", " ")),
+                         "ok" if score >= 90 else "warn" if score >= 70 else "bad"))
+    barq = found.get("barq") or {}
+    if barq:
+        saved, calls = barq.get("saved_bytes", 0), barq.get("calls", 0)
+        if saved >= 0:
+            lines.append(seg(t("d_fam_barq", lang, calls=calls, tokens=f"{saved // 4:,}"), "dim"))
+        else:
+            lines.append(seg(t("d_fam_barq_more", lang, calls=calls, size=_size(-saved)), "warn"))
+    prof = found.get("prof") or {}
+    if prof.get("due") or prof.get("open"):
+        lines.append(seg(t("d_fam_prof", lang, n=prof.get("due", 0), open=prof.get("open", 0)),
+                         "info" if prof.get("due") else "dim"))
+    return lines
 
 
 def detail(snap: dict, lang: str) -> list[dict]:
@@ -220,6 +257,10 @@ def detail(snap: dict, lang: str) -> list[dict]:
         if snap.get("fix"):
             lines.append(seg(t("d_lawha_fix", lang), "dim"))
         sections.append(_section(t("t_lawha", lang), lines))
+
+    lines = _family(snap.get("family") or {}, lang)
+    if lines:
+        sections.append(_section(t("t_family", lang), lines))
 
     device = snap.get("device") or {}
     lines = []
