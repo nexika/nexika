@@ -2,7 +2,8 @@
 
 The input is what only the session knows (context, cost, running agents, tasks), either from the
 mod or from Claude Code's status line JSON; mizan adds git, gh/glab (cached), the device, haris and
-itqan. Context levels: fresh under 40 %, mid 40-75 %, full above 75 %.
+itqan. Context levels: fresh under 40 %, mid 40-75 %, full above 75 % (context_mid and context_full
+in config.json move them).
 """
 from __future__ import annotations
 
@@ -14,12 +15,12 @@ import time
 from . import __version__, config, device, family, forge, gitinfo, i18n, render, status, tasks
 
 SCHEMA = "nexika.mizan/1"
-MID, FULL = 40, 75
 MOD_FRESH = 120  # seconds: the mod publishes every 15 s while it runs
 
 
 def context_level(percent: float) -> str:
-    return "full" if percent > FULL else "mid" if percent >= MID else "fresh"
+    mid, full = config.thresholds()
+    return "full" if percent > full else "mid" if percent >= mid else "fresh"
 
 
 def _number(value) -> float | None:

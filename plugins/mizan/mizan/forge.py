@@ -5,15 +5,18 @@ mizan starts `mizan refresh` detached (one at a time per repository, behind a lo
 these read commands run, with arguments as a list (no shell):
 
     gh pr list --state open --json number,author,headRefName,url --limit 200
+    gh pr list --state open --search review-requested:@me --json number --limit 100
     gh pr checks <number> --json name,bucket,link
-    gh run list --branch=<branch> --json databaseId,status,conclusion,name,headSha,url --limit 20
+    gh run list --branch=<branch> --json databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt --limit 20
     gh run view <id> --json jobs
     glab mr list --output json
+    glab mr list --reviewer=@me --output json
     glab ci get --branch=<branch> --output json
 """
 from __future__ import annotations
 
 import collections
+import datetime
 import hashlib
 import json
 import os
@@ -119,8 +122,35 @@ def pick_runs(runs: list[dict], head: str) -> list[dict]:
     return [r for r in runs if r.get("headSha") == runs[0].get("headSha")]
 
 
-def parse_gh_runs(text: str, head: str) -> dict:
-    runs = pick_runs(json.loads(text or "[]"), head)
+def _when(value) -> float | None:
+    try:
+        return datetime.datetime.fromisoformat(str(value).replace("Z", "+00:00")).timestamp()
+    except (TypeError, ValueError):
+        return None
+
+
+def timing(all_runs: list[dict], running: list[dict], now: float | None = None) -> dict:
+    """How long the running workflow has run, and about how long is left: its usual duration (the
+    median of its recent finished runs, passed or failed) minus that."""
+    now = time.time() if now is None else now
+    starts = [s for s in (_when(r.get("startedAt")) for r in running) if s]
+    if not starts:
+        return {}
+    elapsed = max(0, int(now - min(starts)))
+    names = {r.get("name") for r in running}
+    took = sorted(int(end - start) for r in all_runs
+                  if r.get("status") == "completed" and r.get("name") in names
+                  and r.get("conclusion") in ("success", "failure")
+                  and (start := _when(r.get("startedAt"))) and (end := _when(r.get("updatedAt"))) and end > start)
+    if not took:
+        return {"elapsed": elapsed, "eta": None}
+    usual = took[len(took) // 2]
+    return {"elapsed": elapsed, "eta": max(0, usual - elapsed)}
+
+
+def parse_gh_runs(text: str, head: str, now: float | None = None) -> dict:
+    every = json.loads(text or "[]")
+    runs = pick_runs(every, head)
     if not runs:
         return {"state": "none", "failed": [], "failed_run": None}
     bad = [r for r in runs if r.get("status") == "completed"
@@ -128,8 +158,9 @@ def parse_gh_runs(text: str, head: str) -> dict:
     if bad:
         return {"state": "failed", "failed": [r.get("name", "?") for r in bad],
                 "failed_run": bad[0].get("databaseId"), "url": bad[0].get("url", "")}
-    if any(r.get("status") != "completed" for r in runs):
-        return {"state": "running", "failed": [], "failed_run": None}
+    going = [r for r in runs if r.get("status") != "completed"]
+    if going:
+        return {"state": "running", "failed": [], "failed_run": None, **timing(every, going, now)}
     return {"state": "passed", "failed": [], "failed_run": None}
 
 
@@ -186,10 +217,19 @@ def fetch_prs(info: dict) -> dict:
     cwd, branch = info["repo"], info.get("branch", "")
     try:
         if tool == "glab":
-            return parse_glab_mrs(run_tool(["glab", "mr", "list", "--output", "json"], cwd), branch)
-        argv = ["gh", "pr", "list", "--state", "open", "--json",
-                "number,author,headRefName,url,isCrossRepository", "--limit", "200"]
-        return parse_gh_prs(run_tool(argv, cwd), branch)
+            found = parse_glab_mrs(run_tool(["glab", "mr", "list", "--output", "json"], cwd), branch)
+            mine = ["glab", "mr", "list", "--reviewer=@me", "--output", "json"]
+        else:
+            argv = ["gh", "pr", "list", "--state", "open", "--json",
+                    "number,author,headRefName,url,isCrossRepository", "--limit", "200"]
+            found = parse_gh_prs(run_tool(argv, cwd), branch)
+            mine = ["gh", "pr", "list", "--state", "open", "--search", "review-requested:@me", "--json",
+                    "number", "--limit", "100"]
+        try:  # reviews waiting for you: a bonus, never a reason to lose the PR list
+            found["reviews"] = len(json.loads(run_tool(mine, cwd) or "[]"))
+        except (Off, ValueError, TypeError):
+            found["reviews"] = None
+        return found
     except Off as off:
         return {"state": "off", "why": off.reason, "tool": off.tool}
     except ValueError:
@@ -226,15 +266,19 @@ def fetch_ci(info: dict, pr: dict | None) -> dict:
         if tool == "glab":
             argv = ["glab", "ci", "get", f"--branch={branch}", "--output", "json"]
             return parse_glab_pipeline(run_tool(argv, cwd))
+        checks = None
         if pr and pr.get("number"):
-            found = parse_gh_checks(run_tool(["gh", "pr", "checks", str(int(pr["number"])), "--json",
-                                              "name,bucket,link"], cwd, accept_codes=(0, 1, 8)))
-            if found["state"] != "none":
-                return found
+            checks = parse_gh_checks(run_tool(["gh", "pr", "checks", str(int(pr["number"])), "--json",
+                                               "name,bucket,link"], cwd, accept_codes=(0, 1, 8)))
+            if checks["state"] not in ("none", "running"):
+                return checks
+            # Running: the run list below says for how long, and about how long is left.
         argv = ["gh", "run", "list", f"--branch={branch}", "--json",
-                "databaseId,status,conclusion,name,headSha,url", "--limit", "20"]
+                "databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt", "--limit", "20"]
         mine = ours(info, json.loads(run_tool(argv, cwd) or "[]"))
         found = parse_gh_runs(json.dumps(mine), info.get("head", ""))
+        if checks and checks["state"] == "running" and found["state"] != "running":
+            return checks
         run_id = found.pop("failed_run", None)
         found["run"] = run_id
         if run_id:

@@ -46,6 +46,12 @@ def _prs(prs: dict, lang: str) -> dict | None:
     return seg(f"{t(word, lang)} {shown}{more}", "plain")
 
 
+def _reviews(prs: dict, lang: str) -> dict | None:
+    """Pull requests waiting for your review, when there are any."""
+    n = prs.get("reviews") if prs.get("state") == "ok" else None
+    return seg(t("reviews", lang, n=n), "info") if isinstance(n, int) and n > 0 else None
+
+
 def _ci(ci: dict, lang: str) -> dict | None:
     state = ci.get("state")
     if state == "passed":
@@ -57,7 +63,12 @@ def _ci(ci: dict, lang: str) -> dict | None:
         more = f" +{len(jobs) - 1}" if len(jobs) > 1 else ""
         return seg(t("ci_failed", lang, job=clean(jobs[0], 40) + more), "dim" if ci.get("stale") else "bad")
     if state == "running":
-        return seg(t("ci_running", lang), "warn")
+        if ci.get("elapsed") is None:
+            return seg(t("ci_running", lang), "warn")
+        text = t("ci_running_for", lang, m=max(1, round(ci["elapsed"] / 60)))
+        if ci.get("eta") is not None:
+            text += SEP + t("ci_eta", lang, m=max(1, round(ci["eta"] / 60)))
+        return seg(text, "warn")
     if state == "none":
         return seg(t("ci_none", lang), "dim")
     if state == "loading":
@@ -83,7 +94,8 @@ def band(snap: dict, lang: str) -> list[list[dict]]:
     if git.get("branch"):
         who = f" ({clean(git['creator'], 20)})" if git.get("creator") else ""
         first.append(seg(f"⎇ {clean(git['branch'], 50)}{who}", "info"))
-        first += [s for s in (_prs(snap.get("prs") or {}, lang), _ci(snap.get("ci") or {}, lang)) if s]
+        first += [s for s in (_prs(snap.get("prs") or {}, lang), _reviews(snap.get("prs") or {}, lang),
+                              _ci(snap.get("ci") or {}, lang)) if s]
         found = snap.get("tabib") or {}
         if found.get("cause_found"):
             first.append(seg(t("tabib_cause", lang), "info"))

@@ -240,6 +240,49 @@ def test_ci_failure_is_saved_before_triage_runs(env, monkeypatch):
     assert forge.load_cache(info["repo"])["ci"]["feat/x"]["tabib"]["kind"] == "code"
 
 
+def test_running_ci_shows_how_long_and_about_how_long_left():
+    runs = json.dumps([
+        {"databaseId": 9, "status": "in_progress", "conclusion": "", "name": "CI", "headSha": "h",
+         "startedAt": "2026-10-07T10:00:00Z", "updatedAt": "2026-10-07T10:03:00Z"},
+        {"databaseId": 8, "status": "completed", "conclusion": "success", "name": "CI", "headSha": "g",
+         "startedAt": "2026-10-07T09:00:00Z", "updatedAt": "2026-10-07T09:07:00Z"},
+        {"databaseId": 7, "status": "completed", "conclusion": "failure", "name": "CI", "headSha": "f",
+         "startedAt": "2026-10-07T08:00:00Z", "updatedAt": "2026-10-07T08:06:00Z"},
+        {"databaseId": 6, "status": "completed", "conclusion": "success", "name": "CI", "headSha": "e",
+         "startedAt": "2026-10-07T07:00:00Z", "updatedAt": "2026-10-07T07:08:00Z"}])
+    now = 1_791_367_380.0  # 2026-10-07T10:03:00Z
+    found = forge.parse_gh_runs(runs, "h", now=now)
+    assert (found["state"], found["elapsed"], found["eta"]) == ("running", 180, 240)  # median 7 min
+    assert render._ci(found, "en")["text"] == "CI running 3m · ~4m left"
+    assert "3" in render._ci(found, "ar")["text"]
+    assert render._ci({"state": "running", "failed": []}, "en")["text"] == "CI running"
+
+
+def test_reviews_requested_from_you(env, monkeypatch):
+    info = {"repo": str(env), "branch": "feat/x", "host": "github"}
+
+    def tool(argv, cwd, accept_codes=(0,)):
+        if "--search" in argv:
+            assert argv[argv.index("--search") + 1] == "review-requested:@me"
+            return json.dumps([{"number": 4}, {"number": 9}])
+        return PRS
+
+    monkeypatch.setattr(forge, "run_tool", tool)
+    found = forge.fetch_prs(info)
+    assert found["reviews"] == 2
+    text = render.plain(render.band({**snap(), "prs": found}, "en")).splitlines()[0]
+    assert "Reviews for you 2" in text
+
+
+def test_the_full_threshold_is_a_setting(env):
+    assert snapshot.context_level(80) == "full"
+    (env / "mizan").mkdir(exist_ok=True)
+    (env / "mizan" / "config.json").write_text(json.dumps({"context_full": 90, "context_mid": 50}))
+    assert (snapshot.context_level(80), snapshot.context_level(45), snapshot.context_level(91)) == ("mid", "fresh", "full")
+    (env / "mizan" / "config.json").write_text(json.dumps({"context_full": "lots", "context_mid": 99}))
+    assert snapshot.context_level(80) == "full"  # nonsense falls back to the defaults
+
+
 def test_glab_pipeline():
     assert forge.parse_glab_pipeline(json.dumps({"status": "failed", "jobs": [{"name": "rspec", "status": "failed"}]}))[
         "failed"] == ["rspec"]
