@@ -345,11 +345,6 @@ def load_script(name):
     return module
 
 
-def test_secrets_copy_is_identical_to_hafiz():
-    ours = (SCRIPTS / "itqan_secrets.py").read_bytes()
-    assert ours == (PLUGINS / "hafiz" / "hafiz" / "secrets.py").read_bytes()
-
-
 # ---------------------------------------------------------------- branches (#24)
 
 

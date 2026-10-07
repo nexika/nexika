@@ -139,6 +139,30 @@ def _umbrella_version(root: Path, runner: gitops.Runner | None, umbrella: proj.P
     return proj.bump(base, types)[0] if released else base   # else: the first umbrella release
 
 
+def stale_copies(root: Path) -> list[str]:
+    """Copies (from .amin.json "copies") that differ from their source or are missing."""
+    stale = []
+    for source, targets in proj.copies(root).items():
+        data = (root / source).read_bytes()
+        for target in targets:
+            path = root / target
+            if not path.is_file() or path.read_bytes() != data:
+                stale.append(target)
+    return stale
+
+
+def sync_copies(root: Path, dry_run: bool = False) -> list[str]:
+    """Refresh every stale copy from its source; returns the files changed."""
+    stale = stale_copies(root)
+    if not dry_run:
+        sources = {t: s for s, targets in proj.copies(root).items() for t in targets}
+        for target in stale:
+            path = root / target
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes((root / sources[target]).read_bytes())
+    return stale
+
+
 def prepare(root: Path, chosen: list[tuple[Plan, str]], date: str | None = None,
             allow_lower: bool = False, runner: gitops.Runner | None = None, umbrella: bool = False,
             dry_run: bool = False, blocks: list[str] | None = None) -> list[str]:
@@ -204,6 +228,7 @@ def prepare(root: Path, chosen: list[tuple[Plan, str]], date: str | None = None,
         if not dry_run:
             changelog.insert(root / whole.changelog, whole.name, whole_version, date, sections)
         changed.append(whole.changelog)
+    changed += sync_copies(root, dry_run)   # shared files ship as copies: refresh them in the release PR
     return changed
 
 

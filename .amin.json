@@ -1,0 +1,22 @@
+{
+  "copies": {
+    "common/secrets.py": [
+      "plugins/haris/haris/secrets.py",
+      "plugins/hafiz/hafiz/secrets.py",
+      "plugins/tabib/tabib/secrets.py",
+      "plugins/itqan/scripts/itqan_secrets.py"
+    ],
+    "common/inject.py": [
+      "plugins/haris/haris/inject.py",
+      "plugins/tabib/tabib/inject.py"
+    ],
+    "common/status.py": [
+      "plugins/mizan/mizan/status.py",
+      "plugins/tabib/tabib/status.py"
+    ],
+    "common/gitinfo.py": [
+      "plugins/mizan/mizan/gitinfo.py",
+      "plugins/tabib/tabib/gitinfo.py"
+    ]
+  }
+}
