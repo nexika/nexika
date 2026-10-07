@@ -65,7 +65,12 @@ def last_session_note(current: str) -> str:
 
 def session_start(hook: dict) -> None:
     cwd = Path(hook.get("cwd") or os.getcwd())
-    stacks = detect_stacks(cwd)
+    try:
+        import itqan_learn
+        root = itqan_learn.project_root(cwd)
+    except Exception:  # the repo root is a nicety: fall back to the current folder
+        root = cwd
+    stacks = detect_stacks(root)
     packs = [(s, PACKS / f"{s}.md") for s in stacks if (PACKS / f"{s}.md").is_file()]
     lines = ["## itqan (Nexika): plan, test-first, review, ship"]
     if stacks:

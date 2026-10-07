@@ -267,3 +267,45 @@ def test_quiet_session_adds_no_note(tmp_path, repo):
     run_hooks("session-end", {"session_id": "cccc3333"}, home)
     out = run_hooks("session-start", {"cwd": str(repo), "session_id": "dddd4444"}, home)
     assert "Last session" not in out
+
+
+# ---------------------------------------------------------------- the proof runs the project's Python (#88)
+
+
+@pytest.fixture
+def proof():
+    return load(ITQAN / "scripts" / "itqan_proof.py", "itqan_proof_t")
+
+
+def python_project(tmp_path):
+    root = tmp_path / "py"
+    (root / "tests").mkdir(parents=True)
+    (root / "pyproject.toml").write_text("[project]\nname='x'\n[tool.ruff]\n")
+    return root
+
+
+def test_proof_uses_uv_when_the_project_has_uv_lock(proof, tmp_path, monkeypatch):
+    root = python_project(tmp_path)
+    (root / "uv.lock").write_text("")
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+    checks = {c["name"]: c["argv"] for c in proof.detect(root)}
+    assert checks["pytest"][:3] == ["uv", "run", "pytest"] and checks["ruff"][:3] == ["uv", "run", "ruff"]
+
+
+def test_proof_uses_the_project_venv(proof, tmp_path):
+    root = python_project(tmp_path)
+    venv_python = root / ".venv" / "bin" / "python"
+    venv_python.parent.mkdir(parents=True)
+    venv_python.write_text("#!/bin/sh\n")
+    venv_python.chmod(0o755)
+    [pytest_check] = [c for c in proof.detect(root) if c["name"] == "pytest"]
+    assert pytest_check["argv"][:3] == [str(venv_python), "-m", "pytest"]
+    assert sys.executable not in pytest_check["argv"]
+
+
+def test_stacks_are_detected_from_the_repo_root(tmp_path, repo):
+    (repo / "pyproject.toml").write_text("[project]\nname='x'\n")
+    (repo / "web").mkdir()
+    (repo / "web" / "package.json").write_text("{}")
+    out = run_hooks("session-start", {"cwd": str(repo / "web"), "session_id": "s1"}, tmp_path / "h")
+    assert "Project stacks: python, node." in out

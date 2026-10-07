@@ -53,6 +53,24 @@ def _package_runner(root: Path) -> str:
     return "npm"
 
 
+def _python_tool(root: Path, tool: str) -> list[str]:
+    """How the project runs a Python tool: `uv run` when it has uv.lock, else its virtualenv, else the
+    python on PATH (never the interpreter that runs itqan, which has none of the project's packages)."""
+    if (root / "uv.lock").is_file() and shutil.which("uv"):
+        return ["uv", "run", tool]
+    for venv in (".venv", "venv", "env"):
+        for folder, exe in (("bin", "python"), ("Scripts", "python.exe")):
+            python = root / venv / folder / exe
+            if python.is_file() and os.access(python, os.X_OK):
+                if tool == "pytest":
+                    return [str(python), "-m", "pytest"]
+                own = python.with_name(tool + (".exe" if exe.endswith(".exe") else ""))
+                return [str(own)] if own.is_file() else [tool]
+    if tool == "pytest":
+        return [shutil.which("python3") or shutil.which("python") or sys.executable, "-m", "pytest"]
+    return [tool]
+
+
 def detect(root: Path) -> list[dict]:
     """The project's checks, from its own files: {name, kind, argv}."""
     found: list[dict] = []
@@ -66,9 +84,9 @@ def detect(root: Path) -> list[dict]:
     has_tests = (root / "tests").is_dir() or (root / "test").is_dir() or any(root.glob("test_*.py"))
     if has_tests and (py_text or (root / "setup.cfg").is_file() or (root / "pytest.ini").is_file()
                       or (root / "tox.ini").is_file()):
-        add("pytest", "tests", [sys.executable, "-m", "pytest", "-q"])
+        add("pytest", "tests", [*_python_tool(root, "pytest"), "-q"])
     if "[tool.ruff" in py_text or (root / "ruff.toml").is_file() or (root / ".ruff.toml").is_file():
-        add("ruff", "lint", ["ruff", "check", "."])
+        add("ruff", "lint", [*_python_tool(root, "ruff"), "check", "."])
 
     package = root / "package.json"
     if package.is_file():
