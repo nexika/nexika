@@ -80,8 +80,10 @@ A plugin with hundreds of skills of which you used one is a context cost worth q
   `kubectl delete`, publishing a package
 - editing `.env` / key files or lock files; writing content that contains a secret token
 
-Everything else passes silently. When [haris](../haris/README.md) is installed, this guard steps
-aside in the sessions haris guards: haris covers these rules and more.
+Everything else passes silently. When [haris](../haris/README.md) is installed and on, haris
+covers the safety rules in the sessions it guards, and this guard keeps only its quality rules:
+editing secret files and lock files, writing a secret, and skipping hooks with `--no-verify`.
+If haris is switched off, set to watch, or disabled with `/plugin`, the full guard is back.
 
 Configure per project in `.itqan.json`:
 

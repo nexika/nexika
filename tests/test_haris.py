@@ -625,3 +625,65 @@ def test_itqan_guard_steps_aside_when_haris_is_active(world):
     (Path(state.data_home()) / "config.json").write_text('{"mode": "watch"}', encoding="utf-8")
     assert guard.decide(event) is not None  # haris only watches, so the itqan guard stays on
     (Path(state.data_home()) / "config.json").unlink()
+
+
+def itqan_guard():
+    spec = importlib.util.spec_from_file_location("itqan_guard_q",
+                                                  PLUGINS / "itqan" / "scripts" / "itqan_guard.py")
+    guard = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(guard)
+    return guard
+
+
+def test_itqan_keeps_its_quality_rules_beside_haris(world):
+    home, project = world
+    guard = itqan_guard()
+    session = "itqan-" + "5" * 8
+    state.mark_active(session)
+
+    def rule(tool, tool_input):
+        decision = guard.decide({"tool_name": tool, "tool_input": tool_input, "cwd": str(project),
+                                 "session_id": session})
+        return decision and decision[1]
+
+    assert rule("Write", {"file_path": str(project / ".env"), "content": "X=1"}) == "edit-secret-file"
+    secret_file, lock_file = "edit-secret-file", "edit-lock-file"
+    assert rule("Write", {"file_path": str(project / ".env.production"), "content": "X"}) == secret_file
+    assert rule("Edit", {"file_path": str(project / "server.pem"), "new_string": "x"}) == "edit-secret-file"
+    assert rule("Edit", {"file_path": str(project / "package-lock.json"), "new_string": "x"}) == lock_file
+    assert rule("Bash", {"command": "git commit --no-verify -m wip"}) == "skip-hooks"
+    assert rule("Bash", {"command": "git push --force origin main"}) is None  # haris's job
+    assert rule("Write", {"file_path": str(project / "src" / "app.py"), "content": "x = 1"}) is None
+
+
+def test_itqan_does_not_trust_a_stale_haris_marker(world):
+    home, project = world
+    guard = itqan_guard()
+    session = "itqan-" + "6" * 8
+    state.mark_active(session)
+    event = {"tool_name": "Bash", "tool_input": {"command": "git push --force origin main"},
+             "cwd": str(project), "session_id": session}
+    assert guard.decide(event) is None
+    settings = home / ".claude" / "settings.json"
+    settings.write_text(json.dumps({"enabledPlugins": {"haris@nexika": False}}), encoding="utf-8")
+    try:
+        assert guard.decide(event) is not None  # haris was turned off: the itqan guard is back
+    finally:
+        settings.write_text("{}", encoding="utf-8")
+
+
+def test_itqan_exits_before_its_imports_when_haris_covers_the_call(world):
+    home, project = world
+    session = "itqan-" + "7" * 8
+    state.mark_active(session)
+    event = json.dumps({"tool_name": "Bash", "tool_input": {"command": "ls -la"}, "cwd": str(project),
+                        "session_id": session})
+    script = str(PLUGINS / "itqan" / "scripts" / "itqan_guard.py")
+    probe = ("import runpy, sys\n"
+             "try:\n"
+             f"    runpy.run_path({script!r}, run_name='__main__')\n"
+             "except SystemExit:\n"
+             "    pass\n"
+             "print('shlex' in sys.modules, 'itqan_secrets' in sys.modules)\n")
+    res = subprocess.run([sys.executable, "-c", probe], input=event, capture_output=True, text=True)
+    assert res.stdout.strip() == "False False", res.stderr

@@ -10,14 +10,93 @@ Never fails the session: any internal error means "allow".
 """
 from __future__ import annotations
 
-import datetime
 import json
 import os
-import re
-import shlex
-import subprocess
 import sys
-from pathlib import Path, PurePath
+
+# ---------------------------------------------------------------- haris (the fast path: json and os only)
+
+EDIT_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit")
+QUALITY_RULES = {"edit-secret-file", "edit-lock-file", "write-secret", "skip-hooks"}
+
+
+def _read_json(path: str):
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return None
+
+
+def _haris_plugin_enabled(cwd: str) -> bool:
+    """False when Claude Code's settings turn the haris plugin off (/plugin disable): user settings,
+    then the project's, then the project's local settings, as Claude Code layers them."""
+    config_dir = os.path.expanduser(os.environ.get("CLAUDE_CONFIG_DIR") or "~/.claude")
+    files = [os.path.join(config_dir, "settings.json")]
+    folder, project = os.path.abspath(cwd or "."), []
+    while True:
+        project = [os.path.join(folder, ".claude", "settings.json"),
+                   os.path.join(folder, ".claude", "settings.local.json")]
+        if any(os.path.isfile(f) for f in project) or os.path.exists(os.path.join(folder, ".git")):
+            break
+        parent = os.path.dirname(folder)
+        if parent == folder:
+            project = []
+            break
+        folder = parent
+    enabled = True
+    for path in files + project:
+        data = _read_json(path)
+        plugins = data.get("enabledPlugins") if isinstance(data, dict) else None
+        if isinstance(plugins, dict):
+            for key, value in plugins.items():
+                if str(key).split("@", 1)[0] == "haris" and isinstance(value, bool):
+                    enabled = value
+    return enabled
+
+
+def haris_active(event: dict) -> bool:
+    """haris, Nexika's protection plugin, really guards this session: it marked the session, it is on
+    (not watching, not off) and the plugin is not disabled. It then covers the safety rules."""
+    session = str(event.get("session_id") or "")
+    if not session or len(session) > 80 or not all(ch.isalnum() or ch in "_-" for ch in session):
+        return False
+    home = os.path.expanduser(os.environ.get("HARIS_HOME") or "~/.claude/nexika/haris")
+    if not os.path.isfile(os.path.join(home, "active", session)):
+        return False
+    if os.path.isfile(os.path.join(home, "config.json")):
+        config = _read_json(os.path.join(home, "config.json"))
+        mode = config.get("mode", "on") if isinstance(config, dict) else "invalid"
+        if mode in ("off", "watch") or not isinstance(mode, str):
+            return False  # haris is only watching or switched off: keep this guard on
+    return _haris_plugin_enabled(str(event.get("cwd") or os.getcwd()))
+
+
+def needs_quality_check(event: dict) -> bool:
+    """Whether a call can hit one of the quality-only rules that itqan keeps beside haris."""
+    tool = event.get("tool_name", "")
+    if tool in EDIT_TOOLS:
+        return True
+    command = str((event.get("tool_input") or {}).get("command") or "")
+    return tool in ("Bash", "PowerShell") and "git" in command and (
+        "--no-verify" in command or " -n" in command)
+
+
+if __name__ == "__main__":
+    try:
+        EVENT = json.loads(sys.stdin.read() or "{}")
+    except ValueError:
+        sys.exit(0)
+    if not isinstance(EVENT, dict) or (haris_active(EVENT) and not needs_quality_check(EVENT)):
+        sys.exit(0)  # haris covers this call: leave before loading anything else
+else:
+    EVENT = None
+
+import datetime  # noqa: E402
+import re  # noqa: E402
+import shlex  # noqa: E402
+import subprocess  # noqa: E402
+from pathlib import Path, PurePath  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import itqan_files  # noqa: E402
@@ -205,6 +284,22 @@ def _check_git(words: list[str], cwd: Path, config: dict):
     return None
 
 
+def skip_hooks(command: str):
+    """Only the quality rule about skipping the repository's hooks (`--no-verify`)."""
+    for segment in SEGMENT_SPLIT.split(command):
+        words = _words(segment.strip())
+        if len(words) < 2 or Path(words[0]).name != "git":
+            continue
+        args = words[1:]
+        while len(args) > 1 and args[0] in ("-C", "-c"):
+            args = args[2:]
+        if args and args[0] == "commit" and ("--no-verify" in args or "-n" in args):
+            return "ask", "skip-hooks", "`git commit --no-verify` skips pre-commit checks."
+        if args and args[0] == "push" and "--no-verify" in args:
+            return "ask", "skip-hooks", "`git push --no-verify` skips the repository's push hooks."
+    return None
+
+
 _ASK_PATTERNS = [
     (re.compile(r"\b(curl|wget)\b[^|]*\|\s*(sudo\s+)?(ba|z|da)?sh\b"), "pipe-to-shell",
      "Downloads a script and runs it without review."),
@@ -266,37 +361,25 @@ def check_edit(tool_input: dict):
 # ---------------------------------------------------------------- entry point
 
 
-def haris_active(event: dict) -> bool:
-    """haris, Nexika's protection plugin, guards this session; it covers this guard's rules and more."""
-    session = str(event.get("session_id") or "")
-    if not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", session):
-        return False
-    home = Path(os.environ.get("HARIS_HOME") or Path.home() / ".claude" / "nexika" / "haris").expanduser()
-    if not (home / "active" / session).is_file():
-        return False
-    try:
-        mode = json.loads((home / "config.json").read_text(encoding="utf-8")).get("mode", "on")
-    except FileNotFoundError:
-        return True
-    except (OSError, ValueError, AttributeError):
-        return False
-    return mode not in ("off", "watch")  # haris is only watching or switched off: keep this guard on
-
-
 def decide(event: dict) -> tuple[str, str, str] | None:
-    if haris_active(event):
-        return None
     cwd = Path(event.get("cwd") or os.getcwd())
     config = load_config(cwd)
     if os.environ.get("ITQAN_GUARD", "").lower() == "off" or (config.get("guard") or {}).get("mode") == "off":
         return None
+    beside_haris = haris_active(event)
+    if beside_haris and not needs_quality_check(event):
+        return None
     tool = event.get("tool_name", "")
     tool_input = event.get("tool_input") or {}
+    decision = None
     if tool in ("Bash", "PowerShell"):
-        return check_bash(str(tool_input.get("command") or ""), cwd, config)
-    if tool in ("Edit", "Write", "MultiEdit", "NotebookEdit"):
-        return check_edit(tool_input)
-    return None
+        command = str(tool_input.get("command") or "")
+        decision = skip_hooks(command) if beside_haris else check_bash(command, cwd, config)
+    elif tool in EDIT_TOOLS:
+        decision = check_edit(tool_input)
+    if decision and beside_haris and decision[1] not in QUALITY_RULES:
+        return None  # a safety rule: haris decides it
+    return decision
 
 
 def log_decision(event: dict, decision: tuple[str, str, str]) -> None:
@@ -316,7 +399,7 @@ def log_decision(event: dict, decision: tuple[str, str, str]) -> None:
 
 def main() -> int:
     try:
-        event = json.loads(sys.stdin.read() or "{}")
+        event = EVENT if EVENT is not None else json.loads(sys.stdin.read() or "{}")
         decision = decide(event)
     except Exception:  # never break the session
         return 0
