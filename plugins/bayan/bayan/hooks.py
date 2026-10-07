@@ -1,13 +1,14 @@
 """Claude Code hooks. They must never break the session: any error means "do nothing"."""
 from __future__ import annotations
 
+import json
 import os
 import re
 import shlex
 import shutil
 from pathlib import Path
 
-from . import config
+from . import config, family
 
 # check, clean and rules (the word lists) are most of a hook's start-up time: they are imported
 # only once a hook has something to clean or check (#50).
@@ -73,8 +74,10 @@ def session_start(hook: dict) -> str:
                 fh.write(line)
     except OSError:
         command = f"python3 {shlex.quote(str(bin_dir / 'bayan'))}"
-    return GUIDE.format(level=cfg["level"], level_rule=LEVEL_RULE[cfg["level"]], cmd=command,
+    note = GUIDE.format(level=cfg["level"], level_rule=LEVEL_RULE[cfg["level"]], cmd=command,
                         guide=bin_dir.parent / "guide" / "writing.md")
+    ask = family.ask_note(f"python3 {shlex.quote(str(Path(family.__file__).resolve()))}")
+    return f"{note}\n{ask}" if ask else note
 
 
 def _project(hook: dict) -> Path:
@@ -180,6 +183,25 @@ SIGNATURE_NOTE = ("bayan: this message carries an AI signature (Co-Authored-By /
                   "\"attribution\": {\"commit\": \"\", \"pr\": \"\"} in .claude/settings.json.")
 
 
+def _signature_kept(project: Path) -> bool:
+    """Whether the user chose to keep Claude Code's signature with its `attribution` setting (or the
+    older includeCoAuthoredBy): local project settings, then project, then user, like Claude Code."""
+    user = Path(os.path.expanduser(os.environ.get("CLAUDE_CONFIG_DIR") or "~/.claude"))
+    for path in (project / ".claude" / "settings.local.json", project / ".claude" / "settings.json",
+                 user / "settings.json"):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        if isinstance(data.get("attribution"), dict):
+            return any(isinstance(v, str) and v.strip() for v in data["attribution"].values())
+        if "includeCoAuthoredBy" in data:
+            return bool(data["includeCoAuthoredBy"])
+    return False
+
+
 def _message_files(command: str, cwd: Path) -> str:
     texts = []
     for m in MESSAGE_FILE.finditer(command):
@@ -209,6 +231,8 @@ def pre_bash(hook: dict) -> dict | None:
         reason = "bayan: the message contains invisible zero-width characters. Remove them."
     elif rules.SIGNATURE_IN_COMMAND.search(message):
         if not cfg.get("deny_signatures", False):
+            if _signature_kept(Path(os.environ.get("CLAUDE_PROJECT_DIR") or _project(hook))):
+                return None   # the user's choice in Claude Code's settings: not bayan's to argue with
             return {"hookSpecificOutput": {"hookEventName": "PreToolUse",
                                            "additionalContext": SIGNATURE_NOTE}}
         reason = ("bayan: this project doesn't sign commits, pull requests or releases with an AI "

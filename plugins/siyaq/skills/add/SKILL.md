@@ -8,6 +8,9 @@ argument-hint: "[topic]"
 
 Topic: $ARGUMENTS (if empty, use the knowledge just discussed; if unclear, ask what to capture).
 
+0. **Pick the right home.** An instruction that applies whenever Claude works on certain files
+   ("never edit generated/ by hand") belongs in `.claude/rules/<slug>.md` with `paths:` frontmatter:
+   Claude Code loads it itself. Write a siyaq entry for knowledge someone would ask about.
 1. **Check it isn't there already.** Run the siyaq helper from the session note:
    `siyaq match "<a question someone would ask about this>"`. If an entry already matches,
    update that file instead of adding a new one.

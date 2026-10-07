@@ -36,6 +36,15 @@ of the other Nexika plugins: prof's lessons and reports, amin's release notes, m
 Both languages are covered: for example `من الجدير بالذكر أن`, `تجدر الإشارة إلى أن` and
 `علاوة على ذلك` are removed or flagged, and Arabic gets an Arabic comma when a dash is replaced.
 
+## Works with Claude Code's built-ins
+
+- **The `attribution` setting** decides whether Claude Code signs commits and pull requests. When
+  you set it to keep the signature (or set the older `includeCoAuthoredBy` to `true`), bayan says
+  nothing about it; it only suggests the setting when you haven't chosen. `deny_signatures` is
+  still bayan's own stricter switch.
+- **Output styles** change how Claude talks; bayan's note is about how the words read, so the two
+  stack.
+
 ## Commands (used by the skills; also handy in CI)
 
 ```
@@ -47,6 +56,8 @@ bayan level [no-code|junior|developer]
 `--min-score` makes `check` exit with 1 below that score, so a CI job can keep docs readable.
 Put `bayan: off` anywhere in a file to leave it alone. Settings live in
 `~/.claude/nexika/bayan/config.json` (`level`, `auto_clean`, `block_signatures`, `deny_signatures`).
+Without a `level` there, the Nexika profile's role picks it (`developer` → developer, `learner` →
+junior, `writer` → no-code); with no role either, bayan writes for a developer.
 
 ## Honest limits
 - The plainness score measures the habits in [the guide](guide/writing.md). It is **not an AI

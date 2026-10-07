@@ -18,7 +18,7 @@ the code, and remembers your progress. It also onboards junior developers to an 
 | Skill | `/prof:report` | End of session: what you learned, what you did, check results, weak areas & logic gaps, level, what to review next |
 | Skill | `/prof:progress [show\|update\|reset]` | Your learner profile and what to learn next |
 | Agent | `project-cartographer` | Read-only explorer that maps a codebase for the onboard skill |
-| Hook | SessionStart | When something is due for review: injects profile, last report's weak areas, open items per topic, and the warm-up rule. Otherwise a one-line note, so working sessions stay working sessions |
+| Hook | SessionStart | When something is due for review: injects profile, last report's weak areas, open items per topic, and the warm-up rule. Otherwise a one-line note, so working sessions stay working sessions. When the Nexika profile says you are a developer or a writer, always the one-line note: questions about code get answers, not lessons |
 | Hook | SessionEnd | If a tutoring session ended without a report and you agreed to automatic reports, writes one in the background (`claude -p`, Sonnet) |
 
 ## The learning loop

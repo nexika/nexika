@@ -41,12 +41,20 @@ usage ─────────────► shown / opened / no-match event
   not list and match every file in the repo again. A changed doc is still noticed at once; a new
   doc made outside Claude shows up within 30 seconds. `siyaq index` lists them again at once.
 
+## Works with Claude Code's built-ins
+
+Claude Code already loads CLAUDE.md files (the nested ones when Claude works in their folder) and
+`.claude/rules/*.md`, whose `paths:` frontmatter loads a rule when Claude touches a matching file.
+siyaq never indexes those (nor `CLAUDE.local.md` or anything under `.claude/`), even if
+`.siyaq.json` asks it to, so nothing is sent twice. Use them for instructions; use siyaq for
+knowledge found by the question asked (in any language, with synonyms), which they can't do.
+
 ## Skills
 
 | Skill | What it does |
 |---|---|
 | `/siyaq:add [topic]` | Capture knowledge as `.siyaq/entries/<slug>.md`, with synonyms in the team's languages and file paths, then verify it matches |
-| `/siyaq:slim` | Move situational sections of CLAUDE.md into on-demand entries (with your approval) and report the tokens saved per session |
+| `/siyaq:slim` | Move situational sections of CLAUDE.md into on-demand entries, and instructions for one area of the code into `.claude/rules` (with your approval); report the tokens saved per session |
 | `/siyaq:stats [days]` | What was injected, opened, never used, which topics had no knowledge, and dead references in docs |
 
 ## Hand-written entries
@@ -79,7 +87,8 @@ what would be injected; `siyaq entries`, `siyaq index` (sources, dead references
 }
 ```
 
-`"mode": "off"` or `SIYAQ=off` disables it. CLAUDE.md and CHANGELOG.md are never indexed
+Without a `min_score`, the Nexika profile's role sets it: 0.7 for a learner (more of the
+project's docs), 1.0 otherwise. `"mode": "off"` or `SIYAQ=off` disables it. CLAUDE.md and CHANGELOG.md are never indexed
 (CLAUDE.md is already loaded). Data lives in `~/.claude/nexika/siyaq/` (`SIYAQ_HOME` to move it);
 the usage events (which hold words from your prompts) are readable only by you and rotate at 1 MB.
 
