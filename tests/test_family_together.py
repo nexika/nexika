@@ -63,6 +63,8 @@ class Family:
         (self.home / ".claude").mkdir(parents=True)
         self.project.mkdir()
         _git(self.project, "init", "-q", "-b", "main")
+        _git(self.project, "config", "user.email", "t@example.com")
+        _git(self.project, "config", "user.name", "Test")
         self.env = {k: v for k, v in os.environ.items() if k not in DATA_HOMES and not k.startswith("PROF_")}
         self.env.update({"HOME": str(self.home), "PATH": f"{fake.parent}{os.pathsep}{os.environ['PATH']}",
                          "HAFIZ_CLAUDE": str(fake), "MIZAN_OFFLINE": "1", "MIZAN_LANG": "en"})
