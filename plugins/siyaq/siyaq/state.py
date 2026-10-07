@@ -1,14 +1,19 @@
 """Per-session memory (what Claude already has) and usage events (what helped)."""
 from __future__ import annotations
 
+import contextlib
 import datetime
 import json
+import os
+import tempfile
 import time
 from pathlib import Path
 
 from .index import data_home, project_dir
 
 SESSION_TTL_DAYS = 7
+LOCK_WAIT = 3.0    # seconds a hook waits for another hook of the same session
+STALE_LOCK = 30    # seconds; a lock older than this was left by a killed process
 
 
 def _now() -> str:
@@ -35,12 +40,57 @@ def load_session(session: str) -> dict:
     return {"shown": {}, "opened": []}
 
 
+def write_atomic(path: Path, text: str) -> None:
+    """Through a new temporary file, so a reader never sees half a file and writers never collide."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        os.replace(tmp, path)
+    except BaseException:
+        with contextlib.suppress(OSError):
+            os.unlink(tmp)
+        raise
+
+
 def save_session(session: str, data: dict) -> None:
     if not _safe(session):
         return
-    path = _session_path(session)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data), encoding="utf-8")
+    write_atomic(_session_path(session), json.dumps(data))
+
+
+@contextlib.contextmanager
+def session_lock(session: str):
+    """One hook of a session at a time between reading what Claude has and recording what it got, so
+    parallel tool calls (four Reads at once) never inject the same block twice. A hook that cannot
+    get the lock in time goes ahead: a repeat is better than a stuck session."""
+    lock = _session_path(session).with_suffix(".lock") if _safe(session) else None
+    held = False
+    if lock is not None:
+        lock.parent.mkdir(parents=True, exist_ok=True)
+        deadline = time.monotonic() + LOCK_WAIT
+        while True:
+            try:
+                lock.mkdir()
+                held = True
+                break
+            except FileExistsError:
+                with contextlib.suppress(OSError):
+                    if time.time() - lock.stat().st_mtime > STALE_LOCK:
+                        lock.rmdir()
+                        continue
+                if time.monotonic() > deadline:
+                    break
+                time.sleep(0.02)
+            except OSError:
+                break
+    try:
+        yield
+    finally:
+        if held:
+            with contextlib.suppress(OSError):
+                lock.rmdir()
 
 
 def reset_session(session: str) -> None:

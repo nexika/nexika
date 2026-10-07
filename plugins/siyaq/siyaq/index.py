@@ -330,8 +330,7 @@ def load(root: Path, config: dict | None = None) -> dict:
     except (OSError, ValueError):
         pass
     index = build(root, config)
-    cache.parent.mkdir(parents=True, exist_ok=True)
-    tmp = cache.with_suffix(".tmp")
-    tmp.write_text(json.dumps(index, ensure_ascii=False), encoding="utf-8")
-    tmp.replace(cache)
+    from .state import write_atomic  # state imports this module
+
+    write_atomic(cache, json.dumps(index, ensure_ascii=False))
     return index

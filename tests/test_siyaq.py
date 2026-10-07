@@ -354,3 +354,59 @@ def test_top_results_are_picked_before_dropping_ones_already_shown(repo):
     assert picked_titles(repo, prompt, top_k=2) == ["Deployment > Rollback", "Deployment > Environments"]
     shown = {"docs/deploy.md#deployment-rollback": "full"}
     assert picked_titles(repo, "roll back the release from production staging", shown=shown, top_k=1) == []
+
+
+# ---------------------------------------------------------------- parallel hooks (#79)
+
+
+def test_parallel_reads_inject_a_block_once(repo, monkeypatch):
+    import threading
+
+    barrier = threading.Barrier(2, timeout=0.5)
+    real_load = state.load_session
+
+    def slow_load(session):
+        data = real_load(session)
+        try:
+            barrier.wait()  # both hooks have read the session before either writes it
+        except threading.BrokenBarrierError:
+            pass
+        return data
+
+    idx.load(repo)  # built once, so only the session state is shared
+    monkeypatch.setattr(state, "load_session", slow_load)
+    outputs = []
+    threads = [threading.Thread(target=lambda: outputs.append(
+        hooks.on_tool(tool_event(repo, "src/Orders/DiscountService.cs", tool="Edit")))) for _ in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert sum(1 for out in outputs if out) == 1
+    shown = [e for e in state.read_events(repo) if e["type"] == "shown" and e["id"].endswith("coupons.md")]
+    assert len(shown) == 1
+
+
+def test_parallel_index_builds_do_not_crash(repo):
+    import threading
+
+    errors = []
+
+    def build():
+        try:
+            idx.load(repo)
+        except Exception as exc:  # noqa: BLE001
+            errors.append(exc)
+
+    threads = [threading.Thread(target=build) for _ in range(6)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert errors == []
+
+
+def test_session_state_is_written_atomically(repo):
+    state.save_session("s1", {"shown": {"a": "full"}, "opened": []})
+    folder = state.data_home() / "sessions"
+    assert [p.name for p in folder.iterdir()] == ["s1.json"]
