@@ -81,6 +81,55 @@ def test_parsers(lines, expected):
     assert (first["framework"], first["test"], first["file"], first["line"]) == expected
 
 
+def _found(lines):
+    return {f["test"]: (f["file"], f["line"]) for f in parse.failures([parse.clean_line(x) for x in lines])}
+
+
+def test_cargo_panics_go_to_their_own_test():
+    found = _found(["test a::one ... FAILED", "test a::two ... FAILED", "", "failures:", "",
+                    "---- a::one stdout ----", "thread 'a::one' panicked at src/one.rs:3:5:", "boom",
+                    "---- a::two stdout ----", "thread 'a::two' panicked at src/two.rs:8:5:", "bang"])
+    assert found == {"a::one": ("src/one.rs", 3), "a::two": ("src/two.rs", 8)}
+
+
+def test_each_pytest_failure_gets_its_own_line():
+    found = _found(["=================================== FAILURES ===================================",
+                    "__________________________________ test_total __________________________________",
+                    "tests/test_cart.py:12: in test_total", "    assert total() == 42", "E   assert 41 == 42",
+                    "_____________________________ TestTax.test_rate[eu] _____________________________",
+                    "tests/test_cart.py:30: in test_rate", "    rate('eu')", "E   KeyError: 'eu'",
+                    "FAILED tests/test_cart.py::test_total - assert 41 == 42",
+                    "FAILED tests/test_cart.py::TestTax::test_rate[eu] - KeyError: 'eu'"])
+    assert found == {"tests/test_cart.py::test_total": ("tests/test_cart.py", 12),
+                     "tests/test_cart.py::TestTax::test_rate[eu]": ("tests/test_cart.py", 30)}
+
+
+def test_jest_file_with_seconds_suffix():
+    found = _found(["FAIL src/cart.test.ts (5.1 s)", "  ● Cart › adds tax",
+                    "    at Object.<anonymous> (src/cart.test.ts:12:5)"])
+    assert found == {"Cart > adds tax": ("src/cart.test.ts", 12)}
+
+
+def test_go_verbose_location_before_the_fail_line():
+    found = _found(["=== RUN   TestOk", "--- PASS: TestOk (0.00s)", "=== RUN   TestTotal",
+                    "    cart_test.go:17: got 41, want 42", "--- FAIL: TestTotal (0.00s)",
+                    "=== RUN   TestTax", "    tax_test.go:9: wrong rate", "--- FAIL: TestTax (0.00s)",
+                    "FAIL", "FAIL\tshop/cart\t0.01s"])
+    assert found == {"TestTotal": ("cart_test.go", 17), "TestTax": ("tax_test.go", 9)}
+
+
+def test_mypy_errors_are_read(tmp_path):
+    lines = ["src/cart.py:12: error: Incompatible types in assignment (expression has type \"str\", "
+             "variable has type \"int\")  [assignment]",
+             "src/cart.py:20:5: error: Name \"x\" is not defined  [name-defined]",
+             "src/cart.py:21: note: See https://mypy.rtfd.io", "Found 2 errors in 1 file (checked 3 source files)"]
+    found = parse.failures([parse.clean_line(x) for x in lines])
+    assert [(f["framework"], f["kind"], f["test"], f["file"], f["line"]) for f in found] == [
+        ("mypy", "build", "assignment", "src/cart.py", 12), ("mypy", "build", "name-defined", "src/cart.py", 20)]
+    argv, label = reproduce.command(tmp_path, found)
+    assert label == "mypy" and argv[1:] == ["-m", "mypy", "src/cart.py"]
+
+
 @pytest.mark.parametrize("line,kind", [
     ("##[error]The job running on runner X has exceeded the maximum execution time of 360 minutes.", "timeout"),
     ("##[error]Process completed with exit code 137.", "oom"),

@@ -84,6 +84,9 @@ def command(root: Path, failures: list[dict]) -> tuple[list[str], str] | None:
         names = [f["test"] for f in mine if SAFE_NAME.match(f["test"])]
         return (["dotnet", "test", "--filter", "|".join(f"FullyQualifiedName~{n}" for n in names)],
                 "dotnet test") if names else None
+    if framework == "mypy":
+        files = _safe_paths([f["file"] for f in mine])
+        return ([_python(root), "-m", "mypy", *files], "mypy") if files else None
     if framework == "ruff":
         files = _safe_paths([f["file"] for f in mine])
         return (["ruff", "check", *files], "ruff") if files else None
