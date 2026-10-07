@@ -132,3 +132,17 @@ test("frames are merged by what layers contain, not by their names", () => {
   assert.match(md, /trim cap/);
   assert.match(md, /leftover space/);
 });
+
+test("colour styles keep their opacity, and a base style outweighed by a longer run is still listed", () => {
+  const grey = { id: "8:1", name: "Card", type: "FRAME", absoluteBoundingBox: box(0, 0, 100, 40), fills: [{ type: "SOLID", color: { r: 0.098, g: 0.094, b: 0.145, a: 1 }, opacity: 0.5 }], styles: { fill: "S:grey50" }, children: [] };
+  const t = tokens([normalize(grey, { "S:grey50": { name: "Grey/50", styleType: "FILL" } })]);
+  assert.equal(t.colors["grey-50"], "#19182580");
+  const name = {
+    id: "8:2", name: "Name", type: "TEXT", characters: "Mark Smith / Travel Enthusiast", absoluteBoundingBox: box(0, 0, 400, 34),
+    style: { fontFamily: "Circular Std", fontWeight: 700, fontSize: 28, lineHeightPx: 34 },
+    characterStyleOverrides: [...Array(10).fill(0), ...Array(20).fill(7)], styleOverrideTable: { 7: { fontSize: 23, fontWeight: 400 } },
+  };
+  const spec = normalize(name, {});
+  assert.equal(spec.text.size, 23, "the longer run is the main style");
+  assert.ok(spec.notes.some((n) => n.startsWith('"Mark Smith" is styled differently (weight 700, 28px)')), spec.notes.join(" | "));
+});

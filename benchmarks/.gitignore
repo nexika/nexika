@@ -1,4 +1,5 @@
 node_modules/
 dist/
 .lawha/
-public/design/
+**/public/design/
+**/public/design-assets/

@@ -1,0 +1,44 @@
+{
+ "task": "figma",
+ "scored": "2026-10-07T09:41:50.399Z",
+ "widths": [
+  430,
+  768,
+  1024,
+  1280,
+  1440
+ ],
+ "results": [
+  {
+   "tool": "lawha",
+   "build": true,
+   "problems": {
+    "phone": {
+     "fail": 0,
+     "warn": 2
+    },
+    "rtl": {
+     "fail": 0,
+     "warn": 0
+    }
+   },
+   "looks": {
+    "430": {
+     "looks": 95.6,
+     "position": 91.8
+    },
+    "1024": {
+     "looks": 98.5,
+     "position": 96.8
+    },
+    "1440": {
+     "looks": 96.2,
+     "position": 94.8
+    }
+   },
+   "hardcodedColours": 28,
+   "notes": [],
+   "report": "runs/figma/lawha/.lawha/score/report.html"
+  }
+ ]
+}

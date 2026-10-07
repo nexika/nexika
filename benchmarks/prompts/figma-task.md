@@ -5,11 +5,11 @@ with only the tool's own method added (see each tool's notes below). One session
 the code, no follow-up prompts except "continue" if the tool stops before it says it is done.
 
 > Build this Figma design as a responsive page in this app (React 19, TypeScript, Tailwind CSS 4).
-> The design has three frames: phone FRAME_PHONE, tablet FRAME_TABLET and desktop FRAME_DESKTOP.
+> The design has three frames: phone https://www.figma.com/design/pE6yYB6HT4jxY2CPBjYtY8/Responsive-Travel-Landing-Page?node-id=13004-968, tablet https://www.figma.com/design/pE6yYB6HT4jxY2CPBjYtY8/Responsive-Travel-Landing-Page?node-id=13004-503 and desktop https://www.figma.com/design/pE6yYB6HT4jxY2CPBjYtY8/Responsive-Travel-Landing-Page?node-id=13004-29.
 > Match the design at each of those widths, and keep it usable at every width in between. Use the
 > design's text, images and icons. Do not ask me questions. When you are done, `npm run build` must pass.
 
-The links are the frames in the benchmark file (see README, "The design").
+The links point to the benchmark file, a draft copy of the community file (see README, "The design").
 
 ## Each tool's method
 - **lawha:** in Claude Code with the nexika marketplace's lawha plugin, start the prompt with `/lawha:figma`.

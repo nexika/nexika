@@ -78,14 +78,25 @@ export async function figmaSpec(root: string, ref: FigmaRef, ids: string[], opts
   };
   frames.forEach((f) => nameFills(f.spec));
   for (const [ref2, file] of Object.entries(fetched.fills)) {
-    const name = `${names.get(ref2) ?? ref2.slice(0, 8)}.${extension(file)}`;
+    // Designers reuse layer names ("Rectangle 6" holding three different photos): number repeats,
+    // never overwrite.
+    const base = names.get(ref2) ?? ref2.slice(0, 8);
+    let name = `${base}.${extension(file)}`;
+    for (let n = 2; Object.values(photoNames).some((p) => p.endsWith(`/${name}`)); n++) name = `${base}-${n}.${extension(file)}`;
     copyFileSync(file, join(assetsDir, name));
     photoNames[ref2] = relative(root, join(assetsDir, name));
   }
 
-  // Icons: one SVG export call for every icon in the widest frame (cached).
-  const widest = frames.reduce((a, b) => (b.width > a.width ? b : a));
-  const icons = vectors(widest.spec);
+  // Icons: one SVG export call for every icon in every frame (cached). The same icon in several frames
+  // (same name and size) is exported once; icons that only exist on the phone or tablet (a menu
+  // button, a fold arrow) are included.
+  const byWidth = [...frames].sort((a, b) => b.width - a.width);
+  const iconKeys = new Set<string>();
+  const icons: Spec[] = [];
+  for (const f of byWidth) for (const v of vectors(f.spec)) {
+    const key = `${v.name}|${Math.round(v.width.px)}x${Math.round(v.height.px)}`;
+    if (!iconKeys.has(key)) { iconKeys.add(key); icons.push(v); }
+  }
   const svgs = await svgExports(root, ref, fetched.version, icons.map((i) => i.id));
   const iconNames: Record<string, string> = {};
   for (const icon of icons) {

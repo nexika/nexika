@@ -248,6 +248,7 @@ async function textOverMediaInView(page) {
             if (opaque)
                 continue;
             const s = getComputedStyle(el);
+            el.setAttribute("data-lawha-over-media", "");
             out.push({ selector: el.id ? `#${el.id}` : `${el.tagName.toLowerCase()}${el.classList[0] ? "." + el.classList[0] : ""}`, x: r.x, y: r.y, w: r.width, h: r.height, color: s.color, size: parseFloat(s.fontSize), weight: Number(s.fontWeight), text: own.slice(0, 50) });
             if (out.length >= 40)
                 break;
@@ -256,7 +257,15 @@ async function textOverMediaInView(page) {
     });
     if (!items.length)
         return [];
+    // The background behind the letters, exactly: the same screen with that text made invisible for
+    // one screenshot. (Sampling around the letters mistakes their soft edges, or a neighbour's text,
+    // for background.)
+    await page.addStyleTag({ content: "[data-lawha-over-media]{color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important;text-decoration-color:transparent!important}" });
     const shot = PNG.sync.read(await page.screenshot({ animations: "disabled" }));
+    await page.evaluate(() => {
+        document.querySelectorAll("[data-lawha-over-media]").forEach((el) => el.removeAttribute("data-lawha-over-media"));
+        [...document.querySelectorAll("style")].filter((t) => t.textContent?.startsWith("[data-lawha-over-media]")).forEach((t) => t.remove());
+    });
     const lum = (r, g, b) => {
         const f = (v) => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
         return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
@@ -265,25 +274,20 @@ async function textOverMediaInView(page) {
     for (const it of items) {
         const m = it.color.match(/[\d.]+/g)?.map(Number) ?? [0, 0, 0];
         const lt = lum(m[0], m[1], m[2]);
-        const ratios = [];
+        // With the text hidden, every pixel in its box is background. Take the worst tenth.
+        const background = [];
         const x0 = Math.max(0, Math.floor(it.x)), x1 = Math.min(shot.width, Math.ceil(it.x + it.w));
         const y0 = Math.max(0, Math.floor(it.y)), y1 = Math.min(shot.height, Math.ceil(it.y + it.h));
         for (let y = y0; y < y1; y += 2) {
             for (let x = x0; x < x1; x += 2) {
                 const i = (y * shot.width + x) * 4;
                 const lb = lum(shot.data[i], shot.data[i + 1], shot.data[i + 2]);
-                const ratio = (Math.max(lt, lb) + 0.05) / (Math.min(lt, lb) + 0.05);
-                ratios.push(ratio);
+                background.push((Math.max(lt, lb) + 0.05) / (Math.min(lt, lb) + 0.05));
             }
         }
-        if (ratios.length < 10)
+        if (background.length < 10)
             continue;
-        ratios.sort((a, b) => a - b);
-        // Pixels close to the text colour are the glyphs themselves: the background is the rest. Take its
-        // worst tenth.
-        const background = ratios.filter((r) => r > 1.25);
-        if (background.length < 5)
-            continue;
+        background.sort((a, b) => a - b);
         const worst = background[Math.floor(background.length * 0.1)];
         const large = it.size >= 24 || (it.size >= 18.66 && it.weight >= 700);
         const needs = large ? 3 : 4.5;

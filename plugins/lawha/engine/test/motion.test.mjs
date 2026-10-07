@@ -49,3 +49,9 @@ test("RTL icons: arrows must mirror, media controls must not; swapping the icon 
   assert.equal(icons.length, 3);
   assert.ok(icons.filter((f) => f.check === "rtl.icon-not-mirrored").every((f) => f.severity === "fail"), "RTL is expected, so they must be fixed");
 });
+
+test("text over faint artwork is measured against what is really behind its letters", () => {
+  // The soft edges of orange letters are half orange: they are not the background.
+  const { findings } = check("text-faint.html");
+  assert.deepEqual(findings.filter((f) => f.check === "a11y.contrast-over-media"), []);
+});

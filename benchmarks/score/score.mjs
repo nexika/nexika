@@ -18,7 +18,7 @@ const task = process.argv[2];
 if (!["figma", "brief"].includes(task)) throw new Error("usage: node score/score.mjs figma|brief");
 const runs = join(HERE, "runs", task);
 const tools = readdirSync(runs).filter((d) => statSync(join(runs, d)).isDirectory() && existsSync(join(runs, d, "package.json")));
-const WIDTHS = task === "figma" ? [390, 768, 1024, 1280, 1440] : [360, 390, 768, 1024, 1280, 1536];
+const WIDTHS = task === "figma" ? [430, 768, 1024, 1280, 1440] : [360, 390, 768, 1024, 1280, 1536];
 
 const sh = (cmd, args, cwd) => {
   try { return { ok: true, out: execFileSync(cmd, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 600_000 }) }; }
@@ -146,10 +146,10 @@ for (const tool of tools) {
 writeFileSync(join(runs, "results.json"), JSON.stringify({ task, scored: new Date().toISOString(), widths: WIDTHS, results }, null, 1));
 const cats = ["layout", "phone", "accessibility", "motion", ...(task === "brief" ? ["rtl"] : [])];
 const lines = [`# Results: ${task === "figma" ? "Figma to code" : "brief to page"}`, "", `Scored ${new Date().toISOString().slice(0, 10)} at ${WIDTHS.join(", ")}px${task === "brief" ? ", light and dark, English and Arabic" : ""}. Problems are counted once per check and element (must fix / should fix).`, ""];
-const head = ["Tool", "Builds", ...(task === "figma" ? ["Looks like the design (390 / 1024 / 1440)"] : ["Did the brief (parts / Arabic RTL / dark)"]), ...cats, "Colours hard-coded"];
+const head = ["Tool", "Builds", ...(task === "figma" ? ["Looks like the design (430 / 1024 / 1440)"] : ["Did the brief (parts / Arabic RTL / dark)"]), ...cats, "Colours hard-coded"];
 lines.push(`| ${head.join(" | ")} |`, `|${head.map(() => "---").join("|")}|`);
 for (const r of results) {
-  const looks = ["390", "1024", "1440"].map((w) => (r.looks[w] ? `${r.looks[w].looks}%` : "–")).join(" / ");
+  const looks = ["430", "1024", "1440"].map((w) => (r.looks[w] ? `${r.looks[w].looks}%` : "–")).join(" / ");
   const cell = (c) => { const p = r.problems[c] ?? { fail: 0, warn: 0 }; return `${p.fail} / ${p.warn}`; };
   const c = r.complete;
   const did = c ? `${Object.values(c.parts).filter(Boolean).length + (c.h1 === 1 ? 1 : 0)}/5 · ${c.arabic.rtl && c.arabic.arabicShare > 0.6 ? "yes" : `no (${Math.round(c.arabic.arabicShare * 100)}% Arabic${c.arabic.rtl ? ", RTL" : ""})`} · ${c.dark.changes ? "yes" : "no"}` : "–";
