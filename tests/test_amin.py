@@ -348,6 +348,33 @@ def test_check_rejects_bad_note_names(market):
     assert not ok and "bad note name: changelog.d/alpha/4.feature.md" in lines[0]
 
 
+def test_deleting_another_projects_note_is_not_a_release(market):
+    # issue #33: deleting beta's pending note let an alpha change pass as a "release"
+    fragments.add(market, projects_of(market)["beta"], "added", "Beta feature.", "1")
+    commit(market)
+    feature_branch(market)
+    write(market, "plugins/beta/main.py", "y = 2\n")
+    (market / "changelog.d/beta/1.added.md").unlink()
+    commit(market)
+    ok, lines = run_check(market)
+    assert not ok and "beta: files changed but no note" in lines[0]
+
+
+def test_empty_and_misplaced_notes_are_rejected(market):
+    feature_branch(market)
+    write(market, "plugins/alpha/main.py", "x = 5\n")
+    write(market, "changelog.d/alpha/5.fixed.md", "  \n")
+    write(market, "changelog.d/6.fixed.md", "Lost at the root.\n")
+    write(market, "changelog.d/gamma/7.fixed.md", "No such project.\n")
+    commit(market)
+    ok, lines = run_check(market)
+    text = "\n".join(lines)
+    assert not ok
+    assert "empty note: changelog.d/alpha/5.fixed.md" in text
+    assert "misplaced note: changelog.d/6.fixed.md" in text
+    assert "misplaced note: changelog.d/gamma/7.fixed.md" in text
+
+
 # ---------------------------------------------------------------- triage
 
 

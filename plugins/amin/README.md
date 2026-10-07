@@ -36,7 +36,9 @@ changelog.d/<project>/<id>.<type>.md        single-project repos: changelog.d/<i
 One file per PR means no merge conflicts in CHANGELOG.md. `/amin:work` writes the note for you;
 by hand: `amin fragment add <project> fixed "What changed, for users" --id 42`. A CI job
 (`amin check-fragment`) fails a PR that changes a project without a note, unless the PR is
-labelled `no-changelog`.
+labelled `no-changelog`. It also fails empty notes and notes outside a project's notes folder
+(they would never be released), and deleting a note only counts as a release when the PR also
+changes that project's CHANGELOG or version. CI runs the base branch's copy of the checker.
 
 ## Releases
 

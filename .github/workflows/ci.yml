@@ -123,7 +123,11 @@ jobs:
         env:
           BASE: ${{ github.base_ref }}
           LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
-        run: python3 plugins/amin/bin/amin check-fragment --base "origin/$BASE" --labels "$LABELS"
+        # the base branch's checker, so a pull request can't loosen the rule it is checked by
+        run: |
+          mkdir -p "$RUNNER_TEMP/amin-base"
+          git archive "origin/$BASE" plugins/amin | tar -x -C "$RUNNER_TEMP/amin-base"
+          python3 "$RUNNER_TEMP/amin-base/plugins/amin/bin/amin" check-fragment --base "origin/$BASE" --labels "$LABELS"
 
   # Single required check for branch protection: passes only if every job above passed
   # (a skipped job, like change notes on push or lawha engine on an unrelated PR, does not fail it).
