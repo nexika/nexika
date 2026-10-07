@@ -8,16 +8,19 @@ Manual entries: .siyaq/entries/**/*.md with optional frontmatter
     title: ...      keywords: a, b, مرادف     paths: src/billing/**, deploy.yml     inject: full
 
 The index is rebuilt automatically whenever a source file, the config or the plugin version
-changes: there is no rebuild step to forget.
+changes: there is no rebuild step to forget. Hooks reuse the list of source files for up to
+FILES_MAX_AGE seconds (a new doc made outside Claude can take that long to appear).
 """
 from __future__ import annotations
 
+import functools
 import hashlib
 import json
 import os
 import posixpath
 import re
 import subprocess
+import time
 from collections import Counter
 from pathlib import Path
 
@@ -33,6 +36,9 @@ MIN_SECTION_CHARS = 80
 MAX_BODY_CHARS = 6000
 TITLE_WEIGHT = 3
 MAX_TRIGGER_DIR_FILES = 15
+# A hook may reuse the project's list of doc files this long (#50): listing a big repo and matching
+# every file against the globs took most of each tool call's wait.
+FILES_MAX_AGE = 30
 
 HEADING = re.compile(r"^(#{1,3})\s+(.+?)\s*#*\s*$")
 FENCE = re.compile(r"^\s*(```|~~~)")
@@ -78,6 +84,7 @@ def load_config(root: Path) -> dict:
 # ---------------------------------------------------------------- globs and files
 
 
+@functools.lru_cache(maxsize=256)
 def glob_regex(pattern: str) -> re.Pattern:
     """Glob to regex: ** spans folders (and may be empty), * and ? stay inside one folder."""
     out, i = "", 0
@@ -324,11 +331,54 @@ def build(root: Path, config: dict | None = None) -> dict:
     }
 
 
-def load(root: Path, config: dict | None = None) -> dict:
-    """The cached index, rebuilt first if any source, the config or the plugin changed."""
+def _files_key(root: Path, config: dict) -> list:
+    try:  # staging, checkouts and merges change git's index; a worktree has none here (0)
+        staged = (root / ".git" / "index").stat().st_mtime_ns
+    except OSError:
+        staged = 0
+    return [json.dumps(config, sort_keys=True), f"{INDEX_VERSION}/{__version__}", staged]
+
+
+def _save_files(root: Path, key: list, files: list[str]) -> None:
+    from .state import write_atomic  # state imports this module
+
+    try:
+        write_atomic(project_dir(root) / "files.json", json.dumps({"key": key, "at": time.time(),
+                                                                   "sources": files}))
+    except OSError:
+        pass
+
+
+def cached_source_files(root: Path, config: dict, max_age: float = 0) -> list[str]:
+    """The doc files to index; with max_age, the list saved by a call at most that many seconds ago,
+    for the same config and the same git index."""
+    key = _files_key(root, config)
+    if max_age > 0:
+        try:
+            data = json.loads((project_dir(root) / "files.json").read_text(encoding="utf-8"))
+            if data["key"] == key and 0 <= time.time() - float(data["at"]) < max_age:
+                return [str(f) for f in data["sources"]]
+        except (OSError, ValueError, TypeError, KeyError):
+            pass
+    files = source_files(root, project_files(root), config)
+    _save_files(root, key, files)
+    return files
+
+
+def forget_files(root: Path) -> None:
+    """A new doc is being written: list the files again on the next call."""
+    try:
+        (project_dir(root) / "files.json").unlink()
+    except OSError:
+        pass
+
+
+def load(root: Path, config: dict | None = None, max_age: float = 0) -> dict:
+    """The cached index, rebuilt first if any source, the config or the plugin changed. Hooks pass
+    max_age=FILES_MAX_AGE to reuse the file list; commands always list the files again."""
     config = load_config(root) if config is None else config
     cache = project_dir(root) / "index.json"
-    files = source_files(root, project_files(root), config)
+    files = cached_source_files(root, config, max_age)
     current = fingerprint(root, files, config)
     try:
         cached = json.loads(cache.read_text(encoding="utf-8"))
@@ -340,4 +390,5 @@ def load(root: Path, config: dict | None = None) -> dict:
     from .state import write_atomic  # state imports this module
 
     write_atomic(cache, json.dumps(index, ensure_ascii=False))
+    _save_files(root, _files_key(root, config), index["sources"])
     return index

@@ -65,7 +65,6 @@ TABLE = {
     "rule-ask": (ASK, ASK, ASK),
     "rule-deny": (DENY, DENY, DENY),
 }
-PROFILES = ("relaxed", "standard", "strict")
 # A tainted session (text that tried to give orders was read) raises these one level.
 TAINT_RAISED = {"egress", "egress-risk", "remote-irreversible", "download-run", "remote-command"}
 # Refused in every profile: no approval lifts these; the user can only do them outside Claude.

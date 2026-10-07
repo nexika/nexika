@@ -3,6 +3,9 @@
 import os
 import sys
 
+if sys.argv[1:2] == ["hook"] and os.environ.get("NEXIKA_BACKGROUND") == "1":
+    sys.exit(0)  # inside a family background model call: no hooks (#45)
+
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 
 from hafiz.cli import entry  # noqa: E402

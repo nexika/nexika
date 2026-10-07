@@ -53,6 +53,7 @@ def cmd_entries(root: Path, word: str = "") -> str:
 
 def cmd_index(root: Path) -> str:
     index = idx.build(root)
+    idx.forget_files(root)  # hooks list the files again too
     cache = idx.project_dir(root) / "index.json"
     cache.parent.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(index, ensure_ascii=False), encoding="utf-8")

@@ -14,8 +14,10 @@ import re
 import shlex
 import subprocess
 
-from . import classify as c
-from . import inject, policy, state
+from . import config, inject, state
+
+# The classifier (classify, policy) is most of a hook's start-up time, so it is imported only
+# where a call is actually checked (#50).
 
 NO_SCAN = {"TodoWrite", "Edit", "Write", "MultiEdit", "NotebookEdit", "ExitPlanMode", "AskUserQuestion",
            "Skill"}
@@ -24,8 +26,8 @@ ALLOW_PROMPT = re.compile(r"^\s*/haris:allow\b(.*)$", re.S)
 
 def _context(event: dict) -> tuple[str, str, dict]:
     cwd = os.path.realpath(str(event.get("cwd") or os.getcwd()))
-    root = policy.project_root(cwd)
-    return cwd, root, policy.effective_config(root)
+    root = config.project_root(cwd)
+    return cwd, root, config.effective_config(root)
 
 
 def _out(event_name: str, **fields) -> str:
@@ -47,6 +49,10 @@ def on_pre_tool_use(event: dict) -> str:
         return ""
     state.mark_active(session)
     state.publish_status(session, cfg)  # a mode changed mid-session reaches mizan's band (written on change)
+    if not config.checked(str(event.get("tool_name") or "")):
+        return ""  # haris never objects to this tool: no need to load the classifier
+    from . import classify as c
+    from . import policy
     try:
         decision = policy.decide(event, cfg, state.load_session(session), state.approvals(session, root))
     except Exception as exc:  # haris must never wave a call through because it failed
@@ -140,7 +146,7 @@ def parse_allow(rest: str, cwd: str) -> tuple[dict | None, bool, str]:
         if raw.endswith("/"):
             path += "/"
         return {"kind": m.group(1), "value": path}, project, f"{m.group(1)} {path}"
-    command = policy.normalize(rest)
+    command = config.normalize(rest)
     return {"kind": "command", "value": command}, project, f"`{command}`"
 
 
@@ -161,7 +167,7 @@ def on_user_prompt_submit(event: dict) -> str:
     rest = m.group(1).strip()
     if rest.startswith("--remove"):
         value = rest[len("--remove"):].strip().strip("`'\"")
-        n = state.remove_approval(session, root, policy.normalize(value)) if value else 0
+        n = state.remove_approval(session, root, config.normalize(value)) if value else 0
         if value and not n:
             n = state.remove_approval(session, root, os.path.realpath(os.path.join(cwd,
                                                                                    os.path.expanduser(value))))
@@ -169,6 +175,9 @@ def on_user_prompt_submit(event: dict) -> str:
     entry, project, shown = parse_allow(rest, cwd)
     if entry is None:
         return ""
+    from . import classify as c
+    from . import policy
+
     tool, key = {"command": ("Bash", "command"), "write": ("Write", "file_path")}.get(entry["kind"],
                                                                                       ("Read", "file_path"))
     check = policy.decide({"tool_name": tool, "tool_input": {key: entry["value"].rstrip("/") or "/"},
