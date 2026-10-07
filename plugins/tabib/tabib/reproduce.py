@@ -183,10 +183,12 @@ def run(repo: str, sha: str, branch: str, failures: list[dict], jobs: list[dict]
         return {"status": "skipped", "why": FORK}
     if not compare.fetch(repo, sha, branch):
         return {"status": "skipped", "why": "the failing commit is not available from origin"}
-    if not compare.advertised_by_origin(repo, sha, branch):
+    # The CI service said this repository's own code (fork is False): a branch deleted by a
+    # squash-merge still leaves the commit advertised as the pull request's head.
+    if not (compare.advertised_by_origin(repo, sha, branch) or compare.advertised_tip(repo, sha)):
         return {"status": "skipped", "why": FORK}
     _, names = compare.git(repo, "diff", "--name-only", "HEAD", sha)
-    differ = compare.deps_changed(names.splitlines())
+    differ = compare.deps_changed(names.splitlines(), failures[0]["framework"])
     if differ:
         return {"status": "skipped",
                 "why": "dependencies differ from your checkout: " + ", ".join(differ[:5])}

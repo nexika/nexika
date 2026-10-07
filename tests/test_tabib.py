@@ -246,6 +246,35 @@ def test_does_not_run_when_dependencies_differ(project):
     assert found["status"] == "skipped" and "pyproject.toml" in found["why"]
 
 
+def test_own_commit_runs_after_its_branch_is_deleted(project):
+    # A squash-merge deletes the branch; GitHub still advertises the pull request's head.
+    sha = git(project, "rev-parse", "feat/x")
+    git(project, "push", "-q", "origin", f"{sha}:refs/pull/7/head")
+    git(project, "push", "-q", "origin", "--delete", "feat/x")
+    git(project, "branch", "-q", "-D", "feat/x")
+    git(project, "update-ref", "-d", "refs/remotes/origin/feat/x")
+    found = reproduce.run(str(project), sha, "feat/x", FAILING, [], fork=False)
+    assert found["status"] == "reproduced", found
+    # Without the CI service saying it is this repository's, the same commit is not run.
+    assert reproduce.run(str(project), sha, "feat/x", FAILING, [], fork=None)["status"] == "skipped"
+
+
+def test_dependency_check_looks_only_at_the_failing_tests_ecosystem(project):
+    git(project, "switch", "-q", "feat/x")
+    (project / "showcases").mkdir()
+    (project / "showcases" / "package-lock.json").write_text("{}\n")
+    git(project, "add", "-A")
+    git(project, "commit", "-qm", "a showcase")
+    git(project, "push", "-q", "origin", "feat/x")
+    sha = git(project, "rev-parse", "HEAD")
+    git(project, "switch", "-q", "main")
+    found = reproduce.run(str(project), sha, "feat/x", FAILING, [])
+    assert found["status"] == "reproduced", found
+    assert compare.deps_changed(["web/package-lock.json", "uv.lock"], "jest") == ["web/package-lock.json"]
+    assert compare.deps_changed(["web/package-lock.json", "uv.lock"], "pytest") == ["uv.lock"]
+    assert compare.deps_changed(["web/package-lock.json", "uv.lock"]) == ["web/package-lock.json", "uv.lock"]
+
+
 def _alive(pid):
     try:
         os.kill(pid, 0)
