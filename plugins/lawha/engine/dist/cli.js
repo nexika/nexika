@@ -2,19 +2,6 @@
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { audit } from "./audit.js";
-import { closePage, launch, openVariant, redirectedTo, variantName } from "./browser.js";
-import { ab, readTaste, reveal } from "./ab.js";
-import { diff } from "./diff.js";
-import { iconFindings, icons } from "./icons.js";
-import { choose, preview, readHistory } from "./direct.js";
-import { inspire } from "./inspire.js";
-import { budget, outline, parseUrl } from "./figma.js";
-import { figmaSpec } from "./figma-spec.js";
-import { indexProject } from "./index-project.js";
-import { record } from "./record.js";
-import { groupFindings, writeReport } from "./report.js";
-import { see } from "./see.js";
 import { DEFAULT_WIDTHS, list, parseArgs, stamp, writeJson } from "./util.js";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const VERSION = JSON.parse(readFileSync(join(HERE, "..", "package.json"), "utf8")).version;
@@ -59,6 +46,13 @@ const HELP = `lawha ${VERSION} - see and check web pages
 Prints JSON on standard output: for check, the summary and the report path.
 check exits 1 when the verdict is fail (unless --no-fail-exit), so it can gate CI.`;
 async function check(url, a) {
+    const { closePage, launch, openVariant, redirectedTo, variantName } = await import("./browser.js");
+    const { audit } = await import("./audit.js");
+    const { iconFindings, icons } = await import("./icons.js");
+    const { see } = await import("./see.js");
+    const { diff } = await import("./diff.js");
+    const { record } = await import("./record.js");
+    const { groupFindings, writeReport } = await import("./report.js");
     const widths = list(a.widths, DEFAULT_WIDTHS.map(String)).map(Number).filter((n) => n >= 200 && n <= 4000);
     const themes = list(a.themes, ["light"]).filter((t) => t === "light" || t === "dark");
     const expectRtl = a["expect-rtl"] === true;
@@ -183,11 +177,13 @@ async function main(argv) {
             const [actual, expected] = a._;
             if (!actual || !expected)
                 break;
+            const { diff } = await import("./diff.js");
             const result = diff(actual, expected, { heatmap: typeof a.heatmap === "string" ? a.heatmap : undefined, expectedScale: typeof a.scale === "string" ? Number(a.scale) : 1 });
             process.stdout.write(JSON.stringify(result, null, 2) + "\n");
             return 0;
         }
         case "index": {
+            const { indexProject } = await import("./index-project.js");
             const root = resolve(a._[0] ?? ".");
             const target = resolve(typeof a.out === "string" ? a.out : join(root, ".lawha", "system.json"));
             const index = indexProject(root);
@@ -197,6 +193,7 @@ async function main(argv) {
         }
         case "figma": {
             const [sub, link] = a._;
+            const { budget, outline, parseUrl } = await import("./figma.js");
             if (sub === "budget") {
                 process.stdout.write(JSON.stringify(budget(), null, 2) + "\n");
                 return 0;
@@ -211,6 +208,7 @@ async function main(argv) {
                 return 0;
             }
             if (sub === "spec") {
+                const { figmaSpec } = await import("./figma-spec.js");
                 const ids = list(a.frames, ref.node ? [ref.node] : []);
                 const result = await figmaSpec(root, ref, ids, { assets: typeof a.assets === "string" ? a.assets : join("public", "figma"), refresh: a.refresh === true, title: typeof a.title === "string" ? a.title : undefined });
                 process.stdout.write(JSON.stringify({ ...result, budget: budget() }, null, 2) + "\n");
@@ -220,6 +218,7 @@ async function main(argv) {
         }
         case "direct": {
             const [sub, file, id] = a._;
+            const { choose, preview, readHistory } = await import("./direct.js");
             if (sub === "history") {
                 process.stdout.write(JSON.stringify(readHistory().slice(-10), null, 2) + "\n");
                 return 0;
@@ -241,6 +240,7 @@ async function main(argv) {
         }
         case "ab": {
             const [first, second] = a._;
+            const { ab, readTaste, reveal } = await import("./ab.js");
             if (first === "taste") {
                 process.stdout.write(JSON.stringify(readTaste().slice(-20), null, 2) + "\n");
                 return 0;
@@ -266,6 +266,7 @@ async function main(argv) {
             const url = a._[0];
             if (!url)
                 break;
+            const { inspire } = await import("./inspire.js");
             const host = (() => { try {
                 return new URL(url).hostname.replace(/^www\./, "");
             }

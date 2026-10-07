@@ -1,7 +1,7 @@
 // lawha engine tests: run the built CLI against fixture pages with known faults.
 import { strict as assert } from "node:assert";
 import { execFile, execFileSync, spawn, spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -94,6 +94,23 @@ test("--wait-for waits for content a client-rendered app draws after the load ev
   } finally {
     server.stop();
   }
+});
+
+test("a broken module breaks only its own command", () => {
+  // A half-written figma-spec.js once took down lawha check: every module loaded at start.
+  const copy = tmp();
+  cpSync(join(ROOT, "dist"), join(copy, "dist"), { recursive: true });
+  cpSync(join(ROOT, "package.json"), join(copy, "package.json"));
+  symlinkSync(join(ROOT, "node_modules"), join(copy, "node_modules"), "dir");
+  writeFileSync(join(copy, "dist", "figma-spec.js"), "export const = ;\n");
+  const cli = (...args) => spawnSync(process.execPath, [join(copy, "dist", "cli.js"), ...args], { encoding: "utf8", timeout: 240_000, env: { ...process.env, ...HOMES } });
+  assert.equal(cli("version").status, 0);
+  const checked = cli("check", page("good.html"), "--widths", "360", "--no-see", "--no-record", "--out", tmp());
+  assert.equal(checked.status, 0, checked.stderr);
+  assert.equal(JSON.parse(checked.stdout).verdict, "pass");
+  const figma = cli("figma", "spec", "https://www.figma.com/design/AbCdEfGhIjKl/x?node-id=1-2");
+  assert.notEqual(figma.status, 0);
+  assert.match(figma.stderr, /lawha:/);
 });
 
 test("every planted fault is found, once per problem", () => {
