@@ -26,7 +26,8 @@ the spacing scale, the type scale ratio and line lengths, and the palette actual
 ## What it checks
 
 Every page at **360, 390, 768, 1024, 1280 and 1536px**, in light (and dark), LTR (and RTL), and
-once with "reduce motion" on.
+once with "reduce motion" on. The variants render in parallel browser contexts (one per CPU, up to
+8; `--concurrency`), about 5 times faster than one at a time ([bench](bench/README.md)).
 
 | | |
 |---|---|

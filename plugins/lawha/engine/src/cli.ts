@@ -8,7 +8,7 @@ import type { Variant } from "./browser.js";
 import type { Icon } from "./icons.js";
 import type { Run, Shot } from "./report.js";
 import type { Seen } from "./see.js";
-import { DEFAULT_WIDTHS, type Finding, list, parseArgs, stamp, writeJson } from "./util.js";
+import { DEFAULT_CONCURRENCY, DEFAULT_WIDTHS, type Finding, list, parseArgs, pool, stamp, writeJson } from "./util.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const VERSION = (JSON.parse(readFileSync(join(HERE, "..", "package.json"), "utf8")) as { version: string }).version;
@@ -28,6 +28,7 @@ const HELP = `lawha ${VERSION} - see and check web pages
       --wait-for <selector>    wait for it before measuring (content an app draws after load)
       --network-idle           also wait for the network to go quiet   --settle <ms>  default 800
       --no-fail-exit       exit 0 on a fail verdict (for callers that read the JSON)
+      --concurrency <n>    variants rendered at once, each in its own browser context (default: one per CPU, up to 8)
   lawha diff <actual.png> <expected.png> [--scale n] [--heatmap out.png]
   lawha index [project]  [--out <file>]   default <project>/.lawha/system.json
   lawha figma outline <figma link>           pages and top-level frames (1 call, cached by version)
@@ -85,23 +86,29 @@ async function check(url: string, a: ReturnType<typeof parseArgs>): Promise<numb
     networkIdle: a["network-idle"] === true,
     settleMs: Number.isFinite(settle) && settle >= 0 ? settle : undefined,
   };
+  // Each variant gets its own browser context, so several render at once (#106); results are
+  // merged in matrix order afterwards, so the report reads the same at any concurrency.
+  const asked = Number(str("concurrency"));
+  const concurrency = Math.min(variants.length, Number.isInteger(asked) && asked >= 1 ? asked : DEFAULT_CONCURRENCY);
+  run.summary.concurrency = concurrency;
+  const rtlUrl = typeof a["rtl-url"] === "string" ? a["rtl-url"] : undefined;
   const browser = await launch();
-  // Icons per width and theme, in each direction, to compare after all renders (rtl.icon-*).
-  const iconsBy = new Map<string, { ltr?: Icon[]; rtl?: Icon[] }>();
+  let results: { findings: Finding[]; shot?: Shot; icons?: Icon[]; seen?: Seen }[];
   try {
-    for (const v of variants) {
+    results = await pool(variants, concurrency, async (v) => {
       const name = variantName(v);
-      const rtlUrl = typeof a["rtl-url"] === "string" ? a["rtl-url"] : undefined;
+      const done: { findings: Finding[]; shot?: Shot; icons?: Icon[]; seen?: Seen } = { findings: [] };
+      const where = { width: v.width, theme: v.theme, dir: v.dir, motion: v.motion };
       const page = await openVariant(browser, { url, rtlUrl, ...load }, v);
       try {
         // Checking the login page and recording it as the page asked for is worse than no check.
         const requested = v.dir === "rtl" && rtlUrl ? rtlUrl : url;
         const landed = redirectedTo(requested, page.url());
-        if (landed) run.findings.push({ check: "page.redirected", severity: "fail", message: `Asked for ${requested} but the browser ended on ${landed} (a redirect, often a login page); the results are for that page, not the one asked for.`, width: v.width, theme: v.theme, dir: v.dir, motion: v.motion } satisfies Finding);
+        if (landed) done.findings.push({ check: "page.redirected", severity: "fail", message: `Asked for ${requested} but the browser ended on ${landed} (a redirect, often a login page); the results are for that page, not the one asked for.`, ...where } satisfies Finding);
         const file = join(out, "shots", `${name}.png`);
         await page.screenshot({ path: file, fullPage: true, animations: "disabled" });
         const height = await page.evaluate(() => document.documentElement.scrollHeight);
-        run.shots.push({ variant: name, width: v.width, theme: v.theme, dir: v.dir, motion: v.motion, file: relative(out, file), height } satisfies Shot);
+        done.shot = { variant: name, width: v.width, theme: v.theme, dir: v.dir, motion: v.motion, file: relative(out, file), height } satisfies Shot;
         if (a["no-audit"] !== true) {
           const audited = await audit(page, v, { expectRtl });
           const shift = audited.findings.findIndex((f) => f.check === "layout.shift");
@@ -117,25 +124,34 @@ async function check(url: string, a: ReturnType<typeof parseArgs>): Promise<numb
               }
             }
             const median = [...loads].sort((x, y) => x - y)[1]!;
-            const where = { width: v.width, theme: v.theme, dir: v.dir, motion: v.motion };
             audited.findings.splice(shift, 1, ...(median > 0.1 ? [{ ...shiftFinding(median, audited.facts.shifted, loads), ...where }] : []));
           }
-          run.findings.push(...audited.findings);
+          done.findings.push(...audited.findings);
         }
-        if (a["no-audit"] !== true && v.motion === "full" && dirs.length > 1) {
-          const key = `${v.width}|${v.theme}`;
-          iconsBy.set(key, { ...iconsBy.get(key), [v.dir]: await icons(page) });
-        }
-        if (a["no-see"] !== true && v.motion === "full" && v.theme === themes[0]) run.seen.push((await see(page, v, name)) as Seen);
+        if (a["no-audit"] !== true && v.motion === "full" && dirs.length > 1) done.icons = await icons(page);
+        if (a["no-see"] !== true && v.motion === "full" && v.theme === themes[0]) done.seen = (await see(page, v, name)) as Seen;
       } catch (error) {
-        run.findings.push({ check: "engine.error", severity: "fail", message: `Could not check ${name}: ${(error as Error).message}`, width: v.width, theme: v.theme, dir: v.dir, motion: v.motion } satisfies Finding);
+        done.findings.push({ check: "engine.error", severity: "fail", message: `Could not check ${name}: ${(error as Error).message}`, ...where } satisfies Finding);
       } finally {
         await closePage(page);
       }
-    }
+      return done;
+    });
   } finally {
     await browser.close();
   }
+  // Icons per width and theme, in each direction, to compare after all renders (rtl.icon-*).
+  const iconsBy = new Map<string, { ltr?: Icon[]; rtl?: Icon[] }>();
+  variants.forEach((v, i) => {
+    const done = results[i]!;
+    run.findings.push(...done.findings);
+    if (done.shot) run.shots.push(done.shot);
+    if (done.seen) run.seen.push(done.seen);
+    if (done.icons) {
+      const key = `${v.width}|${v.theme}`;
+      iconsBy.set(key, { ...iconsBy.get(key), [v.dir]: done.icons });
+    }
+  });
   for (const [key, pair] of iconsBy) {
     if (!pair.ltr || !pair.rtl) continue;
     const [width, theme] = key.split("|") as [string, "light" | "dark"];

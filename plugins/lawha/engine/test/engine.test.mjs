@@ -264,3 +264,18 @@ test("a check is recorded in lawha's folder and announced in the shared status f
   const quiet = run(["check", page("good.html"), "--widths", "390", "--no-see", "--no-record", "--out", tmp()], { env: homes, cwd: project });
   assert.equal(quiet.recorded, null);
 });
+
+test("variants run in parallel browser contexts and give the same result as one at a time", () => {
+  // #106: the full matrix ran one variant after another (80 s inside a 3-round fix loop).
+  const args = ["check", page("bad.html"), "--widths", "390,768,1280", "--themes", "light,dark", "--no-see", "--no-record"];
+  const one = tmp(), many = tmp();
+  run([...args, "--concurrency", "1", "--out", one]);
+  run([...args, "--concurrency", "4", "--out", many]);
+  const read = (dir) => JSON.parse(readFileSync(join(dir, "run.json"), "utf8"));
+  const [a, b] = [read(one), read(many)];
+  assert.equal(a.summary.concurrency, 1);
+  assert.equal(b.summary.concurrency, 4);
+  assert.deepEqual(b.shots.map((s) => s.variant), a.shots.map((s) => s.variant), "shots keep the matrix order");
+  const key = (f) => `${f.check}|${f.severity}|${f.width}|${f.theme}|${f.dir}|${f.motion}`;
+  assert.deepEqual(b.findings.map(key), a.findings.map(key), "same findings, same order");
+});

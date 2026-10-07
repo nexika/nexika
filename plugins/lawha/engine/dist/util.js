@@ -1,7 +1,10 @@
 import { mkdirSync, writeFileSync } from "node:fs";
+import { availableParallelism } from "node:os";
 import { dirname } from "node:path";
 export const DEFAULT_WIDTHS = [360, 390, 768, 1024, 1280, 1536];
 export const PHONE_MAX = 767;
+/** Variants rendered at once in `check`: one per CPU, up to 8 (bench/speed.mjs: 5x faster at 8 on 12 CPUs). */
+export const DEFAULT_CONCURRENCY = Math.max(1, Math.min(8, availableParallelism()));
 /** Minimal flag parser: --name value, --name=value, --flag (boolean); a repeated flag collects its values. */
 export function parseArgs(argv, booleans = [], repeated = []) {
     const out = { _: [] };
@@ -37,4 +40,17 @@ export function stamp(date = new Date()) {
 export function round(n, digits = 2) {
     const f = 10 ** digits;
     return Math.round(n * f) / f;
+}
+/** Run `work` over `items` with at most `limit` running at once; results keep the items' order. */
+export async function pool(items, limit, work) {
+    const results = new Array(items.length);
+    let next = 0;
+    const worker = async () => {
+        while (next < items.length) {
+            const i = next++;
+            results[i] = await work(items[i], i);
+        }
+    };
+    await Promise.all(Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, worker));
+    return results;
 }
