@@ -1,6 +1,6 @@
 // lawha engine tests: run the built CLI against fixture pages with known faults.
 import { strict as assert } from "node:assert";
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFile, execFileSync, spawn, spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -55,6 +55,45 @@ test("a page that redirects elsewhere (a login wall) fails instead of passing as
   assert.ok(moved.length >= 1 && moved.every((f) => f.severity === "fail"));
   assert.match(moved[0].message, /good\.html/);
   assert.ok(summary.top.some((t) => t.includes("page.redirected")));
+});
+
+// The app runs in its own process: the CLI runs synchronously in the tests.
+const app = async () => {
+  const child = spawn(process.execPath, [join(FIX, "server.mjs")], { stdio: ["ignore", "pipe", "inherit"] });
+  const port = await new Promise((done) => child.stdout.once("data", (d) => done(Number(String(d).trim()))));
+  return { url: (path) => `http://127.0.0.1:${port}${path}`, stop: () => child.kill() };
+};
+const checkAsync = (args) => new Promise((done) => {
+  execFile(process.execPath, [CLI, "check", ...args, "--widths", "390", "--no-see", "--no-record", "--no-fail-exit", "--out", tmp()], { encoding: "utf8", timeout: 240_000, env: { ...process.env, ...HOMES } }, (error, stdout) => {
+    assert.ok(!error || error.code === undefined, String(error));
+    done(JSON.parse(stdout));
+  });
+});
+const checks = (summary) => new Set(JSON.parse(readFileSync(summary.run, "utf8")).findings.map((f) => f.check));
+
+test("a page behind login is checked with a cookie, a header or a saved storage state", async () => {
+  const server = await app();
+  try {
+    assert.ok(checks(await checkAsync([server.url("/private")])).has("page.redirected"));
+    assert.ok(!checks(await checkAsync([server.url("/private"), "--cookie", "session=ok"])).has("page.redirected"));
+    assert.ok(!checks(await checkAsync([server.url("/private"), "--cookie=session=ok"])).has("page.redirected"));
+    assert.ok(!checks(await checkAsync([server.url("/private"), "--header", "X-Token: t"])).has("page.redirected"));
+    const state = join(tmp(), "state.json");
+    writeFileSync(state, JSON.stringify({ cookies: [{ name: "session", value: "ok", domain: "127.0.0.1", path: "/", expires: -1, httpOnly: false, secure: false, sameSite: "Lax" }], origins: [] }));
+    assert.ok(!checks(await checkAsync([server.url("/private"), "--storage-state", state])).has("page.redirected"));
+  } finally {
+    server.stop();
+  }
+});
+
+test("--wait-for waits for content a client-rendered app draws after the load event", async () => {
+  const server = await app();
+  try {
+    assert.ok(!checks(await checkAsync([server.url("/spa"), "--settle", "100"])).has("a11y.image-alt"), "the late image is not there yet");
+    assert.ok(checks(await checkAsync([server.url("/spa"), "--settle", "100", "--wait-for", "#late", "--network-idle"])).has("a11y.image-alt"));
+  } finally {
+    server.stop();
+  }
 });
 
 test("every planted fault is found, once per problem", () => {

@@ -30,6 +30,10 @@ const HELP = `lawha ${VERSION} - see and check web pages
       --against-scale <n>  scale of those images (Figma 2x exports: 0.5)
       --no-audit --no-see  skip parts      --out <dir>   default .lawha/runs/<time>
       --no-record          do not share the result with mizan and itqan (status/lawha.json)
+      --storage-state <file>   a signed-in browser's state (Playwright storageState JSON)
+      --cookie name=value      --header "Name: value"   repeatable; sent to the page's own origin only
+      --wait-for <selector>    wait for it before measuring (content an app draws after load)
+      --network-idle           also wait for the network to go quiet   --settle <ms>  default 800
       --no-fail-exit       exit 0 on a fail verdict (for callers that read the JSON)
   lawha diff <actual.png> <expected.png> [--scale n] [--heatmap out.png]
   lawha index [project]  [--out <file>]   default <project>/.lawha/system.json
@@ -71,6 +75,16 @@ async function check(url: string, a: ReturnType<typeof parseArgs>): Promise<numb
   variants.push({ width: widths.includes(390) ? 390 : widths[0]!, theme: themes[0]!, dir: "ltr", motion: "reduce" });
 
   const run: Run = { url, when: new Date().toISOString(), version: VERSION, shots: [], findings: [], seen: [], diffs: [], summary: { fail: 0, warn: 0, info: 0, widths, verdict: "pass" } };
+  const str = (k: string) => (typeof a[k] === "string" ? (a[k] as string) : undefined);
+  const settle = Number(str("settle"));
+  const load = {
+    storageState: str("storage-state"),
+    cookies: Array.isArray(a.cookie) ? a.cookie : [],
+    headers: Array.isArray(a.header) ? a.header : [],
+    waitFor: str("wait-for"),
+    networkIdle: a["network-idle"] === true,
+    settleMs: Number.isFinite(settle) && settle >= 0 ? settle : undefined,
+  };
   const browser = await launch();
   // Icons per width and theme, in each direction, to compare after all renders (rtl.icon-*).
   const iconsBy = new Map<string, { ltr?: Icon[]; rtl?: Icon[] }>();
@@ -78,7 +92,7 @@ async function check(url: string, a: ReturnType<typeof parseArgs>): Promise<numb
     for (const v of variants) {
       const name = variantName(v);
       const rtlUrl = typeof a["rtl-url"] === "string" ? a["rtl-url"] : undefined;
-      const page = await openVariant(browser, { url, rtlUrl }, v);
+      const page = await openVariant(browser, { url, rtlUrl, ...load }, v);
       try {
         // Checking the login page and recording it as the page asked for is worse than no check.
         const requested = v.dir === "rtl" && rtlUrl ? rtlUrl : url;
@@ -153,7 +167,7 @@ async function check(url: string, a: ReturnType<typeof parseArgs>): Promise<numb
 
 async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
-  const a = parseArgs(rest, ["expect-rtl", "no-audit", "no-see", "no-record", "no-fail-exit", "refresh"]);
+  const a = parseArgs(rest, ["expect-rtl", "no-audit", "no-see", "no-record", "no-fail-exit", "network-idle", "refresh"], ["cookie", "header"]);
   switch (command) {
     case "check": {
       const url = a._[0];

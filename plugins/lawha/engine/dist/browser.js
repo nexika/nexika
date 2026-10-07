@@ -1,4 +1,13 @@
 import { chromium } from "playwright";
+function parseHeaders(lines) {
+    const out = {};
+    for (const line of lines) {
+        const cut = line.indexOf(":");
+        if (cut > 0)
+            out[line.slice(0, cut).trim().toLowerCase()] = line.slice(cut + 1).trim();
+    }
+    return out;
+}
 export function variantName(v) {
     return `${v.width}-${v.theme}-${v.dir}${v.motion === "reduce" ? "-reduced" : ""}`;
 }
@@ -61,11 +70,42 @@ export async function openVariant(browser, opts, v) {
         deviceScaleFactor: 1,
         hasTouch: v.width <= 767,
         isMobile: false,
+        ...(opts.storageState ? { storageState: opts.storageState } : {}),
     });
+    const url = v.dir === "rtl" && opts.rtlUrl ? opts.rtlUrl : opts.url;
+    const origin = (() => { try {
+        return new URL(url).origin;
+    }
+    catch {
+        return "null";
+    } })();
+    if (opts.cookies?.length && origin !== "null") {
+        await context.addCookies(opts.cookies.filter((c) => c.includes("=")).map((c) => {
+            const cut = c.indexOf("=");
+            return { name: c.slice(0, cut).trim(), value: c.slice(cut + 1).trim(), url: origin };
+        }));
+    }
+    const headers = parseHeaders(opts.headers ?? []);
+    if (Object.keys(headers).length && origin !== "null") {
+        // Only to the page's own origin: a token must not reach a CDN or an analytics host.
+        await context.route("**/*", (route) => {
+            const request = route.request();
+            const same = (() => { try {
+                return new URL(request.url()).origin === origin;
+            }
+            catch {
+                return false;
+            } })();
+            return same ? route.continue({ headers: { ...request.headers(), ...headers } }) : route.continue();
+        });
+    }
     const page = await context.newPage();
     await page.addInitScript(CLS_SCRIPT);
-    const url = v.dir === "rtl" && opts.rtlUrl ? opts.rtlUrl : opts.url;
     await page.goto(url, { waitUntil: "load", timeout: 60_000 });
+    if (opts.networkIdle)
+        await page.waitForLoadState("networkidle", { timeout: 30_000 }).catch(() => undefined);
+    if (opts.waitFor)
+        await page.waitForSelector(opts.waitFor, { state: "attached", timeout: 30_000 });
     if (v.dir === "rtl" && !opts.rtlUrl) {
         await page.evaluate(() => document.documentElement.setAttribute("dir", "rtl"));
     }

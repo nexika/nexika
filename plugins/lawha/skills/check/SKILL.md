@@ -29,6 +29,11 @@ The helper is named in the session note ("Helper: .../bin/lawha"); below it is w
    - `--against <dir> --against-scale 0.5` when design exports exist (`.lawha/figma/<page>/`,
      images named by width, 2x exports).
    - `--widths` only if the user asks for other widths.
+   - A page behind login (the result has `page.redirected`): ask the user for a way in, never for a
+     password: `--storage-state <file>` (a saved signed-in browser), `--cookie name=value` or
+     `--header "Authorization: Bearer ..."` (both sent to the page's own origin only).
+   - A client-rendered app (React, TanStack, Vue) whose content arrives after load:
+     `--wait-for <selector of that content>`, and `--network-idle` when it keeps fetching.
    It prints a summary with `verdict`, counts, `top` problems and the `report` path, and exits 1
    when the verdict is `fail` (the summary is still printed; that is a result, not a crash).
 
