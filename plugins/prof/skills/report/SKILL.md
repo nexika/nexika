@@ -58,8 +58,10 @@ Session: <sid8> · Source: in-session
 - most important first
 
 ## Concept checklist
+<!-- bayan: off -->
 - [status] topic-slug :: Topic Title :: concept :: evidence
 ```
+Keep the `<!-- bayan: off -->` line: it stops writing cleaners from changing the separators.
 
 3. Merge it into the topic memory:
    `python3 <helper> merge-report <report file>` (helper path is in the session context).

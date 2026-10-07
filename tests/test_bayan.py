@@ -349,3 +349,22 @@ def test_a_write_over_an_existing_file_cleans_only_the_changed_lines(tmp_path):
                       "tool_input": {"file_path": str(fresh), "content": "x"},
                       "tool_response": {"type": "create", "originalFile": None}})
     assert fresh.read_text() == "We did it to learn.\n"
+
+
+# ---------------------------------------------------------------- issue #46: prof's data files
+
+
+def test_prof_topic_files_survive_bayan(store, tmp_path):
+    # bayan turned prof's " — " field separators into commas, and prof then lost the topic
+    store.save_topic("py", "Python", {"generators": ("missed", "generators", "said yield returns", "2026-10-05")})
+    path = store.TOPICS / "py.md"
+    before = path.read_text()
+    hooks.post_write({"tool_name": "Write", "cwd": str(tmp_path), "tool_input": {"file_path": str(path)}})
+    assert path.read_text() == before
+    assert store.load_topic("py")[1]["generators"][0] == "missed"
+    # prof's default home is under ~/.claude, which bayan never rewrites
+    home_copy = tmp_path / ".claude" / "nexika" / "prof" / "topics" / "py.md"
+    home_copy.parent.mkdir(parents=True)
+    home_copy.write_text("- [missed] generators — said yield returns (2026-10-05)\n")
+    hooks.post_write({"tool_name": "Write", "cwd": str(tmp_path), "tool_input": {"file_path": str(home_copy)}})
+    assert "—" in home_copy.read_text()

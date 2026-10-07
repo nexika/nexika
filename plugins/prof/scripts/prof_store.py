@@ -55,6 +55,8 @@ TOPIC_LINE_RE = re.compile(
     r"^- \[(missed|shaky|not-checked|understood)\] (.+?) — (.*) \((\d{4}-\d{2}-\d{2})\)$"
 )
 REPORT_DATE_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})_")
+# Tells writing cleaners (bayan) to leave the file alone: its " — " and "::" are field separators.
+NO_REWRITE = "bayan: off"
 
 REPORT_FORMAT = """\
 # Tutor session report - {date}
@@ -80,6 +82,7 @@ Session: {sid8} · Source: {source}
 - what to re-check or re-teach first next session, most important first
 
 ## Concept checklist
+<!-- bayan: off -->
 - [status] topic-slug :: Topic Title :: concept :: evidence
 """
 
@@ -208,7 +211,7 @@ def save_topic(slug: str, title: str, entries: dict[str, Entry]) -> None:
     rank = {s: i for i, s in enumerate(STATUSES)}
     rows = sorted(entries.values(), key=lambda e: (rank[e[0]], e[1].lower()))
     lines = [f"# {title}", "",
-             "<!-- managed by prof_store.py merge-report; edit statuses freely -->", ""]
+             f"<!-- managed by prof_store.py merge-report; edit statuses freely. {NO_REWRITE} -->", ""]
     lines += [f"- [{s}] {c} — {ev} ({d})" for s, c, ev, d in rows]
     (TOPICS / f"{slug}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
