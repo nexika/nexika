@@ -150,12 +150,18 @@ def test_post_write_leaves_code_opt_out_and_disabled_files_alone(tmp_path):
     assert doc.read_text() == "Great question! Fine.\n"
 
 
-def test_pre_bash_blocks_signed_commits_and_pull_requests():
-    def decide(command):
-        out = hooks.pre_bash({"tool_input": {"command": command}})
-        return out and out["hookSpecificOutput"]["permissionDecision"]
-    assert decide('git commit -m "Fix\n\nCo-Authored-By: Claude <noreply@anthropic.com>"') == "deny"
-    assert decide('gh pr create --title x --body "🤖 Generated with [Claude Code](https://c)"') == "deny"
+def decision(command, cwd=None):
+    """'deny', 'suggest' (allowed, with a note for Claude) or None."""
+    out = hooks.pre_bash({"cwd": str(cwd) if cwd else None, "tool_input": {"command": command}})
+    if not out:
+        return None
+    return out["hookSpecificOutput"].get("permissionDecision") or "suggest"
+
+
+def test_pre_bash_suggests_for_signed_commits_and_blocks_hidden_characters():
+    decide = decision
+    assert decide('git commit -m "Fix\n\nCo-Authored-By: Claude <noreply@anthropic.com>"') == "suggest"
+    assert decide('gh pr create --title x --body "🤖 Generated with [Claude Code](https://c)"') == "suggest"
     assert decide('git commit -m "Fix​ parser"') == "deny"
     assert decide('git commit -m "Fix parser"') is None
     assert decide('echo "Co-Authored-By: Claude"') is None          # not a commit
@@ -273,14 +279,13 @@ def test_symlinks_outside_project_fixtures_and_rst_are_not_rewritten(tmp_path):
 
 def test_guard_ignores_look_alikes_and_reads_message_files(tmp_path):
     def decide(command):
-        out = hooks.pre_bash({"cwd": str(tmp_path), "tool_input": {"command": command}})
-        return out and out["hookSpecificOutput"]["permissionDecision"]
+        return decision(command, tmp_path)
     assert decide('git commit -m "docs: stop adding Generated with Claude Code footer"') is None
     assert decide('git log --grep commit | grep "Co-authored-by: claude"') is None
     assert decide('git commit -m "Résumé : corrigé"') is None          # French no-break space is fine
     (tmp_path / "msg.txt").write_text("Fix\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n")
-    assert decide("git commit -F msg.txt") == "deny"
-    assert decide("cd x && gh pr create --body-file msg.txt") == "deny"
+    assert decide("git commit -F msg.txt") == "suggest"
+    assert decide("cd x && gh pr create --body-file msg.txt") == "suggest"
 
 
 def test_unclosed_comment_is_fast():
@@ -288,3 +293,21 @@ def test_unclosed_comment_is_fast():
     text = "<!--" + "a in order to " * 8000
     start = time.monotonic()
     assert cleaned(text) == text and time.monotonic() - start < 1
+
+
+def test_signed_commits_are_not_denied_and_the_note_points_to_the_attribution_setting():
+    # issue #25: every commit with Claude Code's default trailer was denied, then retried
+    out = hooks.pre_bash({"tool_input": {"command": 'git commit -m "Fix\n\nCo-Authored-By: Claude <noreply@anthropic.com>"'}})
+    spec = out["hookSpecificOutput"]
+    assert "permissionDecision" not in spec
+    assert "attribution" in spec["additionalContext"]
+    config.save(deny_signatures=True)                       # strict mode for those who want it
+    assert decision('git commit -m "x\n\nCo-Authored-By: Claude <noreply@anthropic.com>"') == "deny"
+
+
+def test_git_global_options_do_not_hide_a_commit():
+    signed = 'commit -m "x\n\nCo-Authored-By: Claude <noreply@anthropic.com>"'
+    for prefix in ("git -c user.name=x", "git -C repo -c a=b", "git --no-pager", "git --git-dir=.git",
+                   "git --work-tree /w", "git -c core.hooksPath=/dev/null --no-pager"):
+        assert decision(f"{prefix} {signed}") == "suggest", prefix
+    assert decision('git -c x=y commit -m "Fix​ parser"') == "deny"

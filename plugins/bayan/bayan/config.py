@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 
 LEVELS = ("no-code", "junior", "developer")
-DEFAULTS = {"level": "no-code", "auto_clean": True, "block_signatures": True}
+DEFAULTS = {"level": "no-code", "auto_clean": True, "block_signatures": True, "deny_signatures": False}
 
 
 def home() -> Path:

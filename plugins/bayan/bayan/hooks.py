@@ -14,7 +14,10 @@ CHECK_SUFFIXES = CLEAN_SUFFIXES | {".txt", ".rst"}  # .txt/.rst: checked only (r
 SKIP_DIRS = {"node_modules", ".git", "vendor", ".venv", "venv", "site-packages", "dist", "build",
              "fixtures", "testdata", "__snapshots__", "snapshots"}
 OPT_OUT = "bayan: off"
-PUBLISH = re.compile(r"(?:^|&&|\|\||;)\s*(?:git(?:\s+-C\s+\S+)?\s+(?:commit|tag)\b"
+# git's global options come before the subcommand: git -c k=v, -C dir, --no-pager, --git-dir=x, --work-tree x
+_GIT_OPTS = (r"(?:\s+(?:-[cC]\s*\S+|--(?:git-dir|work-tree|namespace|exec-path|config-env)(?:=|\s+)\S+"
+             r"|--[\w-]+(?:=\S+)?))*")
+PUBLISH = re.compile(rf"(?:^|&&|\|\||;)\s*(?:git{_GIT_OPTS}\s+(?:commit|tag)\b"
                      r"|gh\s+(?:pr|release|issue)\s+(?:create|edit|comment)\b)", re.M)
 MESSAGE_FILE = re.compile(r"(?:\s-F|--file|--body-file|--notes-file)[ =]+(\"[^\"]+\"|'[^']+'|\S+)")
 
@@ -147,6 +150,11 @@ def post_write(hook: dict) -> dict | None:
     return {"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": "\n".join(notes)}}
 
 
+SIGNATURE_NOTE = ("bayan: this message carries an AI signature (Co-Authored-By / 'Generated with'). "
+                  "Leave it out of the next commit or pull request. To stop Claude Code adding it, set "
+                  "\"attribution\": {\"commit\": \"\", \"pr\": \"\"} in .claude/settings.json.")
+
+
 def _message_files(command: str, cwd: Path) -> str:
     texts = []
     for m in MESSAGE_FILE.finditer(command):
@@ -161,16 +169,21 @@ def _message_files(command: str, cwd: Path) -> str:
 
 
 def pre_bash(hook: dict) -> dict | None:
-    """Stop commits, tags, pull requests and releases that carry an AI signature or zero-width characters."""
+    """Commits, tags, pull requests and releases: block zero-width characters; for an AI signature, tell
+    Claude how to leave it out (denying it made every signed commit fail and retry)."""
     command = str((hook.get("tool_input") or {}).get("command") or "")
-    if not PUBLISH.search(command) or not config.load().get("block_signatures", True):
+    cfg = config.load()
+    if not PUBLISH.search(command) or not cfg.get("block_signatures", True):
         return None
     message = command + "\n" + _message_files(command, _project(hook))
-    if rules.SIGNATURE_IN_COMMAND.search(message):
+    if any(ord(c) in rules.ZERO_WIDTH for c in message):
+        reason = "bayan: the message contains invisible zero-width characters. Remove them."
+    elif rules.SIGNATURE_IN_COMMAND.search(message):
+        if not cfg.get("deny_signatures", False):
+            return {"hookSpecificOutput": {"hookEventName": "PreToolUse",
+                                           "additionalContext": SIGNATURE_NOTE}}
         reason = ("bayan: this project doesn't sign commits, pull requests or releases with an AI "
                   "signature. Remove the Co-Authored-By / 'Generated with' line and run it again.")
-    elif any(ord(c) in rules.ZERO_WIDTH for c in message):
-        reason = "bayan: the message contains invisible zero-width characters. Remove them."
     else:
         return None
     return {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",
