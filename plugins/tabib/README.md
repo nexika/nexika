@@ -43,8 +43,8 @@ Cause (reported by Claude)
 
 | | |
 |---|---|
-| **Failures** | pytest, jest, vitest, go test, dotnet test, cargo test, tsc, mypy, ruff, eslint: test, file, line, message |
-| **Signals** | time limits, out of memory (exit 137), the network, rate limits, the runner, missing credentials, dependency resolution |
+| **Failures** | pytest, jest, vitest, Playwright (a test in its "flaky" group passed on a retry and is left out), go test, dotnet test, cargo test, JUnit XML reports printed in the log, tsc, mypy, ruff, eslint: test, file, line, message; a crash (segmentation fault) when nothing else names the failure, at the running test when Python's faulthandler says which |
+| **Signals** | time limits, out of memory (exit 137), crashes (segmentation fault, SIGSEGV, exit 139), the network, rate limits, the runner, missing credentials, dependency resolution |
 | **Kinds** | **code**; **matrix** (fails only on one Python, Node or OS); **flaky** (the same commit passed in another run, or each failing test passed in another run or attempt of the same commit); **infra** (cancelled, a time limit, the network, the runner, credentials); **dependency**; **unknown** |
 | **History** | the last green run of the same workflow, the commits since, ranked: first the commits that last wrote a failing line (git blame at the failing commit on the assertion line and the stack frames in the log), then those that touched a failing file; dependency files that changed |
 | **Flaky tests** | read from GitHub when needed, nothing stored: the earlier attempts of the run and the other runs of the same workflow, commit and event (up to 10, reading at most 5 failed logs); a test that failed and passed on the same commit is named with the run links |

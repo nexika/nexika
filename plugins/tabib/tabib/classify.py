@@ -109,6 +109,8 @@ def classify(facts: dict) -> dict:
                 "confidence": "medium", "evidence": evidence}
     if failures:
         evidence += [f"{f['test'] or f['file']}: {f['message']}" for f in failures[:3]]
+        if "segfault" in signals:
+            evidence.append(f"The process crashed (a segmentation fault): {signals['segfault']}")
         if one_matrix_job(facts.get("jobs") or []):
             # One job of a matrix: a race in a test or a real platform difference; one run cannot say.
             evidence.append("Only one job of the matrix failed and nothing it alone has explains it; "

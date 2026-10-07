@@ -752,3 +752,140 @@ def test_triage_blames_the_lines_in_the_log(ci):
     assert record["suspects"]["commits"][0]["blamed"] == ["tests/test_a.py:2"]
     from tabib import cli
     assert "blame: tests/test_a.py:2" in cli.report(record, "en")
+
+
+# ---------------------------------------------------------------- Playwright, JUnit XML, segfaults (#105)
+
+PLAYWRIGHT_LOG = """\
+Running 4 tests using 2 workers
+
+  ✓  1 [chromium] › tests/example.spec.ts:3:5 › has title (1.2s)
+  ✘  2 [chromium] › tests/example.spec.ts:8:5 › get started link (5.1s)
+  ✘  3 [firefox] › tests/cart.spec.ts:20:7 › cart › adds an item (2.0s)
+  ✘  4 [chromium] › tests/example.spec.ts:8:5 › get started link (retry #1) (5.0s)
+  ✓  5 [firefox] › tests/cart.spec.ts:20:7 › cart › adds an item (retry #1) (1.9s)
+
+  1) [chromium] › tests/example.spec.ts:8:5 › get started link ─────────────────────────────────
+
+    Error: Timed out 5000ms waiting for expect(locator).toBeVisible()
+
+    Locator: getByRole('heading', { name: 'Installation' })
+    Expected: visible
+    Received: <element(s) not found>
+
+      12 |
+      13 |   // Expects page to have a heading with the name of Installation.
+    > 14 |   await expect(page.getByRole('heading', { name: 'Installation' })).toBeVisible();
+         |                                                                     ^
+      15 | });
+
+        at /home/runner/work/web/web/tests/example.spec.ts:14:69
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────
+
+    Error: Timed out 5000ms waiting for expect(locator).toBeVisible()
+
+  2) [firefox] › tests/cart.spec.ts:20:7 › cart › adds an item ─────────────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 1
+    Received: 0
+
+        at /home/runner/work/web/web/tests/cart.spec.ts:24:31
+
+  1 failed
+    [chromium] › tests/example.spec.ts:8:5 › get started link ──────────────────────────────────
+  1 flaky
+    [firefox] › tests/cart.spec.ts:20:7 › cart › adds an item ───────────────────────────────────
+  1 passed (12.3s)
+##[error]Process completed with exit code 1.
+""".splitlines()
+
+
+def test_playwright_failures_leave_out_flaky_tests():
+    found = parse.failures(PLAYWRIGHT_LOG)
+    assert [(f["framework"], f["test"], f["file"], f["line"]) for f in found] == [
+        ("playwright", "[chromium] get started link", "tests/example.spec.ts", 14)]
+    assert found[0]["message"].startswith("Error: Timed out 5000ms waiting for expect(locator).toBeVisible()")
+    without_summary = parse.failures(PLAYWRIGHT_LOG[:PLAYWRIGHT_LOG.index("  1 failed")])
+    assert {f["test"] for f in without_summary} == {"[chromium] get started link", "[firefox] cart > adds an item"}
+    assert reproduce.command(Path("/x"), found)[0] == ["npx", "--no-install", "playwright", "test",
+                                                       "tests/example.spec.ts"]
+
+
+JUNIT_LOG = """\
+$ cat build/test-results/test/TEST-com.shop.CartTest.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.shop.CartTest" tests="3" skipped="0" failures="1" errors="1" timestamp="2026-10-06T07:17:41" hostname="fv-az1" time="0.042">
+  <properties/>
+  <testcase name="totalAddsTax()" classname="com.shop.CartTest" time="0.012">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;42&gt; but was: &lt;41&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;42&gt; but was: &lt;41&gt;
+	at app//org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:151)
+	at app//com.shop.CartTest.totalAddsTax(CartTest.java:27)
+</failure>
+  </testcase>
+  <testcase name="emptyCart()" classname="com.shop.CartTest" time="0.001">
+    <error message="java.lang.NullPointerException" type="java.lang.NullPointerException">java.lang.NullPointerException
+	at app//com.shop.Cart.total(Cart.java:12)
+</error>
+  </testcase>
+  <testcase name="passes()" classname="com.shop.CartTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+</testsuite>
+""".splitlines()
+
+
+def test_junit_xml_in_the_log():
+    found = parse.failures(JUNIT_LOG)
+    assert [(f["framework"], f["test"], f["file"], f["line"]) for f in found] == [
+        ("junit", "com.shop.CartTest.totalAddsTax()", "CartTest.java", 27),
+        ("junit", "com.shop.CartTest.emptyCart()", "Cart.java", 12)]
+    assert found[0]["message"] == "org.opentest4j.AssertionFailedError: expected: <42> but was: <41>"
+    pytest_xml = ('<testsuites><testsuite name="pytest" failures="1"><testcase classname="tests.test_cart" '
+                  'name="test_total" file="tests/test_cart.py" line="41"><failure message="assert 41 == 42">'
+                  'tests/test_cart.py:42: AssertionError</failure></testcase></testsuite></testsuites>')
+    assert [(f["test"], f["file"], f["line"]) for f in parse.junit_xml(pytest_xml)] == [
+        ("tests.test_cart.test_total", "tests/test_cart.py", 42)]
+    bomb = '<?xml version="1.0"?><!DOCTYPE l [<!ENTITY a "aaaa">]><testsuite><testcase name="x">' \
+           '<failure message="&a;"/></testcase></testsuite>'
+    assert parse.junit_xml(bomb) == [] and parse.junit_xml("<testsuite><testcase") == []
+
+
+SEGFAULT_LOGS = [
+    ("""\
+tests/test_native.py Fatal Python error: Segmentation fault
+
+Current thread 0x00007f3a1c8b1740 (most recent call first):
+  File "/home/runner/work/shop/shop/.venv/lib/python3.12/site-packages/fastcart/_core.py", line 88 in total
+  File "/home/runner/work/shop/shop/tests/test_native.py", line 12 in test_crash
+  File "/home/runner/work/shop/shop/.venv/lib/python3.12/site-packages/_pytest/python.py", line 159 in pytest_pyfunc_call
+/home/runner/work/_temp/a1b2.sh: line 1:  2291 Segmentation fault      (core dumped) pytest -q
+##[error]Process completed with exit code 139.""", ("test_crash", "/home/runner/work/shop/shop/tests/test_native.py", 12)),
+    ("""\
+     Running unittests src/lib.rs (target/debug/deps/cart-3f2a1b)
+error: test failed, to rerun pass `--lib`
+
+Caused by:
+  process didn't exit successfully: `/home/runner/work/cart/cart/target/debug/deps/cart-3f2a1b` (signal: 11, SIGSEGV: invalid memory reference)
+##[error]Process completed with exit code 101.""", ("", "", 0)),
+]
+
+
+@pytest.mark.parametrize("log, where", SEGFAULT_LOGS, ids=["python", "rust"])
+def test_segfaults_are_a_signal_and_a_failure(log, where):
+    lines = log.splitlines()
+    assert "segfault" in [s["kind"] for s in parse.signals(lines)]
+    found = parse.failures(lines)
+    assert len(found) == 1 and found[0]["framework"] == "crash" and found[0]["kind"] == "tests"
+    assert (found[0]["test"], found[0]["file"], found[0]["line"]) == where
+    assert "egmentation fault" in found[0]["message"] or "SIGSEGV" in found[0]["message"]
+    verdict = classify.classify({"failures": found, "signals": parse.signals(lines)})
+    assert verdict["kind"] == "code" and any("crashed" in e for e in verdict["evidence"])
+
+
+def test_a_crash_is_not_added_when_the_tests_name_their_failure():
+    lines = ["=== RUN   TestTotal", "panic: runtime error: invalid memory address or nil pointer dereference",
+             "[signal SIGSEGV: segmentation violation code=0x1 addr=0x0 pc=0x4f1c2a]", "--- FAIL: TestTotal (0.00s)",
+             "FAIL\texample.com/shop/cart\t0.012s"]
+    assert [f["framework"] for f in parse.failures(lines)] == ["go"]
