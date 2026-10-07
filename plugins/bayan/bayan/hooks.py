@@ -1,14 +1,16 @@
 """Claude Code hooks. They must never break the session: any error means "do nothing"."""
 from __future__ import annotations
 
-import difflib
 import os
 import re
 import shlex
 import shutil
 from pathlib import Path
 
-from . import check, clean, config, rules
+from . import config
+
+# check, clean and rules (the word lists) are most of a hook's start-up time: they are imported
+# only once a hook has something to clean or check (#50).
 
 CLEAN_SUFFIXES = {".md", ".mdx", ".markdown"}      # cleaned and checked
 CHECK_SUFFIXES = CLEAN_SUFFIXES | {".txt", ".rst"}  # .txt/.rst: checked only (rst code is indented prose)
@@ -108,6 +110,8 @@ def _write(path: Path, text: str) -> None:
 
 def _changed(old: str, new: str) -> list[tuple[int, int]]:
     """The lines a Write changed in an existing file, as character ranges of the new text."""
+    import difflib
+
     lines = new.splitlines(keepends=True)
     offsets = [0]
     for line in lines:
@@ -140,6 +144,8 @@ def post_write(hook: dict) -> dict | None:
     text = _read(path)
     if OPT_OUT in text:
         return None
+    from . import check, clean
+
     cfg = config.load()
     regions = _regions(hook, text)
     lines = None   # None = report on the whole file (it was all written by Claude)
@@ -191,9 +197,13 @@ def pre_bash(hook: dict) -> dict | None:
     """Commits, tags, pull requests and releases: block zero-width characters; for an AI signature, tell
     Claude how to leave it out (denying it made every signed commit fail and retry)."""
     command = str((hook.get("tool_input") or {}).get("command") or "")
-    cfg = config.load()
-    if not PUBLISH.search(command) or not cfg.get("block_signatures", True):
+    if not PUBLISH.search(command):
         return None
+    cfg = config.load()
+    if not cfg.get("block_signatures", True):
+        return None
+    from . import rules
+
     message = command + "\n" + _message_files(command, _project(hook))
     if any(ord(c) in rules.ZERO_WIDTH for c in message):
         reason = "bayan: the message contains invisible zero-width characters. Remove them."

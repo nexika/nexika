@@ -32,7 +32,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import itqan_background  # noqa: E402
 import itqan_files  # noqa: E402
-import itqan_secrets  # noqa: E402
 
 PROPOSE_AT = 2
 MAX_EXCHANGES = 15
@@ -280,7 +279,7 @@ def hook_signal(hook: dict) -> None:
     if not learning_enabled(cwd):
         return
     _append("signals.jsonl", {"ts": _now(), "session": str(hook.get("session_id") or ""),
-                              "cwd": str(cwd), "prompt": itqan_secrets.redact(prompt)[:1000]})
+                              "cwd": str(cwd), "prompt": _redact(prompt)[:1000]})
 
 
 def hook_usage(hook: dict) -> None:
@@ -294,6 +293,12 @@ def hook_usage(hook: dict) -> None:
         return
     _append("usage.jsonl", {"ts": _now(), "session": str(hook.get("session_id") or "")[:8],
                             "cwd": str(hook.get("cwd") or os.getcwd()), "kind": kind, "name": str(name)})
+
+
+def _redact(text: str) -> str:
+    import itqan_secrets  # its patterns take a while to compile: only for text that is kept (#50)
+
+    return itqan_secrets.redact(text)
 
 
 def _text_of(content) -> str:
@@ -345,7 +350,7 @@ def hook_extract(hook: dict) -> None:
     if not itqan_background.allowed():  # a paid model call: only with the family's consent (#45)
         itqan_background.record("itqan", "learn-extract", "sonnet", ran=False)
         return
-    payload = itqan_secrets.redact("\n\n".join(f"ASSISTANT: {a}\nUSER: {u}" for a, u in pairs))
+    payload = _redact("\n\n".join(f"ASSISTANT: {a}\nUSER: {u}" for a, u in pairs))
     itqan_files.private_dir(data_home())
     payload_path = itqan_files.private_dir(data_home() / "tmp") / f"{session[:8]}.txt"
     itqan_files.write_private(payload_path, payload)
