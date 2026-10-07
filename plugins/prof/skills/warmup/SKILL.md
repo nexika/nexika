@@ -1,6 +1,6 @@
 ---
 name: warmup
-description: Start-of-session comprehension check. Tests what the learner kept from previous sessions on a topic, estimates their current level, and re-teaches anything missed BEFORE new material. Use at the start of a tutoring session, before any new lesson on a topic that has history, or when the user says "check what I remember", "where was I", or "test my level".
+description: Start-of-session comprehension check. Tests what the learner kept from previous sessions on a topic, estimates their current level, and re-teaches anything missed BEFORE new material. Use at the start of a tutoring session, before any new lesson on a topic that has history, or when the user says "check what I remember", "where was I in my lessons", or "test my level".
 argument-hint: "[topic or topic-slug, optional]"
 ---
 

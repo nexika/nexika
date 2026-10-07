@@ -1,6 +1,6 @@
 ---
 name: walkthrough
-description: Explain a specific file, function, class or code snippet line by line for a learner, then check understanding. Use when the user says "explain this code", "what does this file do", "walk me through this function", or "I don't understand this part".
+description: Explain a specific file, function, class or code snippet line by line for a learner, then check understanding. Use when the user asks to learn from the code - "walk me through this line by line", "teach me how this file works", "I'm learning, explain this slowly" - or runs /prof:walkthrough. Not for a quick "what does this do" while working: answer that directly.
 argument-hint: "<file path, symbol name, or pasted code>"
 ---
 

@@ -47,7 +47,8 @@ def slash(command, args=""):
 
 @pytest.mark.parametrize(
     ("raw", "expected"),
-    [("C# async/await", "c-async-await"), ("  Hello World ", "hello-world"), ("###", "general")],
+    [("C# async/await", "c-sharp-async-await"), ("  Hello World ", "hello-world"), ("###", "general"),
+     ("C++", "cpp"), ("C#", "c-sharp"), ("F# basics", "f-sharp-basics"), (".NET DI", "dotnet-di")],
 )
 def test_slugify(store, raw, expected):
     assert store.slugify(raw) == expected
@@ -102,6 +103,38 @@ def test_merge_report_records_merged_file(store):
     assert report.name in store.MERGED.read_text()
 
 
+def test_not_checked_never_overwrites_a_checked_status(store):
+    # issue #61/#87: a later "explained but not tested" erased an "understood" with evidence
+    first = write_report(store, "2026-10-01_1000_aaaa0000.md",
+                         ["- [understood] py :: Python :: generators :: wrote a correct one"])
+    later = write_report(store, "2026-10-05_1000_bbbb0000.md",
+                         ["- [not-checked] py :: Python :: generators :: mentioned again"])
+    store.merge_report(first)
+    store.merge_report(later)
+    assert store.load_topic("py")[1]["generators"][:3] == ("understood", "generators", "wrote a correct one")
+
+
+def test_c_sharp_and_c_plus_plus_stay_separate_topics(store):
+    report = write_report(store, "2026-10-05_1000_cccc0001.md", [
+        "- [shaky] C# :: C# :: delegates :: hints",
+        "- [missed] C++ :: C++ :: pointers :: wrong",
+    ])
+    store.merge_report(report)
+    assert set(store.load_topic("c-sharp")[1]) == {"delegates"}
+    assert set(store.load_topic("cpp")[1]) == {"pointers"}
+
+
+def test_skill_triggers_need_a_learning_request():
+    # plain working questions must not start a lesson
+    from conftest import PLUGINS
+    text = "\n".join(p.read_text(encoding="utf-8").split("---")[1]
+                     for p in (PLUGINS / "prof" / "skills").glob("*/SKILL.md"))
+    for plain in ("what is X and how does it work", "explain this code", "what does this file do",
+                  '"bye"', '"done for today"', "explain this project"):
+        assert plain not in text, plain
+    assert '"teach me"' in text
+
+
 # ---------------------------------------------------------------- summaries / topic command
 
 
@@ -132,12 +165,17 @@ def test_print_topic_unknown_lists_known(store, capsys):
 # ---------------------------------------------------------------- session-start
 
 
-def test_session_start_first_time(store, capsys):
+def test_session_start_is_one_line_when_nothing_is_due(store, capsys):
+    # issue #61: every session got the full tutoring context, turning plain questions into lessons
+    store.set_auto_report(False)
+    store.PROFILE.parent.mkdir(parents=True, exist_ok=True)
+    store.PROFILE.write_text("# Learner profile\n- Level: junior\n", encoding="utf-8")
+    store.save_topic("py", "Python", {"loops": ("understood", "loops", "fine", TODAY.isoformat())})
     store.session_start({"session_id": "abcdef1234567"})
-    out = capsys.readouterr().out
-    assert "short: abcdef12" in out
-    assert "No learner profile yet" in out
-    assert "Warm-up rule" not in out  # nothing to warm up on yet
+    out = capsys.readouterr().out.strip()
+    assert len(out.splitlines()) == 1
+    assert "short: abcdef12" in out and "nothing due" in out
+    assert "Warm-up rule" not in out and "Level: junior" not in out
 
 
 def test_session_start_lists_history_and_warmup_rule(store, capsys):

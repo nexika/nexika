@@ -1,6 +1,6 @@
 ---
 name: report
-description: Write the end-of-session learning report - what the learner learned today, exactly what they did, comprehension check results, weak areas and logic gaps, level estimate, and what to review next time - then update the per-topic memory. Use when a tutoring session ends, or when the user says "report", "summary of today", "what did I learn", "bye", "done for today", or "that's all".
+description: Write the end-of-session learning report - what the learner learned today, exactly what they did, comprehension check results, weak areas and logic gaps, level estimate, and what to review next time - then update the per-topic memory. Use when a tutoring session (a prof lesson, quiz, warm-up, walkthrough or onboarding ran in this session) ends, or when the user says "what did I learn" or runs /prof:report. A goodbye at the end of an ordinary working session is not a reason to run it.
 argument-hint: "[optional note]"
 ---
 

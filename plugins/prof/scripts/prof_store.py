@@ -148,7 +148,11 @@ def _read_hook_input() -> dict:
 
 
 def slugify(text: str) -> str:
-    slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+    """Lowercase-with-dashes; language symbols are kept as words so C# and C++ stay apart."""
+    text = text.lower().replace("c++", "cpp")
+    text = re.sub(r"(?<![a-z0-9])\.net\b", "dotnet", text)
+    text = re.sub(r"\b([a-z])#", r"\1-sharp", text)
+    slug = re.sub(r"[^a-z0-9]+", "-", text).strip("-")
     return slug[:60] or "general"
 
 
@@ -224,8 +228,11 @@ def merge_report(path: Path) -> int:
         title, entries = load_topic(slug)
         for status, new_title, concept, evidence in rows:
             title = new_title or title
-            entries[concept.lower()] = (status, concept, evidence or "-", date)
             count += 1
+            old = entries.get(concept.lower())
+            if status == "not-checked" and old and old[0] != "not-checked":
+                continue   # "explained again" never erases a result the learner showed
+            entries[concept.lower()] = (status, concept, evidence or "-", date)
         save_topic(slug, title, entries)
     REPORTS.mkdir(parents=True, exist_ok=True)
     with open(MERGED, "a", encoding="utf-8") as fh:
@@ -271,6 +278,15 @@ def session_start(hook: dict) -> None:
     sid = hook.get("session_id", "")
     script = Path(__file__).resolve()
     p = print
+    topics = topic_summaries()
+    pending = [t for t in topics if t[3] or t[4]]
+    ask = "" if auto_report_setting() is not None else " " + AUTO_REPORT_NOTE[None].format(script=script)
+    if not pending:
+        # nothing to review: one line, so working sessions stay working sessions
+        p(f"Prof plugin: session {sid} (short: {sid[:8]}) · data: {HOME} · helper: python3 {script} · "
+          "nothing due for review. Teach only when the learner asks (/prof:learn, \"teach me\")."
+          + ask)
+        return
 
     p("## Prof plugin")
     p(f"Session id: {sid} (short: {sid[:8]}) · data: {HOME} · helper: python3 {script}")
@@ -293,8 +309,6 @@ def session_start(hook: dict) -> None:
                 p(f"{heading}:")
                 p("\n".join(body))
 
-    topics = topic_summaries()
-    pending = [t for t in topics if t[3] or t[4]]
     if pending:
         p("\n### Open items from past sessions (worst first)")
         for slug, title, last, open_items, stale in pending[:6]:
