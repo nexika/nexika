@@ -65,7 +65,9 @@ so your main conversation does not pay for it. It finds the issue from the branc
 (`feat/123-login`), then the branch's commit messages (`fixes #123`), then the pull request
 linked to the branch (`gh`). Sections: issue and branch, goal, what was done, decisions,
 problems and fixes, files, commits and links, still open. Saved in the data folder, and with
-`--out` also in your repo.
+`--out` also in your repo. A long session is read in parts (about 60,000 characters each): the
+model takes notes on each part, then writes the summary from all the notes, so the middle of the
+session is not lost.
 
 The model only writes text: it runs with no tools, no MCP servers and none of the project's
 settings, in an empty folder, and the session log is passed as data it must not take orders from.

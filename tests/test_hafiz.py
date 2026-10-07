@@ -808,3 +808,48 @@ def test_a_query_of_only_stop_words_finds_nothing():
     items = [store.Memory.make("decision", "Use argon2 for passwords", origin="manual")]
     assert search.find(items, "what did we do there") == []
     assert search.find(items, "") != []  # no query at all: newest first
+
+
+# ---------------------------------------------------------------- long sessions in chunks (#73)
+
+
+@pytest.fixture
+def counting_claude(tmp_path, monkeypatch):
+    """A stand-in `claude` that logs every call and answers part prompts with notes."""
+    script = tmp_path / "claude-many"
+    calls = tmp_path / "claude-calls.jsonl"
+    script.write_text(textwrap.dedent(f"""\
+        #!{sys.executable}
+        import json, sys
+        prompt = sys.stdin.read()
+        with open({str(calls)!r}, "a") as fh:
+            fh.write(json.dumps({{"prompt": prompt}}) + "\\n")
+        if "<session_part" in prompt:
+            print("- notes of this part")
+        else:
+            print("# #12 · feat/12-login\\n## Goal\\nThe whole session.")
+        """))
+    script.chmod(script.stat().st_mode | stat.S_IEXEC)
+    monkeypatch.setenv("HAFIZ_CLAUDE", str(script))
+    return calls
+
+
+def test_a_long_session_is_summarised_in_chunks_then_merged(log, capsys, repo, counting_claude, monkeypatch):
+    monkeypatch.setattr(summary, "MATERIAL_CHARS", 3000)
+    for n in range(40):
+        log.user(f"Step {n}: " + ("adjust the checkout flow " * 6) + ("MIDDLE-MARKER" if n == 20 else ""))
+        log.say("Done with that step.")
+    stop(log, capsys)
+    assert cli.main(["summary"]) == 0
+    calls = [json.loads(line)["prompt"] for line in counting_claude.read_text().splitlines()]
+    parts, final = calls[:-1], calls[-1]
+    assert len(parts) >= 2 and all("<session_part" in p for p in parts)
+    assert any("MIDDLE-MARKER" in p for p in parts)  # the middle of the session is read, not cut
+    assert "notes of this part" in final and "<session_part" not in final
+    assert "The whole session." in capsys.readouterr().out
+
+
+def test_a_short_session_is_summarised_in_one_call(log, capsys, repo, counting_claude):
+    stop(work_session(log), capsys)
+    assert cli.main(["summary"]) == 0
+    assert len(counting_claude.read_text().splitlines()) == 1
