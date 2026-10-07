@@ -13,7 +13,8 @@ USAGE = f"""amin {__version__} - repository maintainer; you always merge (Nexika
 
   amin projects                          projects, versions, version files, last tags
   amin plan                              what would be released, from the change notes
-  amin prepare [NAME[=VERSION] ...] [--allow-lower]   bump versions, write CHANGELOGs, consume notes
+  amin prepare [NAME[=VERSION] ...] [--umbrella] [--dry-run] [--allow-lower]
+                                         bump versions, write CHANGELOGs, consume notes (then: a PR)
   amin publish NAME [--dry-run]          after the release PR is merged: checks, tag, GitHub Release
   amin fragment add NAME TYPE TEXT [--id ID]   add a change note (TYPE: {', '.join(proj.TYPES)})
   amin fragment list                     notes waiting to be released
@@ -32,6 +33,14 @@ def _slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:40] or "issue"
 
 
+def find_project(root: Path, projects: list[proj.Project], name: str) -> proj.Project:
+    """A project, or the whole repo (the umbrella release) by its name."""
+    whole = proj.umbrella(root)
+    if whole and whole.name == name and name not in {p.name for p in projects}:
+        return whole
+    return proj.find(projects, name)
+
+
 def cmd_projects(root: Path, runner: gitops.Runner) -> str:
     projects = proj.detect(root)
     if not projects:
@@ -48,8 +57,11 @@ def cmd_projects(root: Path, runner: gitops.Runner) -> str:
 def cmd_prepare(root: Path, runner: gitops.Runner, args: list[str]) -> str:
     projects = proj.detect(root)
     plans = {pl.project.name: pl for pl in release.plan(root, runner, projects)}
-    allow_lower = "--allow-lower" in args
-    args = [a for a in args if a != "--allow-lower"]
+    flags = {a for a in args if a.startswith("--")}
+    unknown = flags - {"--allow-lower", "--umbrella", "--dry-run"}
+    if unknown:
+        raise ValueError(f"unknown option {sorted(unknown)[0]}")
+    args = [a for a in args if not a.startswith("--")]
     wanted: dict[str, str | None] = {}
     for arg in args:
         name, _, version = arg.partition("=")
@@ -66,8 +78,14 @@ def cmd_prepare(root: Path, runner: gitops.Runner, args: list[str]) -> str:
         if not (version or pl.next):
             raise release.ReleaseError(f"{name}: no proposed version ({pl.reason})")
         chosen.append((pl, version or pl.next))
-    changed = release.prepare(root, chosen, allow_lower=allow_lower)
-    summary = ", ".join(f"{pl.project.name} {v}" for pl, v in chosen)
+    release.preflight(runner)
+    dry_run, blocks = "--dry-run" in flags, []
+    changed = release.prepare(root, chosen, allow_lower="--allow-lower" in flags, runner=runner,
+                              umbrella="--umbrella" in flags, dry_run=dry_run, blocks=blocks)
+    summary = ", ".join(block.split("\n", 1)[0] for block in blocks)
+    if dry_run:
+        return (f"dry run, nothing was changed. Would prepare: {summary}\nfiles:\n"
+                + "\n".join(f"  {c}" for c in changed) + "\n\n" + "\n".join(blocks))
     return f"prepared: {summary}\nchanged files:\n" + "\n".join(f"  {c}" for c in changed)
 
 
@@ -113,7 +131,8 @@ def run(argv: list[str]) -> int:
     elif cmd == "prepare":
         print(cmd_prepare(root, runner, argv[1:]))
     elif cmd == "publish" and len(argv) > 1:
-        print("\n".join(release.publish(root, runner, proj.find(projects, argv[1]), "--dry-run" in argv)))
+        print("\n".join(release.publish(root, runner, find_project(root, projects, argv[1]),
+                                        "--dry-run" in argv)))
     elif cmd == "fragment" and argv[1:2] == ["add"] and len(argv) >= 5:
         rest = argv[2:]
         note_id = "note"

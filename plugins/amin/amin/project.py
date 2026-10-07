@@ -151,6 +151,22 @@ def detect(root: Path) -> list[Project]:
     return []
 
 
+def umbrella(root: Path) -> Project | None:
+    """The whole repository released as one (a marketplace of plugins): tag <name>-v<version>, the root
+    CHANGELOG.md, and the root version file if there is one. .amin.json {"umbrella": {...}} overrides."""
+    item = load_config(root).get("umbrella")
+    if isinstance(item, dict) and item.get("name"):
+        return Project(str(item["name"]), ".", list(item.get("version_files") or []),
+                       item.get("changelog") or "CHANGELOG.md", item.get("tag") or "{name}-v{version}",
+                       "changelog.d")
+    try:
+        name = json.loads((root / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))["name"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    files = [rel for rel in ("pyproject.toml", "package.json") if read_version(root, rel)]
+    return Project(str(name), ".", files, "CHANGELOG.md", "{name}-v{version}", "changelog.d")
+
+
 def find(projects: list[Project], name: str) -> Project:
     for p in projects:
         if p.name == name:

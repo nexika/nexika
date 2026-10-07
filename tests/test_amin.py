@@ -26,6 +26,10 @@ def write(root, rel, text):
     return path
 
 
+def git_out(root, *args):
+    return subprocess.run(["git", *args], cwd=root, check=True, capture_output=True, text=True).stdout
+
+
 def commit(root, message="change"):
     _git(root, "add", "-A")
     _git(root, "commit", "-q", "-m", message)
@@ -67,6 +71,7 @@ class FakeRunner(gitops.Runner):
     def __init__(self, root, checks=None, prs=None, issue=None, releases=(), fail_release=False):
         super().__init__(root)
         self.releases, self.fail_release = set(releases), fail_release
+        self.pulls = {}   # commit sha -> PRs that contain it
         self.checks = checks if checks is not None else [{"name": "CI", "status": "completed",
                                                            "conclusion": "success"}]
         self.prs, self.issue, self.gh_calls = prs or [], issue, []
@@ -89,6 +94,8 @@ class FakeRunner(gitops.Runner):
     def gh_json(self, *args):
         if args[:2] == ("repo", "view"):
             return {"nameWithOwner": "o/r"}
+        if args[0] == "api" and args[1].endswith("/pulls"):
+            return self.pulls.get(args[1].split("/")[-2], [])
         if args[0] == "api":
             return {"check_runs": self.checks}
         if args[:2] == ("pr", "list"):
@@ -265,6 +272,74 @@ def test_prepare_bumps_writes_changelog_and_consumes_notes(market):
                                                    "changelog.d/alpha/9.added.md"}
     with pytest.raises(release.ReleaseError):
         release.prepare(market, [(pl, "0.0.9")])
+
+
+def test_prepare_links_notes_to_the_pr_that_added_them(market):
+    # issue #56: a note written before its PR existed had no PR link
+    _git(market, "tag", "-a", "alpha-v0.1.0", "-m", "x")
+    alpha = projects_of(market)["alpha"]
+    fragments.add(market, alpha, "added", "Outline mode.", "outline")
+    commit(market, "alpha: outline mode (#12)")                      # squash merge subject
+    fragments.add(market, alpha, "fixed", "No crash on start.", "crash")
+    commit(market, "alpha: fix the crash")
+    runner = FakeRunner(market)
+    sha = git_out(market, "rev-parse", "HEAD").strip()
+    runner.pulls[sha] = [{"number": 14, "merged_at": "2026-10-05T10:00:00Z"}]
+    pl = plan_by_name(market)["alpha"]
+    release.prepare(market, [(pl, pl.next)], date="2026-10-06", runner=runner)
+    text = changelog.extract(market / alpha.changelog, "0.2.0")
+    assert "- Outline mode. (#12)" in text and "- No crash on start. (#14)" in text
+
+
+def umbrella_market(market):
+    write(market, ".claude-plugin/marketplace.json", json.dumps({"name": "market", "plugins": []}))
+    write(market, "pyproject.toml", '[project]\nname = "market"\nversion = "0.1.0"\n')
+    write(market, "CHANGELOG.md", "# Market changelog\n\n## [0.1.0] - 2026-10-01\n\nFirst.\n")
+    commit(market)
+    for tag in ("alpha-v0.1.0", "beta-v1.2.0", "market-v0.1.0"):
+        _git(market, "tag", "-a", tag, "-m", "x")
+    p = projects_of(market)
+    fragments.add(market, p["alpha"], "added", "Outline mode.", "1")
+    fragments.add(market, p["beta"], "fixed", "Bug.", "2")
+    commit(market)
+    _git(market, "switch", "-q", "-c", "release/2026-10-06")
+    return market
+
+
+def test_prepare_umbrella_releases_the_whole_repo_too(market):
+    # issue #56: the umbrella tag and root CHANGELOG were made by hand
+    umbrella_market(market)
+    plans = plan_by_name(market)
+    changed = release.prepare(market, [(plans["alpha"], "0.2.0"), (plans["beta"], "1.2.1")],
+                              date="2026-10-06", umbrella=True)
+    assert "pyproject.toml" in changed and "CHANGELOG.md" in changed
+    assert proj.read_version(market, "pyproject.toml") == "0.2.0"
+    section = changelog.extract(market / "CHANGELOG.md", "0.2.0")
+    assert "| [alpha](plugins/alpha/CHANGELOG.md) | 0.2.0 |" in section
+    assert "| [beta](plugins/beta/CHANGELOG.md) | 1.2.1 |" in section
+    text = (market / "CHANGELOG.md").read_text()
+    assert text.index("## [0.2.0]") < text.index("## [0.1.0]")
+    umbrella = cli.find_project(market, proj.detect(market), "market")    # amin publish market
+    assert (umbrella.name, umbrella.tag("0.2.0")) == ("market", "market-v0.2.0")
+    assert changelog.extract(market / umbrella.changelog, "0.2.0")
+
+
+def test_prepare_dry_run_checks_branch_and_tree_and_writes_nothing(market, monkeypatch, capsys):
+    umbrella_market(market)
+    monkeypatch.chdir(market)
+    before = git_out(market, "status", "--porcelain")
+    assert cli.main(["prepare", "--umbrella", "--dry-run"]) == 0
+    out = capsys.readouterr().out
+    assert "dry run" in out and "alpha 0.2.0" in out and "market 0.2.0" in out and "### Added" in out
+    assert git_out(market, "status", "--porcelain") == before
+    assert proj.read_version(market, "pyproject.toml") == "0.1.0"
+    write(market, "dirty.txt", "x")
+    assert cli.main(["prepare", "--dry-run"]) == 1
+    assert "uncommitted changes" in capsys.readouterr().err
+    (market / "dirty.txt").unlink()
+    _git(market, "switch", "-q", "main")
+    assert cli.main(["prepare"]) == 1
+    assert "on main" in capsys.readouterr().err
 
 
 # ---------------------------------------------------------------- publish

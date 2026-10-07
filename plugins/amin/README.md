@@ -51,6 +51,13 @@ amin publish barq --dry-run     checks: default branch, clean, up to date, versi
 amin publish barq               tag barq-v0.2.0 + GitHub Release with the CHANGELOG section
 ```
 
+`prepare` runs only on a release branch with a clean tree; `--dry-run` shows the versions, files and
+CHANGELOG sections without changing anything. Notes named by a slug instead of a number get the
+number of the PR that added them. In a marketplace, `--umbrella` also releases the whole repo: the
+root version file (`pyproject.toml` or `package.json`) and a root `CHANGELOG.md` section listing the
+released plugins, published with `amin publish <marketplace name>` as tag `<name>-v<version>`
+(`.amin.json` `{"umbrella": {"name", "version_files", "changelog", "tag"}}` overrides this).
+
 First release of a project with no tags: `amin history <project>` lists the merged PRs that
 touched it, so notes can be written from real history.
 

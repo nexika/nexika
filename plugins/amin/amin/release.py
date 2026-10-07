@@ -7,6 +7,7 @@ publish  after that PR is merged: checks, then tag + GitHub Release
 from __future__ import annotations
 
 import datetime
+import re
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -87,14 +88,59 @@ def render_plan(plans: list[Plan]) -> str:
     return "\n".join(lines) or "no projects detected (see /amin:setup)"
 
 
+def preflight(runner: gitops.Runner) -> None:
+    """prepare runs on a release branch with a clean tree (its changes become the release PR)."""
+    failures = []
+    default = gitops.default_branch(runner)
+    branch = runner.git("rev-parse", "--abbrev-ref", "HEAD").strip()
+    if branch == default:
+        failures.append(f"on {default}: create a release branch first, e.g. release/{datetime.date.today()}")
+    if runner.git("status", "--porcelain").strip():
+        failures.append("working tree has uncommitted changes")
+    if failures:
+        raise ReleaseError("not preparing:\n" + "\n".join(f"  - {f}" for f in failures))
+
+
+def pr_for(runner: gitops.Runner, rel: str) -> str | None:
+    """The pull request that added a note: from a squash or merge subject, else from GitHub."""
+    line = runner.git("log", "--diff-filter=A", "-1", "--format=%H %s", "--", rel, check=False).strip()
+    if not line:
+        return None
+    sha, _, subject = line.partition(" ")
+    m = re.search(r"\(#(\d+)\)\s*$", subject) or re.match(r"Merge pull request #(\d+)", subject)
+    if m:
+        return m.group(1)
+    try:
+        repo = runner.gh_json("repo", "view", "--json", "nameWithOwner")["nameWithOwner"]
+        pulls = runner.gh_json("api", f"repos/{repo}/commits/{sha}/pulls") or []
+        merged = [pr for pr in pulls if pr.get("merged_at")] or pulls
+        return str(merged[0]["number"]) if merged else None
+    except (gitops.CommandError, ValueError, KeyError, TypeError, IndexError):
+        return None
+
+
+def _umbrella_version(root: Path, runner: gitops.Runner | None, umbrella: proj.Project,
+                      types: set[str]) -> str:
+    tag = gitops.last_tag(runner or gitops.Runner(root), umbrella.tag_prefix())
+    base = tag[len(umbrella.tag_prefix()):] if tag else _current_version(root, umbrella)[0]
+    if not base:
+        raise ReleaseError(f"{umbrella.name}: no umbrella version found (no tag and no root version file)")
+    released = tag or changelog.has_version(root / umbrella.changelog, base)
+    return proj.bump(base, types)[0] if released else base   # else: the first umbrella release
+
+
 def prepare(root: Path, chosen: list[tuple[Plan, str]], date: str | None = None,
-            allow_lower: bool = False) -> list[str]:
+            allow_lower: bool = False, runner: gitops.Runner | None = None, umbrella: bool = False,
+            dry_run: bool = False, blocks: list[str] | None = None) -> list[str]:
     """Apply chosen (plan, version) pairs. Returns the files changed (to commit as one PR).
 
     A version below what the notes require (a breaking note released as a minor) is refused
-    unless allow_lower."""
+    unless allow_lower. With runner, notes named by a slug get their PR number. With umbrella, the
+    whole repo gets a version and a root CHANGELOG section too. dry_run writes nothing; the
+    CHANGELOG sections go to blocks either way."""
     date = date or datetime.date.today().isoformat()
     changed: list[str] = []
+    blocks = blocks if blocks is not None else []
     for pl, version in chosen:
         proj.parse(version)
         if pl.last_tag:
@@ -107,16 +153,45 @@ def prepare(root: Path, chosen: list[tuple[Plan, str]], date: str | None = None,
                                    f"least {required} (pass --allow-lower to release {version} anyway)")
         if not pl.notes:
             raise ReleaseError(f"{pl.project.name}: no notes to release")
+    whole = proj.umbrella(root) if umbrella else None
+    if umbrella and whole is None:
+        raise ReleaseError("--umbrella needs a plugin marketplace or an \"umbrella\" entry in .amin.json")
+    if whole:
+        types = {n.type for pl, _ in chosen for n in pl.notes}
+        whole_version = _umbrella_version(root, runner, whole, types)
+        if changelog.has_version(root / whole.changelog, whole_version):
+            raise ReleaseError(f"{whole.changelog} already has a section for {whole_version}")
+    for pl, version in chosen:
+        for note in pl.notes:
+            if runner and not note.id.isdigit():
+                note.pr = pr_for(runner, note.path)
         for vf in pl.project.version_files:
             if proj.read_version(root, vf) != version:
-                proj.write_version(root, vf, version)
+                if not dry_run:
+                    proj.write_version(root, vf, version)
                 changed.append(vf)
-        changelog.insert(root / pl.project.changelog, pl.project.name, version, date,
-                         fragments.grouped(pl.notes))
+        sections = fragments.grouped(pl.notes)
+        blocks.append(f"{pl.project.name} {version}\n" + changelog.render(version, date, sections))
+        if not dry_run:
+            changelog.insert(root / pl.project.changelog, pl.project.name, version, date, sections)
         changed.append(pl.project.changelog)
         for note in pl.notes:
-            (root / note.path).unlink()
+            if not dry_run:
+                (root / note.path).unlink()
             changed.append(note.path)
+    if whole:
+        rows = ["| Project | Version |", "|---|---|"] + [
+            f"| [{pl.project.name}]({pl.project.changelog}) | {version} |" for pl, version in chosen]
+        sections = {"Released": rows}
+        blocks.append(f"{whole.name} {whole_version}\n" + changelog.render(whole_version, date, sections))
+        for vf in whole.version_files:
+            if proj.read_version(root, vf) != whole_version:
+                if not dry_run:
+                    proj.write_version(root, vf, whole_version)
+                changed.append(vf)
+        if not dry_run:
+            changelog.insert(root / whole.changelog, whole.name, whole_version, date, sections)
+        changed.append(whole.changelog)
     return changed
 
 
