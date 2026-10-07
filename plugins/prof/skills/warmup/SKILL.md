@@ -25,7 +25,8 @@ Pick 3-5 questions, in this priority:
 1. every `missed` concept,
 2. `shaky` concepts and the logic gaps named in the last report,
 3. `not-checked` concepts (explained but never tested),
-4. 1 retention question on an `understood` concept older than 2 weeks,
+4. 1 retention question on an `understood` concept that is due for review (listed as
+   "retention check" in the session context),
 5. 1 slightly harder "stretch" question to find the ceiling of their level.
 
 Mix question types: explain in your own words, predict the output, find the bug, "what would

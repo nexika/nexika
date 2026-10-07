@@ -16,7 +16,8 @@ Data lives in ~/.claude/nexika/prof (override with PROF_HOME):
   profile.md                 learner profile (managed by the progress skill)
   settings.json              {"auto_report": true|false}; missing = not asked yet (no auto reports)
   reports/DATE_HHMM_SID8.md  one report per session
-  topics/SLUG.md             concept checklist per topic, merged from the reports
+  topics/SLUG.json           concept checklist per topic, merged from the reports
+  topics/SLUG.md             the same, rendered for reading (status edits there are kept)
 """
 from __future__ import annotations
 
@@ -43,7 +44,7 @@ GUARD_ENV = "PROF_REPORTING"
 
 # Worst first: this is also the order items are shown and re-taught in.
 STATUSES = ("missed", "shaky", "not-checked", "understood")
-STALE_DAYS = 14  # an "understood" concept older than this gets a retention question
+STALE_DAYS = 14  # retention check for an "understood" concept with unknown history (see REVIEW_LADDER)
 
 # Report line:  - [status] topic-slug :: Topic Title :: concept :: evidence
 CHECK_RE = re.compile(
@@ -187,33 +188,88 @@ def report_for_session(sid: str) -> Path | None:
 
 
 # ---------------------------------------------------------------- topic store
+#
+# topics/SLUG.json is the data; topics/SLUG.md is rendered from it for people to read. A Markdown file
+# edited by hand after the last save is read back, so its status edits are kept.
 
 Entry = tuple[str, str, str, str]  # status, concept, evidence, date
+REVIEW_LADDER = (3, 7, 14, 30, 60, 120)  # days until the next retention check, per success in a row
 
 
-def load_topic(slug: str) -> tuple[str, dict[str, Entry]]:
-    path = TOPICS / f"{slug}.md"
-    title, entries = slug, {}
-    if path.is_file():
-        for line in path.read_text(encoding="utf-8").splitlines():
-            if line.startswith("# "):
-                title = line[2:].strip()
-                continue
-            m = TOPIC_LINE_RE.match(line.strip())
-            if m:
-                status, concept, evidence, date = m.groups()
-                entries[concept.lower()] = (status, concept, evidence, date)
+def review_days(streak: int | None) -> int:
+    """Days an "understood" concept rests before its next retention check."""
+    if not streak:
+        return STALE_DAYS   # unknown history (older data): the old fixed interval
+    return REVIEW_LADDER[min(streak, len(REVIEW_LADDER)) - 1]
+
+
+def _parse_markdown(path: Path) -> tuple[str | None, dict[str, Entry]]:
+    title, entries = None, {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("# "):
+            title = line[2:].strip()
+            continue
+        m = TOPIC_LINE_RE.match(line.strip())
+        if m:
+            status, concept, evidence, date = m.groups()
+            entries[concept.lower()] = (status, concept, evidence, date)
     return title, entries
 
 
-def save_topic(slug: str, title: str, entries: dict[str, Entry]) -> None:
+def _load(slug: str) -> tuple[str, dict[str, Entry], dict[str, int | None]]:
+    """(title, entries, successes in a row per concept)."""
+    data_path, md_path = TOPICS / f"{slug}.json", TOPICS / f"{slug}.md"
+    title, entries, streaks = slug, {}, {}
+    try:
+        data = json.loads(data_path.read_text(encoding="utf-8"))
+        title = str(data.get("title") or slug)
+        for c in data.get("concepts") or []:
+            if c.get("status") in STATUSES and c.get("concept"):
+                key = str(c["concept"]).lower()
+                entries[key] = (c["status"], str(c["concept"]), str(c.get("evidence") or "-"),
+                                str(c.get("date") or _today()))
+                streaks[key] = c.get("streak") if isinstance(c.get("streak"), int) else None
+    except (OSError, ValueError, AttributeError, TypeError):
+        data_path = None
+    if md_path.is_file() and (data_path is None
+                              or md_path.stat().st_mtime > data_path.stat().st_mtime + 1):
+        md_title, md_entries = _parse_markdown(md_path)
+        title = md_title or title
+        for key, entry in md_entries.items():
+            if entries.get(key, (None,))[0] != entry[0]:
+                streaks[key] = None
+            entries[key] = entry
+    return title, entries, streaks
+
+
+def load_topic(slug: str) -> tuple[str, dict[str, Entry]]:
+    title, entries, _ = _load(slug)
+    return title, entries
+
+
+def load_streaks(slug: str) -> dict[str, int | None]:
+    return _load(slug)[2]
+
+
+def save_topic(slug: str, title: str, entries: dict[str, Entry],
+               streaks: dict[str, int | None] | None = None) -> None:
     TOPICS.mkdir(parents=True, exist_ok=True)
     rank = {s: i for i, s in enumerate(STATUSES)}
     rows = sorted(entries.values(), key=lambda e: (rank[e[0]], e[1].lower()))
+    streaks = streaks or {}
+    data = {"title": title, "concepts": [
+        {"concept": c, "status": s, "evidence": ev, "date": d, "streak": streaks.get(c.lower())}
+        for s, c, ev, d in rows]}
+    (TOPICS / f"{slug}.json").write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n",
+                                         encoding="utf-8")
     lines = [f"# {title}", "",
-             f"<!-- managed by prof_store.py merge-report; edit statuses freely. {NO_REWRITE} -->", ""]
+             f"<!-- rendered from {slug}.json by prof_store.py; status edits here are kept. "
+             f"{NO_REWRITE} -->", ""]
     lines += [f"- [{s}] {c} — {ev} ({d})" for s, c, ev, d in rows]
-    (TOPICS / f"{slug}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    md = TOPICS / f"{slug}.md"
+    md.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    stamp = (TOPICS / f"{slug}.json").stat().st_mtime
+    os.utime(md, (stamp, stamp))   # same time: the Markdown counts as hand-edited only after a change
 
 
 def merge_report(path: Path) -> int:
@@ -229,36 +285,58 @@ def merge_report(path: Path) -> int:
             updates.setdefault(slugify(slug), []).append((status, title, concept, evidence))
     count = 0
     for slug, rows in updates.items():
-        title, entries = load_topic(slug)
+        title, entries, streaks = _load(slug)
         for status, new_title, concept, evidence in rows:
             title = new_title or title
             count += 1
-            old = entries.get(concept.lower())
+            key = concept.lower()
+            old = entries.get(key)
             if status == "not-checked" and old and old[0] != "not-checked":
                 continue   # "explained again" never erases a result the learner showed
-            entries[concept.lower()] = (status, concept, evidence or "-", date)
-        save_topic(slug, title, entries)
+            if status == "understood":
+                if old and old[0] == "understood":
+                    before = streaks.get(key) or 1
+                    streaks[key] = before if old[3] == date else before + 1
+                else:
+                    streaks[key] = 1
+            else:
+                streaks[key] = 0
+            entries[key] = (status, concept, evidence or "-", date)
+        save_topic(slug, title, entries, streaks)
     REPORTS.mkdir(parents=True, exist_ok=True)
     with open(MERGED, "a", encoding="utf-8") as fh:
         fh.write(path.name + "\n")
     return count
 
 
-def topic_summaries() -> list[tuple[str, str, str, list[Entry], list[Entry]]]:
-    """(slug, title, last_date, open_items, stale_items) per topic, most recent first."""
-    out = []
+def topic_slugs() -> list[str]:
     if not TOPICS.is_dir():
-        return out
-    cutoff = (datetime.date.today() - datetime.timedelta(days=STALE_DAYS)).isoformat()
-    for path in TOPICS.glob("*.md"):
-        title, entries = load_topic(path.stem)
+        return []
+    return sorted({p.stem for p in TOPICS.glob("*.json")} | {p.stem for p in TOPICS.glob("*.md")})
+
+
+def topic_summaries() -> list[tuple[str, str, str, list[Entry], list[Entry]]]:
+    """(slug, title, last_date, open_items, due_for_review) per topic, most recent first."""
+    out = []
+    today = datetime.date.today()
+    for slug in topic_slugs():
+        title, entries, streaks = _load(slug)
         if not entries:
             continue
         values = list(entries.values())
         open_items = [e for e in values if e[0] != "understood"]
-        stale = [e for e in values if e[0] == "understood" and e[3] < cutoff]
+        stale = []
+        for e in values:
+            if e[0] != "understood":
+                continue
+            try:
+                rested = (today - datetime.date.fromisoformat(e[3])).days
+            except ValueError:
+                rested = STALE_DAYS
+            if rested >= review_days(streaks.get(e[1].lower())):
+                stale.append(e)
         last = max(e[3] for e in values)
-        out.append((path.stem, title, last, open_items, stale))
+        out.append((slug, title, last, open_items, stale))
     out.sort(key=lambda t: t[2], reverse=True)
     return out
 
@@ -452,7 +530,7 @@ def write_auto_report(sid: str, convo_path: Path) -> int:
 
 def print_topic(slug: str) -> int:
     slug = slugify(slug)
-    known_slugs = sorted(p.stem for p in TOPICS.glob("*.md")) if TOPICS.is_dir() else []
+    known_slugs = topic_slugs()
     if slug not in known_slugs:
         # "C# async" -> c-async: accept the one known slug containing every word.
         words = slug.split("-")

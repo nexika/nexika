@@ -45,11 +45,16 @@ the code, and remembers your progress. It also onboards junior developers to an 
 ```
 profile.md                    level, goals, mastered, weak spots, log (progress skill)
 reports/2026-10-05_1430_ab12cd34.md   one report per session
-topics/csharp-async.md        concept checklist, worst first:
+topics/csharp-async.json      concept checklist (the data: status, evidence, date, successes in a row)
+topics/csharp-async.md        the same, rendered worst first (status edits here are kept):
                               - [missed] async void vs async Task — guessed "slower" (2026-10-05)
                               - [understood] Task.WhenAll — wrote a correct example (2026-10-04)
+settings.json                 your answer about automatic reports
 hook.log                      what the hooks did (auto reports, errors)
 ```
+
+Retention checks use spaced repetition: a concept you just understood comes back after 3 days,
+then 7, 14, 30, 60 and 120 days for each success in a row. A miss starts it over.
 
 Helper (stdlib Python): `python3 scripts/prof_store.py topic <slug>` · `merge-report <file>`.
 Set `PROF_HOME` to keep data somewhere else (e.g. one folder per junior).

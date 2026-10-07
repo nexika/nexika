@@ -4,7 +4,9 @@ from __future__ import annotations
 import datetime
 import io
 import json
+import os
 import subprocess
+import time
 
 import pytest
 
@@ -134,6 +136,49 @@ def test_a_concept_with_a_dash_keeps_its_history(store):
     [(status, concept, evidence, date)] = entries.values()
     assert (status, evidence, date) == ("understood", "x", "2026-10-05")
     assert concept.startswith("await") and concept.endswith("basics")
+
+
+def days_ago(n):
+    return (TODAY - datetime.timedelta(days=n)).isoformat()
+
+
+def test_topics_are_stored_as_json_and_rendered_as_markdown(store):
+    # issue #75: the separator-based markdown was the only copy of the data
+    store.merge_report(write_report(store, "2026-10-05_1000_eeee0000.md",
+                                    ["- [missed] py :: Python :: await — x (y) :: said \"blocks\" — twice"]))
+    data = json.loads((store.TOPICS / "py.json").read_text())
+    assert data["title"] == "Python" and data["concepts"][0]["evidence"] == 'said "blocks" — twice'
+    assert "[missed]" in (store.TOPICS / "py.md").read_text()
+    (store.TOPICS / "py.md").unlink()
+    assert store.load_topic("py")[1]["await - x (y)"][2] == 'said "blocks" — twice'
+    assert [t[0] for t in store.topic_summaries()] == ["py"]
+
+
+def test_old_markdown_topics_still_load_and_hand_edits_are_kept(store):
+    store.TOPICS.mkdir(parents=True)
+    (store.TOPICS / "go.md").write_text("# Go\n\n- [shaky] channels — hints (2026-10-01)\n")
+    assert store.load_topic("go") == ("Go", {"channels": ("shaky", "channels", "hints", "2026-10-01")})
+    store.save_topic("go", "Go", store.load_topic("go")[1])
+    md = store.TOPICS / "go.md"
+    md.write_text(md.read_text().replace("[shaky]", "[understood]"))
+    os.utime(md, (time.time() + 5, time.time() + 5))     # edited after the last save
+    assert store.load_topic("go")[1]["channels"][0] == "understood"
+
+
+def test_review_intervals_grow_with_each_success(store):
+    # a concept understood once comes back after 3 days; understood again, after 7, then 14, 30 ...
+    store.merge_report(write_report(store, f"{days_ago(5)}_1000_ffff0001.md",
+                                    ["- [understood] py :: Python :: loops :: ok"]))
+    [(_, _, _, _, stale)] = store.topic_summaries()
+    assert [e[1] for e in stale] == ["loops"]
+    store.merge_report(write_report(store, f"{days_ago(4)}_1000_ffff0002.md",
+                                    ["- [understood] py :: Python :: loops :: ok again"]))
+    [(_, _, _, _, stale)] = store.topic_summaries()
+    assert stale == []                                   # next review in 7 days
+    assert store.review_days(2) == 7 and store.review_days(9) == 120
+    store.merge_report(write_report(store, f"{days_ago(3)}_1000_ffff0003.md",
+                                    ["- [missed] py :: Python :: loops :: forgot"]))
+    assert store.load_streaks("py")["loops"] == 0        # a miss starts the ladder again
 
 
 def test_skill_triggers_need_a_learning_request():
