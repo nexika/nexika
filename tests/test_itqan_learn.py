@@ -348,3 +348,42 @@ def load_script(name):
 def test_secrets_copy_is_identical_to_hafiz():
     ours = (SCRIPTS / "itqan_secrets.py").read_bytes()
     assert ours == (PLUGINS / "hafiz" / "hafiz" / "secrets.py").read_bytes()
+
+
+# ---------------------------------------------------------------- branches (#24)
+
+
+def test_approving_on_another_branch_keeps_rules_approved_elsewhere(learn, repo):
+    _git(repo, "config", "user.email", "t@example.com")
+    _git(repo, "config", "user.name", "Test")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-qm", "init")
+    proposed_store(learn, repo, "a", "b", "c", "d")
+
+    def approve(lid):
+        learn.cmd_approve(repo, lid, None)
+        _git(repo, "add", "-A")
+        _git(repo, "commit", "-qm", f"approve {lid}")
+
+    approve("a")
+    _git(repo, "branch", "old")
+    approve("b")
+    _git(repo, "checkout", "-q", "old")
+    approve("c")
+    _git(repo, "checkout", "-q", "main")
+    approve("d")
+
+    managed, _ = learn.read_rules_file(repo)
+    assert list(managed) == ["a", "b", "d"]
+    statuses = {k: v["status"] for k, v in learn.load_store(repo)["lessons"].items()}
+    assert statuses == {"a": "approved", "b": "approved", "c": "approved", "d": "approved"}
+
+
+def test_rules_the_store_does_not_know_are_never_rewritten(learn, repo):
+    proposed_store(learn, repo, "a")
+    path = repo / ".itqan" / "rules.md"
+    path.parent.mkdir()
+    path.write_text(f"{learn.RULES_START}\n- [from-a-teammate] Keep it.\n{learn.RULES_END}\n")
+    learn.cmd_approve(repo, "a", None)
+    managed, _ = learn.read_rules_file(repo)
+    assert managed == {"from-a-teammate": "Keep it.", "a": "Rule a."}

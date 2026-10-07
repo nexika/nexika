@@ -172,35 +172,67 @@ def read_rules_file(root: Path) -> tuple[dict[str, str], list[str]]:
     return managed, manual
 
 
+def current_branch(root: Path) -> str:
+    try:
+        res = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=root, capture_output=True,
+                             text=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    branch = res.stdout.strip() if res.returncode == 0 else ""
+    return "" if branch == "HEAD" else branch
+
+
 def sync_from_file(root: Path, store: dict) -> None:
-    """The user may edit or delete rules in .itqan/rules.md: text edits win, deleted = retired."""
+    """The user may edit or delete rules in .itqan/rules.md: text edits win, deleted = retired.
+
+    A rule missing from the file is retired only on the branch where it was approved: another
+    branch's copy of the file may simply predate it.
+    """
     if not rules_file(root).exists():
         return
     managed, _ = read_rules_file(root)
+    branch = current_branch(root)
     for lid, lesson in store["lessons"].items():
         if lesson.get("status") != "approved":
             continue
         if lid in managed:
             lesson["rule"] = managed[lid]
-        else:
+        elif not lesson.get("branch") or lesson.get("branch") == branch:
             lesson["status"] = "retired"
 
 
-def write_rules_file(root: Path, store: dict) -> Path:
+def write_rules_file(root: Path, store: dict, add: str | None = None, remove: str | None = None) -> Path:
+    """Add or remove one rule in the managed block; every other line, known to the store or not, stays."""
     path = rules_file(root)
-    approved = [(lid, les) for lid, les in store["lessons"].items() if les.get("status") == "approved"]
-    block = [RULES_START] + [f"- [{lid}] {les['rule']}" for lid, les in approved] + [RULES_END]
-    if path.exists():
-        text = path.read_text(encoding="utf-8")
-        if RULES_START in text and RULES_END in text:
-            before, rest = text.split(RULES_START, 1)
-            after = rest.split(RULES_END, 1)[1]
-            path.write_text(before + "\n".join(block) + after, encoding="utf-8")
-            return path
+    lessons = store["lessons"]
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
+    if RULES_START in text and RULES_END in text:
+        before, rest = text.split(RULES_START, 1)
+        inside, after = rest.split(RULES_END, 1)
+        lines = [line for line in inside.strip("\n").splitlines() if line.strip()]
+    else:
+        branch = current_branch(root)
+        lines = [f"- [{lid}] {les['rule']}" for lid, les in lessons.items()
+                 if les.get("status") == "approved" and lid != add and les.get("branch", branch) == branch]
+        before = after = None
+    kept = []
+    for line in lines:
+        m = RULE_LINE.match(line.strip())
+        if m and m.group("id") == remove:
+            continue
+        if m and m.group("id") == add:
+            line = f"- [{add}] {lessons[add]['rule']}"
+        kept.append(line)
+    if add and f"- [{add}] {lessons[add]['rule']}" not in kept:
+        kept.append(f"- [{add}] {lessons[add]['rule']}")
+    block = "\n".join([RULES_START, *kept, RULES_END])
+    if before is not None:
+        path.write_text(before + block + after, encoding="utf-8")
+        return path
     path.parent.mkdir(parents=True, exist_ok=True)
     header = ("# Project rules\n\nLessons approved with /itqan:learn. Claude loads them at session start.\n"
               "Edit the wording freely; delete a line to retire a rule.\n\n")
-    path.write_text(header + "\n".join(block) + "\n", encoding="utf-8")
+    path.write_text(header + block + "\n", encoding="utf-8")
     return path
 
 
@@ -414,7 +446,8 @@ def cmd_approve(root: Path, lid: str, text: str | None) -> str:
         lesson["rule"] = text.strip()
     lesson["status"] = "approved"
     lesson["approved"] = _now()
-    path = write_rules_file(root, store)
+    lesson["branch"] = current_branch(root)
+    path = write_rules_file(root, store, add=lid)
     save_store(root, store)
     return f"Approved [{lid}] {lesson['rule']}\nWritten to {path} (commit it to share with your team)."
 
@@ -427,7 +460,7 @@ def cmd_reject(root: Path, lid: str) -> str:
     was_approved = lesson["status"] == "approved"
     lesson["status"] = "rejected"
     if was_approved:
-        write_rules_file(root, store)
+        write_rules_file(root, store, remove=lid)
     save_store(root, store)
     return f"Rejected [{lid}]; it will not be proposed again."
 
