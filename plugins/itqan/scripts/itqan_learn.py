@@ -395,7 +395,7 @@ def run_extract(session: str, payload_path: Path, root: Path) -> int:
     existing = "\n".join(f"- {lid}: {les['rule']} ({les['status']})"
                          for lid, les in store["lessons"].items()) or "(none yet)"
     cmd = [claude, "-p", EXTRACT_PROMPT.format(existing=existing), "--model", "sonnet",
-           "--tools", "", "--no-session-persistence"]
+           "--tools", "", "--no-session-persistence", "--output-format", "json"]
     try:
         with open(payload_path, encoding="utf-8") as stdin:
             res = subprocess.run(cmd, stdin=stdin, capture_output=True, text=True, timeout=300)
@@ -405,7 +405,17 @@ def run_extract(session: str, payload_path: Path, root: Path) -> int:
     if res.returncode != 0:
         print(f"{_now()} extract {session[:8]}: rc={res.returncode} {res.stderr[:300]!r}")
         return 1
-    lessons = parse_lessons(res.stdout)
+    answer, cost = res.stdout, None
+    try:
+        data = json.loads(res.stdout)
+        if isinstance(data, dict) and isinstance(data.get("result"), str):
+            answer, cost = data["result"], data.get("total_cost_usd")
+    except ValueError:
+        pass
+    lessons = parse_lessons(answer)
+    _append("extract.jsonl", {"ts": _now(), "session": session[:8], "cwd": str(root),
+                              "cost_usd": cost if isinstance(cost, (int, float)) else None,
+                              "lessons": len(lessons)})
     store = load_store(root)  # re-read: the user may have approved something meanwhile
     merge_lessons(store, lessons)
     save_store(root, store)
@@ -512,7 +522,20 @@ def cmd_insights(root: Path, days: int = 30) -> str:
     decisions = [g.get("decision") for g in guard]
     out.append(f"guard (all projects): {decisions.count('deny')} refused, {decisions.count('ask')} asked"
                + (" | top: " + _counts([g.get("rule", "?") for g in guard]) if guard else ""))
+    sessions = [s for s in read_jsonl(home / "sessions.jsonl")
+                if s.get("ts", "") >= since and "ask_approved" in s]
+    asked = sum(int(s.get("ask") or 0) for s in sessions)
+    if asked:
+        yes = sum(int(s.get("ask_approved") or 0) for s in sessions)
+        out.append(f"  asks you approved: {yes} of {asked} ({round(100 * yes / asked)}%): "
+                   "each one is likely a false alarm worth a rule in .itqan.json")
     out.append(f"corrections captured: {len(signals)}")
+    runs = [r for r in read_jsonl(home / "extract.jsonl")
+            if r.get("ts", "") >= since and _within(r.get("cwd", ""), root)]
+    if runs:
+        costs = [r["cost_usd"] for r in runs if isinstance(r.get("cost_usd"), (int, float))]
+        spent = f", ${sum(costs):.2f}" if costs else ""
+        out.append(f"learning: {len(runs)} extraction(s){spent} (Sonnet, in the background)")
 
     lessons = store["lessons"]
     approved = {k: v for k, v in lessons.items() if v["status"] == "approved"}

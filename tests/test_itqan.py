@@ -309,3 +309,40 @@ def test_stacks_are_detected_from_the_repo_root(tmp_path, repo):
     (repo / "web" / "package.json").write_text("{}")
     out = run_hooks("session-start", {"cwd": str(repo / "web"), "session_id": "s1"}, tmp_path / "h")
     assert "Project stacks: python, node." in out
+
+
+# ---------------------------------------------------------------- gates in code (#76)
+
+
+def test_proof_refuses_approve_with_a_critical_note_open(proof, tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("ITQAN_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("NEXIKA_STATUS_HOME", str(tmp_path / "status"))
+    root = tmp_path / "proj"
+    root.mkdir()
+    monkeypatch.chdir(root)
+    code = proof.main(["run", "--review", "approve", "--note", "[critical] SQL injection in /login"])
+    assert code == 2 and "critical" in capsys.readouterr().err.lower()
+    assert not list((tmp_path / "home").glob("proofs/*/latest.json"))
+    assert proof.main(["run", "--review", "approve", "--note", "high: token logged in plain text"]) == 2
+    saved = list((tmp_path / "home").glob("proofs/*/latest.json"))
+    assert not saved
+    # saved (exit 1 only because this empty project has no checks to pass)
+    assert proof.main(["run", "--review", "changes", "--note", "[critical] SQL injection in /login"]) == 1
+    assert proof.main(["run", "--review", "approve", "--note", "[low] rename a variable"]) == 1
+    assert list((tmp_path / "home").glob("proofs/*/latest.json"))
+
+
+def test_session_end_counts_asks_the_user_approved(tmp_path, repo):
+    home = tmp_path / "h"
+    for n, command in enumerate(("npm publish", "sudo apt install x")):
+        run_guard({"tool_name": "Bash", "session_id": "eeee5555zz", "cwd": str(repo),
+                   "tool_use_id": f"toolu_{n}", "tool_input": {"command": command}}, home)
+    transcript = tmp_path / "t.jsonl"
+    results = [{"type": "tool_result", "tool_use_id": "toolu_0", "content": "+ pkg@1.0.0"},
+               {"type": "tool_result", "tool_use_id": "toolu_1", "is_error": True,
+                "content": "The user doesn't want to proceed with this tool use. The tool use was rejected."}]
+    records = [{"type": "user", "message": {"role": "user", "content": [r]}} for r in results]
+    transcript.write_text("".join(json.dumps(r) + "\n" for r in records))
+    run_hooks("session-end", {"session_id": "eeee5555zz", "transcript_path": str(transcript)}, home)
+    summary = json.loads((home / "sessions.jsonl").read_text().splitlines()[-1])
+    assert (summary["ask"], summary["ask_approved"]) == (2, 1)

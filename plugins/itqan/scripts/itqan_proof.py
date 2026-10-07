@@ -41,6 +41,7 @@ STATUS_SCHEMA = "nexika.itqan/1"
 KEEP = 20
 TAIL = 20
 KINDS = ("tests", "lint", "build")
+BLOCKING_NOTE = re.compile(r"^\s*[\[(]?\s*(?:critical|high|حرج|خطير|عالي)\b", re.I)
 
 
 # ------------------------------------------------------------------ which checks
@@ -346,6 +347,11 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         print(json.dumps(proof, ensure_ascii=False, indent=1) if args.json else describe(proof))
         return 0
+    blocking = [n for n in args.note if BLOCKING_NOTE.match(n)]
+    if args.review == "approve" and blocking:
+        print(f"Refused: --review approve with a critical or high finding still open ({clean(blocking[0])}). "
+              "Fix it first, or record the review as --review changes.", file=sys.stderr)
+        return 2
     proof = make(root, args)
     path = save(root, proof)
     print(describe(proof))

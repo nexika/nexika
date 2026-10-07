@@ -387,3 +387,28 @@ def test_rules_the_store_does_not_know_are_never_rewritten(learn, repo):
     learn.cmd_approve(repo, "a", None)
     managed, _ = learn.read_rules_file(repo)
     assert managed == {"from-a-teammate": "Keep it.", "a": "Rule a."}
+
+
+# ---------------------------------------------------------------- what learning and the guard cost (#76)
+
+
+def test_extraction_cost_is_recorded_and_reported(learn, repo, monkeypatch):
+    payload = learn.data_home() / "p.txt"
+    payload.parent.mkdir(parents=True, exist_ok=True)
+    payload.write_text("ASSISTANT: npm\nUSER: no, pnpm")
+    answer = json.dumps({"type": "result", "result": json.dumps([lesson("use-pnpm")]),
+                         "total_cost_usd": 0.0123})
+    done = subprocess.CompletedProcess([], 0, stdout=answer, stderr="")
+    monkeypatch.setattr(learn.shutil, "which", lambda name: "/fake/claude")
+    monkeypatch.setattr(learn.subprocess, "run", lambda cmd, stdin, **kw: done)
+    assert learn.run_extract("sess", payload, repo) == 0
+    assert learn.load_store(repo)["lessons"]["use-pnpm"]["status"] == "candidate"
+    out = learn.cmd_insights(repo)
+    assert "learning: 1 extraction(s), $0.01" in out
+
+
+def test_insights_report_the_guard_false_positive_rate(learn, repo):
+    for asked, approved in ((2, 1), (2, 2)):
+        learn._append("sessions.jsonl", {"ts": learn._now(), "session": "s", "deny": 0, "ask": asked,
+                                         "ask_approved": approved, "rules": []})
+    assert "asks you approved: 3 of 4 (75%)" in learn.cmd_insights(repo)

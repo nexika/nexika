@@ -391,6 +391,7 @@ def log_decision(event: dict, decision: tuple[str, str, str]) -> None:
             "ts": datetime.datetime.now().isoformat(timespec="seconds"),
             "session": str(event.get("session_id") or "")[:8],
             "rule": decision[1], "decision": decision[0], "detail": detail,
+            "tool_use_id": str(event.get("tool_use_id") or "")[:80],
         }
         itqan_files.append_jsonl(data_home() / "guard.jsonl", entry)
     except OSError:

@@ -99,17 +99,48 @@ def session_start(hook: dict) -> None:
     print("\n".join(lines))
 
 
+REJECTED = ("doesn't want to proceed", "was rejected", "permission denied by user")
+
+
+def approved_asks(transcript: str, asked: set[str]) -> int:
+    """How many of the guard's questions the user answered yes: the tool then ran (its result is not
+    a rejection). A yes means the guard asked about something the user wanted: a likely false alarm."""
+    if not transcript or not asked:
+        return 0
+    approved = set()
+    try:
+        with open(transcript, encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                if '"tool_result"' not in line:
+                    continue
+                try:
+                    content = json.loads(line).get("message", {}).get("content")
+                except (ValueError, AttributeError):
+                    continue
+                for block in content if isinstance(content, list) else []:
+                    if not isinstance(block, dict) or block.get("tool_use_id") not in asked:
+                        continue
+                    body = json.dumps(block.get("content"), ensure_ascii=False).lower()
+                    if not (block.get("is_error") and any(r in body for r in REJECTED)):
+                        approved.add(block["tool_use_id"])
+    except OSError:
+        return 0
+    return len(approved)
+
+
 def session_end(hook: dict) -> None:
     session = str(hook.get("session_id") or "")[:8]
     if not session:
         return
     events = [e for e in _read_jsonl(data_home() / "guard.jsonl") if e.get("session") == session]
     counts = Counter(e.get("decision") for e in events)
+    asked = {e["tool_use_id"] for e in events if e.get("decision") == "ask" and e.get("tool_use_id")}
     entry = {
         "ts": datetime.datetime.now().isoformat(timespec="seconds"),
         "session": session,
         "deny": counts.get("deny", 0),
         "ask": counts.get("ask", 0),
+        "ask_approved": approved_asks(str(hook.get("transcript_path") or ""), asked),
         "rules": sorted({e.get("rule", "?") for e in events}),
     }
     itqan_files.append_jsonl(data_home() / "sessions.jsonl", entry)
