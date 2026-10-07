@@ -60,11 +60,14 @@ it to `.claude-plugin/marketplace.json`.
 
 ### The family profile: who the user is
 
-`~/.claude/nexika/profile.json` (`NEXIKA_PROFILE` moves it) holds one role, `developer`,
-`learner` or `writer`, so the plugins agree on who they work for: bayan picks its reader level
+The family settings file, `~/.claude/nexika/settings.json` (`NEXIKA_HOME` moves the folder),
+holds one role, `developer`, `learner` or `writer`, so the plugins agree on who they work for: bayan picks its reader level
 from it, prof decides whether to teach or just answer, and siyaq how loosely it matches docs. A
 setting made in a plugin itself still wins. The first session asks once; change it later with
-`python3 common/family.py role <role>` (each plugin ships a copy and prints its path).
+`python3 common/family.py role <role>` (each plugin ships a copy and prints its path). The same
+file holds `background_calls`, the consent for the family's background model calls (#45), and
+`mizan doctor` shows both. An older `profile.json` is moved into it once and kept as
+`profile.json.migrated`.
 
 ### Status files: how the plugins talk to each other
 

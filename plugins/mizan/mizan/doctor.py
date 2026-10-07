@@ -7,6 +7,8 @@ Several problems only show with more than one plugin installed, so this looks at
 - known conflicts: bayan with Claude Code's signature line on (bayan steps in at every commit), and
   itqan without haris (itqan then guards alone, with its smaller rule set);
 - the shared status files: too old, of a schema mizan does not know, or readable by others;
+- the family settings file (#108): the role and the background-call consent, and whether others
+  can read it;
 - each command hook's latency, run once with a dummy event in a throwaway home and folder, so no
   plugin touches your data or your project.
 """
@@ -19,12 +21,13 @@ import tempfile
 import time
 from pathlib import Path
 
-from . import status
+from . import background, status
 
 SCHEMA = "nexika.doctor/1"
 FAMILY = ("amin", "barq", "bayan", "hafiz", "haris", "itqan", "lawha", "manar", "mizan", "prof", "siyaq",
           "tabib")
-DATA_HOMES = ("NEXIKA_STATUS_HOME", *(f"{name.upper()}_HOME" for name in FAMILY))
+DATA_HOMES = ("NEXIKA_STATUS_HOME", "NEXIKA_HOME", "NEXIKA_PROFILE",
+              *(f"{name.upper()}_HOME" for name in FAMILY))
 SLOW_MS = 1000
 STALE_DAYS = 7
 EVENTS = {
@@ -161,6 +164,19 @@ def status_files() -> list[dict]:
     return found
 
 
+def family_settings() -> dict:
+    """The family settings file (common/background.py reads it, moving an older profile in once)."""
+    path = background.settings_path()
+    data = background.read_settings()
+    try:
+        others = bool(path.stat().st_mode & 0o077) and os.name != "nt"
+    except OSError:
+        others = False
+    role = data.get("role")
+    return {"path": str(path), "exists": path.is_file(), "role": role if isinstance(role, str) else "",
+            "background_calls": background.setting(), "open_to_others": others}
+
+
 def _signature_on(found: dict) -> bool:
     """Claude Code signs commits and pull requests unless attribution is emptied (or the older
     includeCoAuthoredBy is false)."""
@@ -236,9 +252,13 @@ def run(cwd: Path, latency: bool = True) -> dict:
                 if hook["event"] != "mod":
                     hook.update(time_hook(Path(plugin["path"]), hook, Path(scratch) / plugin["name"]))
     files = status_files()
+    family = family_settings()
+    mode = [{"kind": "settings-mode", "level": "warn",
+             "text": f"the family settings file is readable by other users ({family['path']})"}
+            ] if family["open_to_others"] else []
     return {"schema": SCHEMA, "cwd": str(cwd), "config": str(config_dir()), "status_home": str(status.home()),
-            "plugins": plugins, "status": files,
-            "problems": conflicts(plugins, cwd) + _hook_problems(plugins) + _status_problems(files)}
+            "plugins": plugins, "status": files, "settings": family,
+            "problems": conflicts(plugins, cwd) + _hook_problems(plugins) + _status_problems(files) + mode}
 
 
 def text(found: dict) -> str:
@@ -255,6 +275,10 @@ def text(found: dict) -> str:
     lines.append(f"Status files ({found['status_home']})")
     ages = [f"  {f['name']}: {f['state']}, {f['age_days']} day(s) old" for f in found["status"]]
     lines += ages or ["  none"]
+    family = found["settings"]
+    lines.append(f"Nexika settings ({family['path']}{'' if family['exists'] else ', not written yet'})")
+    lines.append(f"  role {family['role'] or 'not chosen (developer assumed)'}")
+    lines.append(f"  background calls {family['background_calls']}")
     lines.append("Problems")
     lines += [f"  [{p['level']}] {p['text']}" for p in found["problems"]] or ["  none found"]
     return "\n".join(lines)

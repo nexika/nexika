@@ -23,8 +23,9 @@ def _status_home(tmp_path, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def family_profile(tmp_path, monkeypatch):
-    """The Nexika family profile (#65) of every test lives in tmp_path, never ~/.claude."""
+def old_profile(tmp_path, monkeypatch):
+    """Where #65 kept the profile before it moved into the settings file (#108): migrated from
+    tmp_path, never from ~/.claude."""
     path = tmp_path / "nexika-profile.json"
     monkeypatch.setenv("NEXIKA_PROFILE", str(path))
     return path
@@ -36,6 +37,12 @@ def nexika_home(tmp_path, monkeypatch):
     monkeypatch.setenv("NEXIKA_HOME", str(tmp_path / "nexika"))
     monkeypatch.delenv("NEXIKA_BACKGROUND", raising=False)
     return tmp_path / "nexika"
+
+
+@pytest.fixture
+def family_profile(nexika_home):
+    """The family settings file, which holds the profile's role (#65, #108)."""
+    return nexika_home / "settings.json"
 
 
 @pytest.fixture
