@@ -22,7 +22,8 @@ not the commit title), show them, and after approval add each:
 ## 3. Versions
 Show each proposed version with its reason (`added` → minor, `fixed` only → patch, `breaking`
 → major, or minor while the version is 0.x). The user may override (`NAME=VERSION`). Ask
-explicitly before any major version.
+explicitly before any major version. For a release candidate add `--rc` to prepare (`1.3.0-rc.1`,
+published as a pre-release; notes are kept); preparing again without `--rc` promotes it to final.
 
 ## 4. Release pull request
 1. From an up-to-date default branch with a clean tree, create `release/<project>-<version>`

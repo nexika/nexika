@@ -88,6 +88,16 @@ def render_plan(plans: list[Plan]) -> str:
     return "\n".join(lines) or "no projects detected (see /amin:setup)"
 
 
+def rc_version(runner: gitops.Runner, pl: Plan) -> str:
+    """The next release candidate of the planned version: 1.3.0-rc.1, then -rc.2 ..."""
+    if not pl.next:
+        raise ReleaseError(f"{pl.project.name}: no proposed version ({pl.reason})")
+    prefix = pl.project.tag(f"{pl.next}-rc.")
+    tags = runner.git("tag", "--list", f"{prefix}*", check=False).split()
+    numbers = [int(t[len(prefix):]) for t in tags if t[len(prefix):].isdigit()]
+    return f"{pl.next}-rc.{max(numbers, default=0) + 1}"
+
+
 def preflight(runner: gitops.Runner) -> None:
     """prepare runs on a release branch with a clean tree (its changes become the release PR)."""
     failures = []
@@ -148,7 +158,7 @@ def prepare(root: Path, chosen: list[tuple[Plan, str]], date: str | None = None,
             if proj.parse(version) <= proj.parse(last):
                 raise ReleaseError(f"{pl.project.name}: {version} is not newer than {last}")
             required, reason = proj.bump(last, {n.type for n in pl.notes})
-            if not allow_lower and proj.parse(version) < proj.parse(required):
+            if not allow_lower and proj.parse(version)[:3] < proj.parse(required)[:3]:
                 raise ReleaseError(f"{pl.project.name}: {version} is too low: {reason}, so it needs at "
                                    f"least {required} (pass --allow-lower to release {version} anyway)")
         if not pl.notes:
@@ -175,6 +185,8 @@ def prepare(root: Path, chosen: list[tuple[Plan, str]], date: str | None = None,
         if not dry_run:
             changelog.insert(root / pl.project.changelog, pl.project.name, version, date, sections)
         changed.append(pl.project.changelog)
+        if proj.is_prerelease(version):
+            continue   # a release candidate keeps its notes: the final release collects them all
         for note in pl.notes:
             if not dry_run:
                 (root / note.path).unlink()
@@ -264,7 +276,8 @@ def publish(root: Path, runner: gitops.Runner, project: proj.Project, dry_run: b
         notes_file = fh.name
     try:
         url = runner.gh("release", "create", tag, "--title", f"{project.name} {version}",
-                        "--notes-file", notes_file, "--verify-tag").strip()
+                        "--notes-file", notes_file, "--verify-tag",
+                        *(["--prerelease"] if proj.is_prerelease(version) else [])).strip()
     finally:
         Path(notes_file).unlink(missing_ok=True)
     return report + ([] if pushed else [f"tag {tag} pushed"]) + [f"release published: {url}"]

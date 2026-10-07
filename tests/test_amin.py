@@ -344,6 +344,58 @@ def test_prepare_dry_run_checks_branch_and_tree_and_writes_nothing(market, monke
     assert "on main" in capsys.readouterr().err
 
 
+def test_release_candidates_then_promotion_to_final(market):
+    # issue #69: no pre-releases
+    _git(market, "tag", "-a", "beta-v1.2.0", "-m", "x")
+    beta = projects_of(market)["beta"]
+    fragments.add(market, beta, "added", "Dark mode.", "7")
+    pl = plan_by_name(market)["beta"]
+    assert release.rc_version(gitops.Runner(market), pl) == "1.3.0-rc.1"
+    release.prepare(market, [(pl, "1.3.0-rc.1")], date="2026-10-06")
+    assert proj.read_version(market, beta.version_files[0]) == "1.3.0-rc.1"
+    assert changelog.extract(market / beta.changelog, "1.3.0-rc.1") == "### Added\n- Dark mode. (#7)"
+    assert (market / "changelog.d/beta/7.added.md").exists()          # kept for the final release
+    commit(market)
+    _git(market, "tag", "-a", "beta-v1.3.0-rc.1", "-m", "x")
+    pl = plan_by_name(market)["beta"]
+    assert pl.next == "1.3.0" and release.rc_version(gitops.Runner(market), pl) == "1.3.0-rc.2"
+    release.prepare(market, [(pl, pl.next)], date="2026-10-07")        # promotion to final
+    assert proj.read_version(market, beta.version_files[0]) == "1.3.0"
+    assert not (market / "changelog.d/beta/7.added.md").exists()
+    assert proj.parse("1.3.0-rc.2") < proj.parse("1.3.0") and proj.is_prerelease("1.3.0-rc.2")
+
+
+def test_package_lock_and_cargo_workspaces_are_versioned(tmp_path):
+    node = tmp_path / "node"
+    write(node, "package.json", '{\n  "name": "app",\n  "version": "1.0.0"\n}\n')
+    write(node, "package-lock.json", json.dumps({
+        "name": "app", "version": "1.0.0", "lockfileVersion": 3,
+        "packages": {"": {"name": "app", "version": "1.0.0"},
+                     "node_modules/dep": {"version": "4.5.6"}}}, indent=2) + "\n")
+    [p] = proj.detect(node)
+    assert p.version_files == ["package.json", "package-lock.json"]
+    for vf in p.version_files:
+        proj.write_version(node, vf, "1.1.0")
+    lock = json.loads((node / "package-lock.json").read_text())
+    assert lock["version"] == lock["packages"][""]["version"] == "1.1.0"
+    assert lock["packages"]["node_modules/dep"]["version"] == "4.5.6"
+
+    rust = tmp_path / "rust"
+    write(rust, "Cargo.toml",
+          '[workspace]\nmembers = ["crates/*"]\n\n[workspace.package]\nversion = "0.3.0"\n')
+    write(rust, "crates/core/Cargo.toml", '[package]\nname = "core"\nversion.workspace = true\n')
+    write(rust, "Cargo.lock", 'version = 4\n\n[[package]]\nname = "core"\nversion = "0.3.0"\n\n'
+                              '[[package]]\nname = "serde"\nversion = "0.3.0"\n')
+    [p] = proj.detect(rust)
+    assert p.version_files == ["Cargo.toml", "Cargo.lock"]
+    assert proj.read_version(rust, "Cargo.lock") == "0.3.0"
+    for vf in p.version_files:
+        proj.write_version(rust, vf, "0.4.0")
+    lock = (rust / "Cargo.lock").read_text()
+    assert 'name = "core"\nversion = "0.4.0"' in lock and 'name = "serde"\nversion = "0.3.0"' in lock
+    assert proj.read_version(rust, "Cargo.toml") == "0.4.0"
+
+
 # ---------------------------------------------------------------- publish
 
 

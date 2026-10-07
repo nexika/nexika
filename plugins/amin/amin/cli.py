@@ -13,7 +13,7 @@ USAGE = f"""amin {__version__} - repository maintainer; you always merge (Nexika
 
   amin projects                          projects, versions, version files, last tags
   amin plan                              what would be released, from the change notes
-  amin prepare [NAME[=VERSION] ...] [--umbrella] [--dry-run] [--allow-lower]
+  amin prepare [NAME[=VERSION] ...] [--rc] [--umbrella] [--dry-run] [--allow-lower]
                                          bump versions, write CHANGELOGs, consume notes (then: a PR)
   amin publish NAME [--dry-run]          after the release PR is merged: checks, tag, GitHub Release
   amin fragment add NAME TYPE TEXT [--id ID]   add a change note (TYPE: {', '.join(proj.TYPES)})
@@ -58,7 +58,7 @@ def cmd_prepare(root: Path, runner: gitops.Runner, args: list[str]) -> str:
     projects = proj.detect(root)
     plans = {pl.project.name: pl for pl in release.plan(root, runner, projects)}
     flags = {a for a in args if a.startswith("--")}
-    unknown = flags - {"--allow-lower", "--umbrella", "--dry-run"}
+    unknown = flags - {"--allow-lower", "--umbrella", "--dry-run", "--rc"}
     if unknown:
         raise ValueError(f"unknown option {sorted(unknown)[0]}")
     args = [a for a in args if not a.startswith("--")]
@@ -77,6 +77,8 @@ def cmd_prepare(root: Path, runner: gitops.Runner, args: list[str]) -> str:
         pl = plans[name]
         if not (version or pl.next):
             raise release.ReleaseError(f"{name}: no proposed version ({pl.reason})")
+        if "--rc" in flags and not version:
+            version = release.rc_version(runner, pl)
         chosen.append((pl, version or pl.next))
     release.preflight(runner)
     dry_run, blocks = "--dry-run" in flags, []
