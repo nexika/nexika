@@ -11,7 +11,7 @@ interface PageFacts {
   overflowing: { selector: string; box: Box }[];
   clipped: { selector: string; box: Box; text: string }[];
   overlaps: { a: string; b: string; box: Box }[];
-  targets: { selector: string; box: Box; label: string }[];
+  targets: { selector: string; box: Box; label: string; inline: boolean }[];
   bodyFont: number;
   tinyText: { selector: string; size: number }[];
   physicalCss: string[];
@@ -117,6 +117,9 @@ function collect(): PageFacts {
     selector: sel(el),
     box: boxOf(el.getBoundingClientRect()),
     label: ((el as HTMLElement).innerText || el.getAttribute("aria-label") || el.getAttribute("title") || "").trim().slice(0, 40),
+    // WCAG 2.5.8 exempts a link inside a sentence: its size is set by the line of text around it.
+    inline: el.tagName === "A" && getComputedStyle(el).display === "inline" &&
+      (el.parentElement?.textContent ?? "").trim().length > (el.textContent ?? "").trim().length + 10,
   }));
 
   // Small text.
@@ -130,20 +133,25 @@ function collect(): PageFacts {
   const mirror = (prop: string) => prop.replace(/left|right/, (m) => (m === "left" ? "right" : "left"));
   const physical = /^(margin|padding|border)-(left|right)|^(left|right)$|^border-(top|bottom)-(left|right)-radius$/;
   const physicalCss = new Set<string>();
+  const judge = (where: string, style: CSSStyleDeclaration) => {
+    for (const prop of [...style]) {
+      const value = style.getPropertyValue(prop).trim();
+      const other = style.getPropertyValue(mirror(prop)).trim();
+      if (physical.test(prop) && value && value !== other && !(["0", "0px", "auto", "initial"].includes(value) && !other)) physicalCss.add(where.replace("%", `${prop}: ${value}`));
+      if ((prop === "text-align" || prop === "float") && (value === "left" || value === "right")) physicalCss.add(where.replace("%", `${prop}: ${value}`));
+    }
+  };
+  // Inline styles (style="margin-left: 24px"), which React and Vue write as often as stylesheets.
+  for (const el of all) {
+    const style = (el as HTMLElement).style;
+    if (style?.length) judge(`${sel(el)} style="%"`, style);
+  }
   for (const sheet of [...document.styleSheets]) {
     let rules: CSSRuleList;
     try { rules = sheet.cssRules; } catch { continue; }
     const walk = (list: CSSRuleList) => {
       for (const rule of [...list]) {
-        if (rule instanceof CSSStyleRule) {
-          for (const prop of [...rule.style]) {
-            const value = rule.style.getPropertyValue(prop).trim();
-            const other = rule.style.getPropertyValue(mirror(prop)).trim();
-            if (physical.test(prop) && value && value !== other && !(["0", "0px", "auto", "initial"].includes(value) && !other)) physicalCss.add(`${rule.selectorText} { ${prop}: ${value} }`);
-            if (prop === "text-align" && (value === "left" || value === "right")) physicalCss.add(`${rule.selectorText} { text-align: ${value} }`);
-            if (prop === "float" && (value === "left" || value === "right")) physicalCss.add(`${rule.selectorText} { float: ${value} }`);
-          }
-        }
+        if (rule instanceof CSSStyleRule) judge(`${rule.selectorText} { % }`, rule.style);
         if ("cssRules" in rule && (rule as CSSGroupingRule).cssRules) walk((rule as CSSGroupingRule).cssRules);
       }
     };
@@ -312,6 +320,51 @@ async function movingCanvases(page: Page): Promise<{ selector: string; box: Box;
   return moving;
 }
 
+/**
+ * Motion made by script (requestAnimationFrame, timers): no CSS or Web Animation to read, so the
+ * viewport is photographed twice with those paused and canvases and videos masked; what still
+ * changed moves by script. A MutationObserver names the element the script writes to.
+ */
+async function scriptMotion(page: Page): Promise<{ selector: string; box: Box }[]> {
+  await page.evaluate(() => {
+    for (const a of document.getAnimations()) a.pause();
+    const name = (el: Element) => el.id ? `#${el.id}` : el.tagName.toLowerCase() + [...el.classList].slice(0, 2).map((c) => `.${c}`).join("");
+    const seen = new Map<string, number>();
+    const w = window as unknown as { __lawhaMut?: MutationObserver; __lawhaMoved?: Map<string, number> };
+    w.__lawhaMoved = seen;
+    w.__lawhaMut = new MutationObserver((list) => {
+      for (const m of list) {
+        if (m.target.nodeType !== 1) continue;
+        const r = (m.target as Element).getBoundingClientRect();
+        seen.set(name(m.target as Element), Math.round(r.width * r.height));
+      }
+    });
+    w.__lawhaMut.observe(document.body, { attributes: true, attributeFilter: ["style", "class", "transform", "d", "x", "y", "cx", "cy"], subtree: true });
+  });
+  const mask = [page.locator("canvas, video")];
+  const first = await page.screenshot({ animations: "allow", mask });
+  await page.waitForTimeout(700);
+  const second = await page.screenshot({ animations: "allow", mask });
+  const moved = await page.evaluate(() => {
+    const w = window as unknown as { __lawhaMut?: MutationObserver; __lawhaMoved?: Map<string, number> };
+    w.__lawhaMut?.disconnect();
+    return [...(w.__lawhaMoved ?? new Map<string, number>())].sort((a, b) => b[1] - a[1]).map(([n]) => n);
+  });
+  if (first.equals(second)) return [];
+  const a = PNG.sync.read(first), b = PNG.sync.read(second);
+  let x0 = a.width, y0 = a.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < a.height; y++) {
+    for (let x = 0; x < a.width; x++) {
+      const i = (y * a.width + x) * 4;
+      if (Math.abs(a.data[i]! - b.data[i]!) + Math.abs(a.data[i + 1]! - b.data[i + 1]!) + Math.abs(a.data[i + 2]! - b.data[i + 2]!) > 24) {
+        x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y);
+      }
+    }
+  }
+  if (x1 < 0 || (x1 - x0 + 1) * (y1 - y0 + 1) < 64) return []; // a blinking caret or a pixel of noise
+  return [{ selector: moved[0] ?? "(something on the page)", box: { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 } }];
+}
+
 export async function audit(page: Page, v: Variant, opts: { expectRtl: boolean }): Promise<AuditResult> {
   const facts = await page.evaluate(collect);
   const where = { width: v.width, theme: v.theme, dir: v.dir, motion: v.motion };
@@ -326,6 +379,9 @@ export async function audit(page: Page, v: Variant, opts: { expectRtl: boolean }
     }
     for (const c of await movingCanvases(page)) {
       add({ check: "motion.webgl-reduced", severity: "fail", message: `A ${c.engine || "canvas"} scene keeps animating with "reduce motion" on: render one still frame instead (R3F: frameloop="demand").`, selector: c.selector, box: c.box });
+    }
+    for (const m of await scriptMotion(page)) {
+      add({ check: "motion.reduced", severity: "fail", message: `Something moves by script (requestAnimationFrame or a timer) with "reduce motion" on; check matchMedia("(prefers-reduced-motion: reduce)") before animating.`, selector: m.selector, box: m.box });
     }
     return { findings, facts: { cls: round(facts.cls, 3), targets: facts.targets.length, axeViolations: 0 } };
   }
@@ -348,6 +404,7 @@ export async function audit(page: Page, v: Variant, opts: { expectRtl: boolean }
 
   const phone = v.width <= PHONE_MAX;
   for (const t of facts.targets) {
+    if (t.inline) continue;
     const small = Math.min(t.box.w, t.box.h);
     if (small < 24) {
       add({ check: "phone.tap-target", severity: "fail", message: `Tap target "${t.label || t.selector}" is ${t.box.w}×${t.box.h}px; WCAG 2.2 AA needs at least 24×24 (or enough spacing).`, selector: t.selector, box: t.box });
@@ -367,7 +424,8 @@ export async function audit(page: Page, v: Variant, opts: { expectRtl: boolean }
   }
 
   const rtlSeverity = opts.expectRtl ? "fail" : "info";
-  if (v.dir === "ltr" && v.width === 1280 && v.theme === "light" && v.motion === "full") {
+  // At every width: a menu or a section a script draws only on phones has its own CSS.
+  if (v.dir === "ltr" && v.theme === "light" && v.motion === "full") {
     for (const rule of facts.physicalCss) {
       add({ check: "rtl.physical-css", severity: rtlSeverity, message: `Physical left/right CSS will not mirror in RTL: ${rule}` });
     }
