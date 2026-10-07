@@ -11,16 +11,16 @@ from pathlib import Path
 PLUGIN = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PLUGIN))
 
-USAGE = """## barq ⚡ (Nexika): many file/project operations in ONE call
-Prefer barq over separate cat/head/grep/find/ls/git status/test-runner calls: batch everything
-you need next into one command. Quote every op (the shell would expand `*` and `@`).
-  {cmd} 'read:PATH' 'read:PATH:START:END' 'read:PATH@Symbol' 'read:PATH:outline'
-  {cmd} 'grep:REGEX[:PATH[:MAX]]' 'glob:**/*.cs' 'tree[:PATH[:DEPTH]]' 'map[:PATH]'
-  {cmd} info  git-status  run:test  run:build  run:lint  stats
-JSON form for args containing ':' or spaces: {cmd} '[{{"op":"grep","pattern":"a: b","path":"src"}}]'
-Re-reading an unchanged file returns "unchanged"; a changed one returns a diff. If you no longer
-have the content in context, use 'read:PATH:full'. Never copy a [masked] line into an edit: use
-'read:PATH:raw' for exact text. `{cmd} ops` lists every op."""
+# barq complements the built-in tools, it doesn't replace them: Read, Grep and Glob stay Claude's
+# way to look at files (Edit needs a prior Read), and barq covers what they can't do in one call.
+USAGE = """## barq ⚡ (Nexika): test results, git status and code outlines, short
+Keep using Read, Grep and Glob to look at files (Edit needs a Read first). Use barq for:
+  {cmd} run:test  run:build  run:lint      only the verdict, the failures and the errors
+  {cmd} git-status                         branch, ahead/behind, changes, and the next step
+  {cmd} 'read:PATH:outline' 'read:PATH@Symbol' 'map[:PATH]'   signatures, one symbol, a folder
+  {cmd} info                               languages, stacks and the build/test/lint commands
+Several ops in one command run in one call. Quote every op (the shell would expand `*` and `@`).
+Never copy a [masked] line into an edit; Read the file instead."""
 
 
 def main() -> None:

@@ -20,6 +20,7 @@ def bayan_home(tmp_path, monkeypatch):
     monkeypatch.setenv("BAYAN_HOME", str(tmp_path / "bayan-home"))
     monkeypatch.delenv("BAYAN_LEVEL", raising=False)
     monkeypatch.delenv("CLAUDE_ENV_FILE", raising=False)
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path / "claude-config"))   # never the real ~/.claude
 
 
 def cleaned(text, **kw):
@@ -368,3 +369,39 @@ def test_prof_topic_files_survive_bayan(store, tmp_path):
     home_copy.write_text("- [missed] generators — said yield returns (2026-10-05)\n")
     hooks.post_write({"tool_name": "Write", "cwd": str(tmp_path), "tool_input": {"file_path": str(home_copy)}})
     assert "—" in home_copy.read_text()
+
+
+# ---------------------------------------------------------------- works with Claude Code's attribution setting (#49)
+
+
+SIGNED = 'git commit -m "Fix\n\nCo-Authored-By: Claude <noreply@anthropic.com>"'
+
+
+def write_settings(folder, data):
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "settings.json").write_text(json.dumps(data), encoding="utf-8")
+
+
+def test_a_signature_the_user_kept_with_the_attribution_setting_is_left_alone(tmp_path):
+    # bayan told Claude to drop the line even when the user chose to keep it in Claude Code's settings
+    project = tmp_path / "proj"
+    write_settings(project / ".claude", {"attribution": {"commit": "Co-Authored-By: Claude <noreply@anthropic.com>"}})
+    assert decision(SIGNED, project) is None
+
+
+def test_the_user_level_attribution_setting_counts_too(tmp_path):
+    write_settings(tmp_path / "claude-config", {"includeCoAuthoredBy": True})
+    assert decision(SIGNED, tmp_path / "elsewhere") is None
+
+
+def test_an_empty_attribution_setting_still_gets_the_note(tmp_path):
+    project = tmp_path / "proj"
+    write_settings(project / ".claude", {"attribution": {"commit": "", "pr": ""}})
+    assert decision(SIGNED, project) == "suggest"
+
+
+def test_deny_signatures_still_wins_over_the_attribution_setting(tmp_path):
+    project = tmp_path / "proj"
+    write_settings(project / ".claude", {"attribution": {"commit": "Co-Authored-By: Claude <noreply@anthropic.com>"}})
+    config.save(deny_signatures=True)
+    assert decision(SIGNED, project) == "deny"

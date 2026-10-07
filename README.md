@@ -58,6 +58,14 @@ nexika/
 To add a plugin: create `plugins/<name>/` with its own `.claude-plugin/plugin.json`, then add
 it to `.claude-plugin/marketplace.json`.
 
+### The family profile: who the user is
+
+`~/.claude/nexika/profile.json` (`NEXIKA_PROFILE` moves it) holds one role, `developer`,
+`learner` or `writer`, so the plugins agree on who they work for: bayan picks its reader level
+from it, prof decides whether to teach or just answer, and siyaq how loosely it matches docs. A
+setting made in a plugin itself still wins. The first session asks once; change it later with
+`python3 common/family.py role <role>` (each plugin ships a copy and prints its path).
+
 ### Status files: how the plugins talk to each other
 
 A plugin that knows something the others can use publishes it as a small JSON file under

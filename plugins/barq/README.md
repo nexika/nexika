@@ -76,11 +76,20 @@ Ops marked `"safety": "read"` may run in parallel with other read ops.
   Best effort; `BARQ_NO_MASK=1` disables it.
 - Read ops run in parallel; `run` and custom exec ops always run one after another.
 
+## Works with Claude Code's built-ins
+
+barq complements Bash, it doesn't replace Read, Grep or Glob. Edit only works on a file Claude
+has opened with Read, so steering Claude away from Read added round-trips instead of saving
+them. The session note now points Claude at what the built-ins can't do in one short call:
+test, build and lint results (`run:*`), `git-status`, outlines (`read:PATH:outline`,
+`read:PATH@Symbol`, `map`) and `info`. The read, grep, glob and tree ops still work for you and
+your scripts; Claude is just not told to prefer them.
+
 ## How it plugs into Claude Code
 
 The SessionStart hook puts `bin/` on `PATH` (via `CLAUDE_ENV_FILE`), passes the session id to
 barq for the cache, resets the cache after `/compact` or `/clear` (Claude no longer has the
-old content), and tells Claude how to use barq. The SubagentStart hook gives each subagent its
+old content), and tells Claude what barq is for. The SubagentStart hook gives each subagent its
 own cache (`BARQ_AGENT`): a subagent starts with an empty context, so it never gets "unchanged"
 for a file only the main agent read.
 

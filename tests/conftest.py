@@ -17,6 +17,14 @@ if str(BARQ_ROOT) not in sys.path:
 
 
 @pytest.fixture(autouse=True)
+def family_profile(tmp_path, monkeypatch):
+    """The Nexika family profile (#65) of every test lives in tmp_path, never ~/.claude."""
+    path = tmp_path / "nexika-profile.json"
+    monkeypatch.setenv("NEXIKA_PROFILE", str(path))
+    return path
+
+
+@pytest.fixture(autouse=True)
 def nexika_home(tmp_path, monkeypatch):
     """The family's shared settings and background-call log stay out of ~/.claude (#45)."""
     monkeypatch.setenv("NEXIKA_HOME", str(tmp_path / "nexika"))

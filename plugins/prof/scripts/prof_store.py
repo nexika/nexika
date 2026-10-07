@@ -18,6 +18,9 @@ Data lives in ~/.claude/nexika/prof (override with PROF_HOME):
   reports/DATE_HHMM_SID8.md  one report per session
   topics/SLUG.json           concept checklist per topic, merged from the reports
   topics/SLUG.md             the same, rendered for reading (status edits there are kept)
+
+The Nexika family profile (prof_family.py) says who the user is: for a developer or a writer the
+session note is one line that tells Claude to answer questions about code, not teach.
 """
 from __future__ import annotations
 
@@ -32,6 +35,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import prof_background  # noqa: E402
+import prof_family  # noqa: E402
 
 HOME = Path(os.environ.get("PROF_HOME") or Path.home() / ".claude" / "nexika" / "prof")
 REPORTS = HOME / "reports"
@@ -376,11 +380,21 @@ def session_start(hook: dict) -> None:
     topics = topic_summaries()
     pending = [t for t in topics if t[3] or t[4]]
     ask = "" if auto_report_state() is not None else " " + AUTO_REPORT_NOTE[None].format(script=script)
+    role = prof_family.role()
+    profile_ask = "" if role else prof_family.ask_note(f"python3 {Path(prof_family.__file__).resolve()}")
+    if role and role != "learner":
+        # not learning to code (Nexika profile): a question about code gets an answer, not a lesson
+        due = sum(len(t[3]) + len(t[4]) for t in pending)
+        p(f"Prof plugin: session {sid} (short: {sid[:8]}) · data: {HOME} · helper: python3 {script} · "
+          f"the user is a {role}: answer questions about code directly (\"explain this code\" is a "
+          "question, not a lesson). Teach only when they ask to learn (/prof:learn, \"teach me\")."
+          + (f" {due} concepts are due for review when they next study." if due else ""))
+        return
     if not pending:
         # nothing to review: one line, so working sessions stay working sessions
         p(f"Prof plugin: session {sid} (short: {sid[:8]}) · data: {HOME} · helper: python3 {script} · "
           "nothing due for review. Teach only when the learner asks (/prof:learn, \"teach me\")."
-          + ask)
+          + ask + (" " + profile_ask if profile_ask else ""))
         return
 
     p("## Prof plugin")
@@ -422,6 +436,8 @@ def session_start(hook: dict) -> None:
           "concept. Do the warm-up once per topic per session.")
     p("\nAt the end of a tutoring session (learner says bye/done/that's all), run prof:report.")
     p(AUTO_REPORT_NOTE[auto_report_state()].format(script=script))
+    if profile_ask:
+        p(profile_ask)
 
 
 def _settings_style_is_professor(cwd: str) -> bool:

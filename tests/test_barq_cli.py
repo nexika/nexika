@@ -307,7 +307,7 @@ def test_session_start_puts_barq_on_path(barq_env):
     res = run_hook({"session_id": "abc-123", "source": "startup"},
                    {"CLAUDE_ENV_FILE": str(env_file), "BARQ_HOME": str(barq_env / "h")})
     assert res.returncode == 0
-    assert "barq 'read:PATH'" in res.stdout
+    assert "barq run:test" in res.stdout
     exports = env_file.read_text()
     assert "export BARQ_SESSION='abc-123'" in exports
     assert f'export PATH="{BARQ_ROOT / "bin"}:$PATH"' in exports
@@ -318,7 +318,7 @@ def test_session_start_without_env_file_prints_full_command(barq_env):
     res = subprocess.run([sys.executable, str(BARQ_ROOT / "hooks" / "session_start.py")],
                          input='{"session_id": "s1"}', capture_output=True, text=True,
                          env={**env, "BARQ_HOME": str(barq_env / "h")})
-    assert f"BARQ_SESSION=s1 python3 {BARQ_ROOT / 'bin' / 'barq'} 'read:PATH'" in res.stdout
+    assert f"BARQ_SESSION=s1 python3 {BARQ_ROOT / 'bin' / 'barq'} run:test" in res.stdout
 
 
 def test_session_start_after_compact_resets_cache(project, barq_run, barq_env):
@@ -386,3 +386,14 @@ def test_subagent_start_tells_the_subagent_its_barq_agent_id(barq_env):
     assert res.returncode == 0
     context = json.loads(res.stdout)["hookSpecificOutput"]["additionalContext"]
     assert "BARQ_AGENT=ag-42" in context
+
+
+def test_session_note_leaves_reads_and_searches_to_the_built_in_tools(barq_env):
+    # #49: "prefer barq over cat/grep/find" kept Claude off Read, but Edit needs a prior Read
+    env = {"CLAUDE_ENV_FILE": str(barq_env / "e"), "BARQ_HOME": str(barq_env / "h")}
+    res = run_hook({"session_id": "s1"}, env)
+    note = res.stdout
+    assert "Prefer barq over" not in note and "'read:PATH'" not in note and "grep:" not in note
+    assert "Read" in note and "Edit" in note
+    for op in ("run:test", "git-status", "read:PATH:outline", "read:PATH@Symbol", "map"):
+        assert op in note
