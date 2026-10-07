@@ -6,6 +6,7 @@ become a flag. tabib never re-runs, cancels or edits a run.
 
     gh run list --branch=<b> --json ... --limit 30
     gh run view <id> --json ...            gh run view <id> --log-failed
+    gh run view <id> --attempt <n> --json ... / --log-failed       (earlier attempts, for flaky tests)
     glab api --method GET projects/:id/pipelines?ref=<b>    .../pipelines/<id>/jobs    .../jobs/<id>/trace
 """
 from __future__ import annotations
@@ -15,7 +16,7 @@ import os
 import subprocess
 from urllib.parse import quote
 
-from . import compare
+from . import compare, parse
 from .parse import clean_text
 
 RUN_FIELDS = ("databaseId,status,conclusion,name,workflowName,headSha,headBranch,event,createdAt,attempt,"
@@ -23,6 +24,8 @@ RUN_FIELDS = ("databaseId,status,conclusion,name,workflowName,headSha,headBranch
 VIEW_FIELDS = RUN_FIELDS + ",jobs"
 FAILED = ("failure", "timed_out", "cancelled", "startup_failure")
 LOG_LIMIT = 8 * 1024 * 1024
+PAST_RUNS = 10   # earlier runs (and attempts) of the same commit looked at for flaky tests
+PAST_LOGS = 5    # of which at most this many failed logs are read
 GITLAB = {"failed": "failure", "success": "success", "canceled": "cancelled", "skipped": "skipped"}
 
 
@@ -81,8 +84,11 @@ def gh_runs(cwd: str, branch: str, workflow: str = "") -> list[dict]:
     return [_gh_run(item) for item in _json(run_tool(argv, cwd)) or []]
 
 
-def gh_view(cwd: str, run_id: int) -> dict:
-    return _gh_run(_json(run_tool(["gh", "run", "view", str(int(run_id)), "--json", VIEW_FIELDS], cwd)) or {})
+def gh_view(cwd: str, run_id: int, attempt: int = 0) -> dict:
+    argv = ["gh", "run", "view", str(int(run_id)), "--json", VIEW_FIELDS]
+    if attempt:
+        argv[4:4] = ["--attempt", str(int(attempt))]
+    return _gh_run(_json(run_tool(argv, cwd)) or {})
 
 
 # ------------------------------------------------------------------ GitLab
@@ -162,10 +168,13 @@ def from_fork(info: dict, run: dict) -> bool | None:
         return None
 
 
-def failed_log(info: dict, run: dict) -> str:
-    """The failed part of the log, as `job<TAB>step<TAB>line` lines."""
+def failed_log(info: dict, run: dict, attempt: int = 0) -> str:
+    """The failed part of the log, as `job<TAB>step<TAB>line` lines (GitHub: of one attempt when given)."""
     if run["provider"] == "github":
-        text = run_tool(["gh", "run", "view", str(int(run["id"])), "--log-failed"], info["repo"], timeout=120)
+        argv = ["gh", "run", "view", str(int(run["id"])), "--log-failed"]
+        if attempt:
+            argv[4:4] = ["--attempt", str(int(attempt))]
+        text = run_tool(argv, info["repo"], timeout=120)
         for job in run["jobs"]:
             if job["conclusion"] in ("cancelled", "timed_out", "startup_failure") and job.get("id"):
                 try:
@@ -209,3 +218,61 @@ def history(info: dict, run: dict) -> dict:
         except Off:
             pass
     return {"same_commit_passed": same, "last_green": green}
+
+
+def _attempt_url(run: dict, attempt: int) -> str:
+    return f"{run.get('url') or ''}/attempts/{int(attempt)}" if run.get("url") else ""
+
+
+def _outcomes(info: dict, source: dict, wanted: set[tuple[str, str]], budget: list[int]) -> dict:
+    """{(job, test): 'passed' | 'failed'} in one earlier run or attempt; a test it cannot tell is left out.
+
+    A green run passed every test. Otherwise a test passed when its job passed, or when the job's failed
+    log names other failing tests but not this one (so the tests did run).
+    """
+    if source.get("conclusion") == "success":
+        return {key: "passed" for key in wanted}
+    run = gh_view(info["repo"], source["id"], source.get("only_attempt", 0))
+    jobs = {j["name"]: j["conclusion"] for j in run.get("jobs") or []}
+    found = {key: "passed" for key in wanted if jobs.get(key[0]) == "success"}
+    if not any(jobs.get(job) in FAILED for job, _ in wanted - found.keys()) or budget[0] <= 0:
+        return found
+    budget[0] -= 1
+    log = failed_log(info, {**run, "provider": "github", "id": source["id"]}, source.get("only_attempt", 0))
+    for job, read in parse.read_log(log).items():
+        failed = {f["test"] for f in read["failures"] if f["test"]}
+        for key in wanted - found.keys():
+            if key[0] == job and failed:
+                found[key] = "failed" if key[1] in failed else "passed"
+    return found
+
+
+def flaky_tests(info: dict, run: dict, failures: list[dict]) -> list[dict]:
+    """Failing tests that passed in another run of the same commit, workflow and event, with the run links.
+
+    Read on demand from GitHub (no local history): the earlier attempts of this run and the other runs
+    of the same workflow on the branch, at most PAST_RUNS of them and PAST_LOGS failed logs.
+    """
+    wanted = {(f.get("job") or "", f["test"]) for f in failures if f.get("kind") == "tests" and f.get("test")}
+    if run.get("provider") != "github" or not wanted:
+        return []
+    try:
+        recent = runs(info, run.get("branch") or info.get("branch", ""), run.get("workflow", ""))
+    except Off:
+        recent = []
+    sources = [{"id": run["id"], "only_attempt": n, "conclusion": "", "url": _attempt_url(run, n)}
+               for n in range(int(run.get("attempt") or 1) - 1, 0, -1)]
+    sources += [o for o in recent if o["id"] != run["id"] and o["sha"] == run["sha"]
+                and o.get("workflow") == run.get("workflow") and o.get("event") == run.get("event")
+                and o.get("status", "completed") == "completed"]
+    seen: dict[tuple[str, str], dict[str, list[str]]] = {key: {"passed": [], "failed": []} for key in wanted}
+    budget = [PAST_LOGS]
+    for source in sources[:PAST_RUNS]:
+        try:
+            found = _outcomes(info, source, wanted, budget)
+        except (Off, KeyError, TypeError, ValueError):
+            continue
+        for key, outcome in found.items():
+            seen[key][outcome].append(source.get("url") or "")
+    return [{"job": job, "test": test, **seen[(job, test)]}
+            for job, test in sorted(wanted) if seen[(job, test)]["passed"]]

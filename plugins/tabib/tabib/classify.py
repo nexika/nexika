@@ -1,7 +1,8 @@
 """What kind of failure it is: code, matrix (one Python, one OS), flaky, infra or dependency.
 
 Each kind comes with its evidence, and a confidence: high when the evidence settles it (the same
-commit passed in another run), medium when a strong sign points to it, low otherwise.
+commit passed in another run, or every failing test passed in another run of the same commit),
+medium when a strong sign points to it, low otherwise.
 """
 from __future__ import annotations
 
@@ -69,6 +70,12 @@ def classify(facts: dict) -> dict:
     if passed_same:
         evidence.append(f"The same commit passed in run {passed_same}.")
         return {"kind": "flaky", "detail": {}, "confidence": "high", "evidence": evidence}
+    flaky = {(f.get("job") or "", f["test"]): f for f in facts.get("flaky_tests") or []}
+    flaky_notes = [f"{f['test']} failed and passed on the same commit (passed in "
+                   f"{', '.join(f['passed'][:3])})" for f in flaky.values()]
+    if failures and all((f.get("job") or "", f.get("test")) in flaky for f in failures):
+        return {"kind": "flaky", "detail": {}, "confidence": "high", "evidence": flaky_notes[:5]}
+    evidence += [f"Likely flaky, not the cause: {note}" for note in flaky_notes[:3]]
     infra = [k for k in INFRA if k in signals]
     unhappy = [j for j in facts.get("jobs") or []
                if j.get("conclusion") not in ("success", "skipped", "neutral")]

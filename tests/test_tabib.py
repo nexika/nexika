@@ -426,6 +426,7 @@ def ci(project, env, monkeypatch):
     monkeypatch.setattr(forge, "find_run", lambda info, run_id=None: fake_run(project))
     monkeypatch.setattr(forge, "failed_log", lambda info, run: log)
     monkeypatch.setattr(forge, "from_fork", lambda info, run: False)
+    monkeypatch.setattr(forge, "flaky_tests", lambda info, run, failures: [])
     monkeypatch.setattr(forge, "history", lambda info, run: {
         "same_commit_passed": None, "last_green": {"id": 7000, "sha": git(project, "rev-parse", "main"),
                                                     "branch": "main"}})
@@ -641,3 +642,68 @@ def test_triage_reuses_a_saved_run_without_an_updated_time(ci, monkeypatch):
     first = diagnosis.triage(ci)
     monkeypatch.setattr(diagnosis, "now", lambda: "2099-01-01T00:00:00")   # a later second
     assert diagnosis.triage(ci)["created"] == first["created"]
+
+
+# ---------------------------------------------------------------- flaky tests from past runs (#103)
+
+def test_a_test_that_failed_and_passed_on_the_same_commit_is_flaky(ci, project, monkeypatch):
+    monkeypatch.undo()
+    run = {**fake_run(project), "attempt": 2}
+    job = run["jobs"][0]["name"]
+    failing = [{"framework": "pytest", "kind": "tests", "test": "tests/test_a.py::test_a", "job": job,
+                "file": "tests/test_a.py", "message": "assert 2 == 3"},
+               {"framework": "pytest", "kind": "tests", "test": "tests/test_a.py::test_b", "job": job,
+                "file": "tests/test_a.py", "message": "assert 0"}]
+    # run 7003: same commit and event, test_b failed but test_a passed; 7004: another commit;
+    # 7005: same commit, every job green; attempt 1 of the run itself failed test_a too
+    other = {**run, "id": 7003, "attempt": 1, "url": "https://github.com/o/r/actions/runs/7003"}
+    listed = [run, other, {**run, "id": 7004, "sha": "e" * 40, "conclusion": "success"},
+              {**run, "id": 7005, "attempt": 1, "conclusion": "success",
+               "url": "https://github.com/o/r/actions/runs/7005"},
+              {**run, "id": 7006, "event": "pull_request", "conclusion": "success"}]
+    calls = []
+
+    def tool(argv, cwd, timeout=60, accept=(0,)):
+        calls.append(argv)
+        if argv[:3] == ["gh", "run", "list"]:
+            return json.dumps([])
+        if argv[:3] == ["gh", "run", "view"] and "--log-failed" in argv:
+            if argv[3] == "7003":
+                return gh_log(job, ["FAILED tests/test_a.py::test_b - assert 0"])
+            return gh_log(job, ["FAILED tests/test_a.py::test_a - assert 2 == 3"])  # attempt 1 of 7001
+        if argv[:3] == ["gh", "run", "view"]:
+            ident = int(argv[3])
+            data = {"databaseId": ident, "conclusion": "failure", "headSha": run["sha"], "attempt": 1,
+                    "jobs": [{"databaseId": 9, "name": job, "conclusion": "failure", "steps": []}]}
+            return json.dumps(data)
+        raise AssertionError(argv)
+
+    monkeypatch.setattr(forge, "runs", lambda info, branch="", workflow="": listed)
+    monkeypatch.setattr(forge, "run_tool", tool)
+    found = forge.flaky_tests(ci, run, failing)
+    assert [f["test"] for f in found] == ["tests/test_a.py::test_a", "tests/test_a.py::test_b"]
+    assert found[1]["passed"] == ["https://github.com/o/r/actions/runs/7001/attempts/1",
+                                  "https://github.com/o/r/actions/runs/7005"]
+    assert found[0]["passed"] == ["https://github.com/o/r/actions/runs/7003",
+                                  "https://github.com/o/r/actions/runs/7005"]
+    assert found[0]["failed"] == ["https://github.com/o/r/actions/runs/7001/attempts/1"]
+    assert not any(a[3] in ("7004", "7006", "7005") for a in calls if a[:3] == ["gh", "run", "view"])
+    verdict = classify.classify({"failures": failing[:1], "flaky_tests": found})
+    assert verdict["kind"] == "flaky" and verdict["confidence"] == "high"
+    assert "runs/7003" in " ".join(verdict["evidence"])
+    real = {"framework": "pytest", "kind": "tests", "test": "tests/test_a.py::test_c", "job": job,
+            "file": "tests/test_a.py", "message": "assert 1"}
+    mixed = classify.classify({"failures": [*failing, real], "flaky_tests": found})
+    assert mixed["kind"] == "code" and any("flaky" in e for e in mixed["evidence"])
+    monkeypatch.setattr(forge, "runs", lambda info, branch="", workflow="": (_ for _ in ()).throw(forge.Off("x")))
+    assert forge.flaky_tests(ci, {**run, "attempt": 1}, failing) == []
+    assert forge.flaky_tests({**ci, "host": "gitlab"}, {**run, "provider": "gitlab"}, failing) == []
+
+
+def test_triage_reports_flaky_tests_with_their_runs(ci, monkeypatch):
+    found = [{"test": "tests/test_a.py::test_a", "job": "test (py3.12, ubuntu-latest)",
+              "passed": ["https://github.com/o/r/actions/runs/7003"], "failed": []}]
+    monkeypatch.setattr(forge, "flaky_tests", lambda info, run, failures: found)
+    record = diagnosis.triage(ci)
+    assert record["kind"] == "flaky" and record["flaky_tests"] == found
+    assert record["rerun"] == "gh run rerun 7001 --failed"

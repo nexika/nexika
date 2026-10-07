@@ -107,6 +107,7 @@ def triage(info: dict, run_id: int | None = None, refresh: bool = False) -> dict
     failures, signals, errors, excerpts = _gather(log)
     fork = forge.from_fork(info, run)
     hist = forge.history(info, run)
+    flaky = forge.flaky_tests(info, run, failures) if not hist.get("same_commit_passed") else []
     green = hist.get("last_green") or {}
     files = [f["file"] for f in failures]
     suspects = {"available": False}
@@ -114,7 +115,7 @@ def triage(info: dict, run_id: int | None = None, refresh: bool = False) -> dict
         suspects = compare.compare(info["repo"], green["sha"], run["sha"], files)
     facts = {"failures": failures, "signals": signals, "errors": errors, "jobs": run["jobs"],
              "same_commit_passed": hist.get("same_commit_passed"), "event": run.get("event"),
-             "from_fork": fork,
+             "from_fork": fork, "flaky_tests": flaky,
              "lock_changed": suspects.get("lock_changed")}
     verdict = classify.classify(facts)
     record = {"schema": SCHEMA, "version": __version__, "created": now(), "repo": info["repo"],
@@ -122,7 +123,8 @@ def triage(info: dict, run_id: int | None = None, refresh: bool = False) -> dict
               "run": {**{k: run.get(k) for k in ("provider", "id", "url", "workflow", "sha", "attempt",
                                                   "event", "number", "created", "updated")},
                       "from_fork": fork},
-              "jobs": run["jobs"], "failures": failures, "signals": signals, "errors": errors,
+              "jobs": run["jobs"], "failures": failures, "flaky_tests": flaky, "signals": signals,
+              "errors": errors,
               "kind": verdict["kind"], "detail": verdict["detail"], "confidence": verdict["confidence"],
               "evidence": [secrets.redact(e) for e in verdict["evidence"]], "history": hist,
               "suspects": {**suspects, "green_run": green.get("id")},

@@ -45,8 +45,9 @@ Cause (reported by Claude)
 |---|---|
 | **Failures** | pytest, jest, vitest, go test, dotnet test, cargo test, tsc, mypy, ruff, eslint: test, file, line, message |
 | **Signals** | time limits, out of memory (exit 137), the network, rate limits, the runner, missing credentials, dependency resolution |
-| **Kinds** | **code**; **matrix** (fails only on one Python, Node or OS); **flaky** (the same commit passed in another run); **infra** (cancelled, a time limit, the network, the runner, credentials); **dependency**; **unknown** |
+| **Kinds** | **code**; **matrix** (fails only on one Python, Node or OS); **flaky** (the same commit passed in another run, or each failing test passed in another run or attempt of the same commit); **infra** (cancelled, a time limit, the network, the runner, credentials); **dependency**; **unknown** |
 | **History** | the last green run of the same workflow, the commits since (a commit that touched a failing file is a suspect), dependency files that changed |
+| **Flaky tests** | read from GitHub when needed, nothing stored: the earlier attempts of the run and the other runs of the same workflow, commit and event (up to 10, reading at most 5 failed logs); a test that failed and passed on the same commit is named with the run links |
 
 ## Running the failing tests again, safely
 
