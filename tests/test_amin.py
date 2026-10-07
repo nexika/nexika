@@ -64,15 +64,25 @@ def market(tmp_path):
 class FakeRunner(gitops.Runner):
     """Real git; canned gh answers (no network)."""
 
-    def __init__(self, root, checks=None, prs=None, issue=None):
+    def __init__(self, root, checks=None, prs=None, issue=None, releases=(), fail_release=False):
         super().__init__(root)
+        self.releases, self.fail_release = set(releases), fail_release
         self.checks = checks if checks is not None else [{"name": "CI", "status": "completed",
                                                            "conclusion": "success"}]
         self.prs, self.issue, self.gh_calls = prs or [], issue, []
 
     def gh(self, *args, check=True):
         self.gh_calls.append(args)
+        if args[:2] == ("release", "view"):
+            if args[2] in self.releases:
+                return json.dumps({"url": f"https://github.com/o/r/releases/tag/{args[2]}"})
+            if check:
+                raise gitops.CommandError("release not found")
+            return ""
         if args[:2] == ("release", "create"):
+            if self.fail_release:
+                raise gitops.CommandError("gh release create: HTTP 502")
+            self.releases.add(args[2])
             return f"https://github.com/o/r/releases/tag/{args[2]}\n"
         return json.dumps(self.gh_json(*args))
 
@@ -265,6 +275,20 @@ def test_publish_creates_tag_and_release(market):
     assert create[2:5] == ("alpha-v0.1.0", "--title", "alpha 0.1.0")
 
 
+def test_publish_resumes_after_the_release_step_failed(market):
+    # issue #34: the tag was pushed, gh release create failed, and a retry stopped at "tag already exists"
+    alpha = released_market(market)
+    with pytest.raises(gitops.CommandError, match="502"):
+        release.publish(market, FakeRunner(market, fail_release=True), alpha)
+    assert "alpha-v0.1.0" in _tags(market)
+    runner = FakeRunner(market)
+    report = release.publish(market, runner, alpha)
+    assert "tag alpha-v0.1.0 already pushed" in "\n".join(report)
+    assert report[-1] == "release published: https://github.com/o/r/releases/tag/alpha-v0.1.0"
+    with pytest.raises(release.ReleaseError, match="already published"):
+        release.publish(market, FakeRunner(market, releases={"alpha-v0.1.0"}), alpha)
+
+
 def test_publish_dry_run_creates_nothing(market):
     alpha = released_market(market)
     report = release.publish(market, FakeRunner(market), alpha, dry_run=True)
@@ -275,7 +299,7 @@ def test_publish_dry_run_creates_nothing(market):
     (lambda r: _git(r, "switch", "-q", "-c", "other"), "releases are cut from main"),
     (lambda r: write(r, "dirty.txt", "x"), "uncommitted changes"),
     (lambda r: (write(r, "more.txt", "x"), commit(r)), "is not the same commit as origin/main"),
-    (lambda r: _git(r, "tag", "alpha-v0.1.0"), "already exists"),
+    (lambda r: _git(r, "tag", "alpha-v0.1.0", "HEAD~1"), "already exists on another commit"),
 ])
 def test_publish_refuses_unsafe_states(market, setup, message):
     alpha = released_market(market)

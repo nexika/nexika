@@ -151,19 +151,31 @@ def publish(root: Path, runner: gitops.Runner, project: proj.Project, dry_run: b
     notes = changelog.extract(root / project.changelog, version or "?")
     if not notes:
         failures.append(f"{project.changelog} has no section for {version}: run prepare and merge that PR")
-    if runner.git("rev-parse", "-q", "--verify", f"refs/tags/{tag}", check=False).strip() or \
-            runner.git("ls-remote", "--tags", "origin", tag, check=False).strip():
-        failures.append(f"tag {tag} already exists")
+    # a tag already on HEAD with no release yet means an earlier publish stopped half way: finish it
+    tagged = runner.git("rev-parse", "-q", "--verify", f"refs/tags/{tag}^{{commit}}", check=False).strip()
+    pushed = bool(runner.git("ls-remote", "--tags", "origin", f"refs/tags/{tag}", check=False).strip())
+    resume = False
+    if tagged or pushed:
+        if tagged and tagged != head:
+            failures.append(f"tag {tag} already exists on another commit ({tagged[:7]})")
+        elif runner.gh("release", "view", tag, "--json", "url", check=False).strip():
+            failures.append(f"tag {tag} already exists and its release is already published")
+        else:
+            resume = True
     if not failures:
         ok, ci = _ci_state(runner, head)
         (report if ok else failures).append(ci)
     if failures:
         raise ReleaseError("not releasing:\n" + "\n".join(f"  - {f}" for f in failures))
     report.append(f"ready: {project.name} {version} -> tag {tag} on {head[:7]}")
+    if resume:
+        report.append(f"tag {tag} already {'pushed' if pushed else 'created'}: creating only what is missing")
     if dry_run:
         return report + ["dry run: nothing was created"]
-    runner.git("tag", "-a", tag, "-m", f"{project.name} {version}")
-    runner.git("push", "origin", tag)
+    if not tagged:
+        runner.git("tag", "-a", tag, "-m", f"{project.name} {version}")
+    if not pushed:
+        runner.git("push", "origin", tag)
     with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False, encoding="utf-8") as fh:
         fh.write(notes)
         notes_file = fh.name
@@ -172,7 +184,7 @@ def publish(root: Path, runner: gitops.Runner, project: proj.Project, dry_run: b
                         "--notes-file", notes_file, "--verify-tag").strip()
     finally:
         Path(notes_file).unlink(missing_ok=True)
-    return report + [f"tag {tag} pushed", f"release published: {url}"]
+    return report + ([] if pushed else [f"tag {tag} pushed"]) + [f"release published: {url}"]
 
 
 def history(root: Path, runner: gitops.Runner, project: proj.Project, tag: str | None) -> list[str]:
