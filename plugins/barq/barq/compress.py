@@ -31,8 +31,11 @@ def _dedupe(lines: list[str]) -> list[str]:
 
 
 def pytest(lines: list[str]):
+    # "=== 1 failed, 2 passed in 0.05s ===", or with -q just "1 failed, 2 passed in 0.05s"
     summary = [ln for ln in lines if re.match(
-        r"^=+ .*\b(passed|failed|errors?|no tests ran|skipped|deselected)\b.* in [\d.]+s", ln)]
+        r"^(?:=+ .*\b(passed|failed|errors?|no tests ran|skipped|deselected)\b"
+        r"|\d+ (?:passed|failed|errors?|skipped|deselected|xfailed|xpassed|warnings?)\b"
+        r"|no tests ran\b).* in [\d.]+s", ln.strip())]
     if not summary:
         return None
     details = [ln for ln in lines if ln.startswith(("FAILED ", "ERROR "))]

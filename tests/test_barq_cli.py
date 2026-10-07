@@ -55,6 +55,13 @@ def test_read_range_symbol_and_outline(project, barq_run):
     assert "4-6     class Cart" in out and "    def total(self)" in out
 
 
+def test_a_symbol_read_that_may_be_partial_says_so(project, barq_run):
+    (project / "broken.js").write_text("function broken() {\n" + "  x();\n" * 80)
+    _, out = barq_run("read:broken.js@broken")
+    assert "may be cut short" in out and "read:broken.js:1:" in out
+    assert "may be cut short" not in barq_run("read:src/app.py@Cart.total")[1]
+
+
 def test_read_unknown_symbol_lists_available(project, barq_run):
     code, out = barq_run("read:src/app.py@Nope")
     assert code == 1 and "[ERROR]" in out and "Symbols: Cart, Cart.total, helper" in out

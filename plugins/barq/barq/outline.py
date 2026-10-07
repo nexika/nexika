@@ -19,6 +19,7 @@ class Symbol:
     end: int         # 1-based last line
     signature: str
     depth: int
+    partial: bool = False   # the end could not be found for sure: the symbol may be cut short
 
 
 PY_EXT = {".py", ".pyi"}
@@ -43,6 +44,7 @@ TYPE_RE = re.compile(
 )
 GO_TYPE = re.compile(r"^\s*type\s+(?P<name>\w+)\s+(?:\[[^\]]*\]\s*)?(?P<kind>struct|interface)\b")
 GO_FUNC = re.compile(r"^\s*func\s+(?:\((?P<recv>[^)]*)\)\s*)?(?P<name>\w+)\s*[\[(]")
+GO_RECV_TYPE = re.compile(r"(\w+)\s*(?:\[[^\]]*\])?\s*$")   # (s *Server) -> Server, (l List[T]) -> List
 KEYWORD_FUNC = re.compile(
     r"^\s*" + _MODS + r"(?:function\s*\*?|fun|func|fn|def)\s+(?:<[^>]*>\s*)?(?:[\w.]+\.)?"
     r"(?P<name>[A-Za-z_]\w*)"
@@ -50,6 +52,15 @@ KEYWORD_FUNC = re.compile(
 JS_ARROW = re.compile(
     r"^\s*(?:export\s+)?(?:const|let|var)\s+(?P<name>\w+)\s*(?::[^=]+)?=\s*(?:async\s+)?"
     r"(?:\([^)]*\)|\w+)\s*(?::[^=]+)?=>"
+)
+JS_EXT = {".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"}
+# class fields holding an arrow function: handleClick = (e) => {, private load = async () => {
+JS_FIELD_ARROW = re.compile(
+    r"^\s*" + _MODS + r"(?P<name>[A-Za-z_$][\w$]*)\s*(?::[^=]+)?=\s*(?:async\s+)?"
+    r"(?:\([^)]*\)|\w+)\s*(?::[^=]+)?=>"
+)
+TS_TYPE_ALIAS = re.compile(
+    r"^\s*(?:export\s+)?(?:declare\s+)?type\s+(?P<name>[A-Za-z_$][\w$]*)\s*(?:<.*>)?\s*="
 )
 METHOD = re.compile(
     r"^\s*" + _MODS + r"(?:[\w<>\[\],.?:*&]+\s+)+(?P<name>[A-Za-z_]\w*)\s*(?:<[^>()]*>)?\s*\("
@@ -66,14 +77,76 @@ NOT_NAMES = {
 STATEMENT_STARTS = ("return ", "await ", "throw ", "yield ", "else", "var ", "let ", "const ",
                     "new ", "case ", "using (", "using(", "#", "@", "[")
 
-_STRING = re.compile(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|`(?:\\.|[^`\\])*`')
+def _skip_quoted(line: str, k: int) -> int:
+    """Index after the string starting at line[k], or k + 1 when it doesn't close on this line
+    (a Rust lifetime, an apostrophe)."""
+    quote, j = line[k], k + 1
+    while j < len(line):
+        if line[j] == "\\":
+            j += 2
+        elif line[j] == quote:
+            return j + 1
+        else:
+            j += 1
+    return k + 1
 
 
-def _code_only(line: str) -> str:
-    """Line without string literals and // comments (enough for brace counting)."""
-    line = _STRING.sub('""', line)
-    cut = line.find("//")
-    return line[:cut] if cut >= 0 else line
+def _code_lines(lines: list[str]) -> list[str]:
+    """Each line with strings as "", and comments and template literal text (also across lines,
+    with their ${...} parts) removed: enough for brace counting and declaration matching."""
+    out = []
+    nest: list = []      # open template literals ("T") and ${...} parts (count of their own open braces)
+    in_comment = False
+    for line in lines:
+        kept, k = [], 0
+        while k < len(line):
+            c = line[k]
+            if in_comment:
+                if line.startswith("*/", k):
+                    in_comment, k = False, k + 2
+                else:
+                    k += 1
+                continue
+            if nest and nest[-1] == "T":
+                if c == "\\":
+                    k += 2
+                elif c == "`":
+                    nest.pop()
+                    k += 1
+                elif line.startswith("${", k):
+                    nest.append(0)
+                    k += 2
+                else:
+                    k += 1
+                continue
+            visible = not nest
+            if c in "\"'":
+                end = _skip_quoted(line, k)
+                if visible:
+                    kept.append('""' if end > k + 1 else c)
+                k = end
+                continue
+            if line.startswith("//", k):
+                break
+            if line.startswith("/*", k):
+                in_comment, k = True, k + 2
+                continue
+            if c == "`":
+                if visible:
+                    kept.append('""')
+                nest.append("T")
+            elif nest and c == "{":
+                nest[-1] += 1
+            elif nest and c == "}":
+                if nest[-1]:
+                    nest[-1] -= 1
+                else:
+                    nest.pop()   # back in the template text
+            elif visible:
+                kept.append(c)
+            k += 1
+        out.append("".join(kept))
+    return out
 
 
 def _signature(line: str) -> str:
@@ -154,9 +227,19 @@ def _match_decl(code: str, nxt: str, suffix: str) -> tuple[str, str] | None:
         if m:
             return m.group("kind"), m.group("name")
         m = GO_FUNC.match(code)
+        if m and m.group("recv"):
+            recv = GO_RECV_TYPE.search(m.group("recv").strip())
+            return "method", (f"{recv.group(1)}." if recv else "") + m.group("name")
         if m:
-            return ("method" if m.group("recv") else "func"), m.group("name")
+            return "func", m.group("name")
         return None
+    if suffix in JS_EXT:
+        m = TS_TYPE_ALIAS.match(code)
+        if m:
+            return "alias", m.group("name")
+        m = JS_FIELD_ARROW.match(code)
+        if m and m.group("name") not in NOT_NAMES:
+            return "func", m.group("name")
     m = TYPE_RE.match(code)
     if m:
         return m.group("kind"), m.group("name")
@@ -191,22 +274,21 @@ def _decl_start(lines: list[str], i: int) -> int:
     return j
 
 
-def _block_end(lines: list[str], i: int) -> int:
-    """0-based index of the line closing the block that starts at line i."""
+def _block_end(code: list[str], i: int) -> tuple[int, bool]:
+    """(0-based index of the line closing the block that starts at line i, sure)."""
     depth, opened = 0, False
-    for j in range(i, len(lines)):
-        code = _code_only(lines[j])
-        if not opened and "{" not in code and code.rstrip().endswith(";"):
-            return j  # abstract / interface / expression-bodied member
-        for ch in code:
+    for j in range(i, len(code)):
+        if not opened and "{" not in code[j] and code[j].rstrip().endswith(";"):
+            return j, True  # abstract / interface / expression-bodied member
+        for ch in code[j]:
             if ch == "{":
                 depth += 1
                 opened = True
             elif ch == "}":
                 depth -= 1
                 if opened and depth <= 0:
-                    return j
-    return min(i + 50, len(lines) - 1)
+                    return j, True
+    return min(i + 50, len(code) - 1), False
 
 
 def _brace_symbols(text: str, suffix: str) -> list[Symbol]:
@@ -214,23 +296,17 @@ def _brace_symbols(text: str, suffix: str) -> list[Symbol]:
     out: list[Symbol] = []
     stack: list[list] = []  # [name, depth_at_declaration, opened]
     depth = 0
-    in_block_comment = False
+    codes = _code_lines(lines)
     for i, line in enumerate(lines):
-        if in_block_comment:
-            if "*/" in line:
-                in_block_comment = False
-            continue
-        if line.strip().startswith("/*") and "*/" not in line:
-            in_block_comment = True
-            continue
-        code = _code_only(line)
-        nxt = lines[i + 1] if i + 1 < len(lines) else ""
-        decl = _match_decl(code, nxt, suffix) if depth <= 4 else None
+        code = codes[i]
+        nxt = codes[i + 1] if i + 1 < len(lines) else ""
+        decl = _match_decl(code, nxt, suffix) if depth <= 4 and code.strip() else None
         if decl:
             kind, name = decl
             qual = ".".join([s[0] for s in stack] + [name])
-            end = _block_end(lines, i)
-            out.append(Symbol(qual, kind, _decl_start(lines, i) + 1, end + 1, _signature(line), len(stack)))
+            end, sure = _block_end(codes, i)
+            out.append(Symbol(qual, kind, _decl_start(lines, i) + 1, end + 1, _signature(line), len(stack),
+                              partial=not sure))
             if kind in TYPE_KINDS and end > i:  # a one-line type can't contain anything
                 stack.append([name, depth, False])
         depth += code.count("{") - code.count("}")

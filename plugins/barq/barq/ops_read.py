@@ -68,7 +68,10 @@ def op_read(ctx: Context, path: str, start=None, end=None, symbol: str | None = 
             raise OpError(f"no symbol '{symbol}' in {shown}. Symbols: {hint or 'none found'}")
         parts = [numbered(lines[s.line - 1:s.end], s.line) for s in found]
         spans = ", ".join(f"{s.line}-{s.end}" for s in found)
-        return Result(f"read {shown}@{symbol} (lines {spans} of {total}{masked_note})",
+        partial = [s for s in found if s.partial]
+        partial_note = (f", may be cut short: its end wasn't found, check with "
+                        f"read:{shown}:{partial[0].line}:{partial[0].end + 100}" if partial else "")
+        return Result(f"read {shown}@{symbol} (lines {spans} of {total}{masked_note}{partial_note})",
                       "\n...\n".join(parts), baseline=baseline, masked=True)
 
     if start is not None:
