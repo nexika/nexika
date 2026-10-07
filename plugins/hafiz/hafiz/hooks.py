@@ -66,6 +66,7 @@ def on_session_start(event: dict, helper: str) -> str:
     cwd, root, config = ctx
     folder = store.project_dir(root)
     store.gc(folder)
+    store.Memory(root).expire_open()
     session = str(event.get("session_id") or "")
     if event.get("source") == "compact" and session:
         restored = card.restore_text(folder, session, helper)

@@ -7,7 +7,8 @@ a repository shares one memory.
 A memory is one JSON line in memories.jsonl:
     id, type (decision|task|problem|file|link), text, date, branch, commit, session,
     source (where it came from: "transcript <session> L<line>" or "manual"),
-    origin (auto|manual), scope (branch|project), status (open|done|solved|""), key (for updates)
+    origin (auto|manual), scope (branch|project), status (open|done|solved|dropped|expired|""),
+    key (for updates)
 """
 from __future__ import annotations
 
@@ -28,6 +29,7 @@ TYPES = ("decision", "task", "problem", "file", "link")
 MAX_MEMORIES = 3000          # per project; auto file/link memories go first when over
 MAX_TEXT = 500               # characters per memory
 SESSION_KEEP_DAYS = 60
+OPEN_KEEP_DAYS = 14          # an open task or problem not touched for this long is marked expired
 SNAPSHOT_KEEP_DAYS = 7
 STALE_LOCK = 120             # seconds; far longer than any hook may run
 
@@ -252,6 +254,19 @@ class Memory:
             if changed:
                 self._save(prune(items))
             return changed
+
+    def expire_open(self, days: int = OPEN_KEEP_DAYS) -> int:
+        """Mark open tasks and problems older than `days` as expired, so stale ones stop showing."""
+        cutoff = (datetime.datetime.now() - datetime.timedelta(days=days)).isoformat(timespec="seconds")
+        with locked(self.dir):
+            items = self.all()
+            stale = [i for i in items if i["type"] in ("task", "problem") and i.get("status") == "open"
+                     and i.get("date", "")[:19] < cutoff]
+            for item in stale:
+                item["status"] = "expired"
+            if stale:
+                self._save(items)
+            return len(stale)
 
     def forget(self, match) -> list[dict]:
         """Remove memories for which match(item) is true; auto capture never brings them back."""

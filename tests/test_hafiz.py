@@ -604,3 +604,41 @@ def test_new_transcript_file_is_read_from_the_start(log, capsys, repo, tmp_path)
 def test_notifications_are_not_prompts():
     assert transcript.clean_prompt("<task-notification><task-id>x</task-id></task-notification>") == ""
     assert transcript.clean_prompt("[SYSTEM NOTIFICATION - NOT USER INPUT] go with X") == ""
+
+
+# ---------------------------------------------------------------- open items across sessions (#36)
+
+
+def test_a_pass_in_a_later_session_closes_the_problem(log, capsys, repo, tmp_path):
+    stop(log.user("Go").tool("Bash", {"command": "pytest tests/test_a.py"}, "FAILED test_x", error=True), capsys)
+    later = Log(tmp_path / "later.jsonl", repo)
+    later.user("Again").tool("Bash", {"command": "pytest tests/test_a.py -q"}, "1 passed")
+    hook("stop", {"session_id": "b" * 8 + "-later", "transcript_path": later.write(), "cwd": str(repo)}, capsys)
+    problems = [i for i in store.Memory(repo).all() if i["type"] == "problem"]
+    assert [p["status"] for p in problems] == ["solved"]
+    third = hook("session-start", {"session_id": "c" * 8, "cwd": str(repo), "source": "startup"}, capsys)
+    assert "Open problems" not in third
+
+
+def test_a_task_finished_in_a_later_session_is_closed(log, capsys, repo, tmp_path):
+    stop(log.user("Go").tool("TodoWrite", {"todos": [{"content": "Add refresh tokens", "status": "pending"}]}),
+         capsys)
+    later = Log(tmp_path / "later.jsonl", repo)
+    later.user("Again").tool("TodoWrite", {"todos": [{"content": "Add refresh tokens", "status": "completed"}]})
+    hook("stop", {"session_id": "b" * 8 + "-later", "transcript_path": later.write(), "cwd": str(repo)}, capsys)
+    assert [i["status"] for i in store.Memory(repo).all() if i["type"] == "task"] == ["done"]
+
+
+def test_old_open_items_expire(repo, capsys):
+    old = (store.datetime.datetime.now() - store.datetime.timedelta(days=store.OPEN_KEEP_DAYS + 1)).isoformat()
+    memory = store.Memory(repo)
+    memory.upsert([store.Memory.make("task", "Ancient task", status="open", key="task|x", date=old,
+                                     branch=BRANCH, origin="auto"),
+                   store.Memory.make("problem", "`pytest` failed: old", status="open", key="problem|pytest",
+                                     date=old, branch=BRANCH, origin="auto"),
+                   store.Memory.make("task", "Fresh task", status="open", key="task|y", branch=BRANCH,
+                                     origin="auto")])
+    text = hook("session-start", {"session_id": "c" * 8, "cwd": str(repo), "source": "startup"}, capsys)
+    assert "Fresh task" in text and "Ancient task" not in text and "Open problems" not in text
+    status = {i["text"]: i["status"] for i in memory.all()}
+    assert status["Ancient task"] == "expired" and status["Fresh task"] == "open"

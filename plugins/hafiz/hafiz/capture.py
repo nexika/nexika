@@ -112,6 +112,7 @@ class Capture:
     def __init__(self, root: Path, state: dict, commit: str):
         self.root, self.state, self.commit = root, state, commit
         self.memories: list[dict] = []
+        self._memories: list[dict] | None = None
         self.sid = state["session"][:8]
 
     def clean(self, text: str) -> str:
@@ -244,7 +245,7 @@ class Capture:
 
     def _task(self, subject: str, status: str, event: dict, source: str = "task") -> str:
         subject = _short(self.clean(subject), 200)
-        key = f"task|{self.sid}|{subject.lower()[:100]}"
+        key = f"task|{subject.lower()[:100]}"  # the same task in a later session is the same memory
         before = self.state["tasks"].get(key)
         if before and before["status"] == status:
             return key
@@ -272,7 +273,7 @@ class Capture:
         family = runner.group(1)
         targets = sorted(a for a in runner.group(2).split() if not a.startswith("-"))[:6]
         name = " ".join([family, *targets])
-        key = f"problem|{self.sid}|{name}"
+        key = f"problem|{name}"  # by command, so a pass in any later session closes it
         if not ok:
             detail = _short(self.clean(_first_error(event["text"])), 220)
             text = f"`{name}` failed: {detail}" if detail else f"`{name}` failed"
@@ -280,13 +281,27 @@ class Capture:
                                            "family": family}
             self._add("problem", text, event, key=key, status="open")
             return
+
         # a pass solves the same run, or every run of that tool when it ran without targets
+        def same(other: str) -> bool:
+            ran = other.rsplit("|", 1)[-1]
+            return ran == name or (not targets and (ran == family or ran.startswith(family + " ")))
+
         for other, problem in list(self.state["problems"].items()):
-            same = other == key or (not targets and problem.get("family") == family)
-            if same and problem["status"] == "open":
+            if same(other) and problem["status"] == "open":
                 text = f"{problem['text']} (passed again at L{event['line']})"
                 self.state["problems"][other] = {**problem, "text": text, "status": "solved"}
                 self._add("problem", text, event, key=other, status="solved")
+        for item in self._stored():
+            if (item["type"] == "problem" and item.get("status") == "open" and item.get("key")
+                    and item["key"] not in self.state["problems"] and same(item["key"])):
+                text = f"{item['text']} (passed again in session {self.sid})"
+                self._add("problem", text, event, key=item["key"], status="solved")
+
+    def _stored(self) -> list[dict]:
+        if self._memories is None:
+            self._memories = store.Memory(self.root).all()
+        return self._memories
 
 
 def update(root: Path, session: str, transcript_path: str, cwd: str = "") -> dict:
