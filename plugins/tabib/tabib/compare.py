@@ -14,6 +14,17 @@ LOCKFILES = re.compile(r"(?:^|/)(?:package-lock\.json|npm-shrinkwrap\.json|pnpm-
                        r"packages\.lock\.json|[^/]+\.csproj|Directory\.Packages\.props|Gemfile(?:\.lock)?|"
                        r"composer\.(?:json|lock))$")
 SHA = re.compile(r"^[0-9a-f]{7,64}$")
+# Which dependency files can change a failure, by the tool that reported it.
+ECOSYSTEMS = {
+    "python": re.compile(r"(?:^|/)(?:poetry\.lock|uv\.lock|Pipfile(?:\.lock)?|"
+                         r"requirements[\w.-]*\.(?:txt|in)|pyproject\.toml|setup\.(?:cfg|py))$"),
+    "node": re.compile(r"(?:^|/)(?:package-lock\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock)$"),
+    "go": re.compile(r"(?:^|/)go\.(?:mod|sum)$"),
+    "rust": re.compile(r"(?:^|/)Cargo\.(?:toml|lock)$"),
+    "dotnet": re.compile(r"(?:^|/)(?:packages\.lock\.json|[^/]+\.csproj|Directory\.Packages\.props)$"),
+}
+FRAMEWORK_ECOSYSTEM = {"pytest": "python", "ruff": "python", "mypy": "python", "jest": "node",
+                       "eslint": "node", "tsc": "node", "go": "go", "cargo": "rust", "dotnet": "dotnet"}
 
 
 def git(cwd: str, *args: str, timeout: float = 30) -> tuple[int, str]:
@@ -62,8 +73,31 @@ def advertised_by_origin(repo: str, sha: str, branch: str) -> bool:
     return git(repo, "merge-base", "--is-ancestor", sha, tip)[0] == 0
 
 
-def deps_changed(files: list[str]) -> list[str]:
-    return [f for f in files if LOCKFILES.search(f)]
+def deps_changed(files: list[str], framework: str = "") -> list[str]:
+    """Dependency files among these; with a framework, only its ecosystem's.
+
+    pytest ignores package-lock.json, jest ignores uv.lock.
+    """
+    scope = ECOSYSTEMS.get(FRAMEWORK_ECOSYSTEM.get(framework, ""), LOCKFILES)
+    return [f for f in files if scope.search(f)]
+
+
+def advertised_tip(repo: str, sha: str) -> bool:
+    """True when origin advertises a ref (a branch, or a pull request's head) whose tip is this commit.
+
+    After a squash-merge deletes the branch, GitHub still serves refs/pull/<n>/head. Such a ref may
+    hold a fork's code, so callers trust it only when the CI service says the run was not a fork's.
+    """
+    if not SHA.match(sha or ""):
+        return False
+    code, out = git(repo, "ls-remote", "origin", "refs/heads/*", "refs/pull/*/head", timeout=60)
+    if code != 0:
+        return False
+    for line in out.splitlines():
+        tip = line.partition("\t")[0]
+        if tip.startswith(sha) or (len(tip) >= len(sha) and sha.startswith(tip)):
+            return have(repo, sha) or fetch(repo, sha)
+    return False
 
 
 def compare(repo: str, green_sha: str, failing_sha: str, failure_files: list[str]) -> dict:

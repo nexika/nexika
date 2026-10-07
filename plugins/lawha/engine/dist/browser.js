@@ -1,4 +1,13 @@
 import { chromium } from "playwright";
+function parseHeaders(lines) {
+    const out = {};
+    for (const line of lines) {
+        const cut = line.indexOf(":");
+        if (cut > 0)
+            out[line.slice(0, cut).trim().toLowerCase()] = line.slice(cut + 1).trim();
+    }
+    return out;
+}
 export function variantName(v) {
     return `${v.width}-${v.theme}-${v.dir}${v.motion === "reduce" ? "-reduced" : ""}`;
 }
@@ -61,11 +70,42 @@ export async function openVariant(browser, opts, v) {
         deviceScaleFactor: 1,
         hasTouch: v.width <= 767,
         isMobile: false,
+        ...(opts.storageState ? { storageState: opts.storageState } : {}),
     });
+    const url = v.dir === "rtl" && opts.rtlUrl ? opts.rtlUrl : opts.url;
+    const origin = (() => { try {
+        return new URL(url).origin;
+    }
+    catch {
+        return "null";
+    } })();
+    if (opts.cookies?.length && origin !== "null") {
+        await context.addCookies(opts.cookies.filter((c) => c.includes("=")).map((c) => {
+            const cut = c.indexOf("=");
+            return { name: c.slice(0, cut).trim(), value: c.slice(cut + 1).trim(), url: origin };
+        }));
+    }
+    const headers = parseHeaders(opts.headers ?? []);
+    if (Object.keys(headers).length && origin !== "null") {
+        // Only to the page's own origin: a token must not reach a CDN or an analytics host.
+        await context.route("**/*", (route) => {
+            const request = route.request();
+            const same = (() => { try {
+                return new URL(request.url()).origin === origin;
+            }
+            catch {
+                return false;
+            } })();
+            return same ? route.continue({ headers: { ...request.headers(), ...headers } }) : route.continue();
+        });
+    }
     const page = await context.newPage();
     await page.addInitScript(CLS_SCRIPT);
-    const url = v.dir === "rtl" && opts.rtlUrl ? opts.rtlUrl : opts.url;
     await page.goto(url, { waitUntil: "load", timeout: 60_000 });
+    if (opts.networkIdle)
+        await page.waitForLoadState("networkidle", { timeout: 30_000 }).catch(() => undefined);
+    if (opts.waitFor)
+        await page.waitForSelector(opts.waitFor, { state: "attached", timeout: 30_000 });
     if (v.dir === "rtl" && !opts.rtlUrl) {
         await page.evaluate(() => document.documentElement.setAttribute("dir", "rtl"));
     }
@@ -94,6 +134,23 @@ export async function revealAll(page) {
     await page.waitForTimeout(900); // the last entrances finish (lawha's slowest token is 700ms)
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(300);
+}
+/**
+ * Where the page ended up, when that is not where it was sent: a login wall, a locale redirect.
+ * Origin and path are compared (a trailing slash, the query and the hash do not count), so
+ * /private landing on /login.html?next=/private is caught.
+ */
+export function redirectedTo(requested, final) {
+    const key = (u) => {
+        try {
+            const p = new URL(u);
+            return `${p.origin === "null" ? p.protocol : p.origin}${p.pathname.replace(/\/+$/, "") || "/"}`;
+        }
+        catch {
+            return u;
+        }
+    };
+    return key(requested) === key(final) ? null : final;
 }
 export async function closePage(page) {
     await page.context().close();

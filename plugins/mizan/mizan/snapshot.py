@@ -2,7 +2,8 @@
 
 The input is what only the session knows (context, cost, running agents, tasks), either from the
 mod or from Claude Code's status line JSON; mizan adds git, gh/glab (cached), the device, haris and
-itqan. Context levels: fresh under 40 %, mid 40-75 %, full above 75 %.
+itqan. Context levels: fresh under 40 %, mid 40-75 %, full above 75 % (context_mid and context_full
+in config.json move them).
 """
 from __future__ import annotations
 
@@ -14,12 +15,12 @@ import time
 from . import __version__, config, device, family, forge, gitinfo, i18n, render, status, tasks
 
 SCHEMA = "nexika.mizan/1"
-MID, FULL = 40, 75
 MOD_FRESH = 120  # seconds: the mod publishes every 15 s while it runs
 
 
 def context_level(percent: float) -> str:
-    return "full" if percent > FULL else "mid" if percent >= MID else "fresh"
+    mid, full = config.thresholds()
+    return "full" if percent > full else "mid" if percent >= mid else "fresh"
 
 
 def _number(value) -> float | None:
@@ -149,13 +150,19 @@ def build(raw: dict, publish: bool = False) -> dict:
         context = {"percent": round(percent), "tokens": _number(p["context"].get("tokens")),
                    "window": _number(p["context"].get("window")), "level": context_level(percent)}
         context["window"] = int(context["window"]) if context["window"] else None
+    running = p["agents"]
     if isinstance(p["tasks"], dict):
         items = p["tasks"].get("items")
     else:
         items = tasks.from_transcript(p["transcript"])
+        if p["source"] == "statusline":
+            # The status line is told nothing about agents: the transcript says which ran and finished.
+            called = tasks.agents_from_transcript(p["transcript"])
+            running = [a for a in called if a["status"] == "running"]
+            items = items or tasks.from_agents(called)
     agents = [{"type": render.clean(a.get("type"), 40),
                "description": render.clean(a.get("description"), 120)}
-              for a in p["agents"] if isinstance(a, dict)][:10]
+              for a in running if isinstance(a, dict)][:10]
     lang = i18n.lang()
     snap = {
         "schema": SCHEMA, "version": __version__,

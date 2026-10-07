@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Layout shift</title>
+<style>body { margin: 0; font: 18px/1.5 system-ui, sans-serif; padding: 24px; } .late { height: 300px; background: #eef; } p { min-height: 220px; background: #f6f6f6; }</style></head>
+<body><main><h1>Layout shift</h1><p id="a">First paragraph of text that moves.</p><p id="b">Second paragraph of text that moves.</p></main>
+<script>
+  // One cause (a late banner), but what it pushes down differs by width.
+  setTimeout(() => {
+    const late = document.createElement("div");
+    late.className = "late";
+    document.getElementById(innerWidth < 600 ? "a" : "b").before(late);
+  }, 300);
+</script></body></html>

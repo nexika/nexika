@@ -81,6 +81,55 @@ def test_parsers(lines, expected):
     assert (first["framework"], first["test"], first["file"], first["line"]) == expected
 
 
+def _found(lines):
+    return {f["test"]: (f["file"], f["line"]) for f in parse.failures([parse.clean_line(x) for x in lines])}
+
+
+def test_cargo_panics_go_to_their_own_test():
+    found = _found(["test a::one ... FAILED", "test a::two ... FAILED", "", "failures:", "",
+                    "---- a::one stdout ----", "thread 'a::one' panicked at src/one.rs:3:5:", "boom",
+                    "---- a::two stdout ----", "thread 'a::two' panicked at src/two.rs:8:5:", "bang"])
+    assert found == {"a::one": ("src/one.rs", 3), "a::two": ("src/two.rs", 8)}
+
+
+def test_each_pytest_failure_gets_its_own_line():
+    found = _found(["=================================== FAILURES ===================================",
+                    "__________________________________ test_total __________________________________",
+                    "tests/test_cart.py:12: in test_total", "    assert total() == 42", "E   assert 41 == 42",
+                    "_____________________________ TestTax.test_rate[eu] _____________________________",
+                    "tests/test_cart.py:30: in test_rate", "    rate('eu')", "E   KeyError: 'eu'",
+                    "FAILED tests/test_cart.py::test_total - assert 41 == 42",
+                    "FAILED tests/test_cart.py::TestTax::test_rate[eu] - KeyError: 'eu'"])
+    assert found == {"tests/test_cart.py::test_total": ("tests/test_cart.py", 12),
+                     "tests/test_cart.py::TestTax::test_rate[eu]": ("tests/test_cart.py", 30)}
+
+
+def test_jest_file_with_seconds_suffix():
+    found = _found(["FAIL src/cart.test.ts (5.1 s)", "  ● Cart › adds tax",
+                    "    at Object.<anonymous> (src/cart.test.ts:12:5)"])
+    assert found == {"Cart > adds tax": ("src/cart.test.ts", 12)}
+
+
+def test_go_verbose_location_before_the_fail_line():
+    found = _found(["=== RUN   TestOk", "--- PASS: TestOk (0.00s)", "=== RUN   TestTotal",
+                    "    cart_test.go:17: got 41, want 42", "--- FAIL: TestTotal (0.00s)",
+                    "=== RUN   TestTax", "    tax_test.go:9: wrong rate", "--- FAIL: TestTax (0.00s)",
+                    "FAIL", "FAIL\tshop/cart\t0.01s"])
+    assert found == {"TestTotal": ("cart_test.go", 17), "TestTax": ("tax_test.go", 9)}
+
+
+def test_mypy_errors_are_read(tmp_path):
+    lines = ["src/cart.py:12: error: Incompatible types in assignment (expression has type \"str\", "
+             "variable has type \"int\")  [assignment]",
+             "src/cart.py:20:5: error: Name \"x\" is not defined  [name-defined]",
+             "src/cart.py:21: note: See https://mypy.rtfd.io", "Found 2 errors in 1 file (checked 3 source files)"]
+    found = parse.failures([parse.clean_line(x) for x in lines])
+    assert [(f["framework"], f["kind"], f["test"], f["file"], f["line"]) for f in found] == [
+        ("mypy", "build", "assignment", "src/cart.py", 12), ("mypy", "build", "name-defined", "src/cart.py", 20)]
+    argv, label = reproduce.command(tmp_path, found)
+    assert label == "mypy" and argv[1:] == ["-m", "mypy", "src/cart.py"]
+
+
 @pytest.mark.parametrize("line,kind", [
     ("##[error]The job running on runner X has exceeded the maximum execution time of 360 minutes.", "timeout"),
     ("##[error]Process completed with exit code 137.", "oom"),
@@ -93,6 +142,23 @@ def test_parsers(lines, expected):
 ])
 def test_signals(line, kind):
     assert parse.signals([line])[0]["kind"] == kind
+
+
+def test_signals_are_named_by_the_most_specific_line():
+    # GitHub prints "The operation was canceled." under a runner shutdown too: not a time limit.
+    shutdown = ["##[error]The runner has received a shutdown signal.", "##[error]The operation was canceled."]
+    verdict = classify.classify({"signals": parse.signals(shutdown)})
+    assert verdict["detail"]["signal"] == "runner"
+    alone = classify.classify({"signals": parse.signals(["##[error]The operation was canceled."])})
+    assert alone["detail"]["signal"] == "cancelled"
+    timed = ["##[error]The job running on runner X has exceeded the maximum execution time of 360 minutes.",
+             "##[error]The operation was canceled."]
+    assert classify.classify({"signals": parse.signals(timed)})["detail"]["signal"] == "timeout"
+    # "Killed" inside a test's own message is not the kernel killing the job.
+    assert parse.signals(["AssertionError: expected user state Killed to be Active"]) == []
+    assert parse.signals(["E   assert 'Killed' == 'Alive'"]) == []
+    for line in ["Killed", "/home/runner/work/_temp/x.sh: line 1:  2345 Killed                  pytest -q"]:
+        assert [s["kind"] for s in parse.signals([line])] == ["oom"], line
 
 
 def test_excerpt_shows_the_lines_around_a_failure():
@@ -113,6 +179,21 @@ def test_matrix_only():
     assert classify.matrix_only(found) == "py3.10"
     assert classify.matrix_only(jobs(("test (py3.10, ubuntu)", "cancelled"), ("test (py3.12, ubuntu)", "success"))) == ""
     assert classify.matrix_parts("lint") == ("lint", ())
+
+
+def test_one_failed_job_is_not_blamed_on_all_its_parameters():
+    # Run 37521330971: a race in one test failed one job; both of its values were "the cause".
+    one = jobs(("test (py3.13, macos-latest)", "failure"), ("test (py3.12, ubuntu-latest)", "success"),
+               ("test (py3.11, windows-latest)", "success"))
+    assert classify.matrix_only(one) == ""
+    verdict = classify.classify({"failures": FAIL, "jobs": one})
+    assert (verdict["kind"], verdict["confidence"], verdict["detail"].get("jobs")) == ("code", "low", 1)
+    assert "one job" in i18n.label(verdict["kind"], verdict["detail"], "en")
+    # One failed job whose only unshared value is the Python: still matrix.
+    assert classify.matrix_only(jobs(("t (py3.13, ubuntu)", "failure"), ("t (py3.12, ubuntu)", "success"))) == "py3.13"
+    # Two failed jobs that share the value: matrix.
+    two = jobs(("t (py3.13, macos)", "failure"), ("t (py3.13, windows)", "failure"), ("t (py3.12, ubuntu)", "success"))
+    assert classify.matrix_only(two) == "py3.13"
 
 
 FAIL = [{"framework": "pytest", "kind": "tests", "test": "tests/a.py::t", "file": "tests/a.py", "line": 1,
@@ -229,6 +310,95 @@ def test_does_not_run_when_dependencies_differ(project):
     git(project, "switch", "-q", "main")
     found = reproduce.run(str(project), sha, "feat/x", FAILING, [])
     assert found["status"] == "skipped" and "pyproject.toml" in found["why"]
+
+
+def test_own_commit_runs_after_its_branch_is_deleted(project):
+    # A squash-merge deletes the branch; GitHub still advertises the pull request's head.
+    sha = git(project, "rev-parse", "feat/x")
+    git(project, "push", "-q", "origin", f"{sha}:refs/pull/7/head")
+    git(project, "push", "-q", "origin", "--delete", "feat/x")
+    git(project, "branch", "-q", "-D", "feat/x")
+    git(project, "update-ref", "-d", "refs/remotes/origin/feat/x")
+    found = reproduce.run(str(project), sha, "feat/x", FAILING, [], fork=False)
+    assert found["status"] == "reproduced", found
+    # Without the CI service saying it is this repository's, the same commit is not run.
+    assert reproduce.run(str(project), sha, "feat/x", FAILING, [], fork=None)["status"] == "skipped"
+
+
+def test_dependency_check_looks_only_at_the_failing_tests_ecosystem(project):
+    git(project, "switch", "-q", "feat/x")
+    (project / "showcases").mkdir()
+    (project / "showcases" / "package-lock.json").write_text("{}\n")
+    git(project, "add", "-A")
+    git(project, "commit", "-qm", "a showcase")
+    git(project, "push", "-q", "origin", "feat/x")
+    sha = git(project, "rev-parse", "HEAD")
+    git(project, "switch", "-q", "main")
+    found = reproduce.run(str(project), sha, "feat/x", FAILING, [])
+    assert found["status"] == "reproduced", found
+    assert compare.deps_changed(["web/package-lock.json", "uv.lock"], "jest") == ["web/package-lock.json"]
+    assert compare.deps_changed(["web/package-lock.json", "uv.lock"], "pytest") == ["uv.lock"]
+    assert compare.deps_changed(["web/package-lock.json", "uv.lock"]) == ["web/package-lock.json", "uv.lock"]
+
+
+def _alive(pid):
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    # A zombie still answers kill(0); it is gone once its state is Z.
+    try:
+        return Path(f"/proc/{pid}/stat").read_text().split(")")[-1].split()[0] != "Z"
+    except OSError:
+        return True
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX signals")
+def test_sigterm_removes_the_worktree_and_stops_the_tests(project, tmp_path):
+    import signal
+    import time
+    marker = tmp_path / "test-pid"
+    git(project, "switch", "-q", "feat/x")
+    (project / "tests" / "test_a.py").write_text(
+        "import os, time\n"
+        f"def test_a():\n    open({str(marker)!r}, 'w').write(str(os.getpid()))\n    time.sleep(60)\n")
+    git(project, "commit", "-qam", "slow test")
+    git(project, "push", "-q", "origin", "feat/x")
+    sha = git(project, "rev-parse", "HEAD")
+    git(project, "switch", "-q", "main")
+    script = ("import sys; sys.path.insert(0, sys.argv[1]); from tabib import reproduce; "
+              "reproduce.run(sys.argv[2], sys.argv[3], 'feat/x', "
+              "[{'framework': 'pytest', 'kind': 'tests', 'test': 'tests/test_a.py::test_a', "
+              "'file': 'tests/test_a.py', 'line': 2, 'message': 'x'}], [])")
+    runner = subprocess.Popen([sys.executable, "-c", script, str(TABIB_ROOT), str(project), sha])
+    deadline = time.monotonic() + 60
+    while not marker.exists() and time.monotonic() < deadline:
+        time.sleep(0.1)
+    assert marker.exists(), "the test never started"
+    time.sleep(0.2)
+    test_pid = int(marker.read_text())
+    runner.send_signal(signal.SIGTERM)
+    runner.wait(timeout=30)
+    deadline = time.monotonic() + 10
+    while _alive(test_pid) and time.monotonic() < deadline:
+        time.sleep(0.1)
+    assert not _alive(test_pid), "the test process outlived tabib"
+    assert git(project, "worktree", "list").count("\n") == 0
+
+
+def test_stale_worktrees_of_a_dead_run_are_swept(project, tmp_path):
+    import tempfile
+    parent = Path(tempfile.mkdtemp(prefix="tabib-"))
+    git(project, "worktree", "add", "--detach", "--quiet", str(parent / "worktree"), "main")
+    dead = subprocess.Popen([sys.executable, "-c", "pass"])
+    dead.wait()
+    (parent / "owner").write_text(str(dead.pid))
+    reproduce.sweep(str(project))
+    assert git(project, "worktree", "list").count("\n") == 0
+    assert not parent.exists()
+    assert reproduce.TIMEOUT < 120  # the Bash tool gives up at 120 s
 
 
 def test_compare_marks_suspects(project):

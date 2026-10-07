@@ -21,14 +21,14 @@ In Arabic (`"lang": "ar"`, or an Arabic system locale):
 | Part | What it shows |
 |---|---|
 | **Branch** | the branch and who started it: the author of its pull request when there is one, else of its first commit of its own, else you |
-| **PRs / MRs** | open pull requests (GitHub, `gh`) or merge requests (GitLab, `glab`) per person |
-| **CI** | the branch's checks: passed, failed with the job's name, or running (checked every 90 s, 45 s while running); with tabib, the kind of failure (`tabib: only py3.10`, `tabib: flaky?`) and a **Why?** button |
+| **PRs / MRs** | open pull requests (GitHub, `gh`) or merge requests (GitLab, `glab`) per person, and `Reviews for you 2` when some wait for your review |
+| **CI** | the branch's checks: passed, failed with the job's name, or running with how long so far and about how long is left (`CI running 3m · ~4m left`, from its recent runs) (checked every 90 s, 45 s while running, four times less often after 10 minutes with nothing new); with tabib, the kind of failure (`tabib: only py3.10`, `tabib: flaky?`) and a **Why?** button |
 | **Pages** | with lawha, its latest check of the project's pages at this commit: `lawha ✓ 6 widths`, or `lawha: 3 to fix` with a **Fix** button |
 | **RAM, Disk** | in use, yellow from 85 %, red from 95 % with a notice |
-| **Context** | fresh under 40 %, mid 40-75 %, full above 75 % |
+| **Context** | fresh under 40 %, mid 40-75 %, full above 75 % (`context_mid` and `context_full` move them) |
 | **Cost** | this session in dollars; with a daily budget set, today's total across sessions |
 | **Agent** | the running agent and its task, `+n more` when several run |
-| **Task** | where Claude stands in its task list, like `3/7: Writing tests` |
+| **Task** | where Claude stands in its task list, like `3/7: Writing tests`; without one, its agents are the list (started since your last message, done when they finish) |
 | **haris** | its profile, or `haris watching` in watch mode |
 
 `/mizan` opens the details in a pane; `/mizan proof` opens itqan's proof.
@@ -91,11 +91,12 @@ With it, the Stop hook refreshes the handoff at mid and, at full, saves it and t
 `~/.claude/nexika/mizan/config.json` (yours to edit; haris keeps Claude out of it):
 
 ```json
-{ "lang": "auto", "daily_budget_usd": 0, "network": true }
+{ "lang": "auto", "daily_budget_usd": 0, "network": true, "context_mid": 40, "context_full": 75 }
 ```
 
 - `lang`: `auto` (Arabic for an Arabic locale), `en` or `ar`. `MIZAN_LANG` overrides it.
 - `daily_budget_usd`: off at `0`; set, the cost turns yellow at 80 % and red at 100 % of it.
+- `context_mid`, `context_full`: where the context turns mid and full (the handoff and the `/clear` offer follow them).
 - `network`: `false` stops the gh and glab reads (`MIZAN_OFFLINE=1` too).
 
 ## The Nexika family

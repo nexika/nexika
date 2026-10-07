@@ -1,6 +1,6 @@
 ---
 name: system
-description: Read the project's design system - Tailwind theme tokens and CSS variables, shadcn/ui components, the project's own components with their props, TanStack routes, fonts - and report drift (hard-coded colours, arbitrary sizes, left/right utilities that break RTL). Saves .lawha/system.json so new pages reuse the same tokens and components. Use when the user says "what's in our design system", "index the project", "lawha system", "check for design drift", "ما هي مكونات المشروع", or before building a new page in an existing project.
+description: Read the project's design system - Tailwind theme tokens (@theme or tailwind.config.js) and CSS variables, shadcn/ui components, the project's own React and Vue components with their props, TanStack and Next.js routes, fonts - and report drift (hard-coded colours, arbitrary sizes, left/right utilities that break RTL). Saves .lawha/system.json so new pages reuse the same tokens and components. Use when the user says "what's in our design system", "index the project", "lawha system", "check for design drift", "ما هي مكونات المشروع", or before building a new page in an existing project.
 argument-hint: "[project folder]"
 ---
 

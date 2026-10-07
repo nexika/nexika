@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>RTL and script motion</title>
+<style>
+  body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: #fff; color: #111; padding: 24px; }
+  p.small { font-size: 14px; }
+  #ticker { width: 120px; height: 60px; background: #1f3a5f; }
+</style></head>
+<body>
+  <main>
+    <h1>RTL and script motion</h1>
+    <!-- An inline style that will not mirror in Arabic. -->
+    <div id="aside" style="margin-left: 24px">Note</div>
+    <!-- A link inside a sentence: WCAG 2.5.8 exempts it from the target size. -->
+    <p class="small">Please read the <a href="#terms">terms</a> before you sign up for the plan.</p>
+    <!-- Moved by requestAnimationFrame, ignoring "reduce motion": no CSS animation to see. -->
+    <div id="ticker"></div>
+  </main>
+  <script>
+    // Drawn only on phones, as a menu built by script for small screens.
+    if (innerWidth < 600) document.querySelector("main").insertAdjacentHTML("beforeend", '<nav id="phone-menu" class="pl-6">Menu</nav>');
+    const ticker = document.getElementById("ticker");
+    const step = (t) => { ticker.style.transform = `translateX(${(t / 8) % 200}px)`; requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  </script>
+</body></html>

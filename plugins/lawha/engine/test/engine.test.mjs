@@ -1,7 +1,7 @@
 // lawha engine tests: run the built CLI against fixture pages with known faults.
 import { strict as assert } from "node:assert";
-import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { execFile, execFileSync, spawn, spawnSync } from "node:child_process";
+import { cpSync, mkdtempSync, readFileSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -14,7 +14,16 @@ const FIX = join(ROOT, "test", "fixtures");
 const tmp = () => mkdtempSync(join(tmpdir(), "lawha-test-"));
 // Never touch the real ~/.claude/nexika: every run gets throwaway homes.
 const HOMES = { LAWHA_HOME: tmp(), NEXIKA_STATUS_HOME: tmp() };
-const run = (args, opts = {}) => JSON.parse(execFileSync(process.execPath, [CLI, ...args], { encoding: "utf8", timeout: 240_000, env: { ...process.env, ...HOMES, ...opts.env }, cwd: opts.cwd }));
+// A fail verdict exits 1 with the summary still on stdout; anything else non-zero is a crash.
+const exec = (args, opts = {}) => spawnSync(process.execPath, [CLI, ...args], { encoding: "utf8", timeout: 240_000, env: { ...process.env, ...HOMES, ...opts.env }, cwd: opts.cwd });
+const run = (args, opts = {}) => {
+  const r = exec(args, opts);
+  if (r.status !== 0 && r.status !== 1) throw new Error(`lawha ${args[0]} exited ${r.status}: ${r.stderr}`);
+  const out = JSON.parse(r.stdout);
+  if (out && typeof out === "object" && "verdict" in out) assert.equal(r.status, out.verdict === "fail" ? 1 : 0, `exit code for verdict ${out.verdict}`);
+  else assert.equal(r.status, 0, `lawha ${args[0]} exited ${r.status}`);
+  return out;
+};
 const lawha = (...args) => run(args);
 const page = (name) => pathToFileURL(join(FIX, name)).href;
 
@@ -26,6 +35,110 @@ test("a clean page passes with no problems", () => {
   const run = JSON.parse(readFileSync(join(out, "run.json"), "utf8"));
   assert.equal(run.shots.length, 3); // two widths and one reduced-motion pass
   assert.match(readFileSync(join(out, "report.html"), "utf8"), /Passes every required check/);
+});
+
+test("a fail verdict exits 1 so gates stop; --no-fail-exit keeps 0 for callers that read the JSON", () => {
+  const failing = exec(["check", page("bad.html"), "--widths", "390", "--no-see", "--out", tmp()]);
+  assert.equal(failing.status, 1, failing.stderr);
+  assert.equal(JSON.parse(failing.stdout).verdict, "fail");
+  const parsed = exec(["check", page("bad.html"), "--widths", "390", "--no-see", "--no-fail-exit", "--out", tmp()]);
+  assert.equal(parsed.status, 0, parsed.stderr);
+  assert.equal(JSON.parse(parsed.stdout).verdict, "fail");
+});
+
+test("a page that redirects elsewhere (a login wall) fails instead of passing as the page asked for", () => {
+  const out = tmp();
+  const summary = lawha("check", page("private.html"), "--widths", "390", "--no-see", "--out", out);
+  assert.equal(summary.verdict, "fail");
+  const run = JSON.parse(readFileSync(join(out, "run.json"), "utf8"));
+  const moved = run.findings.filter((f) => f.check === "page.redirected");
+  assert.ok(moved.length >= 1 && moved.every((f) => f.severity === "fail"));
+  assert.match(moved[0].message, /good\.html/);
+  assert.ok(summary.top.some((t) => t.includes("page.redirected")));
+});
+
+// The app runs in its own process: the CLI runs synchronously in the tests.
+const app = async () => {
+  const child = spawn(process.execPath, [join(FIX, "server.mjs")], { stdio: ["ignore", "pipe", "inherit"] });
+  const port = await new Promise((done) => child.stdout.once("data", (d) => done(Number(String(d).trim()))));
+  return { url: (path) => `http://127.0.0.1:${port}${path}`, stop: () => child.kill() };
+};
+const checkAsync = (args) => new Promise((done) => {
+  execFile(process.execPath, [CLI, "check", ...args, "--widths", "390", "--no-see", "--no-record", "--no-fail-exit", "--out", tmp()], { encoding: "utf8", timeout: 240_000, env: { ...process.env, ...HOMES } }, (error, stdout) => {
+    assert.ok(!error || error.code === undefined, String(error));
+    done(JSON.parse(stdout));
+  });
+});
+const checks = (summary) => new Set(JSON.parse(readFileSync(summary.run, "utf8")).findings.map((f) => f.check));
+
+test("a page behind login is checked with a cookie, a header or a saved storage state", async () => {
+  const server = await app();
+  try {
+    assert.ok(checks(await checkAsync([server.url("/private")])).has("page.redirected"));
+    assert.ok(!checks(await checkAsync([server.url("/private"), "--cookie", "session=ok"])).has("page.redirected"));
+    assert.ok(!checks(await checkAsync([server.url("/private"), "--cookie=session=ok"])).has("page.redirected"));
+    assert.ok(!checks(await checkAsync([server.url("/private"), "--header", "X-Token: t"])).has("page.redirected"));
+    const state = join(tmp(), "state.json");
+    writeFileSync(state, JSON.stringify({ cookies: [{ name: "session", value: "ok", domain: "127.0.0.1", path: "/", expires: -1, httpOnly: false, secure: false, sameSite: "Lax" }], origins: [] }));
+    assert.ok(!checks(await checkAsync([server.url("/private"), "--storage-state", state])).has("page.redirected"));
+  } finally {
+    server.stop();
+  }
+});
+
+test("--wait-for waits for content a client-rendered app draws after the load event", async () => {
+  const server = await app();
+  try {
+    assert.ok(!checks(await checkAsync([server.url("/spa"), "--settle", "100"])).has("a11y.image-alt"), "the late image is not there yet");
+    assert.ok(checks(await checkAsync([server.url("/spa"), "--settle", "100", "--wait-for", "#late", "--network-idle"])).has("a11y.image-alt"));
+  } finally {
+    server.stop();
+  }
+});
+
+test("a broken module breaks only its own command", () => {
+  // A half-written figma-spec.js once took down lawha check: every module loaded at start.
+  const copy = tmp();
+  cpSync(join(ROOT, "dist"), join(copy, "dist"), { recursive: true });
+  cpSync(join(ROOT, "package.json"), join(copy, "package.json"));
+  symlinkSync(join(ROOT, "node_modules"), join(copy, "node_modules"), "dir");
+  writeFileSync(join(copy, "dist", "figma-spec.js"), "export const = ;\n");
+  const cli = (...args) => spawnSync(process.execPath, [join(copy, "dist", "cli.js"), ...args], { encoding: "utf8", timeout: 240_000, env: { ...process.env, ...HOMES } });
+  assert.equal(cli("version").status, 0);
+  const checked = cli("check", page("good.html"), "--widths", "360", "--no-see", "--no-record", "--out", tmp());
+  assert.equal(checked.status, 0, checked.stderr);
+  assert.equal(JSON.parse(checked.stdout).verdict, "pass");
+  const figma = cli("figma", "spec", "https://www.figma.com/design/AbCdEfGhIjKl/x?node-id=1-2");
+  assert.notEqual(figma.status, 0);
+  assert.match(figma.stderr, /lawha:/);
+});
+
+test("one layout shift is one problem across widths, and one unlucky load is not reported", async () => {
+  const out = tmp();
+  const summary = lawha("check", page("shift.html"), "--widths", "390,1280", "--no-see", "--no-record", "--out", out);
+  assert.equal(summary.top.filter((t) => t.includes("layout.shift")).length, 1, summary.top.join("\n"));
+  assert.match(summary.top.find((t) => t.includes("layout.shift")), /median/);
+  const server = await app();
+  try {
+    assert.ok(!checks(await checkAsync([server.url("/shift")])).has("layout.shift"), "only the first of three loads shifted");
+  } finally {
+    server.stop();
+  }
+});
+
+test("index reads Next.js routes, Vue components and tailwind.config.js", () => {
+  const out = join(tmp(), "system.json");
+  lawha("index", join(FIX, "project-wide"), "--out", out);
+  const s = JSON.parse(readFileSync(out, "utf8"));
+  assert.deepEqual(s.routes, ["/", "/about", "/blog/[slug]", "/pricing"]);
+  assert.ok(s.tokens.some((t) => t.name === "colors.brand" && t.value === "#1f3a5f" && t.source === "tailwind.config.js"), JSON.stringify(s.tokens));
+  assert.ok(s.tokens.some((t) => t.name === "borderRadius.card" && t.value === "12px"));
+  const card = s.components.find((c) => c.name === "PriceCard");
+  assert.deepEqual(card?.props, [{ name: "title", type: "string", optional: false }, { name: "price", type: "number", optional: true }]);
+  assert.ok(s.drift.some((d) => d.file.endsWith("PriceCard.vue") && d.kind === "physical utility"));
+  assert.ok(s.drift.some((d) => d.file.endsWith("PriceCard.vue") && d.kind === "hard-coded colour"));
+  assert.equal(s.stack.next, "15.5.0");
+  assert.equal(s.stack.vue, "3.5.0");
 });
 
 test("every planted fault is found, once per problem", () => {

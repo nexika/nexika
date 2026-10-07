@@ -2,19 +2,12 @@
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { audit } from "./audit.js";
-import { closePage, launch, openVariant, type Variant, variantName } from "./browser.js";
-import { ab, readTaste, reveal } from "./ab.js";
-import { diff } from "./diff.js";
-import { type Icon, iconFindings, icons } from "./icons.js";
-import { choose, preview, readHistory } from "./direct.js";
-import { inspire } from "./inspire.js";
-import { budget, outline, parseUrl } from "./figma.js";
-import { figmaSpec } from "./figma-spec.js";
-import { indexProject } from "./index-project.js";
-import { record } from "./record.js";
-import { groupFindings, type Run, type Shot, writeReport } from "./report.js";
-import { type Seen, see } from "./see.js";
+// Command modules load when their command runs, so a broken one (a half-written figma-spec.js)
+// takes down only its own command.
+import type { Variant } from "./browser.js";
+import type { Icon } from "./icons.js";
+import type { Run, Shot } from "./report.js";
+import type { Seen } from "./see.js";
 import { DEFAULT_WIDTHS, type Finding, list, parseArgs, stamp, writeJson } from "./util.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -30,6 +23,11 @@ const HELP = `lawha ${VERSION} - see and check web pages
       --against-scale <n>  scale of those images (Figma 2x exports: 0.5)
       --no-audit --no-see  skip parts      --out <dir>   default .lawha/runs/<time>
       --no-record          do not share the result with mizan and itqan (status/lawha.json)
+      --storage-state <file>   a signed-in browser's state (Playwright storageState JSON)
+      --cookie name=value      --header "Name: value"   repeatable; sent to the page's own origin only
+      --wait-for <selector>    wait for it before measuring (content an app draws after load)
+      --network-idle           also wait for the network to go quiet   --settle <ms>  default 800
+      --no-fail-exit       exit 0 on a fail verdict (for callers that read the JSON)
   lawha diff <actual.png> <expected.png> [--scale n] [--heatmap out.png]
   lawha index [project]  [--out <file>]   default <project>/.lawha/system.json
   lawha figma outline <figma link>           pages and top-level frames (1 call, cached by version)
@@ -53,9 +51,17 @@ const HELP = `lawha ${VERSION} - see and check web pages
   (Figma needs FIGMA_TOKEN: a personal access token with read-only file content)
   lawha version
 
-Prints JSON on standard output: for check, the summary and the report path.`;
+Prints JSON on standard output: for check, the summary and the report path.
+check exits 1 when the verdict is fail (unless --no-fail-exit), so it can gate CI.`;
 
 async function check(url: string, a: ReturnType<typeof parseArgs>): Promise<number> {
+  const { closePage, launch, openVariant, redirectedTo, variantName } = await import("./browser.js");
+  const { audit, shiftFinding } = await import("./audit.js");
+  const { iconFindings, icons } = await import("./icons.js");
+  const { see } = await import("./see.js");
+  const { diff } = await import("./diff.js");
+  const { record } = await import("./record.js");
+  const { groupFindings, writeReport } = await import("./report.js");
   const widths = list(a.widths, DEFAULT_WIDTHS.map(String)).map(Number).filter((n) => n >= 200 && n <= 4000);
   const themes = list(a.themes, ["light"]).filter((t): t is "light" | "dark" => t === "light" || t === "dark");
   const expectRtl = a["expect-rtl"] === true;
@@ -69,19 +75,53 @@ async function check(url: string, a: ReturnType<typeof parseArgs>): Promise<numb
   variants.push({ width: widths.includes(390) ? 390 : widths[0]!, theme: themes[0]!, dir: "ltr", motion: "reduce" });
 
   const run: Run = { url, when: new Date().toISOString(), version: VERSION, shots: [], findings: [], seen: [], diffs: [], summary: { fail: 0, warn: 0, info: 0, widths, verdict: "pass" } };
+  const str = (k: string) => (typeof a[k] === "string" ? (a[k] as string) : undefined);
+  const settle = Number(str("settle"));
+  const load = {
+    storageState: str("storage-state"),
+    cookies: Array.isArray(a.cookie) ? a.cookie : [],
+    headers: Array.isArray(a.header) ? a.header : [],
+    waitFor: str("wait-for"),
+    networkIdle: a["network-idle"] === true,
+    settleMs: Number.isFinite(settle) && settle >= 0 ? settle : undefined,
+  };
   const browser = await launch();
   // Icons per width and theme, in each direction, to compare after all renders (rtl.icon-*).
   const iconsBy = new Map<string, { ltr?: Icon[]; rtl?: Icon[] }>();
   try {
     for (const v of variants) {
       const name = variantName(v);
-      const page = await openVariant(browser, { url, rtlUrl: typeof a["rtl-url"] === "string" ? a["rtl-url"] : undefined }, v);
+      const rtlUrl = typeof a["rtl-url"] === "string" ? a["rtl-url"] : undefined;
+      const page = await openVariant(browser, { url, rtlUrl, ...load }, v);
       try {
+        // Checking the login page and recording it as the page asked for is worse than no check.
+        const requested = v.dir === "rtl" && rtlUrl ? rtlUrl : url;
+        const landed = redirectedTo(requested, page.url());
+        if (landed) run.findings.push({ check: "page.redirected", severity: "fail", message: `Asked for ${requested} but the browser ended on ${landed} (a redirect, often a login page); the results are for that page, not the one asked for.`, width: v.width, theme: v.theme, dir: v.dir, motion: v.motion } satisfies Finding);
         const file = join(out, "shots", `${name}.png`);
         await page.screenshot({ path: file, fullPage: true, animations: "disabled" });
         const height = await page.evaluate(() => document.documentElement.scrollHeight);
         run.shots.push({ variant: name, width: v.width, theme: v.theme, dir: v.dir, motion: v.motion, file: relative(out, file), height } satisfies Shot);
-        if (a["no-audit"] !== true) run.findings.push(...(await audit(page, v, { expectRtl })).findings);
+        if (a["no-audit"] !== true) {
+          const audited = await audit(page, v, { expectRtl });
+          const shift = audited.findings.findIndex((f) => f.check === "layout.shift");
+          if (shift >= 0) {
+            // CLS swings from load to load (cache, fonts, timing): load twice more and keep the median.
+            const loads = [audited.facts.cls];
+            for (let i = 0; i < 2; i++) {
+              const again = await openVariant(browser, { url, rtlUrl, ...load }, v);
+              try {
+                loads.push(await again.evaluate(() => (window as unknown as { __lawhaCls?: number }).__lawhaCls ?? 0));
+              } finally {
+                await closePage(again);
+              }
+            }
+            const median = [...loads].sort((x, y) => x - y)[1]!;
+            const where = { width: v.width, theme: v.theme, dir: v.dir, motion: v.motion };
+            audited.findings.splice(shift, 1, ...(median > 0.1 ? [{ ...shiftFinding(median, audited.facts.shifted, loads), ...where }] : []));
+          }
+          run.findings.push(...audited.findings);
+        }
         if (a["no-audit"] !== true && v.motion === "full" && dirs.length > 1) {
           const key = `${v.width}|${v.theme}`;
           iconsBy.set(key, { ...iconsBy.get(key), [v.dir]: await icons(page) });
@@ -141,12 +181,12 @@ async function check(url: string, a: ReturnType<typeof parseArgs>): Promise<numb
 
   const top = problems.filter((p) => p.severity !== "info").slice(0, 15).map((p) => `[${p.severity}] ${p.message} (${p.check} at ${p.where.join(", ")})`);
   process.stdout.write(JSON.stringify({ verdict: run.summary.verdict, fail: run.summary.fail, warn: run.summary.warn, info: run.summary.info, report: join(out, "report.html"), run: join(out, "run.json"), recorded, top }, null, 2) + "\n");
-  return 0;
+  return run.summary.verdict === "fail" && a["no-fail-exit"] !== true ? 1 : 0;
 }
 
 async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
-  const a = parseArgs(rest, ["expect-rtl", "no-audit", "no-see", "no-record", "refresh"]);
+  const a = parseArgs(rest, ["expect-rtl", "no-audit", "no-see", "no-record", "no-fail-exit", "network-idle", "refresh"], ["cookie", "header"]);
   switch (command) {
     case "check": {
       const url = a._[0];
@@ -156,11 +196,13 @@ async function main(argv: string[]): Promise<number> {
     case "diff": {
       const [actual, expected] = a._;
       if (!actual || !expected) break;
+      const { diff } = await import("./diff.js");
       const result = diff(actual, expected, { heatmap: typeof a.heatmap === "string" ? a.heatmap : undefined, expectedScale: typeof a.scale === "string" ? Number(a.scale) : 1 });
       process.stdout.write(JSON.stringify(result, null, 2) + "\n");
       return 0;
     }
     case "index": {
+      const { indexProject } = await import("./index-project.js");
       const root = resolve(a._[0] ?? ".");
       const target = resolve(typeof a.out === "string" ? a.out : join(root, ".lawha", "system.json"));
       const index = indexProject(root);
@@ -170,6 +212,7 @@ async function main(argv: string[]): Promise<number> {
     }
     case "figma": {
       const [sub, link] = a._;
+      const { budget, outline, parseUrl } = await import("./figma.js");
       if (sub === "budget") {
         process.stdout.write(JSON.stringify(budget(), null, 2) + "\n");
         return 0;
@@ -183,6 +226,7 @@ async function main(argv: string[]): Promise<number> {
         return 0;
       }
       if (sub === "spec") {
+        const { figmaSpec } = await import("./figma-spec.js");
         const ids = list(a.frames, ref.node ? [ref.node] : []);
         const result = await figmaSpec(root, ref, ids, { assets: typeof a.assets === "string" ? a.assets : join("public", "figma"), refresh: a.refresh === true, title: typeof a.title === "string" ? a.title : undefined });
         process.stdout.write(JSON.stringify({ ...result, budget: budget() }, null, 2) + "\n");
@@ -192,6 +236,7 @@ async function main(argv: string[]): Promise<number> {
     }
     case "direct": {
       const [sub, file, id] = a._;
+      const { choose, preview, readHistory } = await import("./direct.js");
       if (sub === "history") {
         process.stdout.write(JSON.stringify(readHistory().slice(-10), null, 2) + "\n");
         return 0;
@@ -213,6 +258,7 @@ async function main(argv: string[]): Promise<number> {
     }
     case "ab": {
       const [first, second] = a._;
+      const { ab, readTaste, reveal } = await import("./ab.js");
       if (first === "taste") {
         process.stdout.write(JSON.stringify(readTaste().slice(-20), null, 2) + "\n");
         return 0;
@@ -236,6 +282,7 @@ async function main(argv: string[]): Promise<number> {
     case "inspire": {
       const url = a._[0];
       if (!url) break;
+      const { inspire } = await import("./inspire.js");
       const host = (() => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return "page"; } })();
       const out = resolve(typeof a.out === "string" ? a.out : join(".lawha", "inspire", `${host}-${stamp()}`));
       const result = await inspire(url, out);

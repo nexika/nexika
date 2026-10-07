@@ -43,7 +43,7 @@ Cause (reported by Claude)
 
 | | |
 |---|---|
-| **Failures** | pytest, jest, vitest, go test, dotnet test, cargo test, tsc, ruff, eslint: test, file, line, message |
+| **Failures** | pytest, jest, vitest, go test, dotnet test, cargo test, tsc, mypy, ruff, eslint: test, file, line, message |
 | **Signals** | time limits, out of memory (exit 137), the network, rate limits, the runner, missing credentials, dependency resolution |
 | **Kinds** | **code**; **matrix** (fails only on one Python, Node or OS); **flaky** (the same commit passed in another run); **infra** (cancelled, a time limit, the network, the runner, credentials); **dependency**; **unknown** |
 | **History** | the last green run of the same workflow, the commits since (a commit that touched a failing file is a suspect), dependency files that changed |

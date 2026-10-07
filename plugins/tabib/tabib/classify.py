@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import re
 
-INFRA = ("timeout", "network", "rate_limit", "runner", "oom")
+# Most specific first: a runner shutdown or a kill explains a timeout or a cancel printed after it.
+INFRA = ("runner", "oom", "timeout", "rate_limit", "network", "cancelled")
 PARAMS = re.compile(r"^(.*?)\s*\((.*)\)\s*$")
 
 
@@ -19,8 +20,8 @@ def matrix_parts(name: str) -> tuple[str, tuple[str, ...]]:
     return m.group(1), tuple(p.strip() for p in m.group(2).split(",") if p.strip())
 
 
-def matrix_only(jobs: list[dict]) -> str:
-    """The matrix value(s) only the failed jobs have, when siblings of the same job passed: 'py3.10'."""
+def _matrix_groups(jobs: list[dict]) -> dict[str, dict[str, list[tuple[str, ...]]]]:
+    """Matrix jobs by their base name, split into failed and passed parameter sets."""
     groups: dict[str, dict[str, list[tuple[str, ...]]]] = {}
     for job in jobs:
         base, params = matrix_parts(job.get("name", ""))
@@ -30,15 +31,33 @@ def matrix_only(jobs: list[dict]) -> str:
             "passed" if job.get("conclusion") in ("success", "passed") else "")
         if side:
             groups.setdefault(base, {"failed": [], "passed": []})[side].append(params)
-    for sides in groups.values():
+    return groups
+
+
+def matrix_only(jobs: list[dict]) -> str:
+    """The matrix value only the failed jobs have, when siblings of the same job passed: 'py3.10'.
+
+    With one failed job every value it has looks like the cause, so a single job counts only when
+    exactly one of its values is missing from the jobs that passed; otherwise two or more failed
+    jobs must share the value.
+    """
+    for sides in _matrix_groups(jobs).values():
         if not sides["failed"] or not sides["passed"]:
             continue
         failed_values = set.intersection(*(set(p) for p in sides["failed"]))
         passed_values = set().union(*(set(p) for p in sides["passed"]))
         only = sorted(failed_values - passed_values)
+        if len(sides["failed"]) == 1 and len(only) != 1:
+            continue
         if only:
             return ", ".join(only)
     return ""
+
+
+def one_matrix_job(jobs: list[dict]) -> bool:
+    """Exactly one job of a matrix failed while its siblings passed: a weak sign either way."""
+    groups = [g for g in _matrix_groups(jobs).values() if g["failed"]]
+    return len(groups) == 1 and len(groups[0]["failed"]) == 1 and bool(groups[0]["passed"])
 
 
 def classify(facts: dict) -> dict:
@@ -83,6 +102,12 @@ def classify(facts: dict) -> dict:
                 "confidence": "medium", "evidence": evidence}
     if failures:
         evidence += [f"{f['test'] or f['file']}: {f['message']}" for f in failures[:3]]
+        if one_matrix_job(facts.get("jobs") or []):
+            # One job of a matrix: a race in a test or a real platform difference; one run cannot say.
+            evidence.append("Only one job of the matrix failed and nothing it alone has explains it; "
+                            "a rerun tells a flaky test from a platform difference.")
+            return {"kind": "code", "detail": {"count": len(failures), "what": what, "jobs": 1},
+                    "confidence": "low", "evidence": evidence}
         return {"kind": "code", "detail": {"count": len(failures), "what": what}, "confidence": "medium",
                 "evidence": evidence}
     if infra:

@@ -2,8 +2,8 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 export const DEFAULT_WIDTHS = [360, 390, 768, 1024, 1280, 1536];
 export const PHONE_MAX = 767;
-/** Minimal flag parser: --name value, --name=value, --flag (boolean). */
-export function parseArgs(argv, booleans = []) {
+/** Minimal flag parser: --name value, --name=value, --flag (boolean); a repeated flag collects its values. */
+export function parseArgs(argv, booleans = [], repeated = []) {
     const out = { _: [] };
     for (let i = 0; i < argv.length; i++) {
         const arg = argv[i];
@@ -11,13 +11,14 @@ export function parseArgs(argv, booleans = []) {
             out._.push(arg);
             continue;
         }
-        const [name, inline] = arg.slice(2).split("=", 2);
-        if (inline !== undefined)
-            out[name] = inline;
-        else if (booleans.includes(name))
-            out[name] = true;
+        const cut = arg.indexOf("=");
+        const name = cut < 0 ? arg.slice(2) : arg.slice(2, cut);
+        const inline = cut < 0 ? undefined : arg.slice(cut + 1);
+        const value = inline !== undefined ? inline : booleans.includes(name) ? true : (argv[++i] ?? "");
+        if (repeated.includes(name))
+            out[name] = [...(out[name] ?? []), String(value)];
         else
-            out[name] = argv[++i] ?? "";
+            out[name] = value;
     }
     return out;
 }

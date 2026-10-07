@@ -5,15 +5,19 @@ mizan starts `mizan refresh` detached (one at a time per repository, behind a lo
 these read commands run, with arguments as a list (no shell):
 
     gh pr list --state open --json number,author,headRefName,url --limit 200
+    gh pr list --state open --search review-requested:@me --json number --limit 100
     gh pr checks <number> --json name,bucket,link
-    gh run list --branch=<branch> --json databaseId,status,conclusion,name,headSha,url --limit 20
+    gh run list --branch=<branch> --limit 20
+        --json databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt
     gh run view <id> --json jobs
     glab mr list --output json
+    glab mr list --reviewer=@me --output json
     glab ci get --branch=<branch> --output json
 """
 from __future__ import annotations
 
 import collections
+import datetime
 import hashlib
 import json
 import os
@@ -27,6 +31,9 @@ from . import config, family, status
 from .gitinfo import first_name
 
 PR_TTL, CI_TTL, CI_RUNNING_TTL, LOCK_TTL = 300, 90, 45, 360  # a refresh may wait up to 180 s for tabib
+# Nothing changed for IDLE_AFTER seconds (same commit, same PRs, same CI result, CI not running):
+# ask IDLE_FACTOR times less often. A new commit is still fetched at once.
+IDLE_AFTER, IDLE_FACTOR = 600, 4
 BIN = Path(__file__).resolve().parent.parent / "bin" / "mizan"
 TOOL = {"github": "gh", "gitlab": "glab"}
 
@@ -116,8 +123,36 @@ def pick_runs(runs: list[dict], head: str) -> list[dict]:
     return [r for r in runs if r.get("headSha") == runs[0].get("headSha")]
 
 
-def parse_gh_runs(text: str, head: str) -> dict:
-    runs = pick_runs(json.loads(text or "[]"), head)
+def _when(value) -> float | None:
+    try:
+        return datetime.datetime.fromisoformat(str(value).replace("Z", "+00:00")).timestamp()
+    except (TypeError, ValueError):
+        return None
+
+
+def timing(all_runs: list[dict], running: list[dict], now: float | None = None) -> dict:
+    """How long the running workflow has run, and about how long is left: its usual duration (the
+    median of its recent finished runs, passed or failed) minus that."""
+    now = time.time() if now is None else now
+    starts = [s for s in (_when(r.get("startedAt")) for r in running) if s]
+    if not starts:
+        return {}
+    elapsed = max(0, int(now - min(starts)))
+    names = {r.get("name") for r in running}
+    took = sorted(int(end - start) for r in all_runs
+                  if r.get("status") == "completed" and r.get("name") in names
+                  and r.get("conclusion") in ("success", "failure")
+                  and (start := _when(r.get("startedAt")))
+                  and (end := _when(r.get("updatedAt"))) and end > start)
+    if not took:
+        return {"elapsed": elapsed, "eta": None}
+    usual = took[len(took) // 2]
+    return {"elapsed": elapsed, "eta": max(0, usual - elapsed)}
+
+
+def parse_gh_runs(text: str, head: str, now: float | None = None) -> dict:
+    every = json.loads(text or "[]")
+    runs = pick_runs(every, head)
     if not runs:
         return {"state": "none", "failed": [], "failed_run": None}
     bad = [r for r in runs if r.get("status") == "completed"
@@ -125,8 +160,9 @@ def parse_gh_runs(text: str, head: str) -> dict:
     if bad:
         return {"state": "failed", "failed": [r.get("name", "?") for r in bad],
                 "failed_run": bad[0].get("databaseId"), "url": bad[0].get("url", "")}
-    if any(r.get("status") != "completed" for r in runs):
-        return {"state": "running", "failed": [], "failed_run": None}
+    going = [r for r in runs if r.get("status") != "completed"]
+    if going:
+        return {"state": "running", "failed": [], "failed_run": None, **timing(every, going, now)}
     return {"state": "passed", "failed": [], "failed_run": None}
 
 
@@ -183,10 +219,19 @@ def fetch_prs(info: dict) -> dict:
     cwd, branch = info["repo"], info.get("branch", "")
     try:
         if tool == "glab":
-            return parse_glab_mrs(run_tool(["glab", "mr", "list", "--output", "json"], cwd), branch)
-        argv = ["gh", "pr", "list", "--state", "open", "--json",
-                "number,author,headRefName,url,isCrossRepository", "--limit", "200"]
-        return parse_gh_prs(run_tool(argv, cwd), branch)
+            found = parse_glab_mrs(run_tool(["glab", "mr", "list", "--output", "json"], cwd), branch)
+            mine = ["glab", "mr", "list", "--reviewer=@me", "--output", "json"]
+        else:
+            argv = ["gh", "pr", "list", "--state", "open", "--json",
+                    "number,author,headRefName,url,isCrossRepository", "--limit", "200"]
+            found = parse_gh_prs(run_tool(argv, cwd), branch)
+            mine = ["gh", "pr", "list", "--state", "open", "--search", "review-requested:@me", "--json",
+                    "number", "--limit", "100"]
+        try:  # reviews waiting for you: a bonus, never a reason to lose the PR list
+            found["reviews"] = len(json.loads(run_tool(mine, cwd) or "[]"))
+        except (Off, ValueError, TypeError):
+            found["reviews"] = None
+        return found
     except Off as off:
         return {"state": "off", "why": off.reason, "tool": off.tool}
     except ValueError:
@@ -223,15 +268,19 @@ def fetch_ci(info: dict, pr: dict | None) -> dict:
         if tool == "glab":
             argv = ["glab", "ci", "get", f"--branch={branch}", "--output", "json"]
             return parse_glab_pipeline(run_tool(argv, cwd))
+        checks = None
         if pr and pr.get("number"):
-            found = parse_gh_checks(run_tool(["gh", "pr", "checks", str(int(pr["number"])), "--json",
-                                              "name,bucket,link"], cwd, accept_codes=(0, 1, 8)))
-            if found["state"] != "none":
-                return found
+            checks = parse_gh_checks(run_tool(["gh", "pr", "checks", str(int(pr["number"])), "--json",
+                                               "name,bucket,link"], cwd, accept_codes=(0, 1, 8)))
+            if checks["state"] not in ("none", "running"):
+                return checks
+            # Running: the run list below says for how long, and about how long is left.
         argv = ["gh", "run", "list", f"--branch={branch}", "--json",
-                "databaseId,status,conclusion,name,headSha,url", "--limit", "20"]
+                "databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt", "--limit", "20"]
         mine = ours(info, json.loads(run_tool(argv, cwd) or "[]"))
         found = parse_gh_runs(json.dumps(mine), info.get("head", ""))
+        if checks and checks["state"] == "running" and found["state"] != "running":
+            return checks
         run_id = found.pop("failed_run", None)
         found["run"] = run_id
         if run_id:
@@ -254,6 +303,12 @@ def ci_ttl(entry: dict | None) -> float:
     return CI_RUNNING_TTL if (entry or {}).get("state") == "running" else CI_TTL
 
 
+def idle(data: dict, ci: dict | None) -> bool:
+    """Nothing has changed for IDLE_AFTER seconds and no CI run is going: poll less."""
+    changed = float(data.get("changed") or 0)
+    return bool(changed) and time.time() - changed > IDLE_AFTER and (ci or {}).get("state") != "running"
+
+
 def cached(info: dict) -> dict:
     """{prs, ci} from the cache (either may be None: not fetched yet), and whether a refresh is due."""
     data = load_cache(info["repo"])
@@ -261,8 +316,17 @@ def cached(info: dict) -> dict:
     ci = (data.get("ci") or {}).get(info.get("branch", ""))
     if ci and ci.get("head") != info.get("head"):
         ci = {**ci, "stale": True}  # a new commit: the old result stays shown until the new one is in
-    due = not fresh(prs, PR_TTL) or not fresh(ci, ci_ttl(ci)) or bool(ci and ci.get("stale"))
+    factor = IDLE_FACTOR if idle(data, ci) else 1
+    due = (not fresh(prs, PR_TTL * factor) or not fresh(ci, ci_ttl(ci) * factor)
+           or bool(ci and ci.get("stale")))
     return {"prs": prs, "ci": ci, "due": due}
+
+
+def _gist(prs: dict | None, ci: dict | None) -> list:
+    """What the person would see change: not when it was fetched."""
+    prs, ci = prs or {}, ci or {}
+    return [prs.get("state"), prs.get("per_user"), prs.get("branch_pr"),
+            ci.get("state"), ci.get("run"), ci.get("failed"), ci.get("head")]
 
 
 def refresh(info: dict) -> dict:
@@ -273,13 +337,27 @@ def refresh(info: dict) -> dict:
         save_cache(info["repo"], data)
         return data
     data = load_cache(info["repo"])
-    prs = {**fetch_prs(info), "fetched": time.time()}
+    branch = info.get("branch", "")
+    before = (data.get("ci") or {}).get(branch)
+    prs = data.get("prs")
+    if not fresh(prs, PR_TTL) or (prs or {}).get("state") != "ok":
+        prs = {**fetch_prs(info), "fetched": time.time()}
     ci = {**fetch_ci(info, prs.get("branch_pr")), "fetched": time.time(), "head": info.get("head")}
-    ci = with_triage(info, ci, (data.get("ci") or {}).get(info.get("branch", "")))
+    if before and before.get("tabib") and before.get("run") == ci.get("run"):
+        ci["tabib"] = before["tabib"]
+    if _gist(prs, ci) != _gist(data.get("prs"), before) or not data.get("changed"):
+        data["changed"] = time.time()
     data["prs"] = prs
-    data["ci"] = {**{k: v for k, v in (data.get("ci") or {}).items()
-                     if time.time() - float(v.get("fetched") or 0) < 86400}, info.get("branch", ""): ci}
-    save_cache(info["repo"], data)
+
+    def store(found: dict) -> None:
+        data["ci"] = {**{k: v for k, v in (data.get("ci") or {}).items()
+                         if time.time() - float(v.get("fetched") or 0) < 86400}, branch: found}
+        save_cache(info["repo"], data)
+
+    store(ci)  # shown now: tabib's triage below can take seconds
+    triaged = with_triage(info, ci, before)
+    if triaged != ci:
+        store(triaged)
     return data
 
 

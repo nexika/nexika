@@ -30,8 +30,8 @@ export interface Args {
   [flag: string]: string | boolean | string[];
 }
 
-/** Minimal flag parser: --name value, --name=value, --flag (boolean). */
-export function parseArgs(argv: string[], booleans: string[] = []): Args {
+/** Minimal flag parser: --name value, --name=value, --flag (boolean); a repeated flag collects its values. */
+export function parseArgs(argv: string[], booleans: string[] = [], repeated: string[] = []): Args {
   const out: Args = { _: [] };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i] as string;
@@ -39,10 +39,12 @@ export function parseArgs(argv: string[], booleans: string[] = []): Args {
       out._.push(arg);
       continue;
     }
-    const [name, inline] = arg.slice(2).split("=", 2) as [string, string | undefined];
-    if (inline !== undefined) out[name] = inline;
-    else if (booleans.includes(name)) out[name] = true;
-    else out[name] = argv[++i] ?? "";
+    const cut = arg.indexOf("=");
+    const name = cut < 0 ? arg.slice(2) : arg.slice(2, cut);
+    const inline = cut < 0 ? undefined : arg.slice(cut + 1);
+    const value = inline !== undefined ? inline : booleans.includes(name) ? true : (argv[++i] ?? "");
+    if (repeated.includes(name)) out[name] = [...((out[name] as string[] | undefined) ?? []), String(value)];
+    else out[name] = value;
   }
   return out;
 }

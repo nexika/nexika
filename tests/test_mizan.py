@@ -185,6 +185,104 @@ def test_checks_and_runs():
     assert forge.parse_gh_jobs(jobs) == ["test (py3.12)"]
 
 
+def _forge_world(env, monkeypatch, ci_state="passed"):
+    info = {"repo": str(env / "r"), "branch": "feat/x", "head": "h1", "host": "github", "remote": "x"}
+    calls = {"prs": 0, "ci": 0}
+
+    def prs(_info):
+        calls["prs"] += 1
+        return {"state": "ok", "tool": "gh", "per_user": [], "branch_pr": None}
+
+    def ci(_info, _pr):
+        calls["ci"] += 1
+        return {"state": ci_state, "run": 7 if ci_state == "failed" else None, "failed": []}
+
+    monkeypatch.setattr(forge, "fetch_prs", prs)
+    monkeypatch.setattr(forge, "fetch_ci", ci)
+    return info, calls
+
+
+def test_refresh_honours_the_pr_ttl(env, monkeypatch):
+    info, calls = _forge_world(env, monkeypatch)
+    forge.refresh(info)
+    forge.refresh(info)  # CI is due every 90 s; the PR list is good for 5 minutes
+    assert calls == {"prs": 1, "ci": 2}
+
+
+def test_polling_backs_off_when_nothing_changes(env, monkeypatch):
+    info, _ = _forge_world(env, monkeypatch)
+    now = [1_000_000.0]
+    monkeypatch.setattr(forge.time, "time", lambda: now[0])
+    forge.refresh(info)
+    now[0] += forge.CI_TTL + 1
+    assert forge.cached(info)["due"]  # active: CI every 90 s
+    forge.refresh(info)
+    now[0] += forge.IDLE_AFTER + 1
+    forge.refresh(info)  # same results for over IDLE_AFTER: idle
+    now[0] += forge.CI_TTL + 1
+    assert not forge.cached(info)["due"], "idle: no gh call every 90 s"
+    now[0] += forge.CI_TTL * forge.IDLE_FACTOR
+    assert forge.cached(info)["due"]
+    assert forge.cached({**info, "head": "h2"})["due"], "a new commit is fetched at once"
+
+
+def test_ci_failure_is_saved_before_triage_runs(env, monkeypatch):
+    info, _ = _forge_world(env, monkeypatch, "failed")
+    seen = []
+
+    def triage(info_, ci, before):
+        seen.append((forge.load_cache(info_["repo"]).get("ci") or {}).get("feat/x", {}).get("state"))
+        return {**ci, "tabib": {"run": 7, "kind": "code"}}
+
+    monkeypatch.setattr(forge, "with_triage", triage)
+    forge.refresh(info)
+    assert seen == ["failed"], "the band shows the failure while tabib reads the log"
+    assert forge.load_cache(info["repo"])["ci"]["feat/x"]["tabib"]["kind"] == "code"
+
+
+def test_running_ci_shows_how_long_and_about_how_long_left():
+    runs = json.dumps([
+        {"databaseId": 9, "status": "in_progress", "conclusion": "", "name": "CI", "headSha": "h",
+         "startedAt": "2026-10-07T10:00:00Z", "updatedAt": "2026-10-07T10:03:00Z"},
+        {"databaseId": 8, "status": "completed", "conclusion": "success", "name": "CI", "headSha": "g",
+         "startedAt": "2026-10-07T09:00:00Z", "updatedAt": "2026-10-07T09:07:00Z"},
+        {"databaseId": 7, "status": "completed", "conclusion": "failure", "name": "CI", "headSha": "f",
+         "startedAt": "2026-10-07T08:00:00Z", "updatedAt": "2026-10-07T08:06:00Z"},
+        {"databaseId": 6, "status": "completed", "conclusion": "success", "name": "CI", "headSha": "e",
+         "startedAt": "2026-10-07T07:00:00Z", "updatedAt": "2026-10-07T07:08:00Z"}])
+    now = 1_791_367_380.0  # 2026-10-07T10:03:00Z
+    found = forge.parse_gh_runs(runs, "h", now=now)
+    assert (found["state"], found["elapsed"], found["eta"]) == ("running", 180, 240)  # median 7 min
+    assert render._ci(found, "en")["text"] == "CI running 3m · ~4m left"
+    assert "3" in render._ci(found, "ar")["text"]
+    assert render._ci({"state": "running", "failed": []}, "en")["text"] == "CI running"
+
+
+def test_reviews_requested_from_you(env, monkeypatch):
+    info = {"repo": str(env), "branch": "feat/x", "host": "github"}
+
+    def tool(argv, cwd, accept_codes=(0,)):
+        if "--search" in argv:
+            assert argv[argv.index("--search") + 1] == "review-requested:@me"
+            return json.dumps([{"number": 4}, {"number": 9}])
+        return PRS
+
+    monkeypatch.setattr(forge, "run_tool", tool)
+    found = forge.fetch_prs(info)
+    assert found["reviews"] == 2
+    text = render.plain(render.band({**snap(), "prs": found}, "en")).splitlines()[0]
+    assert "Reviews for you 2" in text
+
+
+def test_the_full_threshold_is_a_setting(env):
+    assert snapshot.context_level(80) == "full"
+    (env / "mizan").mkdir(exist_ok=True)
+    (env / "mizan" / "config.json").write_text(json.dumps({"context_full": 90, "context_mid": 50}))
+    assert (snapshot.context_level(80), snapshot.context_level(45), snapshot.context_level(91)) == ("mid", "fresh", "full")
+    (env / "mizan" / "config.json").write_text(json.dumps({"context_full": "lots", "context_mid": 99}))
+    assert snapshot.context_level(80) == "full"  # nonsense falls back to the defaults
+
+
 def test_glab_pipeline():
     assert forge.parse_glab_pipeline(json.dumps({"status": "failed", "jobs": [{"name": "rspec", "status": "failed"}]}))[
         "failed"] == ["rspec"]
@@ -281,6 +379,52 @@ def test_tasks_from_transcript(tmp_path):
     path.write_text("\n".join(json.dumps(r) for r in rows) + "\n{broken\n")
     assert [t["text"] for t in tasks.from_transcript(str(path))] == ["a", "b"]
     assert tasks.from_transcript(str(tmp_path / "missing.jsonl")) == []
+
+
+def _agent_transcript(tmp_path):
+    def use(i, desc, kind="Explore"):
+        return {"type": "assistant", "message": {"content": [{"type": "tool_use", "id": f"toolu_{i}", "name": "Agent",
+                                                              "input": {"description": desc, "subagent_type": kind,
+                                                                        "prompt": "..."}}]}}
+
+    def result(i, launched=True):
+        return {"type": "user", "toolUseResult": {"status": "async_launched" if launched else "completed"},
+                "message": {"content": [{"type": "tool_result", "tool_use_id": f"toolu_{i}",
+                                         "content": [{"type": "text", "text": "Async agent launched successfully."
+                                                      if launched else "Found it."}]}]}}
+
+    def notified(i, state="completed"):
+        return {"type": "user", "message": {"content": f"<task-notification>\n<task-id>a{i}</task-id>\n"
+                                                       f"<tool-use-id>toolu_{i}</tool-use-id>\n"
+                                                       f"<status>{state}</status>\n</task-notification>"}}
+
+    rows = [{"type": "user", "message": {"content": "an older request"}}, use(0, "old work"), result(0, False),
+            {"type": "user", "message": {"content": [{"type": "text", "text": "review the branch"}]}},
+            use(1, "code review", "general-purpose"), result(1), use(2, "security review"), result(2),
+            use(3, "find the tests"), result(3, False), notified(1)]
+    path = tmp_path / "agents.jsonl"
+    path.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+    return path
+
+
+def test_agents_give_the_task_step_without_todowrite(tmp_path):
+    # Real sessions: hundreds of Agent calls and no TodoWrite, so the step and the proof question never ran.
+    path = _agent_transcript(tmp_path)
+    found = tasks.agents_from_transcript(str(path))
+    assert [(a["description"], a["status"]) for a in found] == [
+        ("code review", "completed"), ("security review", "running"), ("find the tests", "completed")]
+    items = tasks.from_agents(found)
+    summary = tasks.summarize(items)
+    assert (summary["total"], summary["done"], summary["step"], summary["current"]) == (3, 2, 2, "security review")
+    assert tasks.summarize(tasks.from_agents([{**a, "status": "completed"} for a in found]))["all_done"]
+
+
+def test_status_line_fallback_shows_agents_and_their_step(tmp_path, env):
+    path = _agent_transcript(tmp_path)
+    snap = snapshot.build({"session_id": "s9", "transcript_path": str(path), "workspace": {"current_dir": str(env)}})
+    assert snap["agents"] == [{"type": "Explore", "description": "security review"}]
+    assert (snap["tasks"]["total"], snap["tasks"]["step"]) == (3, 2)
+    assert "Agent Explore: security review" in render.plain(snap["band"])
 
 
 # ---------------------------------------------------------------- the helper: status, statusline, report, export

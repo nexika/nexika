@@ -1,6 +1,7 @@
 """mizan's own folder and settings: ~/.claude/nexika/mizan/ (MIZAN_HOME moves it).
 
-    config.json   your settings: {"lang": "auto|en|ar", "daily_budget_usd": 0, "network": true}
+    config.json   your settings: {"lang": "auto|en|ar", "daily_budget_usd": 0, "network": true,
+                  "context_mid": 40, "context_full": 75}
     cache/        what gh and glab last answered, per repository
 """
 from __future__ import annotations
@@ -9,7 +10,7 @@ import json
 import os
 from pathlib import Path
 
-DEFAULTS = {"lang": "auto", "daily_budget_usd": 0, "network": True}
+DEFAULTS = {"lang": "auto", "daily_budget_usd": 0, "network": True, "context_mid": 40, "context_full": 75}
 
 
 def home() -> Path:
@@ -34,3 +35,15 @@ def budget() -> float:
 
 def network() -> bool:
     return os.environ.get("MIZAN_OFFLINE") != "1" and load().get("network") is not False
+
+
+def thresholds() -> tuple[float, float]:
+    """(mid, full) context percentages; values that make no sense fall back to 40 and 75."""
+    data = load()
+    try:
+        mid, full = float(data.get("context_mid")), float(data.get("context_full"))
+    except (TypeError, ValueError):
+        return 40.0, 75.0
+    if not 0 < mid < full <= 100:
+        return 40.0, 75.0
+    return mid, full
