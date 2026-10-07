@@ -27,7 +27,7 @@ from pathlib import Path
 from . import secrets
 
 TYPES = ("decision", "task", "problem", "file", "link")
-MAX_MEMORIES = 3000          # per project; auto file/link memories go first when over
+MAX_MEMORIES = 3000          # per project; over it, routine automatic memories go first (see prune)
 MAX_TEXT = 500               # characters per memory
 SESSION_KEEP_DAYS = 60
 OPEN_KEEP_DAYS = 14          # an open task or problem not touched for this long is marked expired
@@ -282,14 +282,28 @@ class Memory:
             return gone
 
 
+CLOSED = ("done", "solved", "dropped", "expired")
+
+
+def _keep_rank(item: dict) -> int:
+    """Lower goes first when over the cap: routine automatic memories before decisions, and anything
+    automatic before what you wrote yourself."""
+    if item.get("origin") != "auto":
+        return 9
+    kind, status = item["type"], item.get("status", "")
+    if kind in ("file", "link"):
+        return 0
+    if kind in ("problem", "task"):
+        return 1 if status in CLOSED else 2
+    return 3  # decisions
+
+
 def prune(items: list[dict], limit: int = MAX_MEMORIES) -> list[dict]:
-    """Over the cap, drop the oldest automatic file and link memories first, then the oldest rest."""
+    """Over the cap, drop by type: old automatic files and links first, then closed tasks and problems,
+    then open ones, then decisions; what you wrote yourself goes last."""
     if len(items) <= limit:
         return items
-    order = sorted(range(len(items)), key=lambda n: (
-        0 if items[n].get("origin") == "auto" and items[n]["type"] in ("file", "link") else
-        1 if items[n].get("origin") == "auto" else 2,
-        items[n].get("date", "")))
+    order = sorted(range(len(items)), key=lambda n: (_keep_rank(items[n]), items[n].get("date", "")))
     drop = set(order[: len(items) - limit])
     return [i for n, i in enumerate(items) if n not in drop]
 

@@ -775,3 +775,36 @@ def test_files_outside_the_repo_are_dropped(log, capsys, repo, tmp_path):
     log.user("Go").tool("Write", {"file_path": str(outside)}).tool("Edit", {"file_path": "src/auth.py"})
     stop(log, capsys)
     assert capture.load_state(store.project_dir(repo), SESSION)["files"] == {"src/auth.py": 1}
+
+
+# ---------------------------------------------------------------- the cap, other repos, empty queries (#81)
+
+
+def test_pruning_keeps_decisions_over_newer_routine_memories():
+    old = store.Memory.make("decision", "Use argon2 for passwords", date="2026-01-01T10:00:00", origin="auto",
+                            key="decision|old")
+    routine = [store.Memory.make("problem", f"`pytest t{n}` failed (passed again)", status="solved",
+                                 date=f"2026-10-01T10:00:{n:02d}", origin="auto", key=f"problem|t{n}")
+               for n in range(6)]
+    kept = store.prune([old, *routine], limit=5)
+    assert old in kept and len(kept) == 5
+    opened = store.Memory.make("task", "Add refresh tokens", status="open", date="2026-10-02T10:00:00",
+                               origin="auto", key="task|open")
+    kept = store.prune([old, opened, *routine], limit=5)
+    assert old in kept and opened in kept
+
+
+def test_files_from_other_repos_are_not_in_play(repo, capsys):
+    folder = store.project_dir(repo)
+    state = capture.new_state("e" * 8, "")
+    state.update(prompt_count=1, branch=BRANCH, updated=store.now(),
+                 files={"/home/someone/other-repo/app.py": 9, "src/auth.py": 1})
+    capture.save_state(folder, state)
+    text = hook("session-start", {"session_id": "f" * 8, "cwd": str(repo), "source": "startup"}, capsys)
+    assert "src/auth.py" in text and "other-repo" not in text
+
+
+def test_a_query_of_only_stop_words_finds_nothing():
+    items = [store.Memory.make("decision", "Use argon2 for passwords", origin="manual")]
+    assert search.find(items, "what did we do there") == []
+    assert search.find(items, "") != []  # no query at all: newest first

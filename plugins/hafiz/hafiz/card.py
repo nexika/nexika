@@ -70,8 +70,13 @@ def problem_title(text: str) -> str:
 def files(state: dict) -> list[str]:
     """Changed files, the most recently touched first."""
     touched = state.get("touched", {})
-    return [f for f, _ in sorted(state.get("files", {}).items(),
-                                 key=lambda kv: (-touched.get(kv[0], 0), -kv[1]))]
+    inside = {f: n for f, n in state.get("files", {}).items() if not _outside(f)}
+    return [f for f, _ in sorted(inside.items(), key=lambda kv: (-touched.get(kv[0], 0), -kv[1]))]
+
+
+def _outside(path: str) -> bool:
+    """An absolute path: a file outside the repository (older sessions recorded those too)."""
+    return path.startswith(("/", "\\", "~", "../")) or bool(re.match(r"^[A-Za-z]:[\\/]", path))
 
 
 def working_on(state: dict) -> str:
