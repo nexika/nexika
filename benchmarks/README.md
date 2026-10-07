@@ -32,9 +32,27 @@ Both tools did what was asked:
 The difference is in the design: every blind pick went to lawha. lawha costs about seven times the time, because it renders directions, checks and A/B-tests its own work.
 [Full table](runs/brief/results.md).
 
-### Task 1: Figma to code
+### Task 1: Figma to code (scored 2026-10-07)
 
-Waiting for the Figma MCP and Builder.io runs (see "Running the tools you need an account for").
+The design is the Responsive Travel Landing Page, with phone 430, tablet 1024 and desktop 1440 frames.
+
+| | lawha | Figma MCP + Claude Code | Builder.io |
+|---|---|---|---|
+| Builds | yes | yes | waiting |
+| Looks like the design (430 / 1024 / 1440) | **95.6% / 98.5% / 96.2%** | 93.0% / 97.1% / 95.9% | |
+| Must fix | **0** | 22 (14 tap targets, 8 accessibility) | |
+| Should fix | 2 | 9 | |
+| Colours hard-coded in components | 28 | **19** | |
+
+Both match the design closely, and lawha is 0.3 to 2.6 points closer.
+
+The real difference is what each did with the design's own flaws:
+- **Text contrast:** the pink and grey text fail WCAG contrast. Figma MCP copied them; lawha darkened them, at a small cost to pixel match.
+- **Tap targets:** the nav links and the email field are under 24px tall. Figma MCP kept them; lawha made them big enough.
+- **Keyboard:** Figma MCP left two scrolling regions that the keyboard cannot reach.
+
+Figma MCP hard-coded fewer colours.
+[Full table](runs/figma/results.md).
 
 ## Rules
 - **Same start:** every run starts from [`starter/`](starter): Vite, React 19, TypeScript, Tailwind CSS 4.

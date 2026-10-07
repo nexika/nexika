@@ -129,7 +129,7 @@ lawha is being built in steps (see [DESIGN.md](DESIGN.md)):
 
 1. **0.1:** checks on every screen, the eye's measurements, the design-system index.
 2. **0.2:** `/lawha:figma`, Claude's eyes on your Figma file.
-3. **0.3, this version:** `/lawha:direct`, `/lawha:inspire`, `/lawha:elevate` with blind A/B and
-   taste, the Three.js recipes, and checks for 3D motion and text over media.
-4. **0.4:** motion recipes built on Motion, Figma motion, RTL icon rules, and a public benchmark
-   against the leading tools.
+3. **0.3:** `/lawha:direct`, `/lawha:inspire`, `/lawha:elevate` with blind A/B and taste, the
+   Three.js recipes, and checks for 3D motion and text over media.
+4. **0.4, this version:** motion recipes built on Motion, motion from Figma prototypes, RTL icon
+   rules, and a [public benchmark](../../benchmarks/README.md) against the leading tools.

@@ -1,6 +1,6 @@
 {
  "task": "figma",
- "scored": "2026-10-07T09:41:50.399Z",
+ "scored": "2026-10-07T11:16:49.306Z",
  "widths": [
   430,
   768,
@@ -39,6 +39,41 @@
    "hardcodedColours": 28,
    "notes": [],
    "report": "runs/figma/lawha/.lawha/score/report.html"
+  },
+  {
+   "tool": "figma-mcp",
+   "build": true,
+   "problems": {
+    "phone": {
+     "fail": 14,
+     "warn": 9
+    },
+    "accessibility": {
+     "fail": 8,
+     "warn": 0
+    },
+    "rtl": {
+     "fail": 0,
+     "warn": 0
+    }
+   },
+   "looks": {
+    "430": {
+     "looks": 93,
+     "position": 81.8
+    },
+    "1024": {
+     "looks": 97.1,
+     "position": 90.8
+    },
+    "1440": {
+     "looks": 95.9,
+     "position": 93.5
+    }
+   },
+   "hardcodedColours": 19,
+   "notes": [],
+   "report": "runs/figma/figma-mcp/.lawha/score/report.html"
   }
  ]
 }

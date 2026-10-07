@@ -17,7 +17,10 @@ const LAWHA = resolve(HERE, "../plugins/lawha/engine/dist/cli.js");
 const task = process.argv[2];
 if (!["figma", "brief"].includes(task)) throw new Error("usage: node score/score.mjs figma|brief");
 const runs = join(HERE, "runs", task);
-const tools = readdirSync(runs).filter((d) => statSync(join(runs, d)).isDirectory() && existsSync(join(runs, d, "package.json")));
+// Optional: score only the named tools (node score/score.mjs figma figma-mcp); the others keep
+// their earlier results.
+const only = process.argv.slice(3);
+const tools = readdirSync(runs).filter((d) => statSync(join(runs, d)).isDirectory() && existsSync(join(runs, d, "package.json")) && (!only.length || only.includes(d)));
 const WIDTHS = task === "figma" ? [430, 768, 1024, 1280, 1440] : [360, 390, 768, 1024, 1280, 1536];
 
 const sh = (cmd, args, cwd) => {
@@ -143,6 +146,10 @@ for (const tool of tools) {
   }
 }
 
+if (only.length && existsSync(join(runs, "results.json"))) {
+  const earlier = JSON.parse(readFileSync(join(runs, "results.json"), "utf8")).results.filter((r) => !only.includes(r.tool));
+  results.unshift(...earlier);
+}
 writeFileSync(join(runs, "results.json"), JSON.stringify({ task, scored: new Date().toISOString(), widths: WIDTHS, results }, null, 1));
 const cats = ["layout", "phone", "accessibility", "motion", ...(task === "brief" ? ["rtl"] : [])];
 const lines = [`# Results: ${task === "figma" ? "Figma to code" : "brief to page"}`, "", `Scored ${new Date().toISOString().slice(0, 10)} at ${WIDTHS.join(", ")}px${task === "brief" ? ", light and dark, English and Arabic" : ""}. Problems are counted once per check and element (must fix / should fix).`, ""];
