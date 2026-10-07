@@ -8,7 +8,7 @@ import shlex
 import shutil
 from pathlib import Path
 
-from . import check, clean, config, rules
+from . import check, clean, config, family, rules
 
 CLEAN_SUFFIXES = {".md", ".mdx", ".markdown"}      # cleaned and checked
 CHECK_SUFFIXES = CLEAN_SUFFIXES | {".txt", ".rst"}  # .txt/.rst: checked only (rst code is indented prose)
@@ -71,8 +71,10 @@ def session_start(hook: dict) -> str:
                 fh.write(line)
     except OSError:
         command = f"python3 {shlex.quote(str(bin_dir / 'bayan'))}"
-    return GUIDE.format(level=cfg["level"], level_rule=LEVEL_RULE[cfg["level"]], cmd=command,
+    note = GUIDE.format(level=cfg["level"], level_rule=LEVEL_RULE[cfg["level"]], cmd=command,
                         guide=bin_dir.parent / "guide" / "writing.md")
+    ask = family.ask_note(f"python3 {shlex.quote(str(Path(family.__file__).resolve()))}")
+    return f"{note}\n{ask}" if ask else note
 
 
 def _project(hook: dict) -> Path:

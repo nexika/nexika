@@ -16,6 +16,14 @@ if str(BARQ_ROOT) not in sys.path:
     sys.path.insert(0, str(BARQ_ROOT))
 
 
+@pytest.fixture(autouse=True)
+def family_profile(tmp_path, monkeypatch):
+    """The Nexika family profile (#65) of every test lives in tmp_path, never ~/.claude."""
+    path = tmp_path / "nexika-profile.json"
+    monkeypatch.setenv("NEXIKA_PROFILE", str(path))
+    return path
+
+
 @pytest.fixture
 def store(tmp_path, monkeypatch):
     """A fresh prof_store module whose data lives in tmp_path/prof (never ~/.claude)."""

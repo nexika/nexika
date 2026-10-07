@@ -17,6 +17,11 @@
     "common/gitinfo.py": [
       "plugins/mizan/mizan/gitinfo.py",
       "plugins/tabib/tabib/gitinfo.py"
+    ],
+    "common/family.py": [
+      "plugins/bayan/bayan/family.py",
+      "plugins/prof/scripts/prof_family.py",
+      "plugins/siyaq/siyaq/family.py"
     ]
   }
 }

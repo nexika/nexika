@@ -75,7 +75,8 @@ what would be injected; `siyaq entries`, `siyaq index` (sources, dead references
 }
 ```
 
-`"mode": "off"` or `SIYAQ=off` disables it. CLAUDE.md and CHANGELOG.md are never indexed
+Without a `min_score`, the Nexika profile's role sets it: 0.7 for a learner (more of the
+project's docs), 1.0 otherwise. `"mode": "off"` or `SIYAQ=off` disables it. CLAUDE.md and CHANGELOG.md are never indexed
 (CLAUDE.md is already loaded). Data lives in `~/.claude/nexika/siyaq/` (`SIYAQ_HOME` to move it);
 the usage events (which hold words from your prompts) are readable only by you and rotate at 1 MB.
 

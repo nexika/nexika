@@ -47,6 +47,8 @@ bayan level [no-code|junior|developer]
 `--min-score` makes `check` exit with 1 below that score, so a CI job can keep docs readable.
 Put `bayan: off` anywhere in a file to leave it alone. Settings live in
 `~/.claude/nexika/bayan/config.json` (`level`, `auto_clean`, `block_signatures`, `deny_signatures`).
+Without a `level` there, the Nexika profile's role picks it (`developer` → developer, `learner` →
+junior, `writer` → no-code).
 
 ## Honest limits
 - The plainness score measures the habits in [the guide](guide/writing.md). It is **not an AI

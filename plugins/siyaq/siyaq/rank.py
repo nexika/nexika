@@ -10,8 +10,8 @@ from __future__ import annotations
 import math
 import re
 
+from . import family, text
 from . import index as idx
-from . import text
 
 K1, B = 1.4, 0.75
 CHARS_PER_TOKEN = 4
@@ -25,8 +25,14 @@ DEFAULTS = {
 }
 
 
+# The Nexika profile's role moves the floor; a min_score in .siyaq.json still wins. A learner gets
+# looser matches (more of the project's docs), a developer and a writer the tuned default.
+ROLE_MIN_SCORE = {"developer": 1.0, "learner": 0.7, "writer": 1.0}
+
+
 def settings(config: dict) -> dict:
-    return {**DEFAULTS, **{k: config[k] for k in DEFAULTS if k in config}}
+    role = {"min_score": ROLE_MIN_SCORE[r]} if (r := family.role()) else {}
+    return {**DEFAULTS, **role, **{k: config[k] for k in DEFAULTS if k in config}}
 
 
 def squeeze(cfg: dict, level: str) -> dict:
