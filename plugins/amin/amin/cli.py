@@ -22,6 +22,8 @@ USAGE = f"""amin {__version__} - repository maintainer; you always merge (Nexika
   amin triage                            unlabeled issues, possible duplicates, stale issues
   amin work start ISSUE                  branch + isolated worktree for an issue
   amin check-fragment --base REF [--labels a,b]   CI rule: changed projects need a note
+  amin copies [--check]                  refresh shared-file copies (.amin.json "copies");
+                                         --check only lists stale ones
 """
 
 
@@ -132,6 +134,16 @@ def run(argv: list[str]) -> int:
         print(release.render_plan(release.plan(root, runner, projects)))
     elif cmd == "prepare":
         print(cmd_prepare(root, runner, argv[1:]))
+    elif cmd == "copies":
+        check_only = "--check" in argv[1:]
+        changed = release.stale_copies(root) if check_only else release.sync_copies(root)
+        if not changed:
+            print("all copies match their source")
+        else:
+            verb = "stale (run amin copies)" if check_only else "refreshed"
+            print(f"{verb}:\n" + "\n".join(f"  {c}" for c in changed))
+            if check_only:
+                return 1
     elif cmd == "publish" and len(argv) > 1:
         print("\n".join(release.publish(root, runner, find_project(root, projects, argv[1]),
                                         "--dry-run" in argv)))

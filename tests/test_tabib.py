@@ -477,20 +477,12 @@ def test_flaky_comes_with_the_rerun_command_and_no_local_run(ci, project, monkey
     assert record["reproduction"]["status"] == "skipped"
 
 
-# ---------------------------------------------------------------- startup note and shared copies
+# ---------------------------------------------------------------- startup note
 
 def test_startup_note_is_small():
     long_path = "/home/" + "a-rather-long-user-name/" * 3 + ".claude/plugins/cache/nexika/tabib/0.1.0/bin/tabib"
     note = json.loads(hooks.on_session_start({}, long_path))["hookSpecificOutput"]["additionalContext"]
     assert len(note.encode("utf-8")) < 400 and "never edit code" in note and long_path in note
-
-
-@pytest.mark.parametrize("copy,original", [("inject.py", "haris/haris/inject.py"),
-                                           ("secrets.py", "hafiz/hafiz/secrets.py"),
-                                           ("status.py", "mizan/mizan/status.py"),
-                                           ("gitinfo.py", "mizan/mizan/gitinfo.py")])
-def test_shared_copies_are_identical(copy, original):
-    assert (TABIB_ROOT / "tabib" / copy).read_text() == (PLUGINS / original).read_text()
 
 
 # ---------------------------------------------------------------- with mizan and itqan

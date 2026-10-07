@@ -33,6 +33,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import itqan_secrets  # noqa: E402
 from itqan_guard import SECRET_PATTERNS  # noqa: E402
 from itqan_learn import data_home, project_root  # noqa: E402
 
@@ -114,16 +115,12 @@ def detect(root: Path) -> list[dict]:
 
 # ------------------------------------------------------------------ running and saving
 
-SECRET_ASSIGNMENT = re.compile(r"(?i)\b([\w.-]*(?:secret|token|passw(?:or)?d|api[_-]?key|private[_-]?key|"
-                               r"access[_-]?key|credential)[\w.-]*)(\s*[=:]\s*)(\S+)")
-URL_USERINFO = re.compile(r"(\b[a-z][\w+.-]*://)[^/\s:@]+:[^/\s@]+@", re.I)
-
-
 def redact(text: str) -> str:
+    """The family's shared redaction (common/secrets.py), then the guard's own patterns."""
+    text = itqan_secrets.redact(text)
     for pattern in SECRET_PATTERNS:
-        text = pattern.sub("[secret removed]", text)
-    text = SECRET_ASSIGNMENT.sub(r"\1\2[secret removed]", text)
-    return URL_USERINFO.sub(r"\1[secret removed]@", text)
+        text = pattern.sub(itqan_secrets.MARK, text)
+    return text
 
 
 def run_check(check: dict, root: Path, timeout: int) -> dict:

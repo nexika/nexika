@@ -218,6 +218,16 @@ def detect(root: Path) -> list[Project]:
     return []
 
 
+def copies(root: Path) -> dict[str, list[str]]:
+    """Files kept in one place and copied into each project that ships them:
+    .amin.json {"copies": {"common/x.py": ["plugins/a/a/x.py", ...]}} (repo-relative paths)."""
+    item = load_config(root).get("copies")
+    if not isinstance(item, dict):
+        return {}
+    return {str(source): [str(t) for t in targets] for source, targets in item.items()
+            if isinstance(targets, list)}
+
+
 def umbrella(root: Path) -> Project | None:
     """The whole repository released as one (a marketplace of plugins): tag <name>-v<version>, the root
     CHANGELOG.md, and the root version file if there is one. .amin.json {"umbrella": {...}} overrides."""
