@@ -687,3 +687,22 @@ def test_itqan_exits_before_its_imports_when_haris_covers_the_call(world):
              "print('shlex' in sys.modules, 'itqan_secrets' in sys.modules)\n")
     res = subprocess.run([sys.executable, "-c", probe], input=event, capture_output=True, text=True)
     assert res.stdout.strip() == "False False", res.stderr
+
+
+# ---------------------------------------------------------------- readable reasons (#90)
+
+
+@pytest.mark.parametrize("command", ["git push --force origin `echo main`", "git push -f origin feat`x`",
+                                     "git push -f origin $'\\x1b[2Jmain'"])
+def test_reasons_never_show_control_characters(world, command):
+    home, project = world
+    reason = decide(project, "Bash", command).reason
+    assert reason and not any(ord(ch) < 32 or ord(ch) == 127 for ch in reason), repr(reason)
+
+
+def test_raw_api_calls_with_a_body_are_labelled_post(world):
+    home, project = world
+    mutation = 'gh api graphql -f query="mutation { deleteRepository(input:{repositoryId:1}) { id } }"'
+    assert "POST" in decide(project, "Bash", mutation).reason
+    assert "GET" not in decide(project, "Bash", "gh api repos/o/r/issues -f title=x").reason
+    assert "(DELETE)" in decide(project, "Bash", "gh api -X DELETE repos/o/r").reason

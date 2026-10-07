@@ -21,7 +21,7 @@ from urllib.parse import urlsplit
 
 from . import classify as c
 from . import powershell, secrets, state
-from .paths import Where
+from .paths import UNKNOWN, Where
 
 PROFILE_INDEX = {name: i for i, name in enumerate(c.PROFILES)}
 TAINT_TURNS = 3
@@ -267,4 +267,13 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
         elif finding.target:
             kind = "write" if tool in WRITE_TOOLS else "read"
             reason += f" If the user wants this anyway, they can type: /haris:allow {kind} {finding.target}"
-    return Decision(verdict, finding.cls, reason, findings, tainted)
+    return Decision(verdict, finding.cls, readable(reason), findings, tainted)
+
+
+CONTROL = re.compile(r"[\x01-\x08\x0b-\x1f\x7f\u200b-\u200f\u202a-\u202e\u2066-\u2069]")
+
+
+def readable(text: str) -> str:
+    """Text fit to show: a value haris could not know (computed by `...` or $(...)) reads <computed>,
+    and control characters (terminal escapes, direction overrides) are shown as \uFFFD."""
+    return CONTROL.sub("\uFFFD", text.replace(UNKNOWN, "<computed>"))

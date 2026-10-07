@@ -103,8 +103,8 @@ def cmd_why(args) -> int:
     for e in entries[-args.n:]:
         verdict = {"ask": "asked", "deny": "refused", "taint": "marked the session"}.get(e.get("decision"),
                                                                                          "")
-        print(f"{e.get('ts', '')}  {verdict} ({e.get('class')}): {e.get('detail', '')}")
-        print(f"  why: {e.get('reason', '')}")
+        print(f"{e.get('ts', '')}  {verdict} ({e.get('class')}): {policy.readable(str(e.get('detail', '')))}")
+        print(f"  why: {policy.readable(str(e.get('reason', '')))}")
         if e.get("class") in CLASS_HELP:
             print(f"  meaning: {CLASS_HELP[e['class']]}")
     return 0
@@ -142,7 +142,7 @@ def cmd_audit(args) -> int:
         print("Nothing in the audit log for this filter.")
     for e in entries:
         print(f"{e.get('ts', '')} {e.get('decision', ''):8} {e.get('class', ''):22} {e.get('tool', '')}: "
-              f"{e.get('detail', '')}")
+              f"{policy.readable(str(e.get('detail', '')))}")
     return 0
 
 
