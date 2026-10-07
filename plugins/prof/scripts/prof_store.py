@@ -225,6 +225,7 @@ def merge_report(path: Path) -> int:
         cm = CHECK_RE.match(line)
         if cm:
             status, slug, title, concept, evidence = cm.groups()
+            concept = concept.replace(" — ", " - ")   # " — " separates concept and evidence in topic files
             updates.setdefault(slugify(slug), []).append((status, title, concept, evidence))
     count = 0
     for slug, rows in updates.items():

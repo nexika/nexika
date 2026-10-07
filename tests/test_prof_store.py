@@ -124,6 +124,18 @@ def test_c_sharp_and_c_plus_plus_stay_separate_topics(store):
     assert set(store.load_topic("cpp")[1]) == {"pointers"}
 
 
+def test_a_concept_with_a_dash_keeps_its_history(store):
+    # issue #87: "await — basics" was saved, then reloaded as concept "await" with evidence "basics — ..."
+    for name, status in (("2026-10-01_1000_aaaa0002.md", "missed"),
+                         ("2026-10-05_1000_bbbb0002.md", "understood")):
+        store.merge_report(write_report(store, name, [f"- [{status}] py :: Python :: await — basics :: x"]))
+    _, entries = store.load_topic("py")
+    assert len(entries) == 1
+    [(status, concept, evidence, date)] = entries.values()
+    assert (status, evidence, date) == ("understood", "x", "2026-10-05")
+    assert concept.startswith("await") and concept.endswith("basics")
+
+
 def test_skill_triggers_need_a_learning_request():
     # plain working questions must not start a lesson
     from conftest import PLUGINS
