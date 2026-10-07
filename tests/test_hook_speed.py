@@ -62,6 +62,35 @@ def test_haris_still_guards_the_calls_it_checks(tmp_path):
     assert json.loads(out)["hookSpecificOutput"]["permissionDecision"] in ("ask", "deny")
 
 
+PARSER = {"haris.classify", "haris.shell", "haris.powershell"}
+
+
+@pytest.mark.parametrize("tool,tool_input", [
+    ("Read", {"file_path": "a.py"}),
+    ("Glob", {"pattern": "*.py"}),
+    ("Edit", {"file_path": "a.py", "old_string": "x = 1", "new_string": "x = 2"}),
+    ("Write", {"file_path": "b.py", "content": "y = 1\n"}),
+    ("MultiEdit", {"file_path": "a.py", "edits": [{"old_string": "x", "new_string": "z"}]}),
+    ("WebFetch", {"url": "https://example.com/"}),
+])
+def test_haris_checks_file_and_web_calls_without_the_command_parser(tmp_path, tool, tool_input):
+    """Read, Edit and Write only need the path helpers (#102): the shell parser stays unloaded."""
+    (tmp_path / "a.py").write_text("x = 1\n")
+    payload = {"session_id": "speed-1", "cwd": str(tmp_path), "tool_name": tool, "tool_input": tool_input}
+    _, modules = run_hook(tmp_path, [HARIS, "hook", "pre-tool-use"], payload)
+    assert not PARSER & modules, f"{tool} loaded {sorted(PARSER & modules)}"
+
+
+def test_haris_classifier_uses_the_light_path_helpers():
+    sys.path.insert(0, str(PLUGINS / "haris"))
+    try:
+        from haris import classify, targets
+    finally:
+        sys.path.remove(str(PLUGINS / "haris"))
+    for name in ("Ctx", "Finding", "read_paths", "write_paths", "targets", "arg"):
+        assert getattr(classify, name) is getattr(targets, name), name
+
+
 def test_haris_tool_list_matches_what_the_policy_checks():
     sys.path.insert(0, str(PLUGINS / "haris"))
     try:

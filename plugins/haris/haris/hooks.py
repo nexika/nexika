@@ -12,9 +12,8 @@ import json
 import os
 import re
 import shlex
-import subprocess
 
-from . import config, inject, state
+from . import config, state
 
 # The classifier (classify, policy) is most of a hook's start-up time, so it is imported only
 # where a call is actually checked (#50).
@@ -51,8 +50,8 @@ def on_pre_tool_use(event: dict) -> str:
     state.publish_status(session, cfg)  # a mode changed mid-session reaches mizan's band (written on change)
     if not config.checked(str(event.get("tool_name") or "")):
         return ""  # haris never objects to this tool: no need to load the classifier
-    from . import classify as c
     from . import policy
+    from . import targets as c
     try:
         decision = policy.decide(event, cfg, state.load_session(session), state.approvals(session, root))
     except Exception as exc:  # haris must never wave a call through because it failed
@@ -78,6 +77,7 @@ def _tracked_file(tool: str, event: dict, root: str) -> bool:
     full = os.path.realpath(path if os.path.isabs(path) else os.path.join(root, path))
     if not full.startswith(root.rstrip(os.sep) + os.sep):
         return False
+    import subprocess
     try:
         res = subprocess.run(["git", "ls-files", "--error-unmatch", "--", full], cwd=root,
                              capture_output=True, timeout=5)
@@ -94,6 +94,7 @@ def on_post_tool_use(event: dict) -> str:
     cwd, root, cfg = _context(event)
     if cfg["mode"] == "off":
         return ""
+    from . import inject
     hits = inject.scan(event.get("tool_response"))
     if not hits:
         return ""
@@ -175,8 +176,8 @@ def on_user_prompt_submit(event: dict) -> str:
     entry, project, shown = parse_allow(rest, cwd)
     if entry is None:
         return ""
-    from . import classify as c
     from . import policy
+    from . import targets as c
 
     tool, key = {"command": ("Bash", "command"), "write": ("Write", "file_path")}.get(entry["kind"],
                                                                                       ("Read", "file_path"))

@@ -19,7 +19,6 @@ import re
 import time
 from pathlib import Path
 
-from . import secrets
 from .paths import data_home
 
 SAFE_ID = re.compile(r"^[A-Za-z0-9_-]{1,80}$")
@@ -199,6 +198,7 @@ def log(entry: dict) -> None:
     folder = _ensure(home())
     path = folder / "audit.jsonl"
     entry = {"ts": now(), **entry}
+    from . import secrets  # only an ask or a deny is logged: a passing call never loads it
     for key in ("detail", "reason"):
         if key in entry:
             entry[key] = secrets.redact(str(entry[key]))[:600 if key == "reason" else 300]

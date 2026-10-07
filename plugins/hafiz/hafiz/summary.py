@@ -257,7 +257,7 @@ def run(root: Path, session: str = "", model: str = DEFAULT_MODEL, lang: str = "
         out: str = "") -> tuple[int, str]:
     model = model_name(model)
     if not dry_run and not background.allowed(asked=True):  # asked for, so only "off" stops it (#45)
-        settings = background.home() / "settings.json"
+        settings = background.settings_path()
         helper = Path(background.__file__).resolve()
         return 1, (f"Background model calls are off (background_calls in {settings}). Turn them on with: "
                    f"python3 {helper} on, or write the summary in this session instead.")

@@ -72,7 +72,8 @@ def test_setting_defaults_to_ask_and_is_stored_once_for_the_family(nexika_home):
     assert background.allowed()
     background.set_setting("off")
     assert not background.allowed(asked=True)
-    assert json.loads((nexika_home / "settings.json").read_text()) == {"background_calls": "off"}
+    assert json.loads((nexika_home / "settings.json").read_text()) == {"background_calls": "off",
+                                                                        "schema": "nexika.settings/1"}
     with pytest.raises(ValueError):
         background.set_setting("maybe")
 

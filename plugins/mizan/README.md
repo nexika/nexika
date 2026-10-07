@@ -119,7 +119,9 @@ With it, the Stop hook refreshes the handoff at mid and, at full, saves it and t
 - `mizan doctor` (or `/mizan:doctor`) looks at the installed Nexika plugins as a group: their
   hooks and how long each takes (run once with a dummy event in a throwaway home), known
   conflicts (bayan with Claude Code's signature line on, itqan without haris) and status files
-  that are stale, of an unknown schema or readable by others. It exits 1 when something needs fixing.
+  that are stale, of an unknown schema or readable by others. It also shows the family settings file
+  (`~/.claude/nexika/settings.json`: the role and the background-call consent). It exits 1 when
+  something needs fixing.
 - All of them share status files under `~/.claude/nexika/status/`, each `nexika.<plugin>/1`
   (see the [root README](../../README.md#status-files-how-the-plugins-talk-to-each-other)).
 
