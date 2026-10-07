@@ -22,12 +22,18 @@ not the commit title), show them, and after approval add each:
 ## 3. Versions
 Show each proposed version with its reason (`added` → minor, `fixed` only → patch, `breaking`
 → major, or minor while the version is 0.x). The user may override (`NAME=VERSION`). Ask
-explicitly before any major version.
+explicitly before any major version. For a release candidate add `--rc` to prepare (`1.3.0-rc.1`,
+published as a pre-release; notes are kept); preparing again without `--rc` promotes it to final.
 
 ## 4. Release pull request
 1. From an up-to-date default branch with a clean tree, create `release/<project>-<version>`
    (several projects: `release/<date>`).
-2. Run `amin prepare <project>[=<version>] ...`; show the CHANGELOG sections it wrote.
+2. Run `amin prepare <project>[=<version>] ... --dry-run` and show the result, then the same
+   without `--dry-run`; show the CHANGELOG sections it wrote. It refuses to run on the default
+   branch or with uncommitted changes. A version below what the notes require is refused; add
+   `--allow-lower` only if the user insists. In a plugin marketplace, add `--umbrella` when the
+   whole repo is released too (root version and CHANGELOG; publish it with
+   `amin publish <marketplace name>` after the project tags).
 3. Commit (`Release <project> <version>, ...`), push, and open the PR with the sections in the
    body. **Stop and ask the user to review and merge it.**
 

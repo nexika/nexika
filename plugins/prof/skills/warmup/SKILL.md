@@ -1,6 +1,6 @@
 ---
 name: warmup
-description: Start-of-session comprehension check. Tests what the learner kept from previous sessions on a topic, estimates their current level, and re-teaches anything missed BEFORE new material. Use at the start of a tutoring session, before any new lesson on a topic that has history, or when the user says "check what I remember", "where was I", or "test my level".
+description: Start-of-session comprehension check. Tests what the learner kept from previous sessions on a topic, estimates their current level, and re-teaches anything missed BEFORE new material. Use at the start of a tutoring session, before any new lesson on a topic that has history, or when the user says "check what I remember", "where was I in my lessons", or "test my level".
 argument-hint: "[topic or topic-slug, optional]"
 ---
 
@@ -25,7 +25,8 @@ Pick 3-5 questions, in this priority:
 1. every `missed` concept,
 2. `shaky` concepts and the logic gaps named in the last report,
 3. `not-checked` concepts (explained but never tested),
-4. 1 retention question on an `understood` concept older than 2 weeks,
+4. 1 retention question on an `understood` concept that is due for review (listed as
+   "retention check" in the session context),
 5. 1 slightly harder "stretch" question to find the ceiling of their level.
 
 Mix question types: explain in your own words, predict the output, find the bug, "what would

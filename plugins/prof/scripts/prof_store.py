@@ -4,16 +4,20 @@
 Commands:
   session-start            SessionStart hook. Prints the learner context: profile, what to
                            review from past sessions, and the warm-up rule. (stdin: hook JSON)
-  session-end              SessionEnd hook. If this session was a tutoring session and no
-                           report was written, generates one in the background. (stdin: hook JSON)
+  session-end              SessionEnd hook. If this session was a tutoring session, no report
+                           was written and the learner agreed to automatic reports, generates
+                           one in the background. (stdin: hook JSON)
   merge-report FILE        Apply a report's "Concept checklist" to the per-topic files.
   topic SLUG               Print everything known about one topic (used by the warmup skill).
+  auto-report on|off|status    The learner's answer to "write reports automatically?" (asked once).
   write-auto-report SID CONVO   Internal: runs detached, asks `claude -p` for the report.
 
 Data lives in ~/.claude/nexika/prof (override with PROF_HOME):
   profile.md                 learner profile (managed by the progress skill)
+  settings.json              {"auto_report": true|false}; missing = not asked yet (no auto reports)
   reports/DATE_HHMM_SID8.md  one report per session
-  topics/SLUG.md             concept checklist per topic, merged from the reports
+  topics/SLUG.json           concept checklist per topic, merged from the reports
+  topics/SLUG.md             the same, rendered for reading (status edits there are kept)
 """
 from __future__ import annotations
 
@@ -32,6 +36,7 @@ TOPICS = HOME / "topics"
 TMP = HOME / "tmp"
 PROFILE = HOME / "profile.md"
 LOG = HOME / "hook.log"
+SETTINGS = HOME / "settings.json"
 MERGED = REPORTS / ".merged"
 
 # Set on the background `claude -p` run so its own hooks don't recurse.
@@ -39,7 +44,7 @@ GUARD_ENV = "PROF_REPORTING"
 
 # Worst first: this is also the order items are shown and re-taught in.
 STATUSES = ("missed", "shaky", "not-checked", "understood")
-STALE_DAYS = 14  # an "understood" concept older than this gets a retention question
+STALE_DAYS = 14  # retention check for an "understood" concept with unknown history (see REVIEW_LADDER)
 
 # Report line:  - [status] topic-slug :: Topic Title :: concept :: evidence
 CHECK_RE = re.compile(
@@ -51,6 +56,8 @@ TOPIC_LINE_RE = re.compile(
     r"^- \[(missed|shaky|not-checked|understood)\] (.+?) — (.*) \((\d{4}-\d{2}-\d{2})\)$"
 )
 REPORT_DATE_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})_")
+# Tells writing cleaners (bayan) to leave the file alone: its " — " and "::" are field separators.
+NO_REWRITE = "bayan: off"
 
 REPORT_FORMAT = """\
 # Tutor session report - {date}
@@ -76,6 +83,7 @@ Session: {sid8} · Source: {source}
 - what to re-check or re-teach first next session, most important first
 
 ## Concept checklist
+<!-- bayan: off -->
 - [status] topic-slug :: Topic Title :: concept :: evidence
 """
 
@@ -99,6 +107,17 @@ Rules:
   touched them, so the learner's history stays in one place. Known topics:
 {known}
 """
+
+
+AUTO_REPORT_NOTE = {
+    True: "If a tutoring session ends without a report, one is written automatically in the background "
+          "(turn off: python3 {script} auto-report off).",
+    False: "Automatic reports are off (the learner said no); only prof:report writes one.",
+    None: "Automatic reports are off until the learner agrees. In the first tutoring session, ask once: "
+          "\"When a study session ends without a report, should I write one in the background? It runs "
+          "Claude (Sonnet) on the session text, which uses your plan or API credits.\" Store the answer "
+          "with python3 {script} auto-report on (or auto-report off), and don't ask again.",
+}
 
 
 def known_topics_text() -> str:
@@ -133,8 +152,32 @@ def _read_hook_input() -> dict:
 
 
 def slugify(text: str) -> str:
-    slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+    """Lowercase-with-dashes; language symbols are kept as words so C# and C++ stay apart."""
+    text = text.lower().replace("c++", "cpp")
+    text = re.sub(r"(?<![a-z0-9])\.net\b", "dotnet", text)
+    text = re.sub(r"\b([a-z])#", r"\1-sharp", text)
+    slug = re.sub(r"[^a-z0-9]+", "-", text).strip("-")
     return slug[:60] or "general"
+
+
+def auto_report_setting() -> bool | None:
+    """True/False once the learner answered; None = never asked (automatic reports stay off)."""
+    try:
+        value = json.loads(SETTINGS.read_text(encoding="utf-8")).get("auto_report")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return value if isinstance(value, bool) else None
+
+
+def set_auto_report(on: bool) -> None:
+    try:
+        data = json.loads(SETTINGS.read_text(encoding="utf-8"))
+        data = data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        data = {}
+    data["auto_report"] = on
+    HOME.mkdir(parents=True, exist_ok=True)
+    SETTINGS.write_text(json.dumps(data, indent=1) + "\n", encoding="utf-8")
 
 
 def report_for_session(sid: str) -> Path | None:
@@ -145,33 +188,88 @@ def report_for_session(sid: str) -> Path | None:
 
 
 # ---------------------------------------------------------------- topic store
+#
+# topics/SLUG.json is the data; topics/SLUG.md is rendered from it for people to read. A Markdown file
+# edited by hand after the last save is read back, so its status edits are kept.
 
 Entry = tuple[str, str, str, str]  # status, concept, evidence, date
+REVIEW_LADDER = (3, 7, 14, 30, 60, 120)  # days until the next retention check, per success in a row
 
 
-def load_topic(slug: str) -> tuple[str, dict[str, Entry]]:
-    path = TOPICS / f"{slug}.md"
-    title, entries = slug, {}
-    if path.is_file():
-        for line in path.read_text(encoding="utf-8").splitlines():
-            if line.startswith("# "):
-                title = line[2:].strip()
-                continue
-            m = TOPIC_LINE_RE.match(line.strip())
-            if m:
-                status, concept, evidence, date = m.groups()
-                entries[concept.lower()] = (status, concept, evidence, date)
+def review_days(streak: int | None) -> int:
+    """Days an "understood" concept rests before its next retention check."""
+    if not streak:
+        return STALE_DAYS   # unknown history (older data): the old fixed interval
+    return REVIEW_LADDER[min(streak, len(REVIEW_LADDER)) - 1]
+
+
+def _parse_markdown(path: Path) -> tuple[str | None, dict[str, Entry]]:
+    title, entries = None, {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("# "):
+            title = line[2:].strip()
+            continue
+        m = TOPIC_LINE_RE.match(line.strip())
+        if m:
+            status, concept, evidence, date = m.groups()
+            entries[concept.lower()] = (status, concept, evidence, date)
     return title, entries
 
 
-def save_topic(slug: str, title: str, entries: dict[str, Entry]) -> None:
+def _load(slug: str) -> tuple[str, dict[str, Entry], dict[str, int | None]]:
+    """(title, entries, successes in a row per concept)."""
+    data_path, md_path = TOPICS / f"{slug}.json", TOPICS / f"{slug}.md"
+    title, entries, streaks = slug, {}, {}
+    try:
+        data = json.loads(data_path.read_text(encoding="utf-8"))
+        title = str(data.get("title") or slug)
+        for c in data.get("concepts") or []:
+            if c.get("status") in STATUSES and c.get("concept"):
+                key = str(c["concept"]).lower()
+                entries[key] = (c["status"], str(c["concept"]), str(c.get("evidence") or "-"),
+                                str(c.get("date") or _today()))
+                streaks[key] = c.get("streak") if isinstance(c.get("streak"), int) else None
+    except (OSError, ValueError, AttributeError, TypeError):
+        data_path = None
+    if md_path.is_file() and (data_path is None
+                              or md_path.stat().st_mtime > data_path.stat().st_mtime + 1):
+        md_title, md_entries = _parse_markdown(md_path)
+        title = md_title or title
+        for key, entry in md_entries.items():
+            if entries.get(key, (None,))[0] != entry[0]:
+                streaks[key] = None
+            entries[key] = entry
+    return title, entries, streaks
+
+
+def load_topic(slug: str) -> tuple[str, dict[str, Entry]]:
+    title, entries, _ = _load(slug)
+    return title, entries
+
+
+def load_streaks(slug: str) -> dict[str, int | None]:
+    return _load(slug)[2]
+
+
+def save_topic(slug: str, title: str, entries: dict[str, Entry],
+               streaks: dict[str, int | None] | None = None) -> None:
     TOPICS.mkdir(parents=True, exist_ok=True)
     rank = {s: i for i, s in enumerate(STATUSES)}
     rows = sorted(entries.values(), key=lambda e: (rank[e[0]], e[1].lower()))
+    streaks = streaks or {}
+    data = {"title": title, "concepts": [
+        {"concept": c, "status": s, "evidence": ev, "date": d, "streak": streaks.get(c.lower())}
+        for s, c, ev, d in rows]}
+    (TOPICS / f"{slug}.json").write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n",
+                                         encoding="utf-8")
     lines = [f"# {title}", "",
-             "<!-- managed by prof_store.py merge-report; edit statuses freely -->", ""]
+             f"<!-- rendered from {slug}.json by prof_store.py; status edits here are kept. "
+             f"{NO_REWRITE} -->", ""]
     lines += [f"- [{s}] {c} — {ev} ({d})" for s, c, ev, d in rows]
-    (TOPICS / f"{slug}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    md = TOPICS / f"{slug}.md"
+    md.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    stamp = (TOPICS / f"{slug}.json").stat().st_mtime
+    os.utime(md, (stamp, stamp))   # same time: the Markdown counts as hand-edited only after a change
 
 
 def merge_report(path: Path) -> int:
@@ -183,36 +281,62 @@ def merge_report(path: Path) -> int:
         cm = CHECK_RE.match(line)
         if cm:
             status, slug, title, concept, evidence = cm.groups()
+            concept = concept.replace(" — ", " - ")   # " — " separates concept and evidence in topic files
             updates.setdefault(slugify(slug), []).append((status, title, concept, evidence))
     count = 0
     for slug, rows in updates.items():
-        title, entries = load_topic(slug)
+        title, entries, streaks = _load(slug)
         for status, new_title, concept, evidence in rows:
             title = new_title or title
-            entries[concept.lower()] = (status, concept, evidence or "-", date)
             count += 1
-        save_topic(slug, title, entries)
+            key = concept.lower()
+            old = entries.get(key)
+            if status == "not-checked" and old and old[0] != "not-checked":
+                continue   # "explained again" never erases a result the learner showed
+            if status == "understood":
+                if old and old[0] == "understood":
+                    before = streaks.get(key) or 1
+                    streaks[key] = before if old[3] == date else before + 1
+                else:
+                    streaks[key] = 1
+            else:
+                streaks[key] = 0
+            entries[key] = (status, concept, evidence or "-", date)
+        save_topic(slug, title, entries, streaks)
     REPORTS.mkdir(parents=True, exist_ok=True)
     with open(MERGED, "a", encoding="utf-8") as fh:
         fh.write(path.name + "\n")
     return count
 
 
-def topic_summaries() -> list[tuple[str, str, str, list[Entry], list[Entry]]]:
-    """(slug, title, last_date, open_items, stale_items) per topic, most recent first."""
-    out = []
+def topic_slugs() -> list[str]:
     if not TOPICS.is_dir():
-        return out
-    cutoff = (datetime.date.today() - datetime.timedelta(days=STALE_DAYS)).isoformat()
-    for path in TOPICS.glob("*.md"):
-        title, entries = load_topic(path.stem)
+        return []
+    return sorted({p.stem for p in TOPICS.glob("*.json")} | {p.stem for p in TOPICS.glob("*.md")})
+
+
+def topic_summaries() -> list[tuple[str, str, str, list[Entry], list[Entry]]]:
+    """(slug, title, last_date, open_items, due_for_review) per topic, most recent first."""
+    out = []
+    today = datetime.date.today()
+    for slug in topic_slugs():
+        title, entries, streaks = _load(slug)
         if not entries:
             continue
         values = list(entries.values())
         open_items = [e for e in values if e[0] != "understood"]
-        stale = [e for e in values if e[0] == "understood" and e[3] < cutoff]
+        stale = []
+        for e in values:
+            if e[0] != "understood":
+                continue
+            try:
+                rested = (today - datetime.date.fromisoformat(e[3])).days
+            except ValueError:
+                rested = STALE_DAYS
+            if rested >= review_days(streaks.get(e[1].lower())):
+                stale.append(e)
         last = max(e[3] for e in values)
-        out.append((path.stem, title, last, open_items, stale))
+        out.append((slug, title, last, open_items, stale))
     out.sort(key=lambda t: t[2], reverse=True)
     return out
 
@@ -236,6 +360,15 @@ def session_start(hook: dict) -> None:
     sid = hook.get("session_id", "")
     script = Path(__file__).resolve()
     p = print
+    topics = topic_summaries()
+    pending = [t for t in topics if t[3] or t[4]]
+    ask = "" if auto_report_setting() is not None else " " + AUTO_REPORT_NOTE[None].format(script=script)
+    if not pending:
+        # nothing to review: one line, so working sessions stay working sessions
+        p(f"Prof plugin: session {sid} (short: {sid[:8]}) · data: {HOME} · helper: python3 {script} · "
+          "nothing due for review. Teach only when the learner asks (/prof:learn, \"teach me\")."
+          + ask)
+        return
 
     p("## Prof plugin")
     p(f"Session id: {sid} (short: {sid[:8]}) · data: {HOME} · helper: python3 {script}")
@@ -258,8 +391,6 @@ def session_start(hook: dict) -> None:
                 p(f"{heading}:")
                 p("\n".join(body))
 
-    topics = topic_summaries()
-    pending = [t for t in topics if t[3] or t[4]]
     if pending:
         p("\n### Open items from past sessions (worst first)")
         for slug, title, last, open_items, stale in pending[:6]:
@@ -276,8 +407,8 @@ def session_start(hook: dict) -> None:
           f"{TOPICS}. Test the open items and retention checks, estimate the level, and if "
           "the learner missed something from earlier sessions, re-teach it before any new "
           "concept. Do the warm-up once per topic per session.")
-    p("\nAt the end of a tutoring session (learner says bye/done/that's all), run "
-      "prof:report. If the session ends without one, a report is generated automatically.")
+    p("\nAt the end of a tutoring session (learner says bye/done/that's all), run prof:report.")
+    p(AUTO_REPORT_NOTE[auto_report_setting()].format(script=script))
 
 
 def _settings_style_is_professor(cwd: str) -> bool:
@@ -328,7 +459,8 @@ def extract_conversation(transcript: Path) -> tuple[str, bool, int]:
             if not text:
                 continue
             if kind == "user":
-                if "/prof:" in text:
+                # a /prof: command the user ran (not a message that merely mentions one)
+                if re.search(r"<command-name>/?prof:", text):
                     tutoring = True
                 if not text.startswith("<system-reminder>"):
                     turns += 1
@@ -349,6 +481,9 @@ def session_end(hook: dict) -> None:
     if not tutoring:
         tutoring = _settings_style_is_professor(hook.get("cwd") or os.getcwd())
     if not tutoring or turns < 3:
+        return
+    if auto_report_setting() is not True:
+        _log(f"auto-report for {sid[:8]} skipped: not enabled (prof_store.py auto-report on)")
         return
     TMP.mkdir(parents=True, exist_ok=True)
     convo_path = TMP / f"{sid[:8]}.txt"
@@ -395,7 +530,7 @@ def write_auto_report(sid: str, convo_path: Path) -> int:
 
 def print_topic(slug: str) -> int:
     slug = slugify(slug)
-    known_slugs = sorted(p.stem for p in TOPICS.glob("*.md")) if TOPICS.is_dir() else []
+    known_slugs = topic_slugs()
     if slug not in known_slugs:
         # "C# async" -> c-async: accept the one known slug containing every word.
         words = slug.split("-")
@@ -429,6 +564,11 @@ def main(argv: list[str]) -> int:
             print(f"merged {n} concepts from {argv[2]} into {TOPICS}")
         elif cmd == "topic" and len(argv) > 2:
             return print_topic(argv[2])
+        elif cmd == "auto-report" and len(argv) > 2 and argv[2] in ("on", "off", "status"):
+            if argv[2] != "status":
+                set_auto_report(argv[2] == "on")
+            state = {True: "on", False: "off", None: "not asked yet (off)"}[auto_report_setting()]
+            print(f"automatic reports: {state}")
         elif cmd == "write-auto-report" and len(argv) > 3:
             return write_auto_report(argv[2], Path(argv[3]))
         else:

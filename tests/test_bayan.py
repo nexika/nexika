@@ -150,12 +150,18 @@ def test_post_write_leaves_code_opt_out_and_disabled_files_alone(tmp_path):
     assert doc.read_text() == "Great question! Fine.\n"
 
 
-def test_pre_bash_blocks_signed_commits_and_pull_requests():
-    def decide(command):
-        out = hooks.pre_bash({"tool_input": {"command": command}})
-        return out and out["hookSpecificOutput"]["permissionDecision"]
-    assert decide('git commit -m "Fix\n\nCo-Authored-By: Claude <noreply@anthropic.com>"') == "deny"
-    assert decide('gh pr create --title x --body "🤖 Generated with [Claude Code](https://c)"') == "deny"
+def decision(command, cwd=None):
+    """'deny', 'suggest' (allowed, with a note for Claude) or None."""
+    out = hooks.pre_bash({"cwd": str(cwd) if cwd else None, "tool_input": {"command": command}})
+    if not out:
+        return None
+    return out["hookSpecificOutput"].get("permissionDecision") or "suggest"
+
+
+def test_pre_bash_suggests_for_signed_commits_and_blocks_hidden_characters():
+    decide = decision
+    assert decide('git commit -m "Fix\n\nCo-Authored-By: Claude <noreply@anthropic.com>"') == "suggest"
+    assert decide('gh pr create --title x --body "🤖 Generated with [Claude Code](https://c)"') == "suggest"
     assert decide('git commit -m "Fix​ parser"') == "deny"
     assert decide('git commit -m "Fix parser"') is None
     assert decide('echo "Co-Authored-By: Claude"') is None          # not a commit
@@ -273,14 +279,13 @@ def test_symlinks_outside_project_fixtures_and_rst_are_not_rewritten(tmp_path):
 
 def test_guard_ignores_look_alikes_and_reads_message_files(tmp_path):
     def decide(command):
-        out = hooks.pre_bash({"cwd": str(tmp_path), "tool_input": {"command": command}})
-        return out and out["hookSpecificOutput"]["permissionDecision"]
+        return decision(command, tmp_path)
     assert decide('git commit -m "docs: stop adding Generated with Claude Code footer"') is None
     assert decide('git log --grep commit | grep "Co-authored-by: claude"') is None
     assert decide('git commit -m "Résumé : corrigé"') is None          # French no-break space is fine
     (tmp_path / "msg.txt").write_text("Fix\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n")
-    assert decide("git commit -F msg.txt") == "deny"
-    assert decide("cd x && gh pr create --body-file msg.txt") == "deny"
+    assert decide("git commit -F msg.txt") == "suggest"
+    assert decide("cd x && gh pr create --body-file msg.txt") == "suggest"
 
 
 def test_unclosed_comment_is_fast():
@@ -288,3 +293,78 @@ def test_unclosed_comment_is_fast():
     text = "<!--" + "a in order to " * 8000
     start = time.monotonic()
     assert cleaned(text) == text and time.monotonic() - start < 1
+
+
+def test_signed_commits_are_not_denied_and_the_note_points_to_the_attribution_setting():
+    # issue #25: every commit with Claude Code's default trailer was denied, then retried
+    out = hooks.pre_bash({"tool_input": {"command": 'git commit -m "Fix\n\nCo-Authored-By: Claude <noreply@anthropic.com>"'}})
+    spec = out["hookSpecificOutput"]
+    assert "permissionDecision" not in spec
+    assert "attribution" in spec["additionalContext"]
+    config.save(deny_signatures=True)                       # strict mode for those who want it
+    assert decision('git commit -m "x\n\nCo-Authored-By: Claude <noreply@anthropic.com>"') == "deny"
+
+
+def test_git_global_options_do_not_hide_a_commit():
+    signed = 'commit -m "x\n\nCo-Authored-By: Claude <noreply@anthropic.com>"'
+    for prefix in ("git -c user.name=x", "git -C repo -c a=b", "git --no-pager", "git --git-dir=.git",
+                   "git --work-tree /w", "git -c core.hooksPath=/dev/null --no-pager"):
+        assert decision(f"{prefix} {signed}") == "suggest", prefix
+    assert decision('git -c x=y commit -m "Fix​ parser"') == "deny"
+
+
+# ---------------------------------------------------------------- issue #26: prompt files and human text
+
+
+def test_word_ranges_tables_and_headings_keep_their_dashes():
+    for text in ("Open Mon – Fri.\n", "| step — result | ok |\n", "## Setup — the short way\n"):
+        assert cleaned(text) == text, text
+    assert cleaned("Fast — and free.\n") == "Fast, and free.\n"
+
+
+def test_prompt_files_are_never_rewritten(tmp_path):
+    body = "1. Run the step — result goes to out.json.\nGreat question! Keep this line.\n"
+    for rel in ("SKILL.md", "skills/x/SKILL.md", "CLAUDE.md", "agents/reviewer.md",
+                "output-styles/plain.md", ".claude/commands/go.md", "AGENTS.md"):
+        path = tmp_path / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(body)
+        hooks.post_write({"tool_name": "Write", "cwd": str(tmp_path), "tool_input": {"file_path": str(path)}})
+        assert path.read_text() == body, rel
+
+
+def test_a_write_over_an_existing_file_cleans_only_the_changed_lines(tmp_path):
+    doc = tmp_path / "CHANGELOG.md"
+    old = "# Changes\n\nOpen Mon — Fri, we did it in order to learn.\n"
+    new = old + "\nNew: we did it in order to learn.\n"
+    doc.write_text(new)
+    hooks.post_write({"tool_name": "Write", "cwd": str(tmp_path),
+                      "tool_input": {"file_path": str(doc), "content": new},
+                      "tool_response": {"type": "update", "originalFile": old}})
+    assert doc.read_text() == old + "\nNew: we did it to learn.\n"
+    # a new file is all Claude's text
+    fresh = tmp_path / "new.md"
+    fresh.write_text("We did it in order to learn.\n")
+    hooks.post_write({"tool_name": "Write", "cwd": str(tmp_path),
+                      "tool_input": {"file_path": str(fresh), "content": "x"},
+                      "tool_response": {"type": "create", "originalFile": None}})
+    assert fresh.read_text() == "We did it to learn.\n"
+
+
+# ---------------------------------------------------------------- issue #46: prof's data files
+
+
+def test_prof_topic_files_survive_bayan(store, tmp_path):
+    # bayan turned prof's " — " field separators into commas, and prof then lost the topic
+    store.save_topic("py", "Python", {"generators": ("missed", "generators", "said yield returns", "2026-10-05")})
+    path = store.TOPICS / "py.md"
+    before = path.read_text()
+    hooks.post_write({"tool_name": "Write", "cwd": str(tmp_path), "tool_input": {"file_path": str(path)}})
+    assert path.read_text() == before
+    assert store.load_topic("py")[1]["generators"][0] == "missed"
+    # prof's default home is under ~/.claude, which bayan never rewrites
+    home_copy = tmp_path / ".claude" / "nexika" / "prof" / "topics" / "py.md"
+    home_copy.parent.mkdir(parents=True)
+    home_copy.write_text("- [missed] generators — said yield returns (2026-10-05)\n")
+    hooks.post_write({"tool_name": "Write", "cwd": str(tmp_path), "tool_input": {"file_path": str(home_copy)}})
+    assert "—" in home_copy.read_text()

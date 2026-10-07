@@ -26,6 +26,7 @@ class Fragment:
     id: str
     type: str
     text: str
+    pr: str | None = None    # the pull request that added the note, found at release time
 
 
 def check_name(filename: str) -> str | None:
@@ -78,7 +79,8 @@ def add(root: Path, project: Project, kind: str, text: str, note_id: str) -> Pat
 
 
 def _bullets(note: Fragment) -> list[str]:
-    ref = f" (#{note.id})" if note.id.isdigit() else ""
+    number = note.id if note.id.isdigit() else note.pr
+    ref = f" (#{number})" if number else ""
     lines = [ln.strip() for ln in note.text.splitlines() if ln.strip()]
     if all(ln.startswith(("- ", "* ")) for ln in lines):
         return [f"- {ln[2:].strip()}{ref}" for ln in lines]

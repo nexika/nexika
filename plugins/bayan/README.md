@@ -19,13 +19,19 @@ of the other Nexika plugins: prof's lessons and reports, amin's release notes, m
 - **After Claude writes or edits a Markdown file** (`.md`, `.mdx`), bayan cleans **only the part
   Claude just wrote**: it removes hidden characters (zero-width spaces and the like), AI signature
   lines, filler sentences (`Great question!`, `I hope this helps!`) and wordy phrases (`in order to`,
-  `it's worth noting that`), and turns em dashes between words into commas. Then it tells Claude
-  which of those lines still need rewriting. Text written by people is left alone, and so are code,
-  front matter, HTML, link targets, comments, files outside the project, symlinks and test fixtures.
+  `it's worth noting that`), and turns em dashes between words into commas (dashes in headings,
+  table rows and ranges such as `Mon – Fri` stay). Then it tells Claude which of those lines still
+  need rewriting. When Claude rewrites a whole existing file, only the lines that changed count as
+  Claude's. Text written by people is left alone, and so are code, front matter, HTML, link targets,
+  comments, files outside the project, symlinks and test fixtures. Prompt files are never changed:
+  `SKILL.md`, `CLAUDE.md`, `AGENTS.md` and anything in `.claude/`, `agents/` or `output-styles/`.
   `.txt` and `.rst` files are only checked, never changed.
 - **Before a commit, tag, pull request or release**, bayan stops it if the message (or the message
-  file) carries an AI signature line (`Co-Authored-By: Claude ... <noreply@anthropic.com>`,
-  `Generated with [Claude Code]`) or zero-width characters. Human co-authors are never touched.
+  file) carries zero-width characters. When it carries an AI signature line
+  (`Co-Authored-By: Claude ... <noreply@anthropic.com>`, `Generated with [Claude Code]`), bayan lets it
+  through and tells Claude to leave the line out and how to turn it off with Claude Code's
+  `attribution` setting; set `deny_signatures` to `true` to block it instead. Human co-authors are
+  never touched.
 
 Both languages are covered: for example `من الجدير بالذكر أن`, `تجدر الإشارة إلى أن` and
 `علاوة على ذلك` are removed or flagged, and Arabic gets an Arabic comma when a dash is replaced.
@@ -40,7 +46,7 @@ bayan level [no-code|junior|developer]
 
 `--min-score` makes `check` exit with 1 below that score, so a CI job can keep docs readable.
 Put `bayan: off` anywhere in a file to leave it alone. Settings live in
-`~/.claude/nexika/bayan/config.json` (`level`, `auto_clean`, `block_signatures`).
+`~/.claude/nexika/bayan/config.json` (`level`, `auto_clean`, `block_signatures`, `deny_signatures`).
 
 ## Honest limits
 - The plainness score measures the habits in [the guide](guide/writing.md). It is **not an AI

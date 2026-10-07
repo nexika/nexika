@@ -35,7 +35,11 @@ on a branch with a pull request (never commit to the default branch).
          env:
            BASE: ${{ github.base_ref }}
            LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
-         run: python3 <path to amin>/bin/amin check-fragment --base "origin/$BASE" --labels "$LABELS"
+         # run the base branch's copy, so a PR can't loosen the rule it is checked by
+         run: |
+           mkdir -p "$RUNNER_TEMP/amin-base"
+           git archive "origin/$BASE" <path to amin> | tar -x -C "$RUNNER_TEMP/amin-base"
+           python3 "$RUNNER_TEMP/amin-base/<path to amin>/bin/amin" check-fragment --base "origin/$BASE" --labels "$LABELS"
    ```
    If amin is not vendored in the repo, ask where the team wants the helper to come from.
 4. **Label.** Offer `gh label create no-changelog --description "PR needs no change note"`.

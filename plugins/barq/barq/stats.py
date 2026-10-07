@@ -35,7 +35,7 @@ def _since(period: str) -> str:
 
 
 def _kb(n: float) -> str:
-    return f"{n / 1024 / 1024:.1f} MB" if n >= 1024 * 1024 else f"{n / 1024:.1f} KB"
+    return f"{n / 1024 / 1024:.1f} MB" if abs(n) >= 1024 * 1024 else f"{n / 1024:.1f} KB"
 
 
 def op_stats(ctx: Context, period: str = "today") -> Result:
@@ -63,7 +63,7 @@ def op_stats(ctx: Context, period: str = "today") -> Result:
             out = op.get("out", 0)
             sent += out
             if op.get("baseline") is not None:
-                gain = max(op["baseline"] - out, 0)
+                gain = op["baseline"] - out   # negative when barq sent more than the built-in tool would
                 saved += gain
                 by_op[op.get("op", "?")] += gain
             hits += bool(op.get("hit"))
@@ -73,7 +73,7 @@ def op_stats(ctx: Context, period: str = "today") -> Result:
         f"calls: {calls}, ops: {ops} ({ops / calls:.1f} per call)",
         f"round-trips saved: {trips}",
         f"output sent: {_kb(sent)}; avoided: {_kb(saved)} "
-        f"(~{saved // BYTES_PER_TOKEN:,} tokens, estimated at {BYTES_PER_TOKEN} bytes/token)",
+        f"(~{int(saved / BYTES_PER_TOKEN):,} tokens, estimated at {BYTES_PER_TOKEN} bytes/token)",
         f"seen-before cache: {hits} read(s) answered as unchanged or as a diff",
     ]
     if by_op:

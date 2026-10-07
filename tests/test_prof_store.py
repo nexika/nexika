@@ -4,7 +4,9 @@ from __future__ import annotations
 import datetime
 import io
 import json
+import os
 import subprocess
+import time
 
 import pytest
 
@@ -36,12 +38,19 @@ def text(t):
     return {"type": "text", "text": t}
 
 
+def slash(command, args=""):
+    """How Claude Code records a slash command the user ran."""
+    return user(f"<command-message>{command[1:]} is running…</command-message>\n"
+                f"<command-name>{command}</command-name>\n<command-args>{args}</command-args>")
+
+
 # ---------------------------------------------------------------- slugify
 
 
 @pytest.mark.parametrize(
     ("raw", "expected"),
-    [("C# async/await", "c-async-await"), ("  Hello World ", "hello-world"), ("###", "general")],
+    [("C# async/await", "c-sharp-async-await"), ("  Hello World ", "hello-world"), ("###", "general"),
+     ("C++", "cpp"), ("C#", "c-sharp"), ("F# basics", "f-sharp-basics"), (".NET DI", "dotnet-di")],
 )
 def test_slugify(store, raw, expected):
     assert store.slugify(raw) == expected
@@ -96,6 +105,93 @@ def test_merge_report_records_merged_file(store):
     assert report.name in store.MERGED.read_text()
 
 
+def test_not_checked_never_overwrites_a_checked_status(store):
+    # issue #61/#87: a later "explained but not tested" erased an "understood" with evidence
+    first = write_report(store, "2026-10-01_1000_aaaa0000.md",
+                         ["- [understood] py :: Python :: generators :: wrote a correct one"])
+    later = write_report(store, "2026-10-05_1000_bbbb0000.md",
+                         ["- [not-checked] py :: Python :: generators :: mentioned again"])
+    store.merge_report(first)
+    store.merge_report(later)
+    assert store.load_topic("py")[1]["generators"][:3] == ("understood", "generators", "wrote a correct one")
+
+
+def test_c_sharp_and_c_plus_plus_stay_separate_topics(store):
+    report = write_report(store, "2026-10-05_1000_cccc0001.md", [
+        "- [shaky] C# :: C# :: delegates :: hints",
+        "- [missed] C++ :: C++ :: pointers :: wrong",
+    ])
+    store.merge_report(report)
+    assert set(store.load_topic("c-sharp")[1]) == {"delegates"}
+    assert set(store.load_topic("cpp")[1]) == {"pointers"}
+
+
+def test_a_concept_with_a_dash_keeps_its_history(store):
+    # issue #87: "await — basics" was saved, then reloaded as concept "await" with evidence "basics — ..."
+    for name, status in (("2026-10-01_1000_aaaa0002.md", "missed"),
+                         ("2026-10-05_1000_bbbb0002.md", "understood")):
+        store.merge_report(write_report(store, name, [f"- [{status}] py :: Python :: await — basics :: x"]))
+    _, entries = store.load_topic("py")
+    assert len(entries) == 1
+    [(status, concept, evidence, date)] = entries.values()
+    assert (status, evidence, date) == ("understood", "x", "2026-10-05")
+    assert concept.startswith("await") and concept.endswith("basics")
+
+
+def days_ago(n):
+    return (TODAY - datetime.timedelta(days=n)).isoformat()
+
+
+def test_topics_are_stored_as_json_and_rendered_as_markdown(store):
+    # issue #75: the separator-based markdown was the only copy of the data
+    store.merge_report(write_report(store, "2026-10-05_1000_eeee0000.md",
+                                    ["- [missed] py :: Python :: await — x (y) :: said \"blocks\" — twice"]))
+    data = json.loads((store.TOPICS / "py.json").read_text())
+    assert data["title"] == "Python" and data["concepts"][0]["evidence"] == 'said "blocks" — twice'
+    assert "[missed]" in (store.TOPICS / "py.md").read_text()
+    (store.TOPICS / "py.md").unlink()
+    assert store.load_topic("py")[1]["await - x (y)"][2] == 'said "blocks" — twice'
+    assert [t[0] for t in store.topic_summaries()] == ["py"]
+
+
+def test_old_markdown_topics_still_load_and_hand_edits_are_kept(store):
+    store.TOPICS.mkdir(parents=True)
+    (store.TOPICS / "go.md").write_text("# Go\n\n- [shaky] channels — hints (2026-10-01)\n")
+    assert store.load_topic("go") == ("Go", {"channels": ("shaky", "channels", "hints", "2026-10-01")})
+    store.save_topic("go", "Go", store.load_topic("go")[1])
+    md = store.TOPICS / "go.md"
+    md.write_text(md.read_text().replace("[shaky]", "[understood]"))
+    os.utime(md, (time.time() + 5, time.time() + 5))     # edited after the last save
+    assert store.load_topic("go")[1]["channels"][0] == "understood"
+
+
+def test_review_intervals_grow_with_each_success(store):
+    # a concept understood once comes back after 3 days; understood again, after 7, then 14, 30 ...
+    store.merge_report(write_report(store, f"{days_ago(5)}_1000_ffff0001.md",
+                                    ["- [understood] py :: Python :: loops :: ok"]))
+    [(_, _, _, _, stale)] = store.topic_summaries()
+    assert [e[1] for e in stale] == ["loops"]
+    store.merge_report(write_report(store, f"{days_ago(4)}_1000_ffff0002.md",
+                                    ["- [understood] py :: Python :: loops :: ok again"]))
+    [(_, _, _, _, stale)] = store.topic_summaries()
+    assert stale == []                                   # next review in 7 days
+    assert store.review_days(2) == 7 and store.review_days(9) == 120
+    store.merge_report(write_report(store, f"{days_ago(3)}_1000_ffff0003.md",
+                                    ["- [missed] py :: Python :: loops :: forgot"]))
+    assert store.load_streaks("py")["loops"] == 0        # a miss starts the ladder again
+
+
+def test_skill_triggers_need_a_learning_request():
+    # plain working questions must not start a lesson
+    from conftest import PLUGINS
+    text = "\n".join(p.read_text(encoding="utf-8").split("---")[1]
+                     for p in (PLUGINS / "prof" / "skills").glob("*/SKILL.md"))
+    for plain in ("what is X and how does it work", "explain this code", "what does this file do",
+                  '"bye"', '"done for today"', "explain this project"):
+        assert plain not in text, plain
+    assert '"teach me"' in text
+
+
 # ---------------------------------------------------------------- summaries / topic command
 
 
@@ -126,12 +222,17 @@ def test_print_topic_unknown_lists_known(store, capsys):
 # ---------------------------------------------------------------- session-start
 
 
-def test_session_start_first_time(store, capsys):
+def test_session_start_is_one_line_when_nothing_is_due(store, capsys):
+    # issue #61: every session got the full tutoring context, turning plain questions into lessons
+    store.set_auto_report(False)
+    store.PROFILE.parent.mkdir(parents=True, exist_ok=True)
+    store.PROFILE.write_text("# Learner profile\n- Level: junior\n", encoding="utf-8")
+    store.save_topic("py", "Python", {"loops": ("understood", "loops", "fine", TODAY.isoformat())})
     store.session_start({"session_id": "abcdef1234567"})
-    out = capsys.readouterr().out
-    assert "short: abcdef12" in out
-    assert "No learner profile yet" in out
-    assert "Warm-up rule" not in out  # nothing to warm up on yet
+    out = capsys.readouterr().out.strip()
+    assert len(out.splitlines()) == 1
+    assert "short: abcdef12" in out and "nothing due" in out
+    assert "Warm-up rule" not in out and "Level: junior" not in out
 
 
 def test_session_start_lists_history_and_warmup_rule(store, capsys):
@@ -164,7 +265,7 @@ def test_session_start_silent_inside_background_report(store, capsys, monkeypatc
 
 def test_extract_conversation_detects_tutoring_and_counts_turns(store, tmp_path):
     path = write_transcript(tmp_path / "t.jsonl", [
-        user("/prof:learn generators"),
+        slash("/prof:learn", "generators"),
         assistant({"type": "tool_use", "name": "Skill", "input": {"skill": "prof:warmup", "args": "py"}}),
         assistant(text("Q1: what does yield do?")),
         user("it returns a value"),
@@ -199,11 +300,12 @@ def popen_calls(store, monkeypatch):
 
 def tutoring_transcript(tmp_path):
     return write_transcript(tmp_path / "t.jsonl", [
-        user("/prof:learn loops"), assistant(text("Q1?")), user("a"), user("b"), user("bye"),
+        slash("/prof:learn", "loops"), assistant(text("Q1?")), user("a"), user("b"), user("bye"),
     ])
 
 
 def test_session_end_spawns_background_report(store, tmp_path, popen_calls):
+    store.set_auto_report(True)
     store.session_end({"session_id": "abcd1234zz", "transcript_path": str(tutoring_transcript(tmp_path))})
     assert len(popen_calls) == 1
     args, kwargs = popen_calls[0]
@@ -220,7 +322,7 @@ def test_session_end_skips_plain_session(store, tmp_path, popen_calls):
 
 
 def test_session_end_skips_short_session(store, tmp_path, popen_calls):
-    path = write_transcript(tmp_path / "t.jsonl", [user("/prof:learn x"), user("bye")])
+    path = write_transcript(tmp_path / "t.jsonl", [slash("/prof:learn", "x"), user("bye")])
     store.session_end({"session_id": "s1", "transcript_path": str(path)})
     assert popen_calls == []
 
@@ -232,11 +334,42 @@ def test_session_end_skips_when_report_exists(store, tmp_path, popen_calls):
 
 
 def test_session_end_professor_style_counts_as_tutoring(store, tmp_path, popen_calls):
+    store.set_auto_report(True)
     (tmp_path / ".claude").mkdir()
     (tmp_path / ".claude" / "settings.local.json").write_text('{"outputStyle": "Professor"}')
     rows = [user("what is a loop"), user("ok"), user("why"), user("bye")]
     path = write_transcript(tmp_path / "t.jsonl", rows)
     store.session_end({"session_id": "s1", "transcript_path": str(path), "cwd": str(tmp_path)})
+    assert len(popen_calls) == 1
+
+
+# issue #43: any message mentioning /prof: started a paid background report without asking
+
+
+def test_mentioning_prof_in_a_message_is_not_tutoring(store, tmp_path, popen_calls):
+    store.set_auto_report(True)
+    rows = [user("how do I turn off /prof:report?"), user("ok"), user("and /prof:learn?"), user("bye")]
+    path = write_transcript(tmp_path / "t.jsonl", rows)
+    assert store.extract_conversation(path)[1] is False
+    store.session_end({"session_id": "s1", "transcript_path": str(path), "cwd": str(tmp_path)})
+    assert popen_calls == []
+
+
+def test_no_background_report_until_the_learner_agrees(store, tmp_path, popen_calls, capsys):
+    hook = {"session_id": "abcd1234zz", "transcript_path": str(tutoring_transcript(tmp_path))}
+    assert store.auto_report_setting() is None
+    store.session_end(hook)
+    assert popen_calls == []
+    assert "not enabled" in store.LOG.read_text()
+    store.session_start({"session_id": "s2"})
+    assert "auto-report on" in capsys.readouterr().out          # Claude is told to ask once
+    assert store.main(["prof_store.py", "auto-report", "off"]) == 0
+    store.session_end(hook)
+    assert popen_calls == [] and store.auto_report_setting() is False
+    store.session_start({"session_id": "s3"})
+    assert "auto-report on" not in capsys.readouterr().out      # asked once, never again
+    store.main(["prof_store.py", "auto-report", "on"])
+    store.session_end(hook)
     assert len(popen_calls) == 1
 
 

@@ -21,7 +21,8 @@ class Page:
     title: str = ""
     meta: dict[str, str] = field(default_factory=dict)         # name/property -> content (lowercased keys)
     canonical: str = ""
-    hreflang: dict[str, str] = field(default_factory=dict)
+    hreflang: dict[str, str] = field(default_factory=dict)      # code (lowercased) -> absolute URL
+    hreflang_raw: dict[str, str] = field(default_factory=dict)  # code as written -> href as written
     headings: list[tuple[int, str]] = field(default_factory=list)
     links: list[tuple[str, str]] = field(default_factory=list)  # (absolute url, anchor text)
     images: list[tuple[str, str | None]] = field(default_factory=list)  # (src, alt or None)
@@ -96,7 +97,8 @@ class _Parser(HTMLParser):
             if "canonical" in rel and a.get("href"):
                 self.page.canonical = self._abs(a["href"])
             if "alternate" in rel and a.get("hreflang") and a.get("href"):
-                self.page.hreflang[a["hreflang"].lower()] = self._abs(a["href"])
+                self.page.hreflang[a["hreflang"].strip().lower()] = self._abs(a["href"])
+                self.page.hreflang_raw[a["hreflang"].strip()] = a["href"].strip()
         elif tag == "script":
             self.page.scripts += 1
             if a.get("type", "").lower() == "application/ld+json":

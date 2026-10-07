@@ -14,6 +14,8 @@ QUESTION = re.compile(r"[?؟]\s*$|^(how|what|why|when|which|who|can|does|is)\b"
 VAGUE_START = re.compile(r"^(it|this|that|they|these|those)\b", re.I)
 FACT = re.compile(r"\d+(?:[.,]\d+)?\s*%?|\b\d{4}\b")
 NAME = re.compile(r"(?<![.!?]\s)(?<!^)\b[A-Z][a-zA-Z0-9]+")
+ARABIC_LETTER = re.compile(r"[؀-ۿݐ-ݿ]")
+LATIN_LETTER = re.compile(r"[A-Za-z]")
 
 
 def words(text: str) -> list[str]:
@@ -42,12 +44,16 @@ def block_score(heading: str, text: str) -> tuple[int, list[str]]:
     total += 20 if facts >= 2 else 10 if facts == 1 else 0
     if facts < 2:
         missing.append("few specifics (numbers, dates, versions, limits)")
+    # names are spotted by capital letters, which Arabic doesn't have: score Arabic on the other 90 points
+    arabic = len(ARABIC_LETTER.findall(text)) > len(LATIN_LETTER.findall(text))
     names = len(set(NAME.findall(text)))
-    total += 10 if names >= 2 else 0
+    total += 10 if names >= 2 and not arabic else 0
     if VAGUE_START.match(text.strip()):
         missing.append("starts with a pronoun ('It', 'This'): name the subject")
     else:
         total += 10
+    if arabic:
+        total = round(total * 100 / 90)
     return min(total, 100), missing
 
 

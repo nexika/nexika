@@ -11,6 +11,7 @@ HEADER = (
     "[Semantic Versioning](https://semver.org/).\n"
 )
 SECTION_START = re.compile(r"^## \[", re.M)
+VERSION_START = re.compile(r"^## \[(?!unreleased\])", re.M | re.I)   # Unreleased stays on top
 
 
 def render(version: str, date: str, sections: dict[str, list[str]]) -> str:
@@ -28,7 +29,8 @@ def has_version(path: Path, version: str) -> bool:
 
 
 def insert(path: Path, name: str, version: str, date: str, sections: dict[str, list[str]]) -> None:
-    """Add a section for version at the top of the version list (creating the file if needed)."""
+    """Add a section for version at the top of the version list, below any [Unreleased] section
+    (creating the file if needed)."""
     if has_version(path, version):
         raise ValueError(f"{path.name} already has a section for {version}")
     block = render(version, date, sections)
@@ -37,7 +39,7 @@ def insert(path: Path, name: str, version: str, date: str, sections: dict[str, l
         path.write_text(HEADER.format(name=name) + "\n" + block, encoding="utf-8")
         return
     content = path.read_text(encoding="utf-8")
-    m = SECTION_START.search(content)
+    m = VERSION_START.search(content)
     if m:
         content = content[: m.start()] + block + "\n" + content[m.start():]
     else:

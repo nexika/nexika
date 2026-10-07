@@ -7,7 +7,7 @@ actually mention and cite you**, so you can see what each change did.
 
 | Skill | What it does |
 |---|---|
-| `/manar:audit <url or built folder>` | Deterministic checks of indexing, titles, descriptions, canonical, language, structured data, sitemap, robots.txt rules for every AI crawler, llms.txt, JavaScript-only content, and how quotable each passage is (English and Arabic) |
+| `/manar:audit <url or built folder>` | Deterministic checks of indexing, titles, descriptions, canonical, language and hreflang (codes, absolute URLs, return links, x-default), structured data (including the properties each schema.org type needs), sitemap and pages missing from it, broken internal links, robots.txt rules for every AI crawler, llms.txt, JavaScript-only content, and how quotable each passage is (English and Arabic). `--fail-on high` makes it fail a CI job |
 | `/manar:fix` | Writes the fixes into your project with the framework's own conventions (Next.js, Astro, ASP.NET Core, static / GitHub Pages), re-audits the build, and opens a pull request (via itqan and amin when installed) |
 | `/manar:visibility` | Asks Gemini (Google Search grounded), Perplexity, ChatGPT search and Claude search your customers' real questions, several times each, and reports how often you are **mentioned** and **cited**, who is cited instead, and the change since the last release |
 
@@ -30,8 +30,8 @@ actually mention and cite you**, so you can see what each change did.
 ## Commands (the helper the skills use)
 
 ```
-manar audit URL|FOLDER [--max-pages N] [--allow-local] [--base-url URL] [--json]
-manar diff
+manar audit URL|FOLDER [--max-pages N] [--allow-local] [--base-url URL] [--json] [--fail-on SEVERITY]
+manar diff [TARGET]
 manar detect
 manar generate robots --origin URL [--block-training]
 manar generate sitemap|llms URL|FOLDER --name N --summary S
@@ -47,6 +47,8 @@ only (never stored). Override models with `MANAR_GEMINI_MODEL` etc. A run refuse
 ## Honest limits
 - Nobody can guarantee the first position in Google, ChatGPT or Gemini. manar removes known
   obstacles, makes the site easy to understand and cite, and measures the result.
-- A few samples are noisy: compare trends across runs and releases.
+- A few samples are noisy: each rate has a 95% range (counted per prompt, since samples of one
+  prompt move together), a before/after is called a real change only when the ranges don't
+  overlap, and runs with other prompts or models are not compared.
 - JavaScript is not executed; pages that need it are reported as a problem (as crawlers see them).
 - Pure Python standard library; no paid services required.

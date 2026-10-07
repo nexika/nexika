@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import math
 import os
 import re
 import subprocess
@@ -28,10 +29,18 @@ ENGINES = {
 DEFAULT_MAX_CALLS = 30
 
 
+# Rough cost of one call in US dollars (search fee plus typical tokens), for `plan` only; providers change
+# prices, so this is an estimate. Gemini's free tier often covers a small panel.
+COST_PER_CALL = {"gemini": 0.035, "perplexity": 0.008, "openai": 0.015, "anthropic": 0.035}
+
+
 @dataclass
 class Answer:
+    """`citations` are the sources the answer links to inline; that is what "cited" means for every
+    engine. `retrieved` are sources the engine only read."""
     text: str
-    citations: list[str] = field(default_factory=list)   # URLs (and source titles when engines give them)
+    citations: list[str] = field(default_factory=list)
+    retrieved: list[str] = field(default_factory=list)
 
 
 def _post(url: str, headers: dict, body: dict, timeout: int = 90) -> dict:
@@ -47,26 +56,51 @@ def _post(url: str, headers: dict, body: dict, timeout: int = 90) -> dict:
         raise RuntimeError(str(getattr(exc, "reason", exc))) from None
 
 
-def ask_gemini(prompt, key, model, post=_post) -> Answer:
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *args, **kwargs):
+        return None
+
+
+def resolve_redirect(url: str) -> str | None:
+    """Where a Gemini grounding redirect points (its Location header), without following it."""
+    opener = urllib.request.build_opener(_NoRedirect)
+    try:
+        opener.open(urllib.request.Request(url, method="HEAD"), timeout=10)
+    except urllib.error.HTTPError as exc:
+        return exc.headers.get("Location")
+    except (urllib.error.URLError, TimeoutError, ValueError):
+        return None
+    return None
+
+
+def ask_gemini(prompt, key, model, post=_post, resolve=resolve_redirect) -> Answer:
     data = post(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
                 {"x-goog-api-key": key},
                 {"contents": [{"parts": [{"text": prompt}]}], "tools": [{"google_search": {}}]})
     cand = (data.get("candidates") or [{}])[0]
     text = "".join(p.get("text", "") for p in (cand.get("content") or {}).get("parts", []))
-    cites = []
-    for chunk in (cand.get("groundingMetadata") or {}).get("groundingChunks", []):
+    meta = cand.get("groundingMetadata") or {}
+    chunks = meta.get("groundingChunks") or []
+    used = {i for s in meta.get("groundingSupports") or [] for i in s.get("groundingChunkIndices") or []}
+    cites, retrieved = [], []
+    for i, chunk in enumerate(chunks):
         web = chunk.get("web") or {}
-        cites += [v for v in (web.get("uri"), web.get("title")) if v]
-    return Answer(text, cites)
+        uri = web.get("uri") or ""
+        # Gemini links through a redirect: resolve it, so path-scoped domains (github.com/o/r) can match;
+        # the title (a bare host) is the fallback
+        source = (resolve(uri) if "vertexaisearch" in uri else uri) or web.get("title")
+        if source:
+            (cites if i in used else retrieved).append(source)
+    return Answer(text, cites, retrieved)
 
 
 def ask_perplexity(prompt, key, model, post=_post) -> Answer:
     data = post("https://api.perplexity.ai/chat/completions", {"Authorization": f"Bearer {key}"},
                 {"model": model, "messages": [{"role": "user", "content": prompt}]})
     text = ((data.get("choices") or [{}])[0].get("message") or {}).get("content", "")
-    cites = list(data.get("citations") or []) + [r.get("url") for r in data.get("search_results") or []
-                                                  if r.get("url")]
-    return Answer(text, cites)
+    cites = list(data.get("citations") or [])   # the [n] references in the answer
+    retrieved = [r.get("url") for r in data.get("search_results") or [] if r.get("url")]
+    return Answer(text, cites, retrieved)
 
 
 def ask_openai(prompt, key, model, post=_post) -> Answer:
@@ -85,14 +119,14 @@ def ask_anthropic(prompt, key, model, post=_post) -> Answer:
                 {"x-api-key": key, "anthropic-version": "2023-06-01"},
                 {"model": model, "max_tokens": 1024, "messages": [{"role": "user", "content": prompt}],
                  "tools": [{"type": "web_search_20250305", "name": "web_search", "max_uses": 3}]})
-    text, cites = [], []
+    text, cites, retrieved = [], [], []
     for block in data.get("content") or []:
         if block.get("type") == "text":
             text.append(block.get("text", ""))
             cites += [c.get("url") for c in block.get("citations") or [] if c.get("url")]
         elif block.get("type") == "web_search_tool_result" and isinstance(block.get("content"), list):
-            cites += [r.get("url") for r in block["content"] if r.get("url")]
-    return Answer("".join(text), cites)
+            retrieved += [r.get("url") for r in block["content"] if r.get("url")]
+    return Answer("".join(text), cites, retrieved)
 
 
 ASK = {"gemini": ask_gemini, "perplexity": ask_perplexity, "openai": ask_openai, "anthropic": ask_anthropic}
@@ -165,9 +199,10 @@ def run(panel: dict, engines: dict[str, tuple[str, str]], ask=None, ref: str = "
                     answer = ask[engine](prompt["text"], key, model)
                     position = is_cited(answer.citations, panel.get("domains", []))
                     rec.update(mentioned=mentions(answer.text, names), cited=position is not None,
-                               position=position, citations=answer.citations[:15], error="")
+                               position=position, citations=answer.citations[:15],
+                               retrieved=answer.retrieved[:15], error="")
                 except Exception as exc:  # one engine failing must not stop the run
-                    rec.update(mentioned=False, cited=False, position=None, citations=[],
+                    rec.update(mentioned=False, cited=False, position=None, citations=[], retrieved=[],
                                error=str(exc)[:300])
                 records.append(rec)
     return records
@@ -176,6 +211,44 @@ def run(panel: dict, engines: dict[str, tuple[str, str]], ask=None, ref: str = "
 def _rates(rows: list[dict]) -> tuple[float, float]:
     n = len(rows) or 1
     return sum(r["mentioned"] for r in rows) / n, sum(r["cited"] for r in rows) / n
+
+
+def wilson(k: float, n: float, z: float = 1.96) -> tuple[float, float]:
+    """95% Wilson score interval for k successes out of n."""
+    if n <= 0:
+        return 0.0, 1.0
+    p = k / n
+    centre = (p + z * z / (2 * n)) / (1 + z * z / n)
+    margin = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    return max(0.0, centre - margin), min(1.0, centre + margin)
+
+
+def _range(rows: list[dict], key: str) -> tuple[float, float]:
+    """Samples of one prompt are strongly correlated, so the prompt is the unit: n = prompts and k = the
+    sum of per-prompt rates. Wider than counting every answer, and honest."""
+    by_prompt: dict[str, list[bool]] = {}
+    for r in rows:
+        by_prompt.setdefault(r["prompt"], []).append(bool(r[key]))
+    return wilson(sum(sum(v) / len(v) for v in by_prompt.values()), len(by_prompt))
+
+
+def comparable(before: list[dict], after: list[dict], engine: str) -> str:
+    """Why two runs can't be compared for one engine ("" when they can)."""
+    old = [r for r in before if r["engine"] == engine]
+    new = [r for r in after if r["engine"] == engine]
+    if {r["prompt"] for r in old} != {r["prompt"] for r in new}:
+        return "the prompts differ"
+    old_models, new_models = {str(r.get("model")) for r in old}, {str(r.get("model")) for r in new}
+    if old_models != new_models:
+        return f"the model changed ({', '.join(sorted(old_models))} -> {', '.join(sorted(new_models))})"
+    return ""
+
+
+def _change(before: list[dict], after: list[dict], key: str) -> str:
+    """Real only when the 95% ranges don't overlap (conservative)."""
+    lo_b, hi_b = _range(before, key)
+    lo_a, hi_a = _range(after, key)
+    return "real change" if lo_a > hi_b or hi_a < lo_b else "within noise"
 
 
 def report(records: list[dict], previous: list[dict] | None = None, domains: list[str] | None = None) -> str:
@@ -190,17 +263,28 @@ def report(records: list[dict], previous: list[dict] | None = None, domains: lis
             lines.append(f"  {engine:<11} all calls failed: {first_error}")
             continue
         m, c = _rates(rows)
+        (m_lo, m_hi), (c_lo, c_hi) = _range(rows, "mentioned"), _range(rows, "cited")
+        prompts = len({r["prompt"] for r in rows})
         line = (f"  {engine:<11} mentioned in {m:.0%} of answers, cited (linked) in {c:.0%}"
-                f"  [{len(rows)} answers]")
+                f"  [{len(rows)} answers, {prompts} prompts; 95% range: mentioned {m_lo:.0%}-{m_hi:.0%},"
+                f" cited {c_lo:.0%}-{c_hi:.0%}]")
         before = [r for r in prev if r["engine"] == engine]
         if before:
-            pm, pc = _rates(before)
-            line += f"  (before: {pm:.0%} / {pc:.0%}, ref {before[0].get('ref') or '?'})"
+            why = comparable(before, rows, engine)
+            if why:
+                line += f"  (before: not comparable, {why})"
+            else:
+                pm, pc = _rates(before)
+                line += (f"  (before: {pm:.0%} / {pc:.0%}, ref {before[0].get('ref') or '?'}; "
+                         f"mentioned: {_change(before, rows, 'mentioned')}, "
+                         f"cited: {_change(before, rows, 'cited')})")
         lines.append(line)
-    lines.append("by prompt:")
+    lines.append("by prompt (cited, with the 95% range over its samples):")
     for prompt in dict.fromkeys(r["prompt"] for r in ok):
-        m, c = _rates([r for r in ok if r["prompt"] == prompt])
-        lines.append(f"  {m:4.0%} mentioned, {c:4.0%} cited  - {prompt}")
+        rows = [r for r in ok if r["prompt"] == prompt]
+        m, c = _rates(rows)
+        lo, hi = wilson(sum(r["cited"] for r in rows), len(rows))
+        lines.append(f"  {m:4.0%} mentioned, {c:4.0%} cited ({lo:.0%}-{hi:.0%})  - {prompt}")
     own = [d.lower() for d in domains or []]
     hosts: Counter = Counter()
     for r in ok:

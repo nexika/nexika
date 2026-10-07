@@ -36,7 +36,9 @@ changelog.d/<project>/<id>.<type>.md        single-project repos: changelog.d/<i
 One file per PR means no merge conflicts in CHANGELOG.md. `/amin:work` writes the note for you;
 by hand: `amin fragment add <project> fixed "What changed, for users" --id 42`. A CI job
 (`amin check-fragment`) fails a PR that changes a project without a note, unless the PR is
-labelled `no-changelog`.
+labelled `no-changelog`. It also fails empty notes and notes outside a project's notes folder
+(they would never be released), and deleting a note only counts as a release when the PR also
+changes that project's CHANGELOG or version. CI runs the base branch's copy of the checker.
 
 ## Releases
 
@@ -49,6 +51,17 @@ amin publish barq --dry-run     checks: default branch, clean, up to date, versi
 amin publish barq               tag barq-v0.2.0 + GitHub Release with the CHANGELOG section
 ```
 
+`prepare` runs only on a release branch with a clean tree; `--dry-run` shows the versions, files and
+CHANGELOG sections without changing anything. Notes named by a slug instead of a number get the
+number of the PR that added them. In a marketplace, `--umbrella` also releases the whole repo: the
+root version file (`pyproject.toml` or `package.json`) and a root `CHANGELOG.md` section listing the
+released plugins, published with `amin publish <marketplace name>` as tag `<name>-v<version>`
+(`.amin.json` `{"umbrella": {"name", "version_files", "changelog", "tag"}}` overrides this).
+
+Release candidates: `amin prepare <project> --rc` releases `1.3.0-rc.1` (then `-rc.2` ...) as a
+GitHub pre-release and keeps the notes; a later `amin prepare <project>` promotes to `1.3.0` and
+collects every note.
+
 First release of a project with no tags: `amin history <project>` lists the merged PRs that
 touched it, so notes can be written from real history.
 
@@ -57,7 +70,8 @@ touched it, so notes can be written from real history.
 Detected automatically:
 - a plugin marketplace (`plugins/*/.claude-plugin/plugin.json`): one project per plugin, tags
   `<name>-v<version>`, `CHANGELOG.md` in each plugin folder;
-- otherwise one project at the root, versioned in `package.json`, `pyproject.toml`,
+- otherwise one project at the root, versioned in `package.json` (with `package-lock.json`),
+  `pyproject.toml`, `Cargo.toml` (a crate or a `[workspace.package]`, with `Cargo.lock`),
   `.claude-plugin/plugin.json`, `Directory.Build.props` or a `.csproj` `<Version>`: tags `v<version>`.
 
 Anything else: `.amin.json`

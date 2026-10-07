@@ -1,6 +1,6 @@
 ---
 name: onboard
-description: Onboard a junior developer to an existing project - map the architecture, explain how it runs, walk the main flows, and give a guided first task. Use when the user says "explain this project", "I'm new to this codebase", "onboard me", "help a junior understand this repo", or "where do I start in this project".
+description: Onboard a junior developer to an existing project - map the architecture, explain how it runs, walk the main flows, and give a guided first task. Use when the user says "onboard me", "I'm new to this codebase, teach me", "help a junior learn this repo", or runs /prof:onboard. Not for a quick overview asked while working.
 argument-hint: "[path or area of the project, optional]"
 ---
 

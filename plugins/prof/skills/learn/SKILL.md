@@ -1,6 +1,6 @@
 ---
 name: learn
-description: Teach a programming concept step by step like a professor - level check, simple explanation, analogy, examples, check questions and an exercise. Use when the user says "teach me", "explain X to me", "I want to learn", "what is X and how does it work", or "help me understand".
+description: Teach a programming concept step by step like a professor - level check, simple explanation, analogy, examples, check questions and an exercise. Use when the user asks to be taught - "teach me", "I want to learn", "give me a lesson on", "help me learn" - or runs /prof:learn. Not for ordinary questions asked while working ("what is X", "why does this fail"): answer those directly.
 argument-hint: "<topic, e.g. async/await in C#>"
 ---
 
@@ -11,7 +11,9 @@ Topic: $ARGUMENTS (if empty, ask the learner what they want to learn).
 ## Steps
 
 1. **Load the learner.** Use the profile and open items in the "Prof plugin" session context.
-   Don't re-teach what is `understood` unless asked.
+   When the context is only the one-line note (nothing due), read
+   `~/.claude/nexika/prof/profile.md`; if there is none, ask the learner's level and goals and
+   create it with the `progress` skill. Don't re-teach what is `understood` unless asked.
 2. **Warm-up first.** If this topic (or a closely related one) has history in
    `~/.claude/nexika/prof/topics/` and no warm-up ran for it this session, run the `warmup` skill now.
    If it finds gaps from earlier sessions, those are re-taught before step 3.

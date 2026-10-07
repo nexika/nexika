@@ -248,8 +248,9 @@ GO = textwrap.dedent('''\
 
 def test_go_outline():
     syms = {s.name: s for s in outline(GO, ".go")}
-    assert list(syms) == ["Server", "Start", "main"]
-    assert syms["Start"].kind == "method" and (syms["Start"].line, syms["Start"].end) == (7, 9)
+    assert list(syms) == ["Server", "Server.Start", "main"]
+    start = syms["Server.Start"]
+    assert start.kind == "method" and (start.line, start.end) == (7, 9)
 
 
 def test_markdown_sections_skip_code_fences():
@@ -400,3 +401,63 @@ def test_generic_success_and_plain_error_lines_are_not_cargo():
 
 def test_ansi_codes_are_removed():
     assert compress.clean("\x1b[31mred\x1b[0m\r\n") == "red\n"
+
+
+# ---------------------------------------------------------------- issue #86: parser and symbol gaps
+
+
+def test_pytest_quiet_summary_is_recognised():
+    verdict, details, _ = summarize("""\
+        ..F.                                                                     [100%]
+        FAILED tests/test_a.py::test_add - assert 3 == 4
+        1 failed, 3 passed in 0.12s
+    """)
+    assert verdict == "1 failed, 3 passed in 0.12s"
+    assert "FAILED tests/test_a.py::test_add" in details
+    assert summarize("....  [100%]\n4 passed in 0.02s\n", 0)[0] == "4 passed in 0.02s"
+
+
+def test_go_methods_can_be_found_by_receiver():
+    assert [s.name for s in find_symbol(GO, ".go", "Server.Start")] == ["Server.Start"]
+    assert [s.name for s in find_symbol(GO, ".go", "Start")] == ["Server.Start"]
+
+
+TS_MORE = textwrap.dedent('''\
+    export type Id = string | number;
+    type Props<T> = {
+      value: T;
+    };
+    export class Button {
+      private handleClick = (e: Event) => {
+        this.fire(e);
+      };
+      render = async () => {
+        return `<div class="x">
+          ${this.label} }
+        </div>`;
+      };
+      after() {
+        return 1;
+      }
+    }
+''')
+
+
+def test_typescript_class_arrow_fields_and_type_aliases():
+    syms = {s.name: s for s in outline(TS_MORE, ".ts")}
+    assert list(syms) == ["Id", "Props", "Button", "Button.handleClick", "Button.render", "Button.after"]
+    assert (syms["Props"].line, syms["Props"].end) == (2, 4)
+    assert (syms["Button.handleClick"].line, syms["Button.handleClick"].end) == (6, 8)
+
+
+def test_a_multi_line_template_literal_does_not_cut_a_function_short():
+    syms = {s.name: s for s in outline(TS_MORE, ".ts")}
+    assert (syms["Button.render"].line, syms["Button.render"].end) == (9, 13)
+    assert (syms["Button"].line, syms["Button"].end) == (5, 17)
+    assert not syms["Button.render"].partial
+
+
+def test_a_symbol_without_a_closing_brace_is_marked_partial():
+    text = "function broken() {\n" + "  x();\n" * 80
+    sym = outline(text, ".js")[0]
+    assert sym.partial

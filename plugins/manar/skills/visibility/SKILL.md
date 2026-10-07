@@ -16,11 +16,17 @@ The manar helper is printed in the session note; below it is written `manar`.
 2. **Keys.** At least one: `GEMINI_API_KEY` (free tier; answers grounded in Google Search),
    `PERPLEXITY_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`. Keys stay in the environment;
    never write them to files. Models can be changed with `MANAR_<ENGINE>_MODEL`.
-3. **Cost first.** `manar visibility plan` shows the number of API calls; confirm with the user.
+3. **Cost first.** `manar visibility plan` shows the number of API calls and a rough dollar
+   estimate; confirm with the user.
 4. **Measure.** `manar visibility run` (refuses above `--max-calls`, default 30). Results are
    appended to `.manar/visibility.jsonl` with the git ref (e.g. a release tag).
 5. **Report** (`manar visibility report`): per engine, the share of answers that **mention** the
-   brand and that **cite** (link) its domains; per prompt; and the sources cited instead (the
-   real competition). Compare with the previous run and name the change that happened between.
+   brand and that **cite** its domains (link them in the answer itself, the same rule for every
+   engine; sources an engine only read don't count); per prompt; and the sources cited instead (the
+   real competition). Each rate comes with a 95% range; samples of one prompt move together, so
+   the range counts prompts, not answers. Compare with the previous run only when the report
+   says the change is a **real change**; "within noise" means the runs can't tell, and "not
+   comparable" (other prompts or another model) means don't compare at all. Name the change
+   that happened between.
 6. Be honest: a few samples are noisy; trends over weeks matter more than one run; label
    everything Measured. Suggest re-running after each release (`/amin:release`).

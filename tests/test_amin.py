@@ -26,6 +26,10 @@ def write(root, rel, text):
     return path
 
 
+def git_out(root, *args):
+    return subprocess.run(["git", *args], cwd=root, check=True, capture_output=True, text=True).stdout
+
+
 def commit(root, message="change"):
     _git(root, "add", "-A")
     _git(root, "commit", "-q", "-m", message)
@@ -64,21 +68,36 @@ def market(tmp_path):
 class FakeRunner(gitops.Runner):
     """Real git; canned gh answers (no network)."""
 
-    def __init__(self, root, checks=None, prs=None, issue=None):
+    def __init__(self, root, checks=None, prs=None, issue=None, releases=(), fail_release=False):
         super().__init__(root)
+        self.releases, self.fail_release = set(releases), fail_release
+        self.pulls = {}   # commit sha -> PRs that contain it
         self.checks = checks if checks is not None else [{"name": "CI", "status": "completed",
                                                            "conclusion": "success"}]
         self.prs, self.issue, self.gh_calls = prs or [], issue, []
 
     def gh(self, *args, check=True):
         self.gh_calls.append(args)
+        if args[:2] == ("release", "view"):
+            if args[2] in self.releases:
+                return json.dumps({"url": f"https://github.com/o/r/releases/tag/{args[2]}"})
+            if check:
+                raise gitops.CommandError("release not found")
+            return ""
         if args[:2] == ("release", "create"):
+            if self.fail_release:
+                raise gitops.CommandError("gh release create: HTTP 502")
+            self.releases.add(args[2])
             return f"https://github.com/o/r/releases/tag/{args[2]}\n"
         return json.dumps(self.gh_json(*args))
 
     def gh_json(self, *args):
+        if not self.gh_calls or self.gh_calls[-1] != args:
+            self.gh_calls.append(args)
         if args[:2] == ("repo", "view"):
             return {"nameWithOwner": "o/r"}
+        if args[0] == "api" and args[1].endswith("/pulls"):
+            return self.pulls.get(args[1].split("/")[-2], [])
         if args[0] == "api":
             return {"check_runs": self.checks}
         if args[:2] == ("pr", "list"):
@@ -192,6 +211,28 @@ def test_changelog_insert_and_extract(tmp_path):
         changelog.insert(path, "alpha", "0.2.0", "2026-10-06", {"Fixed": ["- again"]})
 
 
+def test_new_versions_go_below_unreleased(tmp_path):
+    # issue #35: the new version was inserted above "## [Unreleased]"
+    path = tmp_path / "CHANGELOG.md"
+    path.write_text("# Changelog\n\n## [Unreleased]\n\n## [0.1.0] - 2026-10-01\n### Added\n- First.\n")
+    changelog.insert(path, "alpha", "0.2.0", "2026-10-06", {"Fixed": ["- Second."]})
+    text = path.read_text()
+    assert text.index("## [Unreleased]") < text.index("## [0.2.0]") < text.index("## [0.1.0]")
+    assert changelog.extract(path, "0.2.0") == "### Fixed\n- Second."
+
+
+def test_a_version_override_below_what_the_notes_require_is_refused(market):
+    # issue #35: with a breaking note, prepare beta=1.3.0 on 1.2.0 went through silently
+    _git(market, "tag", "-a", "beta-v1.2.0", "-m", "x")
+    fragments.add(market, projects_of(market)["beta"], "breaking", "Renamed option.", "6")
+    pl = plan_by_name(market)["beta"]
+    with pytest.raises(release.ReleaseError, match="breaking.*needs at least 2.0.0"):
+        release.prepare(market, [(pl, "1.3.0")])
+    assert proj.read_version(market, pl.project.version_files[0]) == "1.2.0"
+    release.prepare(market, [(pl, "1.3.0")], allow_lower=True)
+    assert proj.read_version(market, pl.project.version_files[0]) == "1.3.0"
+
+
 # ---------------------------------------------------------------- plan and prepare
 
 
@@ -235,6 +276,126 @@ def test_prepare_bumps_writes_changelog_and_consumes_notes(market):
         release.prepare(market, [(pl, "0.0.9")])
 
 
+def test_prepare_links_notes_to_the_pr_that_added_them(market):
+    # issue #56: a note written before its PR existed had no PR link
+    _git(market, "tag", "-a", "alpha-v0.1.0", "-m", "x")
+    alpha = projects_of(market)["alpha"]
+    fragments.add(market, alpha, "added", "Outline mode.", "outline")
+    commit(market, "alpha: outline mode (#12)")                      # squash merge subject
+    fragments.add(market, alpha, "fixed", "No crash on start.", "crash")
+    commit(market, "alpha: fix the crash")
+    runner = FakeRunner(market)
+    sha = git_out(market, "rev-parse", "HEAD").strip()
+    runner.pulls[sha] = [{"number": 14, "merged_at": "2026-10-05T10:00:00Z"}]
+    pl = plan_by_name(market)["alpha"]
+    release.prepare(market, [(pl, pl.next)], date="2026-10-06", runner=runner)
+    text = changelog.extract(market / alpha.changelog, "0.2.0")
+    assert "- Outline mode. (#12)" in text and "- No crash on start. (#14)" in text
+
+
+def umbrella_market(market):
+    write(market, ".claude-plugin/marketplace.json", json.dumps({"name": "market", "plugins": []}))
+    write(market, "pyproject.toml", '[project]\nname = "market"\nversion = "0.1.0"\n')
+    write(market, "CHANGELOG.md", "# Market changelog\n\n## [0.1.0] - 2026-10-01\n\nFirst.\n")
+    commit(market)
+    for tag in ("alpha-v0.1.0", "beta-v1.2.0", "market-v0.1.0"):
+        _git(market, "tag", "-a", tag, "-m", "x")
+    p = projects_of(market)
+    fragments.add(market, p["alpha"], "added", "Outline mode.", "1")
+    fragments.add(market, p["beta"], "fixed", "Bug.", "2")
+    commit(market)
+    _git(market, "switch", "-q", "-c", "release/2026-10-06")
+    return market
+
+
+def test_prepare_umbrella_releases_the_whole_repo_too(market):
+    # issue #56: the umbrella tag and root CHANGELOG were made by hand
+    umbrella_market(market)
+    plans = plan_by_name(market)
+    changed = release.prepare(market, [(plans["alpha"], "0.2.0"), (plans["beta"], "1.2.1")],
+                              date="2026-10-06", umbrella=True)
+    assert "pyproject.toml" in changed and "CHANGELOG.md" in changed
+    assert proj.read_version(market, "pyproject.toml") == "0.2.0"
+    section = changelog.extract(market / "CHANGELOG.md", "0.2.0")
+    assert "| [alpha](plugins/alpha/CHANGELOG.md) | 0.2.0 |" in section
+    assert "| [beta](plugins/beta/CHANGELOG.md) | 1.2.1 |" in section
+    text = (market / "CHANGELOG.md").read_text()
+    assert text.index("## [0.2.0]") < text.index("## [0.1.0]")
+    umbrella = cli.find_project(market, proj.detect(market), "market")    # amin publish market
+    assert (umbrella.name, umbrella.tag("0.2.0")) == ("market", "market-v0.2.0")
+    assert changelog.extract(market / umbrella.changelog, "0.2.0")
+
+
+def test_prepare_dry_run_checks_branch_and_tree_and_writes_nothing(market, monkeypatch, capsys):
+    umbrella_market(market)
+    monkeypatch.chdir(market)
+    before = git_out(market, "status", "--porcelain")
+    assert cli.main(["prepare", "--umbrella", "--dry-run"]) == 0
+    out = capsys.readouterr().out
+    assert "dry run" in out and "alpha 0.2.0" in out and "market 0.2.0" in out and "### Added" in out
+    assert git_out(market, "status", "--porcelain") == before
+    assert proj.read_version(market, "pyproject.toml") == "0.1.0"
+    write(market, "dirty.txt", "x")
+    assert cli.main(["prepare", "--dry-run"]) == 1
+    assert "uncommitted changes" in capsys.readouterr().err
+    (market / "dirty.txt").unlink()
+    _git(market, "switch", "-q", "main")
+    assert cli.main(["prepare"]) == 1
+    assert "on main" in capsys.readouterr().err
+
+
+def test_release_candidates_then_promotion_to_final(market):
+    # issue #69: no pre-releases
+    _git(market, "tag", "-a", "beta-v1.2.0", "-m", "x")
+    beta = projects_of(market)["beta"]
+    fragments.add(market, beta, "added", "Dark mode.", "7")
+    pl = plan_by_name(market)["beta"]
+    assert release.rc_version(gitops.Runner(market), pl) == "1.3.0-rc.1"
+    release.prepare(market, [(pl, "1.3.0-rc.1")], date="2026-10-06")
+    assert proj.read_version(market, beta.version_files[0]) == "1.3.0-rc.1"
+    assert changelog.extract(market / beta.changelog, "1.3.0-rc.1") == "### Added\n- Dark mode. (#7)"
+    assert (market / "changelog.d/beta/7.added.md").exists()          # kept for the final release
+    commit(market)
+    _git(market, "tag", "-a", "beta-v1.3.0-rc.1", "-m", "x")
+    pl = plan_by_name(market)["beta"]
+    assert pl.next == "1.3.0" and release.rc_version(gitops.Runner(market), pl) == "1.3.0-rc.2"
+    release.prepare(market, [(pl, pl.next)], date="2026-10-07")        # promotion to final
+    assert proj.read_version(market, beta.version_files[0]) == "1.3.0"
+    assert not (market / "changelog.d/beta/7.added.md").exists()
+    assert proj.parse("1.3.0-rc.2") < proj.parse("1.3.0") and proj.is_prerelease("1.3.0-rc.2")
+
+
+def test_package_lock_and_cargo_workspaces_are_versioned(tmp_path):
+    node = tmp_path / "node"
+    write(node, "package.json", '{\n  "name": "app",\n  "version": "1.0.0"\n}\n')
+    write(node, "package-lock.json", json.dumps({
+        "name": "app", "version": "1.0.0", "lockfileVersion": 3,
+        "packages": {"": {"name": "app", "version": "1.0.0"},
+                     "node_modules/dep": {"version": "4.5.6"}}}, indent=2) + "\n")
+    [p] = proj.detect(node)
+    assert p.version_files == ["package.json", "package-lock.json"]
+    for vf in p.version_files:
+        proj.write_version(node, vf, "1.1.0")
+    lock = json.loads((node / "package-lock.json").read_text())
+    assert lock["version"] == lock["packages"][""]["version"] == "1.1.0"
+    assert lock["packages"]["node_modules/dep"]["version"] == "4.5.6"
+
+    rust = tmp_path / "rust"
+    write(rust, "Cargo.toml",
+          '[workspace]\nmembers = ["crates/*"]\n\n[workspace.package]\nversion = "0.3.0"\n')
+    write(rust, "crates/core/Cargo.toml", '[package]\nname = "core"\nversion.workspace = true\n')
+    write(rust, "Cargo.lock", 'version = 4\n\n[[package]]\nname = "core"\nversion = "0.3.0"\n\n'
+                              '[[package]]\nname = "serde"\nversion = "0.3.0"\n')
+    [p] = proj.detect(rust)
+    assert p.version_files == ["Cargo.toml", "Cargo.lock"]
+    assert proj.read_version(rust, "Cargo.lock") == "0.3.0"
+    for vf in p.version_files:
+        proj.write_version(rust, vf, "0.4.0")
+    lock = (rust / "Cargo.lock").read_text()
+    assert 'name = "core"\nversion = "0.4.0"' in lock and 'name = "serde"\nversion = "0.3.0"' in lock
+    assert proj.read_version(rust, "Cargo.toml") == "0.4.0"
+
+
 # ---------------------------------------------------------------- publish
 
 
@@ -265,6 +426,20 @@ def test_publish_creates_tag_and_release(market):
     assert create[2:5] == ("alpha-v0.1.0", "--title", "alpha 0.1.0")
 
 
+def test_publish_resumes_after_the_release_step_failed(market):
+    # issue #34: the tag was pushed, gh release create failed, and a retry stopped at "tag already exists"
+    alpha = released_market(market)
+    with pytest.raises(gitops.CommandError, match="502"):
+        release.publish(market, FakeRunner(market, fail_release=True), alpha)
+    assert "alpha-v0.1.0" in _tags(market)
+    runner = FakeRunner(market)
+    report = release.publish(market, runner, alpha)
+    assert "tag alpha-v0.1.0 already pushed" in "\n".join(report)
+    assert report[-1] == "release published: https://github.com/o/r/releases/tag/alpha-v0.1.0"
+    with pytest.raises(release.ReleaseError, match="already published"):
+        release.publish(market, FakeRunner(market, releases={"alpha-v0.1.0"}), alpha)
+
+
 def test_publish_dry_run_creates_nothing(market):
     alpha = released_market(market)
     report = release.publish(market, FakeRunner(market), alpha, dry_run=True)
@@ -275,7 +450,7 @@ def test_publish_dry_run_creates_nothing(market):
     (lambda r: _git(r, "switch", "-q", "-c", "other"), "releases are cut from main"),
     (lambda r: write(r, "dirty.txt", "x"), "uncommitted changes"),
     (lambda r: (write(r, "more.txt", "x"), commit(r)), "is not the same commit as origin/main"),
-    (lambda r: _git(r, "tag", "alpha-v0.1.0"), "already exists"),
+    (lambda r: _git(r, "tag", "alpha-v0.1.0", "HEAD~1"), "already exists on another commit"),
 ])
 def test_publish_refuses_unsafe_states(market, setup, message):
     alpha = released_market(market)
@@ -348,6 +523,33 @@ def test_check_rejects_bad_note_names(market):
     assert not ok and "bad note name: changelog.d/alpha/4.feature.md" in lines[0]
 
 
+def test_deleting_another_projects_note_is_not_a_release(market):
+    # issue #33: deleting beta's pending note let an alpha change pass as a "release"
+    fragments.add(market, projects_of(market)["beta"], "added", "Beta feature.", "1")
+    commit(market)
+    feature_branch(market)
+    write(market, "plugins/beta/main.py", "y = 2\n")
+    (market / "changelog.d/beta/1.added.md").unlink()
+    commit(market)
+    ok, lines = run_check(market)
+    assert not ok and "beta: files changed but no note" in lines[0]
+
+
+def test_empty_and_misplaced_notes_are_rejected(market):
+    feature_branch(market)
+    write(market, "plugins/alpha/main.py", "x = 5\n")
+    write(market, "changelog.d/alpha/5.fixed.md", "  \n")
+    write(market, "changelog.d/6.fixed.md", "Lost at the root.\n")
+    write(market, "changelog.d/gamma/7.fixed.md", "No such project.\n")
+    commit(market)
+    ok, lines = run_check(market)
+    text = "\n".join(lines)
+    assert not ok
+    assert "empty note: changelog.d/alpha/5.fixed.md" in text
+    assert "misplaced note: changelog.d/6.fixed.md" in text
+    assert "misplaced note: changelog.d/gamma/7.fixed.md" in text
+
+
 # ---------------------------------------------------------------- triage
 
 
@@ -395,6 +597,36 @@ def test_history_filters_by_project_path(market):
             "files": [{"path": "plugins/beta/main.py"}]}]
     lines = release.history(market, FakeRunner(market, prs=prs), projects_of(market)["alpha"], None)
     assert lines == ["#3 Alpha thing (2026-10-01)"]
+
+
+def test_history_compares_real_times_and_asks_github_for_every_pr_since_the_tag(market):
+    # issue #85: a +03:00 tag date compared as text against GitHub's UTC dropped PRs; only 200 were read
+    import os
+    write(market, "plugins/alpha/main.py", "x = 9\n")
+    _git(market, "add", "-A")
+    env = {**os.environ, "GIT_COMMITTER_DATE": "2026-10-01T12:00:00+03:00"}
+    subprocess.run(["git", "commit", "-q", "-m", "x"], cwd=market, env=env, check=True)
+    _git(market, "tag", "-a", "alpha-v0.1.0", "-m", "x")
+    prs = [{"number": 5, "title": "After the tag", "mergedAt": "2026-10-01T10:00:00Z",   # 13:00 +03:00
+            "files": [{"path": "plugins/alpha/main.py"}]},
+           {"number": 6, "title": "Before the tag", "mergedAt": "2026-10-01T08:59:00Z",
+            "files": [{"path": "plugins/alpha/main.py"}]}]
+    runner = FakeRunner(market, prs=prs)
+    lines = release.history(market, runner, projects_of(market)["alpha"], "alpha-v0.1.0")
+    assert lines == ["#5 After the tag (2026-10-01)"]
+    call = next(c for c in runner.gh_calls if c[:2] == ("pr", "list"))
+    assert "merged:>=2026-10-01" in " ".join(call)   # the date filter runs on GitHub, so no PR is cut off
+
+
+def test_single_project_name_comes_from_the_manifest_not_the_folder(tmp_path):
+    # issue #85: inside an amin work worktree (<repo>-amin/42) the project was named "42"
+    for rel, content in (("package.json", '{"name": "@acme/app", "version": "1.0.0"}'),
+                         ("pyproject.toml", '[project]\nname = "app"\nversion = "1.0.0"\n'),
+                         ("App.csproj", "<Project><PropertyGroup><Version>1.0.0</Version>"
+                                        "</PropertyGroup></Project>")):
+        root = tmp_path / rel.replace(".", "-") / "repo-amin" / "42"
+        write(root, rel, content)
+        assert proj.detect(root)[0].name in ("@acme/app", "app", "App"), rel
 
 
 def test_work_start_creates_branch_and_worktree(market):

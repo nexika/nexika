@@ -18,8 +18,8 @@ the code, and remembers your progress. It also onboards junior developers to an 
 | Skill | `/prof:report` | End of session: what you learned, what you did, check results, weak areas & logic gaps, level, what to review next |
 | Skill | `/prof:progress [show\|update\|reset]` | Your learner profile and what to learn next |
 | Agent | `project-cartographer` | Read-only explorer that maps a codebase for the onboard skill |
-| Hook | SessionStart | Injects profile, last report's weak areas, open items per topic, and the warm-up rule |
-| Hook | SessionEnd | If a tutoring session ended without a report, writes one in the background (`claude -p`, Sonnet) |
+| Hook | SessionStart | When something is due for review: injects profile, last report's weak areas, open items per topic, and the warm-up rule. Otherwise a one-line note, so working sessions stay working sessions |
+| Hook | SessionEnd | If a tutoring session ended without a report and you agreed to automatic reports, writes one in the background (`claude -p`, Sonnet) |
 
 ## The learning loop
 
@@ -45,17 +45,26 @@ the code, and remembers your progress. It also onboards junior developers to an 
 ```
 profile.md                    level, goals, mastered, weak spots, log (progress skill)
 reports/2026-10-05_1430_ab12cd34.md   one report per session
-topics/csharp-async.md        concept checklist, worst first:
+topics/csharp-async.json      concept checklist (the data: status, evidence, date, successes in a row)
+topics/csharp-async.md        the same, rendered worst first (status edits here are kept):
                               - [missed] async void vs async Task — guessed "slower" (2026-10-05)
                               - [understood] Task.WhenAll — wrote a correct example (2026-10-04)
+settings.json                 your answer about automatic reports
 hook.log                      what the hooks did (auto reports, errors)
 ```
+
+Retention checks use spaced repetition: a concept you just understood comes back after 3 days,
+then 7, 14, 30, 60 and 120 days for each success in a row. A miss starts it over.
 
 Helper (stdlib Python): `python3 scripts/prof_store.py topic <slug>` · `merge-report <file>`.
 Set `PROF_HOME` to keep data somewhere else (e.g. one folder per junior).
 
-Automatic reports only run for tutoring sessions (a `prof:` skill was used, or the output style
-is Professor) with at least 3 learner messages, and never twice for the same session.
+Automatic reports run Claude (Sonnet) in the background, which uses your plan or API credits, so
+they are off until you agree: in your first tutoring session Claude asks once and stores the
+answer (`python3 scripts/prof_store.py auto-report on|off|status`). They only run for tutoring
+sessions (you ran a `/prof:` command, Claude used a `prof:` skill, or the output style is
+Professor; a message that only mentions `/prof:` doesn't count) with at least 3 learner messages,
+and never twice for the same session.
 
 ## Try it locally
 

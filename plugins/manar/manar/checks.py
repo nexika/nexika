@@ -1,6 +1,7 @@
 """Deterministic checks. Every finding says what is wrong, why it matters, and how to fix it."""
 from __future__ import annotations
 
+import re
 import urllib.parse
 import xml.etree.ElementTree as ET
 from collections import Counter
@@ -27,6 +28,145 @@ class Finding:
 
 
 # ---------------------------------------------------------------- pages
+
+# BCP 47 as hreflang uses it: language, optional script, optional region ("ar", "zh-Hant", "en-GB", "es-419")
+HREFLANG_CODE = re.compile(r"^[a-z]{2,3}(?:-[a-z]{4})?(?:-(?:[a-z]{2}|\d{3}))?$", re.I)
+
+
+def page_key(url: str) -> tuple[str, str]:
+    """The same page whatever the scheme, query, fragment, trailing slash or index.html."""
+    parts = urllib.parse.urlsplit(url)
+    path = re.sub(r"(?:/index)?\.html?$", "", parts.path).rstrip("/")
+    return parts.netloc.lower(), path
+
+
+def same_language(code: str, lang: str) -> bool:
+    return bool(lang) and code.lower().split("-")[0] == lang.lower().split("-")[0]
+
+
+def _hreflang_page(p: Page, add) -> None:
+    """hreflang problems visible on one page; return links and targets need the whole crawl."""
+    if not p.hreflang_raw:
+        return
+    bad = [code for code in p.hreflang_raw if code.lower() != "x-default" and not HREFLANG_CODE.match(code)]
+    if bad:
+        add("hreflang-invalid-code", "medium", "international", f"invalid hreflang code(s): {', '.join(bad)}",
+            'use a language code with an optional region, such as "ar", "ar-SA", "en-GB" or "x-default"')
+    relative = [href for href in p.hreflang_raw.values() if not re.match(r"https?://", href, re.I)]
+    if relative:
+        add("hreflang-relative", "medium", "international",
+            f"hreflang URL(s) are not absolute: {relative[0]}",
+            "hreflang links must be full URLs, including https:// and the host")
+    host = urllib.parse.urlsplit(p.url).netloc.lower()
+    other = [href for href in p.hreflang.values() if urllib.parse.urlsplit(href).netloc.lower() != host]
+    if other:
+        add("hreflang-other-host", "low", "international", f"hreflang points to another site: {other[0]}",
+            "fine for separate country domains; otherwise point it to this site's language version")
+    if "x-default" not in p.hreflang:
+        add("hreflang-no-x-default", "low", "international", "hreflang set has no x-default",
+            'add <link rel="alternate" hreflang="x-default" href="..."> for visitors in other languages')
+
+
+def hreflang_site_checks(pages: list[Page]) -> list[Finding]:
+    """Return links and alternates that point to broken pages, among the crawled pages."""
+    out: list[Finding] = []
+    by_key = {page_key(pg.url): pg for pg in pages}
+    for pg in pages:
+        if pg.status >= 400 or not pg.hreflang:
+            continue
+        broken, no_return = [], []
+        for href in dict.fromkeys(pg.hreflang.values()):
+            target = by_key.get(page_key(href))
+            if target is None or target is pg:
+                continue
+            if target.status >= 400:
+                broken.append(f"{href} (HTTP {target.status})")
+            elif not any(page_key(h) == page_key(pg.url) for code, h in target.hreflang.items()
+                         if code != "x-default"):
+                no_return.append(href)
+        if broken:
+            out.append(Finding("hreflang-broken-target", "high", "international",
+                               f"hreflang points to a broken page: {', '.join(broken[:3])}",
+                               "point hreflang only to live pages", pg.url))
+        if no_return:
+            out.append(Finding("hreflang-no-return", "medium", "international",
+                               f"no return link from {', '.join(no_return[:3])}: search engines ignore "
+                               "hreflang pairs that don't link back",
+                               "every language version must list all the others, and itself", pg.url))
+    return out
+
+
+FILE_SUFFIX = re.compile(r"\.[a-z0-9]{1,5}$", re.I)
+
+
+def link_checks(pages: list[Page], complete: bool) -> list[Finding]:
+    """Internal links to pages that return an error, or (when every page is known) don't exist."""
+    out: list[Finding] = []
+    by_key = {page_key(pg.url): pg for pg in pages}
+    for pg in pages:
+        if pg.status >= 400:
+            continue
+        host = urllib.parse.urlsplit(pg.url).netloc.lower()
+        broken: list[str] = []
+        for href, _ in pg.links:
+            parts = urllib.parse.urlsplit(href)
+            if parts.scheme not in ("http", "https") or parts.netloc.lower() != host:
+                continue
+            if FILE_SUFFIX.search(parts.path) and not parts.path.lower().endswith((".html", ".htm")):
+                continue   # a file (image, PDF, feed), not a page
+            target = by_key.get(page_key(href))
+            if target is not None and target.status >= 400:
+                broken.append(f"{parts.path or '/'} (HTTP {target.status})")
+            elif target is None and complete:
+                broken.append(f"{parts.path or '/'} (no such page)")
+        if broken:
+            unique = list(dict.fromkeys(broken))
+            out.append(Finding("broken-internal-link", "high" if len(unique) > 2 else "medium", "technical",
+                               f"{len(unique)} broken internal link(s): {', '.join(unique[:5])}",
+                               "fix or remove links to pages that don't exist", pg.url))
+    return out
+
+
+# What search engines need to use a schema.org type (one of a tuple is enough).
+REQUIRED_PROPERTIES: dict[str, list[str | tuple[str, ...]]] = {
+    "Article": ["headline", "author", "datePublished"],
+    "BlogPosting": ["headline", "author", "datePublished"],
+    "NewsArticle": ["headline", "author", "datePublished"],
+    "Organization": ["name", "url"],
+    "WebSite": ["name", "url"],
+    "Person": ["name"],
+    "LocalBusiness": ["name", "address"],
+    "Product": ["name", ("offers", "review", "aggregateRating")],
+    "SoftwareApplication": ["name", ("offers", "aggregateRating", "review")],
+    "FAQPage": ["mainEntity"],
+    "BreadcrumbList": ["itemListElement"],
+    "HowTo": ["name", "step"],
+    "Event": ["name", "startDate", "location"],
+    "Recipe": ["name", "image"],
+    "VideoObject": ["name", "thumbnailUrl", "uploadDate"],
+}
+
+
+def _schema_items(jsonld: list) -> list[dict]:
+    items = []
+    for item in jsonld:
+        if isinstance(item, dict):
+            graph = item.get("@graph")
+            items += [g for g in graph if isinstance(g, dict)] if isinstance(graph, list) else [item]
+    return items
+
+
+def _schema_missing(p: Page) -> list[str]:
+    problems = []
+    for item in _schema_items(p.jsonld):
+        types = item.get("@type")
+        for t in [types] if isinstance(types, str) else types if isinstance(types, list) else []:
+            missing = [need if isinstance(need, str) else " or ".join(need)
+                       for need in REQUIRED_PROPERTIES.get(t, [])
+                       if not any(item.get(k) for k in ((need,) if isinstance(need, str) else need))]
+            if missing:
+                problems.append(f"{t} without {', '.join(missing)}")
+    return problems
 
 
 def page_checks(p: Page) -> list[Finding]:
@@ -71,6 +211,20 @@ def page_checks(p: Page) -> list[Finding]:
     elif urllib.parse.urlsplit(p.canonical).netloc.lower() != urllib.parse.urlsplit(p.url).netloc.lower():
         add("canonical-other-host", "medium", "indexing", f"canonical points to another site: {p.canonical}",
             "make sure this is intended; otherwise point it to this page")
+    elif page_key(p.canonical) != page_key(p.url):
+        languages = [code for code, href in p.hreflang.items() if code != "x-default"
+                     and page_key(href) == page_key(p.canonical) and not same_language(code, p.lang)]
+        if languages:
+            add("canonical-other-language", "high", "international",
+                f"canonical points to the {languages[0]} version ({p.canonical}): search engines drop "
+                "this page and show the other language instead",
+                "point each language version's canonical to itself; hreflang links the versions")
+        else:
+            add("canonical-other-page", "medium", "indexing",
+                f"canonical points to another page: {p.canonical}",
+                "search engines index the target instead of this page; point it to this page unless "
+                "it is a true duplicate")
+    _hreflang_page(p, add)
     if not p.lang:
         add("lang-missing", "medium", "international", "no lang attribute on <html>",
             'set <html lang="en"> (or "ar" with dir="rtl" for Arabic) so engines know the language')
@@ -94,6 +248,10 @@ def page_checks(p: Page) -> list[Finding]:
         if isinstance(item, dict) and ("@context" not in item or "@type" not in item):
             add("jsonld-incomplete", "medium", "structured-data", "JSON-LD item without @context or @type",
                 'every top-level item needs "@context": "https://schema.org" and "@type"')
+    for problem in _schema_missing(p):
+        add("schema-missing-property", "medium", "structured-data", f"JSON-LD {problem}",
+            "add the properties search engines need for this type (schema.org and Google's "
+            "structured data docs list them)")
     if p.words < 50 and p.scripts >= 3:
         add("client-rendered", "high", "technical",
             f"only {p.words} words in the raw HTML but {p.scripts} scripts: "
@@ -134,7 +292,10 @@ def validate_llms(text: str) -> list[str]:
 
 
 def site_checks(origin: str, home: Page | None, robots_txt: str | None, sitemap_urls: list[str] | None,
-                sitemap_error: str, llms_txt: str | None, pages: list[Page]) -> list[Finding]:
+                sitemap_error: str, llms_txt: str | None, pages: list[Page],
+                complete: bool = False) -> list[Finding]:
+    """`complete`: pages holds every page of the site (a built folder), so a link to anything else is
+    broken; a crawl only knows the pages it fetched."""
     out: list[Finding] = []
 
     def add(fid, sev, cat, msg, fix):
@@ -155,6 +316,14 @@ def site_checks(origin: str, home: Page | None, robots_txt: str | None, sitemap_
             add("robots-blocks-ai-search", "high", "ai-visibility",
                 f"robots.txt blocks AI search/assistant crawlers: {', '.join(blocked)}",
                 "allow them so AI answers can read and cite the site (training bots can stay blocked)")
+        paths = [urllib.parse.urlsplit(pg.url).path or "/" for pg in pages]
+        partly = aibots.blocked_paths(robots_txt, paths)
+        partly.pop("Googlebot", None)
+        if partly:
+            sample = "; ".join(f"{bot}: {', '.join(p[:3])}" for bot, p in list(partly.items())[:4])
+            add("robots-blocks-ai-search-paths", "high", "ai-visibility",
+                f"robots.txt blocks AI search/assistant crawlers from parts of the site ({sample})",
+                "allow these sections unless they must stay out of AI answers")
         if "sitemap:" not in robots_txt.lower():
             add("robots-no-sitemap", "low", "indexing", "robots.txt has no Sitemap line",
                 "add 'Sitemap: <absolute URL of sitemap.xml>'")
@@ -184,6 +353,16 @@ def site_checks(origin: str, home: Page | None, robots_txt: str | None, sitemap_
         if orgs and not any(o.get("sameAs") for o in orgs):
             add("entity-no-sameas", "low", "structured-data", "Organization has no sameAs links",
                 "list official profiles (GitHub, LinkedIn, X...) in sameAs: it ties mentions to you")
+    out += hreflang_site_checks(pages)
+    out += link_checks(pages, complete)
+    if sitemap_urls:
+        listed = {page_key(u) for u in sitemap_urls}
+        missing = [pg.url for pg in pages if pg.status < 400 and page_key(pg.url) not in listed
+                   and "noindex" not in pg.meta.get("robots", "").lower()]
+        if missing:
+            add("sitemap-gaps", "low", "indexing",
+                f"{len(missing)} page(s) not in the sitemap: {', '.join(missing[:3])}",
+                "list every indexable page in sitemap.xml (manar generate sitemap)")
     titles = Counter(p.title for p in pages if p.title and p.status < 400)
     dupes = [t for t, n in titles.items() if n > 1]
     if dupes:
