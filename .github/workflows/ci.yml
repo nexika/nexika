@@ -66,9 +66,35 @@ jobs:
             fi
           done
 
+  # The engine is self-contained Node code, so PRs that don't touch it, the benchmarks
+  # that use it, or this file skip its browser tests. Pushes to main always run them.
+  changes:
+    name: detect lawha engine changes
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      engine: ${{ steps.diff.outputs.engine }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          if git diff --name-only "origin/$BASE...HEAD" | grep -qE '^(plugins/lawha/engine/|benchmarks/|\.github/workflows/ci\.yml$)'; then
+            echo "engine=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "engine=false" >> "$GITHUB_OUTPUT"
+          fi
+
   lawha-engine:
     name: lawha engine (build + browser tests)
+    needs: changes
+    if: always() && (github.event_name == 'push' || needs.changes.outputs.engine == 'true')
     runs-on: ubuntu-latest
+    # Playwright's browser download can hang; fail fast so a re-run is the fix, not a 6h wait.
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: plugins/lawha/engine
@@ -100,11 +126,11 @@ jobs:
         run: python3 plugins/amin/bin/amin check-fragment --base "origin/$BASE" --labels "$LABELS"
 
   # Single required check for branch protection: passes only if every job above passed
-  # (a job skipped on push, like change notes, does not fail it).
+  # (a skipped job, like change notes on push or lawha engine on an unrelated PR, does not fail it).
   ci-ok:
     name: CI passed
     if: always()
-    needs: [lint, test, validate, lawha-engine, changelog]
+    needs: [lint, test, validate, changes, lawha-engine, changelog]
     runs-on: ubuntu-latest
     steps:
       - run: |
