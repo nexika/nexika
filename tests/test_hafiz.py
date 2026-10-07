@@ -642,3 +642,47 @@ def test_old_open_items_expire(repo, capsys):
     assert "Fresh task" in text and "Ancient task" not in text and "Open problems" not in text
     status = {i["text"]: i["status"] for i in memory.all()}
     assert status["Ancient task"] == "expired" and status["Fresh task"] == "open"
+
+
+# ---------------------------------------------------------------- decisions and commits (#37)
+
+
+def test_quiet_commits_are_read_from_git_log(log, capsys, repo):
+    old = {**os.environ, "GIT_COMMITTER_DATE": "2026-01-01T00:00:00"}
+    subprocess.run(["git", "commit", "-q", "--amend", "--no-edit"], cwd=repo, env=old, check=True)
+    started = store.now()
+    (repo / "src" / "new.py").write_text("x = 1\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "Add the new module")
+    head = store.head_commit(repo)
+    log.user("Commit it").tool("Bash", {"command": "git add -A && git commit -q -m 'Add the new module'"}, "")
+    for record in log.records:
+        record["timestamp"] = started
+    stop(log, capsys)
+    commits = capture.load_state(store.project_dir(repo), SESSION)["commits"]
+    assert [(c["hash"][:7], c["message"]) for c in commits] == [(head[:7], "Add the new module")]
+
+
+@pytest.mark.parametrize("prompt", [
+    "Switch to the main branch and pull.",
+    "Explain why this code uses Redis instead of Postgres.",
+    "Show me what was decided in the last PR.",
+    "I prefer to see the full diff first.",
+    "Run the tests; we will see what fails.",
+])
+def test_ordinary_requests_are_not_decisions(log, capsys, repo, prompt):
+    stop(log.user(prompt), capsys)
+    assert not [i for i in store.Memory(repo).all() if i["type"] == "decision"]
+
+
+@pytest.mark.parametrize("prompt, expected", [
+    ("Ok, use argon2 instead of bcrypt.", "use argon2 instead of bcrypt"),
+    ("We decided to drop Python 3.9 support.", "drop Python 3.9"),
+    ("Never use print for logging in this repo.", "print for logging"),
+    ("Here is the context. " + "The old service did many things. " * 25 + "We'll use pnpm for all scripts. "
+     + "More background follows here. " * 5, "pnpm for all scripts"),
+])
+def test_decisions_are_found_in_short_and_long_prompts(log, capsys, repo, prompt, expected):
+    stop(log.user(prompt), capsys)
+    decisions = [i["text"] for i in store.Memory(repo).all() if i["type"] == "decision"]
+    assert len(decisions) == 1 and expected in decisions[0]

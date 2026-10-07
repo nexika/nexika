@@ -1,17 +1,19 @@
 """Turn transcript events into session state and typed memories, with fixed rules (no AI).
 
 What is captured, and from where:
-    decision  answers to Claude's multiple-choice questions, approved plans, and user messages
-              that state a choice ("let's go with", "don't use", "قررنا", "خلينا نستخدم" ...)
+    decision  answers to Claude's multiple-choice questions, approved plans, and sentences of user
+              messages that start with a choice ("let's go with", "don't use", "قررنا", "خلينا نستخدم" ...)
     task      Claude's task list (TodoWrite, TaskCreate/TaskUpdate), kept up to date
     problem   a failing test/build/lint command, marked solved when the same command passes
     file      files Claude changed (Edit, Write, MultiEdit, NotebookEdit), one memory per file
     link      URLs the user shares and pull requests or issues created during the session
+    commit    commits made in the session, from `git commit` output or, when it prints nothing, `git log`
 
 Every memory keeps its source ("transcript <session> L<line>") so it can be checked.
 """
 from __future__ import annotations
 
+import datetime
 import hashlib
 import os
 import re
@@ -23,12 +25,22 @@ EDIT_TOOLS = {"Edit", "Write", "MultiEdit", "NotebookEdit"}
 KEEP_PROMPTS = 6
 PROMPT_CHARS = 400
 
+# A decision is a sentence that *starts* with a choice ("let's use", "we'll go with", "don't use",
+# "use X instead of Y"); the same words in the middle of a request ("explain why it uses X instead
+# of Y") are not one.
 DECISION_EN = re.compile(
-    r"\b(let'?s (?:go with|use|keep|stick with|switch to|drop)|(?:we|i)(?:'ll| will) (?:go with|use)|"
-    r"go with|decided|we decide|i prefer|prefer to|stick with|switch to|don'?t use|do not use|"
-    r"never use|always use|instead of)\b", re.I)
-DECISION_AR = re.compile(r"(قررنا|قررت|القرار|خلينا|خلّينا|نعتمد|اعتمد|بدلا من|بدل ما|لا تستخدم|لا نستخدم|"
-                         r"دايما|دائما|نمشي على|امشي على|سنستخدم)")
+    r"^(?:[\w-]+:\s+)?(?:(?:ok(?:ay)?|yes|yeah|yep|no|nope|fine|so|then|alright|right|good|great|and|but)\b[,.!:]?\s+)*"
+    r"(?:let'?s (?:go with|use|keep|stick with|switch to|move to|drop|not use|avoid)|"
+    r"(?:we|i)(?:'ll| will| are going to| am going to|'re going to|'m going to) "
+    r"(?:go with|use|keep|stick with|switch to|move to|drop|avoid)|"
+    r"(?:we|i)(?: have|'ve)? decided\b|we decide\b|"
+    r"(?:don'?t|do not|never|always) use|stick with|go with|"
+    r"(?:use|switch to|move to|change to) [^,;]{1,60}? instead of|prefer [^,;]{1,60}? over)\b", re.I)
+DECISION_AR = re.compile(r"(قررنا|قررت|خلينا|خلّينا|نعتمد|اعتمد|بدلا من|بدل ما|لا تستخدم|لا نستخدم|"
+                         r"دايما استخدم|دائما استخدم|نمشي على|امشي على|سنستخدم)")
+SENTENCE_END = re.compile(r"(?<=[.!?؟])\s+|\n+")
+CODE_BLOCK = re.compile(r"```.*?(?:```|\Z)|<pasted_content\b.*?(?:</pasted_content[^>]*>|\Z)", re.S | re.I)
+MAX_DECISIONS_PER_PROMPT = 3
 QUESTION = re.compile(r"^(why|what|which|how|should|shall|could|can|would|do|does|did|is|are|"
                       r"هل|ليش|لماذا|ليه|كيف|ايش|شو|ماذا)\b", re.I)
 URL = re.compile(r"https?://[^\s<>\"'`)\]]+")
@@ -48,12 +60,6 @@ ANSWER = re.compile(r'"([^"\n]{3,300})"\s*=\s*"([^"\n]{1,300})"')
 def _short(text: str, limit: int) -> str:
     flat = re.sub(r"\s+", " ", text).strip()
     return flat if len(flat) <= limit else flat[: limit - 1].rsplit(" ", 1)[0] + "…"
-
-
-def _sentence_with(text: str, match: re.Match) -> str:
-    start = max(text.rfind(c, 0, match.start()) for c in ".!?\n؟")
-    ends = [i for i in (text.find(c, match.end()) for c in ".!?\n؟") if i >= 0]
-    return text[start + 1: min(ends) + 1 if ends else len(text)].strip()
 
 
 def _first_error(text: str) -> str:
@@ -153,17 +159,19 @@ class Capture:
                 state["links"].append(url)
                 self._add("link", f"{url} (shared: {_short(text.replace(url, ''), 120)})", event,
                           key=f"link|{url}", scope="project")
-        if len(text) <= 600:
-            for pattern in (DECISION_EN, DECISION_AR):
-                match = pattern.search(text)
-                if match:
-                    sentence = _short(_sentence_with(text, match), 300)
-                    if sentence.endswith(("?", "؟")) or QUESTION.match(sentence):
-                        break  # a question is not a decision
-                    if len(sentence) >= 12 and sentence not in state["decisions"]:
-                        state["decisions"].append(sentence)
-                        self._add("decision", f"User: {sentence}", event,
-                                  key=f"decision|{self.sid}|{sentence[:80]}")
+        found = 0
+        for sentence in SENTENCE_END.split(CODE_BLOCK.sub("\n", text)[:8000]):
+            sentence = sentence.strip(" \t-*>")
+            if not (DECISION_EN.search(sentence) or DECISION_AR.search(sentence)):
+                continue
+            if sentence.endswith(("?", "؟")) or QUESTION.match(sentence):
+                continue  # a question is not a decision
+            sentence = _short(sentence, 300)
+            if len(sentence) >= 12 and sentence not in state["decisions"]:
+                state["decisions"].append(sentence)
+                self._add("decision", f"User: {sentence}", event, key=f"decision|{self.sid}|{sentence[:80]}")
+                found += 1
+                if found >= MAX_DECISIONS_PER_PROMPT:
                     break
 
     def tool(self, event: dict) -> None:
@@ -189,6 +197,7 @@ class Capture:
             keep["path"] = str(data.get("file_path") or data.get("notebook_path") or "")
         elif name == "Bash":
             keep["command"] = self.clean(str(data.get("command") or "")[:2000])
+            keep["time"] = event.get("time", "")
         elif name == "TaskCreate":
             keep["subject"] = self.clean(str(data.get("subject") or ""))
         elif name == "AskUserQuestion":
@@ -216,7 +225,7 @@ class Capture:
                 self._add("file", f"Changed {rel} ({count} edit{'s' if count > 1 else ''})", event,
                           key=f"file|{self.sid}|{rel}")
         elif name == "Bash":
-            self._bash(call["command"], event, ok)
+            self._bash(call["command"], event, ok, call.get("time", ""))
         elif name == "TaskCreate" and ok:
             number = re.search(r"#(\d+)", event["text"])
             subject = call.get("subject", "")
@@ -253,12 +262,15 @@ class Capture:
         self._add("task", subject, event, key=key, status=status)
         return key
 
-    def _bash(self, command: str, event: dict, ok: bool) -> None:
+    def _bash(self, command: str, event: dict, ok: bool, started: str = "") -> None:
         if ok and re.search(r"\bgit\b[^|;&]*\bcommit\b", command):
-            for found_branch, sha, message in COMMIT_LINE.findall(event["text"]):
+            found = [(b, sha, msg) for b, sha, msg in COMMIT_LINE.findall(event["text"])]
+            if not found and started:  # `git commit -q` prints nothing: ask git what was committed
+                found = self._commits_since(started, event)
+            for found_branch, sha, message in found:
                 entry = {"hash": sha[:9], "message": _short(self.clean(message), 160),
                          "branch": found_branch, "time": event.get("time", "")}
-                if entry not in self.state["commits"]:
+                if not any(c["hash"][:7] == entry["hash"][:7] for c in self.state["commits"]):
                     self.state["commits"].append(entry)
                     self.commit = sha[:9]
         if ok and re.search(r"\bgh (pr|issue) create\b", command):
@@ -297,6 +309,18 @@ class Capture:
                     and item["key"] not in self.state["problems"] and same(item["key"])):
                 text = f"{item['text']} (passed again in session {self.sid})"
                 self._add("problem", text, event, key=item["key"], status="solved")
+
+    def _commits_since(self, started: str, event: dict) -> list[tuple[str, str, str]]:
+        try:
+            since = datetime.datetime.fromisoformat(started) - datetime.timedelta(seconds=2)
+        except ValueError:
+            return []
+        cwd = Path(event.get("cwd") or self.state["cwd"] or self.root)
+        out = store._git(cwd, "log", "-n", "20", "--reverse", f"--since={since.isoformat()}",
+                         "--format=%H%x09%s")
+        branch = event.get("branch") or self.state["branch"]
+        return [(branch, sha, message) for sha, _, message in
+                (line.partition("\t") for line in out.splitlines()) if sha]
 
     def _stored(self) -> list[dict]:
         if self._memories is None:
