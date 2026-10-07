@@ -14,7 +14,7 @@ from .checks import ORDER
 
 USAGE = f"""manar {__version__} - be found by search engines and AI assistants, and measure it (Nexika)
 
-  manar audit URL|FOLDER [--max-pages N] [--allow-local] [--base-url URL] [--json]
+  manar audit URL|FOLDER [--max-pages N] [--allow-local] [--base-url URL] [--json] [--fail-on SEVERITY]
   manar diff [TARGET]                          compare the last two audits of one site
   manar detect                                 web framework and where fixes go
   manar generate robots --origin URL [--block-training]
@@ -64,7 +64,7 @@ def _collect(target: str, args: list[str]) -> crawl.Site:
 def run_audit(site: crawl.Site) -> dict:
     per_page = [checks.page_checks(p) for p in site.pages]
     site_findings = checks.site_checks(site.origin, site.home, site.robots_txt, site.sitemap_urls,
-                                       site.sitemap_error, site.llms_txt, site.pages)
+                                       site.sitemap_error, site.llms_txt, site.pages, complete=site.complete)
     allowed = aibots.access(site.robots_txt)
     pages = []
     for i, p in enumerate(site.pages):
@@ -119,6 +119,10 @@ def render(audit: dict) -> str:
 def cmd_audit(args: list[str]) -> int:
     as_json = "--json" in args
     args = [a for a in args if a != "--json"]
+    fail_on = _flag(args, "--fail-on")
+    if fail_on is not None and fail_on not in ORDER:
+        print(f"manar: --fail-on takes one of {', '.join(ORDER)}")
+        return 2
     site = _collect(args[0], args)
     if not site.pages:
         reason = f" ({site.skipped[0]})" if site.skipped else ""
@@ -137,6 +141,14 @@ def cmd_audit(args: list[str]) -> int:
         path, n = folder / f"{stem}-{n}.json", n + 1
     path.write_text(json.dumps(audit, indent=1, ensure_ascii=False), encoding="utf-8")
     print(json.dumps(audit, ensure_ascii=False) if as_json else render(audit) + f"\n\nsaved: {path}")
+    if fail_on:   # CI mode: fail on findings this severe or worse
+        worse = ORDER[: ORDER.index(fail_on) + 1]
+        found = [i for i in audit["site"] + [i for p in audit["pages"] for i in p["issues"]]
+                 if i["severity"] in worse]
+        if found:
+            if not as_json:
+                print(f"manar: {len(found)} finding(s) at fail-on {fail_on} or worse")
+            return 1
     return 0
 
 

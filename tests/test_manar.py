@@ -534,3 +534,50 @@ def test_arabic_passages_are_not_scored_lower_for_having_no_capital_letters():
     gap = citability.block_score("What is Riyadh Metro?", english)[0] - \
         citability.block_score("ما هو مترو الرياض؟", arabic)[0]
     assert abs(gap) <= 2    # was 10: the Arabic passage could never earn the "names" points
+
+
+# ---------------------------------------------------------------- issue #74: links, schema, CI mode
+
+
+def test_broken_internal_links_and_sitemap_gaps(tmp_path):
+    (tmp_path / "index.html").write_text('<html><body><a href="/docs/">d</a> <a href="/gone/">g</a>'
+                                         '<a href="/logo.png">l</a><a href="https://elsewhere.dev/x">e</a></body></html>')
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "index.html").write_text("<html><body>docs</body></html>")
+    (tmp_path / "sitemap.xml").write_text(generate.sitemap_xml(["https://x.dev/"]))
+    site = crawl.scan_folder(tmp_path, "https://x.dev")
+    found = {(f.id, f.url): f for f in checks.site_checks(site.origin, site.home, site.robots_txt, site.sitemap_urls,
+                                                          site.sitemap_error, site.llms_txt, site.pages,
+                                                          complete=site.complete)}
+    broken = found[("broken-internal-link", "https://x.dev/")]
+    assert "/gone/" in broken.message and "/docs/" not in broken.message and "logo" not in broken.message
+    assert "https://x.dev/docs/" in found[("sitemap-gaps", "https://x.dev")].message
+    # a crawled 404 is broken even when the crawl was partial
+    home = p('<html><body><a href="/old">o</a></body></html>', "https://x.dev/")
+    old = page.parse("<html></html>", "https://x.dev/old", status=404)
+    ids = {f.id for f in checks.site_checks("https://x.dev", home, None, None, "", None, [home, old])}
+    assert "broken-internal-link" in ids
+
+
+def test_required_schema_properties_per_type():
+    article = p('<html><head><script type="application/ld+json">{"@context":"https://schema.org",'
+                '"@type":"Article","headline":"H"}</script></head><body>x</body></html>')
+    msgs = [f.message for f in checks.page_checks(article) if f.id == "schema-missing-property"]
+    assert msgs and "Article" in msgs[0] and "author" in msgs[0] and "datePublished" in msgs[0]
+    graph = p('<html><head><script type="application/ld+json">{"@context":"https://schema.org","@graph":['
+              '{"@type":"Organization","name":"N","url":"https://n.dev"},{"@type":"FAQPage"}]}</script></head>'
+              "<body>x</body></html>")
+    msgs = [f.message for f in checks.page_checks(graph) if f.id == "schema-missing-property"]
+    assert len(msgs) == 1 and "FAQPage" in msgs[0] and "mainEntity" in msgs[0]
+    assert "schema-missing-property" not in {f.id for f in checks.page_checks(p(GOOD))}
+
+
+def test_audit_fail_on_sets_the_exit_code(server, tmp_path, monkeypatch, capsys):
+    _, folder = server
+    monkeypatch.setattr(cli, "project_root", lambda: tmp_path)
+    args = ["audit", str(folder), "--base-url", "https://nexika.dev"]
+    assert cli.main(args) == 0
+    assert cli.main([*args, "--fail-on", "low"]) == 1
+    assert "fail-on low" in capsys.readouterr().out
+    assert cli.main([*args, "--fail-on", "critical"]) == 0
+    assert cli.main([*args, "--fail-on", "bogus"]) == 2

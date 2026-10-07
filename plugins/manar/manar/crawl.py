@@ -24,6 +24,7 @@ class Site:
     sitemap_error: str = ""
     llms_txt: str | None = None
     skipped: list[str] = field(default_factory=list)   # robots-disallowed or failed, with reason
+    complete: bool = False   # every page is known (a built folder): a link to anything else is broken
 
     @property
     def home(self) -> page.Page | None:
@@ -139,7 +140,7 @@ def scan_folder(folder: Path, base_url: str | None = None) -> Site:
     if not base_url:
         raise ValueError(f"can't tell the address of the site in {folder}: pass --base-url https://your.site")
     base_url = base_url.rstrip("/")
-    site = Site(base_url)
+    site = Site(base_url, complete=True)
     robots = folder / "robots.txt"
     site.robots_txt = robots.read_text(encoding="utf-8", errors="replace") if robots.is_file() else None
     sitemap = folder / "sitemap.xml"

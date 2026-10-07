@@ -96,6 +96,79 @@ def hreflang_site_checks(pages: list[Page]) -> list[Finding]:
     return out
 
 
+FILE_SUFFIX = re.compile(r"\.[a-z0-9]{1,5}$", re.I)
+
+
+def link_checks(pages: list[Page], complete: bool) -> list[Finding]:
+    """Internal links to pages that return an error, or (when every page is known) don't exist."""
+    out: list[Finding] = []
+    by_key = {page_key(pg.url): pg for pg in pages}
+    for pg in pages:
+        if pg.status >= 400:
+            continue
+        host = urllib.parse.urlsplit(pg.url).netloc.lower()
+        broken: list[str] = []
+        for href, _ in pg.links:
+            parts = urllib.parse.urlsplit(href)
+            if parts.scheme not in ("http", "https") or parts.netloc.lower() != host:
+                continue
+            if FILE_SUFFIX.search(parts.path) and not parts.path.lower().endswith((".html", ".htm")):
+                continue   # a file (image, PDF, feed), not a page
+            target = by_key.get(page_key(href))
+            if target is not None and target.status >= 400:
+                broken.append(f"{parts.path or '/'} (HTTP {target.status})")
+            elif target is None and complete:
+                broken.append(f"{parts.path or '/'} (no such page)")
+        if broken:
+            unique = list(dict.fromkeys(broken))
+            out.append(Finding("broken-internal-link", "high" if len(unique) > 2 else "medium", "technical",
+                               f"{len(unique)} broken internal link(s): {', '.join(unique[:5])}",
+                               "fix or remove links to pages that don't exist", pg.url))
+    return out
+
+
+# What search engines need to use a schema.org type (one of a tuple is enough).
+REQUIRED_PROPERTIES: dict[str, list[str | tuple[str, ...]]] = {
+    "Article": ["headline", "author", "datePublished"],
+    "BlogPosting": ["headline", "author", "datePublished"],
+    "NewsArticle": ["headline", "author", "datePublished"],
+    "Organization": ["name", "url"],
+    "WebSite": ["name", "url"],
+    "Person": ["name"],
+    "LocalBusiness": ["name", "address"],
+    "Product": ["name", ("offers", "review", "aggregateRating")],
+    "SoftwareApplication": ["name", ("offers", "aggregateRating", "review")],
+    "FAQPage": ["mainEntity"],
+    "BreadcrumbList": ["itemListElement"],
+    "HowTo": ["name", "step"],
+    "Event": ["name", "startDate", "location"],
+    "Recipe": ["name", "image"],
+    "VideoObject": ["name", "thumbnailUrl", "uploadDate"],
+}
+
+
+def _schema_items(jsonld: list) -> list[dict]:
+    items = []
+    for item in jsonld:
+        if isinstance(item, dict):
+            graph = item.get("@graph")
+            items += [g for g in graph if isinstance(g, dict)] if isinstance(graph, list) else [item]
+    return items
+
+
+def _schema_missing(p: Page) -> list[str]:
+    problems = []
+    for item in _schema_items(p.jsonld):
+        types = item.get("@type")
+        for t in [types] if isinstance(types, str) else types if isinstance(types, list) else []:
+            missing = [need if isinstance(need, str) else " or ".join(need)
+                       for need in REQUIRED_PROPERTIES.get(t, [])
+                       if not any(item.get(k) for k in ((need,) if isinstance(need, str) else need))]
+            if missing:
+                problems.append(f"{t} without {', '.join(missing)}")
+    return problems
+
+
 def page_checks(p: Page) -> list[Finding]:
     out: list[Finding] = []
 
@@ -175,6 +248,10 @@ def page_checks(p: Page) -> list[Finding]:
         if isinstance(item, dict) and ("@context" not in item or "@type" not in item):
             add("jsonld-incomplete", "medium", "structured-data", "JSON-LD item without @context or @type",
                 'every top-level item needs "@context": "https://schema.org" and "@type"')
+    for problem in _schema_missing(p):
+        add("schema-missing-property", "medium", "structured-data", f"JSON-LD {problem}",
+            "add the properties search engines need for this type (schema.org and Google's "
+            "structured data docs list them)")
     if p.words < 50 and p.scripts >= 3:
         add("client-rendered", "high", "technical",
             f"only {p.words} words in the raw HTML but {p.scripts} scripts: "
@@ -215,7 +292,10 @@ def validate_llms(text: str) -> list[str]:
 
 
 def site_checks(origin: str, home: Page | None, robots_txt: str | None, sitemap_urls: list[str] | None,
-                sitemap_error: str, llms_txt: str | None, pages: list[Page]) -> list[Finding]:
+                sitemap_error: str, llms_txt: str | None, pages: list[Page],
+                complete: bool = False) -> list[Finding]:
+    """`complete`: pages holds every page of the site (a built folder), so a link to anything else is
+    broken; a crawl only knows the pages it fetched."""
     out: list[Finding] = []
 
     def add(fid, sev, cat, msg, fix):
@@ -274,6 +354,15 @@ def site_checks(origin: str, home: Page | None, robots_txt: str | None, sitemap_
             add("entity-no-sameas", "low", "structured-data", "Organization has no sameAs links",
                 "list official profiles (GitHub, LinkedIn, X...) in sameAs: it ties mentions to you")
     out += hreflang_site_checks(pages)
+    out += link_checks(pages, complete)
+    if sitemap_urls:
+        listed = {page_key(u) for u in sitemap_urls}
+        missing = [pg.url for pg in pages if pg.status < 400 and page_key(pg.url) not in listed
+                   and "noindex" not in pg.meta.get("robots", "").lower()]
+        if missing:
+            add("sitemap-gaps", "low", "indexing",
+                f"{len(missing)} page(s) not in the sitemap: {', '.join(missing[:3])}",
+                "list every indexable page in sitemap.xml (manar generate sitemap)")
     titles = Counter(p.title for p in pages if p.title and p.status < 400)
     dupes = [t for t, n in titles.items() if n > 1]
     if dupes:
