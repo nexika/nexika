@@ -86,12 +86,59 @@ def qualifies(entry: dict, matched: list[str], value: float, cfg: dict, short: b
     return len(matched) >= 2 and value >= cfg["min_score"] * BODY_ONLY_FACTOR
 
 
+def _blocks(body: str) -> list[tuple[str, str]]:
+    """("prose" | "table" | "code", text): code fences and table rows keep their lines."""
+    blocks: list[tuple[str, str]] = []
+    lines = body.split("\n")
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.lstrip().startswith(("```", "~~~")):
+            fence = line.lstrip()[:3]
+            end = next((j for j in range(i + 1, len(lines)) if lines[j].lstrip().startswith(fence)),
+                       len(lines) - 1)
+            blocks.append(("code", "\n".join(lines[i:end + 1])))
+            i = end + 1
+        elif line.lstrip().startswith("|"):
+            end = i
+            while end + 1 < len(lines) and lines[end + 1].lstrip().startswith("|"):
+                end += 1
+            blocks.append(("table", "\n".join(lines[i:end + 1])))
+            i = end + 1
+        else:
+            if line.strip():
+                if blocks and blocks[-1][0] == "prose":
+                    blocks[-1] = ("prose", blocks[-1][1] + " " + line.strip())
+                else:
+                    blocks.append(("prose", line.strip()))
+            i += 1
+    return blocks
+
+
 def excerpt(body: str, limit: int) -> str:
-    flat = re.sub(r"\s+", " ", body).strip()
-    if len(flat) <= limit:
-        return flat
-    cut = flat[:limit].rsplit(" ", 1)[0]
-    return cut + " …"
+    """The start of a section: prose on one line, tables and code blocks whole (a cut table or command
+    is worse than none). A table or code block may take the excerpt up to twice `limit`."""
+    out: list[str] = []
+    used = 0
+    for kind, block in _blocks(body):
+        if kind == "prose":
+            flat = re.sub(r"\s+", " ", block).strip()
+            if used + len(flat) <= limit:
+                out.append(flat)
+                used += len(flat)
+                continue
+            room = limit - used
+            if room > 40:
+                out.append(flat[:room].rsplit(" ", 1)[0] + " …")
+            else:
+                out.append("…")
+            break
+        if used + len(block) > limit * 2:
+            out.append("…")
+            break
+        out.append(block)
+        used += len(block)
+    return "\n".join(out)
 
 
 def render(entry: dict, level: str, cfg: dict) -> str:

@@ -21,9 +21,9 @@ import subprocess
 from collections import Counter
 from pathlib import Path
 
-from . import __version__, text
+from . import __version__, glossary, text
 
-INDEX_VERSION = 3
+INDEX_VERSION = 4
 DEFAULT_SOURCES = [
     "docs/**/*.md", "doc/**/*.md", "adr/**/*.md", "**/README.md", "CONTRIBUTING.md", "ARCHITECTURE.md",
 ]
@@ -209,8 +209,15 @@ def _finish(entry: dict, heading: str) -> dict:
     """`heading` is the section's own heading: the doc title and parent headings in the breadcrumb are
     shared by every section below them, so they never count as a title hit."""
     terms = _terms(heading, entry["keywords"], entry["body"])
+    head = set(text.tokens(heading + " " + " ".join(entry["keywords"])))
+    # the other language's words for the terms used here (glossary.py), weighted like the originals
+    translated_head = glossary.other_language(sorted(head))
+    for word in translated_head:
+        terms[word] += TITLE_WEIGHT
+    for word in glossary.other_language(sorted(set(terms) - head)):
+        terms[word] += 1
     entry["terms"] = dict(terms)
-    entry["head"] = sorted(set(text.tokens(heading + " " + " ".join(entry["keywords"]))))
+    entry["head"] = sorted(head | set(translated_head))
     entry["key_terms"] = sorted(set(text.tokens(" ".join(entry["keywords"]))))
     entry["length"] = sum(terms.values())
     entry["body"] = entry["body"][:MAX_BODY_CHARS]

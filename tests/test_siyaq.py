@@ -433,3 +433,29 @@ def test_events_file_is_private_and_rotated(repo, monkeypatch):
     assert (folder / "events.1.jsonl").exists() and (folder / "events.jsonl").stat().st_size <= 600
     terms = [e["terms"][0] for e in state.read_events(repo)]
     assert terms[-1] == "word19" and len(terms) < 20
+
+
+# ---------------------------------------------------------------- Arabic and English together (#72)
+
+
+def test_an_arabic_question_finds_an_english_section(repo):
+    assert picked_titles(repo, "كيف نعمل تراجع للإصدار؟")[0] == "Deployment > Rollback"
+    assert "Deployment > Environments" in picked_titles(repo, "متى يتم النشر على بيئة الإنتاج؟")
+
+
+def test_an_english_question_finds_an_arabic_section(repo):
+    expected = ["الفواتير > إصدار الفاتورة"]
+    assert picked_titles(repo, "can an invoice be edited after it is issued?") == expected
+
+
+def test_summaries_keep_tables_and_code(repo):
+    table = "| plan | requests |\n|------|----------|\n| free | 60 |\n| pro | 600 |"
+    code = "```sh\nadmin limits set --plan pro 900\n```"
+    (repo / "docs" / "limits.md").write_text(
+        "# Limits\n\n## Rate limits\nEach plan has its own request limits, enforced per API key at the "
+        f"gateway and reset every minute for all endpoints.\n\n{table}\n\nRaise them with:\n\n{code}\n\n"
+        + "More background on how limits evolved over the years. " * 20 + "\n")
+    index = idx.load(repo)
+    picked = rank.select_for_prompt(index, "rate limits per plan", rank.settings({"full_max_chars": 100}), {})
+    assert picked[0]["level"] == "summary"
+    assert table in picked[0]["text"] and code in picked[0]["text"]
