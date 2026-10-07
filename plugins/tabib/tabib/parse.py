@@ -18,9 +18,10 @@ MAX_LINES = 200_000
 
 SIGNALS = [
     ("timeout", re.compile(r"(?i)exceeded the maximum execution time|timed? ?out after \d|"
-                           r"the operation was canceled|job .{0,40}timed out|deadline exceeded")),
-    ("oom", re.compile(r"(?i)exit code 137\b|\bKilled\b|heap out of memory|\bMemoryError\b|OOMKilled|"
-                       r"cannot allocate memory")),
+                           r"job .{0,40}timed out|deadline exceeded")),
+    # "Killed" only as the shell or the kernel says it, never inside a test's own message.
+    ("oom", re.compile(r"(?i)exit code 137\b|^\s*Killed\s*$|line \d+:\s+\d+ Killed\b|Killed process \d+|"
+                       r"heap out of memory|\bMemoryError\b|OOMKilled|cannot allocate memory")),
     ("network", re.compile(r"(?i)could not resolve host|ECONNRESET|ETIMEDOUT|ECONNREFUSED|EAI_AGAIN|"
                            r"connection (?:timed out|reset)|TLS handshake timeout|temporary failure in name "
                            r"resolution|50[234] (?:Bad Gateway|Service Unavailable|Gateway Time-?out)")),
@@ -30,6 +31,8 @@ SIGNALS = [
                           r"no space left on device|hosted runner encountered an error")),
     ("auth", re.compile(r"(?i)bad credentials|401 Unauthorized|403 Forbidden|input required and not supplied|"
                         r"permission denied \(publickey\)|resource not accessible by integration")),
+    # GitHub prints this after a timeout, a shutdown and a cancel alike: the weakest sign.
+    ("cancelled", re.compile(r"(?i)the operation was canceled")),
     ("dependency", re.compile(r"(?i)could not find a version that satisfies|no matching distribution|"
                               r"\bERESOLVE\b|npm ERR! code ETARGET|version solving failed|"
                               r"unable to resolve dependency|no solution found when resolving")),

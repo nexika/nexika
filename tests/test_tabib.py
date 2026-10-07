@@ -144,6 +144,23 @@ def test_signals(line, kind):
     assert parse.signals([line])[0]["kind"] == kind
 
 
+def test_signals_are_named_by_the_most_specific_line():
+    # GitHub prints "The operation was canceled." under a runner shutdown too: not a time limit.
+    shutdown = ["##[error]The runner has received a shutdown signal.", "##[error]The operation was canceled."]
+    verdict = classify.classify({"signals": parse.signals(shutdown)})
+    assert verdict["detail"]["signal"] == "runner"
+    alone = classify.classify({"signals": parse.signals(["##[error]The operation was canceled."])})
+    assert alone["detail"]["signal"] == "cancelled"
+    timed = ["##[error]The job running on runner X has exceeded the maximum execution time of 360 minutes.",
+             "##[error]The operation was canceled."]
+    assert classify.classify({"signals": parse.signals(timed)})["detail"]["signal"] == "timeout"
+    # "Killed" inside a test's own message is not the kernel killing the job.
+    assert parse.signals(["AssertionError: expected user state Killed to be Active"]) == []
+    assert parse.signals(["E   assert 'Killed' == 'Alive'"]) == []
+    for line in ["Killed", "/home/runner/work/_temp/x.sh: line 1:  2345 Killed                  pytest -q"]:
+        assert [s["kind"] for s in parse.signals([line])] == ["oom"], line
+
+
 def test_excerpt_shows_the_lines_around_a_failure():
     lines = [f"line {i}" for i in range(100)] + ["FAILED tests/x.py::test_y - boom"] + ["after"] * 5
     text = parse.excerpt(lines, ["test_y"], around=3)

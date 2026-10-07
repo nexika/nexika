@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import re
 
-INFRA = ("timeout", "network", "rate_limit", "runner", "oom")
+# Most specific first: a runner shutdown or a kill explains a timeout or a cancel printed after it.
+INFRA = ("runner", "oom", "timeout", "rate_limit", "network", "cancelled")
 PARAMS = re.compile(r"^(.*?)\s*\((.*)\)\s*$")
 
 
