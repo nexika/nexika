@@ -11,7 +11,8 @@ compaction, a handoff note between sessions, and a search when you ask.
 
 ```
 every reply (Stop) ──► read only the new part of the transcript ─► fixed rules, no AI:
-                         decision  answers to Claude's questions, approved plans,
+                         decision  answers to Claude's questions, approved plans, proposals
+                                   you said yes to ("I suggest ..." -> "yes" / "تمام"),
                                    "let's go with ...", "don't use ...", "قررنا", "خلينا نستخدم"
                          task      Claude's task list, kept up to date (open / done), in any session
                          problem   a failing test, build or lint command; solved when it passes again,

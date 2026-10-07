@@ -7,6 +7,7 @@ a repository shares one memory.
 A memory is one JSON line in memories.jsonl:
     id, type (decision|task|problem|file|link), text, date, branch, commit, session,
     source (where it came from: "transcript <session> L<line>" or "manual"),
+    reason (why, for a decision, when it was given),
     origin (auto|manual), scope (branch|project), status (open|done|solved|dropped|expired|""),
     key (for updates)
 """
@@ -216,6 +217,7 @@ class Memory:
             "session": fields.get("session", "")[:8], "source": fields.get("source", "manual"),
             "origin": fields.get("origin", "manual"), "scope": fields.get("scope", "branch"),
             "status": fields.get("status", ""), "key": secrets.redact(fields.get("key", "")),
+            "reason": secrets.redact(re.sub(r"\s+", " ", fields.get("reason") or "")).strip()[:300],
         }
         item["source"] = secrets.redact(item["source"])
         seed = item["key"] or f"{kind}|{clean}|{item['date']}|{item['session']}"

@@ -686,3 +686,53 @@ def test_decisions_are_found_in_short_and_long_prompts(log, capsys, repo, prompt
     stop(log.user(prompt), capsys)
     decisions = [i["text"] for i in store.Memory(repo).all() if i["type"] == "decision"]
     assert len(decisions) == 1 and expected in decisions[0]
+
+
+# ---------------------------------------------------------------- proposals you agree to (#57)
+
+
+def decisions_of(repo):
+    return [i for i in store.Memory(repo).all() if i["type"] == "decision"]
+
+
+def test_a_proposal_followed_by_yes_is_a_decision(log, capsys, repo):
+    log.user("The cache is slow, what should we do?")
+    log.say("I looked at it. I suggest we use SQLite for the cache because it needs no server. "
+            "Want me to go ahead?")
+    stop(log.user("yes, go ahead"), capsys)
+    [decision] = decisions_of(repo)
+    assert "SQLite for the cache" in decision["text"] and decision["text"].startswith("Agreed: ")
+    assert decision["reason"] == "it needs no server"
+
+
+def test_the_yes_can_come_in_a_later_turn_and_in_arabic(log, capsys, repo):
+    log.user("Which queue?").say("Shall I switch the jobs to Redis streams? That way retries are built in.")
+    stop(log, capsys)
+    assert decisions_of(repo) == []
+    stop(log.user("تمام"), capsys)
+    [decision] = decisions_of(repo)
+    assert "Redis streams" in decision["text"] and decision["reason"] == "retries are built in"
+
+
+@pytest.mark.parametrize("reply", ["no, keep Postgres", "yes but use Postgres", "what about Postgres?",
+                                   "Explain the trade-offs first and list the risks in detail please"])
+def test_other_replies_do_not_agree(log, capsys, repo, reply):
+    log.user("Which store?").say("I recommend moving the sessions to Redis.")
+    stop(log.user(reply), capsys)
+    assert not [d for d in decisions_of(repo) if d["text"].startswith("Agreed")]
+
+
+@pytest.mark.parametrize("prompt, expected", [
+    ("نستخدم Redis للكاش في كل الخدمات", "Redis"),
+    ("خلّي الكاش في الذاكرة حاليا", "الكاش"),
+])
+def test_arabic_verb_forms_are_decisions(log, capsys, repo, prompt, expected):
+    stop(log.user(prompt), capsys)
+    [decision] = decisions_of(repo)
+    assert expected in decision["text"]
+
+
+def test_a_stated_decision_keeps_its_reason(log, capsys, repo):
+    stop(log.user("Let's use pnpm because it is faster on CI."), capsys)
+    [decision] = decisions_of(repo)
+    assert decision["reason"] == "it is faster on CI"

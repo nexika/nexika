@@ -17,7 +17,7 @@ from pathlib import Path
 from . import card, search, store
 
 SCHEMA = "nexika.hafiz/1"
-PUBLIC = ("id", "type", "text", "date", "branch", "commit", "session", "source", "status", "scope")
+PUBLIC = ("id", "type", "text", "date", "branch", "commit", "session", "source", "status", "scope", "reason")
 
 
 def session_view(folder: Path, state: dict) -> dict:

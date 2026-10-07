@@ -1,8 +1,10 @@
 """Turn transcript events into session state and typed memories, with fixed rules (no AI).
 
 What is captured, and from where:
-    decision  answers to Claude's multiple-choice questions, approved plans, and sentences of user
-              messages that start with a choice ("let's go with", "don't use", "قررنا", "خلينا نستخدم" ...)
+    decision  answers to Claude's multiple-choice questions, approved plans, Claude's proposals the
+              user agrees to ("I suggest ..." then "yes" / "تمام"), and sentences of user messages
+              that start with a choice ("let's go with", "don't use", "قررنا", "نستخدم" ...), with
+              the reason when one is given ("because ...", "لأن ...")
     task      Claude's task list (TodoWrite, TaskCreate/TaskUpdate), kept up to date
     problem   a failing test/build/lint command, marked solved when the same command passes
     file      files Claude changed (Edit, Write, MultiEdit, NotebookEdit), one memory per file
@@ -37,7 +39,25 @@ DECISION_EN = re.compile(
     r"(?:don'?t|do not|never|always) use|stick with|go with|"
     r"(?:use|switch to|move to|change to) [^,;]{1,60}? instead of|prefer [^,;]{1,60}? over)\b", re.I)
 DECISION_AR = re.compile(r"(قررنا|قررت|خلينا|خلّينا|نعتمد|اعتمد|بدلا من|بدل ما|لا تستخدم|لا نستخدم|"
-                         r"دايما استخدم|دائما استخدم|نمشي على|امشي على|سنستخدم)")
+                         r"دايما استخدم|دائما استخدم|نمشي على|امشي على|سنستخدم|"
+                         r"(?:^|\s)(?:نستخدم|خلّ?ي|خليه|خليها)(?=\s|$))")
+# Claude proposes ("I suggest ...", "Shall I ...?") and the user agrees ("yes", "تمام"): that is
+# how most decisions are made in Claude Code.
+PROPOSAL = re.compile(
+    r"\b(?:i (?:suggest|recommend|propose|would|'d)\b|my (?:recommendation|suggestion)\b|"
+    r"i think we should|we should\b|the best option is|let'?s\b)", re.I)
+OFFER = re.compile(r"^(?:shall i|should i|do you want me to|want me to|would you like me to|how about)\b",
+                   re.I)
+CONTINUE_ONLY = re.compile(r"\b(?:go ahead|proceed|continue|start|do (?:it|that|this)|"
+                           r"implement (?:it|this|that))\W*$", re.I)
+APPROVAL = re.compile(
+    r"^(?:yes|yep|yeah|yup|sure|ok(?:ay)?|go ahead|do it|sounds good|agreed|approved|lgtm|perfect|"
+    r"great|let'?s do it|please do|go for it|نعم|ايوه|أيوه|تمام|اوكي|أوكي|موافق|ماشي|يلا|اعمل|اكيد|أكيد)"
+    r"(?=$|[\s,.!،])", re.I)
+NOT_PLAIN_YES = re.compile(r"\b(?:but|however|instead|no|not|don'?t|rather|what|why|which)\b|"
+                           r"[?؟]|(?:^|\s)(?:لكن|بس|لا|بدل)(?=\s|$)", re.I)
+REASON = re.compile(r"\s*(?:,\s*)?\b(?:because|since|as it|so that)\b\s*|\s*(?:لأن|لان|عشان|علشان)\s*", re.I)
+REASON_NEXT = re.compile(r"^(?:because|that way|this way|it|this|لأن|لان|عشان|كذا|بهذا)\b,?\s*", re.I)
 SENTENCE_END = re.compile(r"(?<=[.!?؟])\s+|\n+")
 CODE_BLOCK = re.compile(r"```.*?(?:```|\Z)|<pasted_content\b.*?(?:</pasted_content[^>]*>|\Z)", re.S | re.I)
 MAX_DECISIONS_PER_PROMPT = 3
@@ -60,6 +80,19 @@ ANSWER = re.compile(r'"([^"\n]{3,300})"\s*=\s*"([^"\n]{1,300})"')
 def _short(text: str, limit: int) -> str:
     flat = re.sub(r"\s+", " ", text).strip()
     return flat if len(flat) <= limit else flat[: limit - 1].rsplit(" ", 1)[0] + "…"
+
+
+def _split_reason(sentence: str) -> tuple[str, str]:
+    """("use X", "it is faster") from "use X because it is faster."."""
+    parts = REASON.split(sentence, maxsplit=1)
+    if len(parts) == 2 and parts[1].strip():
+        return parts[0].strip().rstrip(","), parts[1].strip().rstrip(".!")
+    return sentence, ""
+
+
+def _approves(prompt: str) -> bool:
+    words = prompt.split()
+    return 0 < len(words) <= 12 and bool(APPROVAL.match(prompt.strip())) and not NOT_PLAIN_YES.search(prompt)
 
 
 def _first_error(text: str) -> str:
@@ -91,6 +124,7 @@ def new_state(session: str, transcript_path: str) -> dict:
             "started": store.now(), "updated": "", "ended": "", "branch": "", "cwd": "",
             "first_prompt": "", "prompts": [], "prompt_count": 0, "files": {}, "commits": [],
             "tasks": {}, "task_ids": {}, "problems": {}, "decisions": [], "links": [], "pending": {},
+            "proposal": {},
             "note": "", "compactions": 0, "private_salt": "", "private": []}
 
 
@@ -159,6 +193,14 @@ class Capture:
                 state["links"].append(url)
                 self._add("link", f"{url} (shared: {_short(text.replace(url, ''), 120)})", event,
                           key=f"link|{url}", scope="project")
+        proposal, state["proposal"] = state.get("proposal") or {}, {}
+        if proposal and _approves(text):
+            sentence = proposal["text"]
+            if sentence not in state["decisions"]:
+                state["decisions"].append(sentence)
+                digest = hashlib.sha1(sentence.encode()).hexdigest()[:12]
+                self._add("decision", f"Agreed: {sentence}", event, key=f"decision|{self.sid}|a{digest}",
+                          reason=proposal.get("reason", ""))
         found = 0
         for sentence in SENTENCE_END.split(CODE_BLOCK.sub("\n", text)[:8000]):
             sentence = sentence.strip(" \t-*>")
@@ -169,10 +211,31 @@ class Capture:
             sentence = _short(sentence, 300)
             if len(sentence) >= 12 and sentence not in state["decisions"]:
                 state["decisions"].append(sentence)
-                self._add("decision", f"User: {sentence}", event, key=f"decision|{self.sid}|{sentence[:80]}")
+                self._add("decision", f"User: {sentence}", event, key=f"decision|{self.sid}|{sentence[:80]}",
+                          reason=_split_reason(sentence)[1])
                 found += 1
                 if found >= MAX_DECISIONS_PER_PROMPT:
                     break
+
+    def say(self, event: dict) -> None:
+        """Remember Claude's latest proposal, so a "yes" in the next prompt records it as a decision."""
+        prose = CODE_BLOCK.sub("\n", event["text"])[-4000:]
+        sentences = [x.strip(" \t-*>") for x in SENTENCE_END.split(prose)]
+        sentences = [x for x in sentences if x]
+        picked = None
+        for n, sentence in enumerate(sentences):
+            if PROPOSAL.search(sentence) and not sentence.endswith(("?", "؟")):
+                picked = n
+            elif OFFER.match(sentence) and not CONTINUE_ONLY.search(sentence.rstrip("?؟ ")):
+                picked = n
+        if picked is None:
+            self.state["proposal"] = {}
+            return
+        text, reason = _split_reason(sentences[picked])
+        if not reason and picked + 1 < len(sentences) and REASON_NEXT.match(sentences[picked + 1]):
+            reason = REASON_NEXT.sub("", sentences[picked + 1]).rstrip(".!")
+        self.state["proposal"] = {"text": _short(self.clean(text), 300),
+                                  "reason": _short(self.clean(reason), 200), "line": event["line"]}
 
     def tool(self, event: dict) -> None:
         name, data = event["name"], event["input"]
@@ -351,7 +414,7 @@ def _update(memory: store.Memory, root: Path, session: str, transcript_path: str
             state["branch"] = event["branch"]
         if event.get("cwd"):
             state["cwd"] = event["cwd"]
-        if event["kind"] in ("prompt", "tool", "result"):
+        if event["kind"] in ("prompt", "say", "tool", "result"):
             getattr(capture, event["kind"])(event)
     memory.upsert(capture.memories)
     save_state(memory.dir, state)
