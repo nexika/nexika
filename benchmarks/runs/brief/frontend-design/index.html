@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Qalam: a calm editor for Arabic and English</title>
+    <meta name="description" content="Qalam is a writing app for notes, drafts and long essays, with the same calm editor in Arabic and English." />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (function () {
+        var ar = new URLSearchParams(location.search).get("lang") === "ar";
+        var d = document.documentElement;
+        d.lang = ar ? "ar" : "en";
+        d.dir = ar ? "rtl" : "ltr";
+        try {
+          var t = localStorage.getItem("qalam-theme");
+          if (t === "light" || t === "dark") d.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
+</html>

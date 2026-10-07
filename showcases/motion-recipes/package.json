@@ -1,0 +1,28 @@
+{
+  "name": "lawha-showcase-motion-recipes",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "lawha's motion recipes (entrances, count-up, shared layout, press, sheet, toasts, skeleton swap, signatures) in the prof 'Ink and saffron' tokens, checked with lawha in English and Arabic, with and without reduced motion.",
+  "scripts": {
+    "recipes": "mkdir -p src/motion && cp ../../plugins/lawha/recipes/motion/*.ts* src/motion/",
+    "build": "npm run recipes && tsc --noEmit && vite build",
+    "preview": "vite preview --port 4175 --strictPort"
+  },
+  "dependencies": {
+    "@fontsource/fraunces": "5.3.0",
+    "@fontsource/source-sans-3": "5.3.0",
+    "motion": "14.0.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "vite": "8.3.3"
+  }
+}

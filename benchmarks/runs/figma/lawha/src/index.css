@@ -1,0 +1,60 @@
+@import "tailwindcss";
+@import "@fontsource-variable/dm-sans";
+@import "@fontsource-variable/inter";
+
+/* lawha: design tokens from Figma (theme.css), merged.
+   The grey-scale styles are #191825 at 75 / 50 / 10 / 5 % opacity in the file. */
+@theme {
+  --color-black: #191825;
+  --color-orange: #ff5722;
+  --color-secondary: #f85e9f;
+  /* The design's pink (#F85E9F) is 2.96:1 on white: too light for text. Pink text uses this darker shade (5:1 on white, 4.8:1 on the newsletter cream). */
+  --color-secondary-text: #c93273;
+  --color-white: #ffffff;
+  --color-medium: #393e46;
+  --color-primary: #5d50c6;
+  --color-light: #eeeeee;
+  --color-dark: #222831;
+  --color-yellow: #facd49;
+  --color-grey-scale-black: #191825;
+  --color-grey-scale-black-75: rgb(25 24 37 / 0.75);
+  /* Design: 50 %. Raised to 60 % so body text reaches 4.5:1 on white (50 % gives 3.3:1). */
+  --color-grey-scale-black-50: rgb(25 24 37 / 0.6);
+  --color-grey-scale-black-10: rgb(25 24 37 / 0.1);
+  --color-grey-scale-black-5: rgb(25 24 37 / 0.05);
+
+  /* Circular Std is a commercial font: DM Sans is the closest free stand-in. */
+  --font-circular-std: "Circular Std", "DM Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-inter: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Most text in the design uses 1.2x line height. */
+  --text-xs--line-height: 1.2;
+  --text-sm--line-height: 1.2;
+  --text-base--line-height: 1.2;
+  --text-lg--line-height: 1.2;
+  --text-xl--line-height: 1.2;
+  --text-2xl--line-height: 1.2;
+  --text-3xl--line-height: 1.2;
+  --text-4xl--line-height: 1.2;
+  --text-5xl--line-height: 1.2;
+  --text-6xl--line-height: 1.2;
+}
+
+html {
+  line-height: 1.2;
+}
+
+body {
+  font-family: var(--font-circular-std);
+  color: var(--color-grey-scale-black);
+  background: #fff;
+}
+
+/* Figma's vertical trim ("trim cap" in the spec). */
+@utility trim-cap {
+  text-box: trim-both cap alphabetic;
+}
+
+@utility trim-none {
+  text-box: normal;
+}

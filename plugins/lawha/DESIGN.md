@@ -203,7 +203,14 @@ Every recipe follows the same rules:
 - it respects `useReducedMotion`;
 - it is mirrored in RTL (a "slide in from the start" respects `dir`).
 
-From Figma, lawha uses the motion context (CSS keyframes or Motion code) when the MCP budget allows. Prototype interactions are not available through Figma's API, so lawha asks for them or proposes a recipe instead.
+From Figma, lawha reads the prototype through the REST API, in the same call that fetches the frames.
+- **What it reads:** each layer's `interactions`, meaning the trigger, the action (go to, change to a variant, overlay, scroll to) and the transition (Smart Animate, dissolve, move in, slide, push), with its duration and easing.
+- **What it writes** (the `## Motion` section of `spec.md`):
+  - the exact Motion transition: a Figma curve becomes a cubic Bézier, and a Figma spring preset or a custom spring becomes a spring;
+  - the slide direction, written logically;
+  - the recipe that builds it;
+  - when the destination was fetched too, what changes between the two states.
+- **No prototype:** lawha proposes recipes timed by the direction.
 
 ## RTL and languages
 
@@ -260,6 +267,6 @@ We run the same cases with the Figma MCP server alone and with frontend-design a
 | **0.1** | engine `shoot`, `audit`, `see` (alignment, rhythm, typography, colour) and `diff`; `/lawha:check` with its report; `/lawha:system` index. This proves every page, including pages lawha did not write. |
 | **0.2** | `/lawha:figma`: batched and cached fetch, normalisation, breakpoint merge, the build and check loop. Built: see `showcases/figma-portfolio`. |
 | **0.3** | `/lawha:direct`: three rendered directions, the gallery, style history. `/lawha:inspire`: design DNA from live sites, with font licences. `/lawha:elevate` (the art director), with a visual-weight ranking, blind A/B (`lawha ab`) and taste learning. Three.js recipes; checks for 3D under reduced motion and for text over media. Built: see `showcases/prof-dashboard` and `showcases/three-recipes`. |
-| **0.4** | The motion recipe library and Figma motion context; the RTL icon rules; the benchmark published. |
+| **0.4** | The motion recipe library (`recipes/motion`) with motion.endless and motion.slow; motion from Figma prototypes (the REST API's `interactions`); the RTL icon rules (rtl.icon-*); the benchmark in `benchmarks/`. Built: see `showcases/motion-recipes` and `benchmarks/README.md`. |
 
 The **prof learner dashboard** (designed earlier, kept in `showcases/prof-dashboard/`) is the first real app built with lawha. It goes through `/lawha:direct`, then `/lawha:check` in English, Arabic and French.

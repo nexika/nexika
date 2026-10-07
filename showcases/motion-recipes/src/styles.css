@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@import "./lawha-theme.css";
+/* src/motion is copied from the plugin and git-ignored here, and Tailwind skips ignored files: name it. */
+@source "./motion";
+@custom-variant dark (&:where(.dark, .dark *));
+html { background: var(--background); color: var(--foreground); font-family: var(--font-sans); line-height: 1.6; }
+body { margin: 0; }
+h1, h2 { font-family: var(--font-display); text-wrap: balance; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }

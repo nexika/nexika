@@ -1,0 +1,83 @@
+/* lawha direction "Margin & Ink": A quiet page of cream paper and iron-gall ink, like a well-kept notebook, so students and writers feel the app respects slow, serious writing in either script. */
+/* Signature: A thin margin rule that runs down the side of each section, with an Arabic and an English line set side by side across it like a bilingual manuscript page. */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-display: "Fraunces", "Amiri", ui-serif, Georgia, serif;
+  --font-sans: "Source Serif 4", "Amiri", ui-sans-serif, system-ui, sans-serif;
+  --radius-card: 2px;
+  --radius-control: 2px;
+  --spacing: 0.5rem;
+  --text-display: 75.8px;
+  --text-h1: 56.8px;
+  --text-h2: 42.6px;
+  --text-h3: 32px;
+  --text-lead: 24px;
+  --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 220ms;
+  --duration-base: 420ms;
+  --duration-slow: 700ms;
+}
+
+:root {
+  --background: #F7F2E8;
+  --foreground: #1E1A16;
+  --card: #FFFBF3;
+  --card-foreground: #1E1A16;
+  --popover: #FFFBF3;
+  --popover-foreground: #1E1A16;
+  --primary: #7A2E1F;
+  --primary-foreground: #FFF8EE;
+  --secondary: #FFFBF3;
+  --secondary-foreground: #1E1A16;
+  --muted: #FFFBF3;
+  --muted-foreground: #5E554A;
+  --accent: #B0812F;
+  --accent-foreground: #1E1A16;
+  --border: #D6CAB4;
+  --input: #D6CAB4;
+  --ring: #7A2E1F;
+  --radius: 2px;
+  --lawha-motion: calm;
+  --lawha-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --lawha-fast: 220;
+  --lawha-base: 420;
+  --lawha-slow: 700;
+  --lawha-distance: 10;
+}
+
+.dark {
+  --background: #17140F;
+  --foreground: #EFE7D8;
+  --card: #211D17;
+  --card-foreground: #EFE7D8;
+  --popover: #211D17;
+  --popover-foreground: #EFE7D8;
+  --primary: #E3A27F;
+  --primary-foreground: #1E120C;
+  --secondary: #211D17;
+  --secondary-foreground: #EFE7D8;
+  --muted: #211D17;
+  --muted-foreground: #B3A792;
+  --accent: #D6B26A;
+  --accent-foreground: #17140F;
+  --border: #3A332A;
+  --input: #3A332A;
+  --ring: #E3A27F;
+}

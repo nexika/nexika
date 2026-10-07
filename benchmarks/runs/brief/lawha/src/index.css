@@ -1,0 +1,50 @@
+@import "tailwindcss";
+@import "./lawha-theme.css";
+
+
+/* Amiri reads about 12% smaller than the Latin serifs at the same size: a size-adjusted face evens them out. */
+@font-face { font-family: "Amiri Text"; src: url("../node_modules/@fontsource/amiri/files/amiri-arabic-400-normal.woff2") format("woff2"); font-weight: 400; font-display: swap; size-adjust: 112%; unicode-range: U+0600-06FF, U+0750-077F, U+0870-08FF, U+FB50-FDFF, U+FE70-FEFF; }
+@font-face { font-family: "Amiri Text"; src: url("../node_modules/@fontsource/amiri/files/amiri-arabic-700-normal.woff2") format("woff2"); font-weight: 700; font-display: swap; size-adjust: 112%; unicode-range: U+0600-06FF, U+0750-077F, U+0870-08FF, U+FB50-FDFF, U+FE70-FEFF; }
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html {
+    background: var(--background);
+    color: var(--foreground);
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+  body {
+    font-family: var(--font-sans);
+    font-size: 18px;
+    line-height: 1.6;
+    font-optical-sizing: auto;
+    text-rendering: optimizeLegibility;
+  }
+  /* Amiri sits small and tall next to Latin serifs: give Arabic more size and air. */
+  :lang(ar) body,
+  [lang="ar"] {
+    line-height: 1.85;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--accent) 35%, transparent);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+}
+
+@utility font-arabic {
+  font-family: "Amiri Text", "Source Serif 4 Variable", serif;
+}
+
+/* The theme names the families; the variable Fontsource builds register them with " Variable". */
+@theme {
+  --font-display: "Fraunces Variable", "Fraunces", "Amiri Text", ui-serif, Georgia, serif;
+  --font-sans: "Source Serif 4 Variable", "Source Serif 4", "Amiri Text", ui-serif, Georgia, serif;
+}

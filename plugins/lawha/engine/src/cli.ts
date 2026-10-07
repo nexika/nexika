@@ -6,6 +6,7 @@ import { audit } from "./audit.js";
 import { closePage, launch, openVariant, type Variant, variantName } from "./browser.js";
 import { ab, readTaste, reveal } from "./ab.js";
 import { diff } from "./diff.js";
+import { type Icon, iconFindings, icons } from "./icons.js";
 import { choose, preview, readHistory } from "./direct.js";
 import { inspire } from "./inspire.js";
 import { budget, outline, parseUrl } from "./figma.js";
@@ -69,6 +70,8 @@ async function check(url: string, a: ReturnType<typeof parseArgs>): Promise<numb
 
   const run: Run = { url, when: new Date().toISOString(), version: VERSION, shots: [], findings: [], seen: [], diffs: [], summary: { fail: 0, warn: 0, info: 0, widths, verdict: "pass" } };
   const browser = await launch();
+  // Icons per width and theme, in each direction, to compare after all renders (rtl.icon-*).
+  const iconsBy = new Map<string, { ltr?: Icon[]; rtl?: Icon[] }>();
   try {
     for (const v of variants) {
       const name = variantName(v);
@@ -79,6 +82,10 @@ async function check(url: string, a: ReturnType<typeof parseArgs>): Promise<numb
         const height = await page.evaluate(() => document.documentElement.scrollHeight);
         run.shots.push({ variant: name, width: v.width, theme: v.theme, dir: v.dir, motion: v.motion, file: relative(out, file), height } satisfies Shot);
         if (a["no-audit"] !== true) run.findings.push(...(await audit(page, v, { expectRtl })).findings);
+        if (a["no-audit"] !== true && v.motion === "full" && dirs.length > 1) {
+          const key = `${v.width}|${v.theme}`;
+          iconsBy.set(key, { ...iconsBy.get(key), [v.dir]: await icons(page) });
+        }
         if (a["no-see"] !== true && v.motion === "full" && v.theme === themes[0]) run.seen.push((await see(page, v, name)) as Seen);
       } catch (error) {
         run.findings.push({ check: "engine.error", severity: "fail", message: `Could not check ${name}: ${(error as Error).message}`, width: v.width, theme: v.theme, dir: v.dir, motion: v.motion } satisfies Finding);
@@ -88,6 +95,11 @@ async function check(url: string, a: ReturnType<typeof parseArgs>): Promise<numb
     }
   } finally {
     await browser.close();
+  }
+  for (const [key, pair] of iconsBy) {
+    if (!pair.ltr || !pair.rtl) continue;
+    const [width, theme] = key.split("|") as [string, "light" | "dark"];
+    run.findings.push(...iconFindings(pair.ltr, pair.rtl, { width: Number(width), theme, motion: "full" }, expectRtl));
   }
 
   if (typeof a.against === "string") {

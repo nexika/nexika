@@ -18,7 +18,9 @@ interface PageFacts {
   physicalClasses: { selector: string; classes: string[] }[];
   cls: number;
   shifted: string[];
-  animations: { selector: string; props: string[]; duration: number; running: boolean }[];
+  animations: { selector: string; props: string[]; duration: number; running: boolean; iterations: number; area: number }[];
+  /** Every animation started since the page began loading (recorded by the init script). */
+  started: { selector: string; props: string[]; duration: number; iterations: number; delay: number; area: number }[];
 }
 
 function collect(): PageFacts {
@@ -164,11 +166,14 @@ function collect(): PageFacts {
       for (const key of Object.keys(frame)) if (!["offset", "easing", "composite", "computedOffset"].includes(key)) props.add(key);
     }
     const timing = effect?.getComputedTiming();
+    const r = target?.getBoundingClientRect();
     return {
       selector: target ? sel(target) : "(unknown)",
       props: [...props],
       duration: Number(timing?.duration) || 0,
       running: a.playState === "running",
+      iterations: timing?.iterations === Infinity ? -1 : Number(timing?.iterations) || 1,
+      area: r ? Math.round(r.width * r.height) : 0,
     };
   });
 
@@ -184,6 +189,7 @@ function collect(): PageFacts {
     physicalCss: [...physicalCss].slice(0, 30),
     physicalClasses,
     cls: (window as unknown as { __lawhaCls?: number }).__lawhaCls ?? 0,
+    started: (window as unknown as { __lawhaAnims?: PageFacts["started"] }).__lawhaAnims ?? [],
     shifted: Object.entries((window as unknown as { __lawhaShifts?: Record<string, number> }).__lawhaShifts ?? {}).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([n]) => n),
     animations,
   };
@@ -244,13 +250,22 @@ async function textOverMediaInView(page: Page): Promise<{ selector: string; box:
       }
       if (opaque) continue;
       const s = getComputedStyle(el);
+      el.setAttribute("data-lawha-over-media", "");
       out.push({ selector: el.id ? `#${el.id}` : `${el.tagName.toLowerCase()}${el.classList[0] ? "." + el.classList[0] : ""}`, x: r.x, y: r.y, w: r.width, h: r.height, color: s.color, size: parseFloat(s.fontSize), weight: Number(s.fontWeight), text: own.slice(0, 50) });
       if (out.length >= 40) break;
     }
     return out;
   });
   if (!items.length) return [];
+  // The background behind the letters, exactly: the same screen with that text made invisible for
+  // one screenshot. (Sampling around the letters mistakes their soft edges, or a neighbour's text,
+  // for background.)
+  await page.addStyleTag({ content: "[data-lawha-over-media]{color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important;text-decoration-color:transparent!important}" });
   const shot = PNG.sync.read(await page.screenshot({ animations: "disabled" }));
+  await page.evaluate(() => {
+    document.querySelectorAll("[data-lawha-over-media]").forEach((el) => el.removeAttribute("data-lawha-over-media"));
+    [...document.querySelectorAll("style")].filter((t) => t.textContent?.startsWith("[data-lawha-over-media]")).forEach((t) => t.remove());
+  });
   const lum = (r: number, g: number, b: number) => {
     const f = (v: number) => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
     return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
@@ -259,23 +274,19 @@ async function textOverMediaInView(page: Page): Promise<{ selector: string; box:
   for (const it of items) {
     const m = it.color.match(/[\d.]+/g)?.map(Number) ?? [0, 0, 0];
     const lt = lum(m[0]!, m[1]!, m[2]!);
-    const ratios: number[] = [];
+    // With the text hidden, every pixel in its box is background. Take the worst tenth.
+    const background: number[] = [];
     const x0 = Math.max(0, Math.floor(it.x)), x1 = Math.min(shot.width, Math.ceil(it.x + it.w));
     const y0 = Math.max(0, Math.floor(it.y)), y1 = Math.min(shot.height, Math.ceil(it.y + it.h));
     for (let y = y0; y < y1; y += 2) {
       for (let x = x0; x < x1; x += 2) {
         const i = (y * shot.width + x) * 4;
         const lb = lum(shot.data[i]!, shot.data[i + 1]!, shot.data[i + 2]!);
-        const ratio = (Math.max(lt, lb) + 0.05) / (Math.min(lt, lb) + 0.05);
-        ratios.push(ratio);
+        background.push((Math.max(lt, lb) + 0.05) / (Math.min(lt, lb) + 0.05));
       }
     }
-    if (ratios.length < 10) continue;
-    ratios.sort((a, b) => a - b);
-    // Pixels close to the text colour are the glyphs themselves: the background is the rest. Take its
-    // worst tenth.
-    const background = ratios.filter((r) => r > 1.25);
-    if (background.length < 5) continue;
+    if (background.length < 10) continue;
+    background.sort((a, b) => a - b);
     const worst = background[Math.floor(background.length * 0.1)]!;
     const large = it.size >= 24 || (it.size >= 18.66 && it.weight >= 700);
     const needs = large ? 3 : 4.5;
@@ -362,6 +373,24 @@ export async function audit(page: Page, v: Variant, opts: { expectRtl: boolean }
     }
     for (const p of facts.physicalClasses) {
       add({ check: "rtl.physical-class", severity: rtlSeverity, message: `Use logical utilities (ms-/me-/ps-/pe-/start-/end-/text-start) instead of: ${p.classes.join(" ")}`, selector: p.selector });
+    }
+  }
+
+  // Motion that never stops: WCAG 2.2.2 asks for a way to pause anything that moves on its own for
+  // more than 5 seconds next to other content. Small loading indicators (under 64x64) are exempt.
+  if (v.motion === "full" && v.theme === "light" && v.dir === "ltr") {
+    const loops = new Map<string, number>();
+    for (const a of facts.animations) if (a.running && a.iterations === -1 && a.area >= 64 * 64 && a.props.some((p) => p !== "opacity" || a.area >= 200 * 200)) loops.set(a.selector, a.area);
+    for (const [selector] of [...loops].slice(0, 5)) {
+      add({ check: "motion.endless", severity: "warn", message: "This keeps moving forever. Anything that moves on its own for more than 5 seconds needs a pause button, or should stop after a few cycles (WCAG 2.2.2).", selector });
+    }
+    // UI motion over a second feels sluggish: entrances and feedback are usually 150-600ms.
+    const slow = new Map<string, number>();
+    for (const a of facts.started) {
+      if (a.iterations !== -1 && a.duration > 1000 && a.area > 0 && !a.props.every((p) => p === "opacity" && a.duration <= 1500)) slow.set(a.selector, Math.max(slow.get(a.selector) ?? 0, a.duration));
+    }
+    for (const [selector, ms] of [...slow].slice(0, 5)) {
+      add({ check: "motion.slow", severity: "warn", message: `An animation takes ${(ms / 1000).toFixed(1)}s; interface motion over a second feels sluggish (entrances and feedback are usually 150-600ms).`, selector });
     }
   }
 

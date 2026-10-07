@@ -33,8 +33,8 @@ once with "reduce motion" on.
 | **Layout** | sideways scrolling and the element causing it; text cut off by its box; text overlapping text; layout shift while loading |
 | **Phones** | tap targets (24×24 required by WCAG 2.2 AA, 44×44 comfortable); body text under 16px; text under 12px |
 | **Accessibility** | axe-core (WCAG 2.2 A and AA): contrast, names, labels, landmarks, keyboard access; the contrast of text over images, video and 3D, read from the real pixels behind it (axe cannot) |
-| **Motion** | animations that keep running with "reduce motion" on, including 3D scenes (Three.js, WebGL) drawn on a canvas; animating width, height or top instead of transform and opacity |
-| **RTL** | left/right CSS and utilities (`ml-4`, `text-left`, `rounded-l`) that will not mirror in Arabic; symmetric values like `padding: 16px` are fine |
+| **Motion** | animations that keep running with "reduce motion" on, including 3D scenes (Three.js, WebGL) drawn on a canvas; motion that never stops (WCAG 2.2.2); interface motion slower than a second; animating width, height or top instead of transform and opacity |
+| **RTL** | left/right CSS and utilities (`ml-4`, `text-left`, `rounded-l`) that will not mirror in Arabic (symmetric values like `padding: 16px` are fine); icons that show direction (arrows, chevrons, send, reply, undo, log-out, lists) and still point the same way in Arabic, and media controls, clocks and logos that were mirrored by mistake |
 | **The eye** | where the eye lands first above the fold; alignment near-misses, off-scale gaps, uneven lists, type sizes and scale ratio, long lines, tight leading, palette shares, colours outside the tokens, low contrast |
 | **Design** | with Figma exports, a pixel diff per width with a heat map and the regions that differ |
 
@@ -49,7 +49,8 @@ once with "reduce motion" on.
   (Starter plans allow very few). It merges them into one mobile-first spec: Auto Layout as flex,
   named styles as tokens, real line heights, vertical trim, style overrides, photos and SVG icons,
   and design-file habits (a 796px "gap" that is only leftover space) read as intent. Claude builds
-  it in your stack, then `lawha check --against` compares it with each frame: how much it **looks**
+  it in your stack, with the prototype's motion read too (click, hover, Smart Animate, springs, as
+  exact Motion transitions), then `lawha check --against` compares it with each frame: how much it **looks**
   like the design, position for position, and where heights drift. See the
   [showcase](../../showcases/figma-portfolio/README.md): 95.4% / 91.4% / 93.2% at 387 / 1024 / 1440.
 - `/lawha:system` reads the project's design system: Tailwind `@theme` tokens and CSS variables,
@@ -73,6 +74,15 @@ once with "reduce motion" on.
   - Each change is kept only if the `lawha:judge` agent prefers it in a blind side-by-side (`lawha ab`), where it never knows which side is new.
   - Your own picks are kept as your taste and used the next time.
   - There is no "beauty score".
+
+**Motion recipes** (`recipes/motion/`):
+- entrances in reading order and number count-ups;
+- page cross-fades and the shared-layout tab mark;
+- press feedback, a sheet on the native dialog, toasts, and skeleton to content without a jump;
+- the six signature movements.
+
+All are timed by your direction (calm, lively or precise), mirror in Arabic and respect reduced
+motion. See the [showcase](../../showcases/motion-recipes/README.md).
 
 **Three.js recipes** (`recipes/three/`): `WaveField`, `GradientFlow` and `FloatingShapes` for React
 Three Fiber, inside a `Scene3D` wrapper that:
@@ -119,7 +129,7 @@ lawha is being built in steps (see [DESIGN.md](DESIGN.md)):
 
 1. **0.1:** checks on every screen, the eye's measurements, the design-system index.
 2. **0.2:** `/lawha:figma`, Claude's eyes on your Figma file.
-3. **0.3, this version:** `/lawha:direct`, `/lawha:inspire`, `/lawha:elevate` with blind A/B and
-   taste, the Three.js recipes, and checks for 3D motion and text over media.
-4. **0.4:** motion recipes built on Motion, Figma motion, RTL icon rules, and a public benchmark
-   against the leading tools.
+3. **0.3:** `/lawha:direct`, `/lawha:inspire`, `/lawha:elevate` with blind A/B and taste, the
+   Three.js recipes, and checks for 3D motion and text over media.
+4. **0.4, this version:** motion recipes built on Motion, motion from Figma prototypes, RTL icon
+   rules, and a [public benchmark](../../benchmarks/README.md) against the leading tools.

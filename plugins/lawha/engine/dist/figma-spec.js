@@ -1,6 +1,7 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { cacheDir, fetchFrames, svgExports } from "./figma.js";
+import { extractMotion, layerNames, motionMarkdown } from "./figma-motion.js";
 import { merge, specMarkdown } from "./merge.js";
 import { normalize, tokens, typeStyles } from "./normalize.js";
 /** The image type from its first bytes, for a sensible file extension. */
@@ -68,13 +69,29 @@ export async function figmaSpec(root, ref, ids, opts) {
     };
     frames.forEach((f) => nameFills(f.spec));
     for (const [ref2, file] of Object.entries(fetched.fills)) {
-        const name = `${names.get(ref2) ?? ref2.slice(0, 8)}.${extension(file)}`;
+        // Designers reuse layer names ("Rectangle 6" holding three different photos): number repeats,
+        // never overwrite.
+        const base = names.get(ref2) ?? ref2.slice(0, 8);
+        let name = `${base}.${extension(file)}`;
+        for (let n = 2; Object.values(photoNames).some((p) => p.endsWith(`/${name}`)); n++)
+            name = `${base}-${n}.${extension(file)}`;
         copyFileSync(file, join(assetsDir, name));
         photoNames[ref2] = relative(root, join(assetsDir, name));
     }
-    // Icons: one SVG export call for every icon in the widest frame (cached).
-    const widest = frames.reduce((a, b) => (b.width > a.width ? b : a));
-    const icons = vectors(widest.spec);
+    // Icons: one SVG export call for every icon in every frame (cached). The same icon in several frames
+    // (same name and size) is exported once; icons that only exist on the phone or tablet (a menu
+    // button, a fold arrow) are included.
+    const byWidth = [...frames].sort((a, b) => b.width - a.width);
+    const iconKeys = new Set();
+    const icons = [];
+    for (const f of byWidth)
+        for (const v of vectors(f.spec)) {
+            const key = `${v.name}|${Math.round(v.width.px)}x${Math.round(v.height.px)}`;
+            if (!iconKeys.has(key)) {
+                iconKeys.add(key);
+                icons.push(v);
+            }
+        }
     const svgs = await svgExports(root, ref, fetched.version, icons.map((i) => i.id));
     const iconNames = {};
     for (const icon of icons) {
@@ -122,7 +139,32 @@ export async function figmaSpec(root, ref, ids, opts) {
         "",
     ].join("\n");
     writeFileSync(join(out, "theme.css"), css);
+    // Prototype motion: interactions on every fetched layer, with destinations named and, when a
+    // destination was fetched too (pass its id with the frames), what changes between the two.
+    const layers = new Map();
+    for (const n of Object.values(data.nodes))
+        if (n?.document)
+            layerNames(n.document, layers);
+    const byId = new Map();
+    const index = (s) => { byId.set(s.id, s); s.children.forEach(index); };
+    for (const n of Object.values(data.nodes)) {
+        const s = n?.document ? normalize(n.document, n.styles ?? {}) : null;
+        if (s)
+            index(s);
+    }
+    const motion = [];
+    const seen = new Set();
+    for (const id of ids)
+        for (const step of extractMotion(data.nodes[id].document, layers, byId)) {
+            const key = `${step.layer}|${step.trigger}|${step.action}|${step.transition.figma}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                motion.push(step);
+            } // the same button in every breakpoint frame
+        }
+    const unresolved = new Set(motion.filter((m) => m.destination && !byId.has(m.destination.id) && !m.action.startsWith("goes to")).map((m) => m.destination.id)).size;
     let md = specMarkdown(merged, opts.title ?? data.name ?? "Figma design");
+    md += motionMarkdown(motion, unresolved);
     md += "\n## Tokens\n\n" + Object.entries(t.colors).map(([n, h]) => `- \`--color-${n}\` ${h}`).join("\n") + "\n";
     if (t.untokened.length)
         md += "\nColours used without a named style: " + t.untokened.slice(0, 12).map((c) => `${c.hex} (${c.uses}×)`).join(", ") + "\n";
@@ -134,13 +176,13 @@ export async function figmaSpec(root, ref, ids, opts) {
     const specPath = join(out, "spec.md");
     writeFileSync(specPath, md);
     const jsonPath = join(out, "spec.json");
-    writeFileSync(jsonPath, JSON.stringify({ breakpoints: merged.breakpoints, root: merged.root, tokens: t, type, photos: photoNames, icons: iconNames }, null, 1));
+    writeFileSync(jsonPath, JSON.stringify({ breakpoints: merged.breakpoints, root: merged.root, tokens: t, type, photos: photoNames, icons: iconNames, motion }, null, 1));
     const countNotes = (m) => m.notes.length + m.children.reduce((a, c) => a + countNotes(c), 0);
     const countRe = (m) => (m.restructured ? 1 : 0) + m.children.reduce((a, c) => a + countRe(c), 0);
     return {
         dir: out, spec: specPath, json: jsonPath, tokensCss: join(out, "theme.css"), designs: join(out, "designs"),
         assets: { photos: Object.values(photoNames), icons: Object.values(iconNames) },
-        breakpoints: merged.breakpoints, calls: fetched.calls + svgs.calls, notes: countNotes(merged.root), restructured: countRe(merged.root),
+        breakpoints: merged.breakpoints, motion: motion.length, calls: fetched.calls + svgs.calls, notes: countNotes(merged.root), restructured: countRe(merged.root),
     };
 }
 export { cacheDir, existsSync };

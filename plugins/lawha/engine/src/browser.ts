@@ -23,8 +23,36 @@ export async function launch(): Promise<Browser> {
   return chromium.launch();
 }
 
-/** Track layout shifts from the very first paint, before any page script runs. */
+/** Track layout shifts and every animation started, from the very first paint, before any page script runs. */
 const CLS_SCRIPT = `
+  window.__lawhaAnims = [];
+  (function () {
+    const name = (el) => el && el.tagName ? el.tagName.toLowerCase() + (el.id ? "#" + el.id : "") + [...el.classList].slice(0, 2).map((c) => "." + c).join("") : "(unknown)";
+    const log = (el, duration, iterations, delay, props) => {
+      if (window.__lawhaAnims.length >= 400) return;
+      const r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : { width: 0, height: 0 };
+      window.__lawhaAnims.push({ selector: name(el), duration: Number(duration) || 0, iterations: iterations === Infinity ? -1 : Number(iterations) || 1, delay: Number(delay) || 0, props, area: Math.round(r.width * r.height) });
+    };
+    // Motion and other libraries animate through element.animate (the Web Animations API).
+    const original = Element.prototype.animate;
+    Element.prototype.animate = function (keyframes, options) {
+      try {
+        const o = typeof options === "number" ? { duration: options } : options || {};
+        const frames = Array.isArray(keyframes) ? keyframes : [keyframes || {}];
+        const props = [...new Set(frames.flatMap((f) => Object.keys(f || {})).filter((k) => !["offset", "easing", "composite"].includes(k)))];
+        log(this, o.duration, o.iterations, o.delay, props);
+      } catch (e) {}
+      return original.apply(this, arguments);
+    };
+    // CSS animations.
+    document.addEventListener("animationstart", (e) => {
+      try {
+        const s = getComputedStyle(e.target);
+        const i = s.animationIterationCount === "infinite" ? Infinity : parseFloat(s.animationIterationCount);
+        log(e.target, parseFloat(s.animationDuration) * 1000, i, parseFloat(s.animationDelay) * 1000, ["@" + e.animationName]);
+      } catch (err) {}
+    }, true);
+  })();
   window.__lawhaCls = 0;
   try {
     new PerformanceObserver((list) => {
@@ -63,7 +91,28 @@ export async function openVariant(browser: Browser, opts: LoadOptions, v: Varian
   // Let fonts, images and entrance animations settle before measuring.
   await page.evaluate(() => (document as Document & { fonts?: FontFaceSet }).fonts?.ready);
   await page.waitForTimeout(opts.settleMs ?? 800);
+  await revealAll(page);
   return page;
+}
+
+/**
+ * Scroll through the whole page once, so sections that appear when scrolled to (whileInView,
+ * IntersectionObserver, lazy images) are shown before anything is measured or photographed, then go
+ * back to the top. Without this, a full-page screenshot shows those sections blank.
+ */
+export async function revealAll(page: Page): Promise<void> {
+  const step = Math.round((page.viewportSize()?.height ?? 900) * 0.8);
+  for (let i = 0; i < 40; i++) {
+    const done = await page.evaluate((s) => {
+      window.scrollBy(0, s);
+      return window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+    }, step);
+    await page.waitForTimeout(120);
+    if (done) break;
+  }
+  await page.waitForTimeout(900); // the last entrances finish (lawha's slowest token is 700ms)
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(300);
 }
 
 export async function closePage(page: Page): Promise<void> {

@@ -1,6 +1,7 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { type FigmaRef, cacheDir, fetchFrames, svgExports } from "./figma.js";
+import { extractMotion, layerNames, type MotionStep, motionMarkdown } from "./figma-motion.js";
 import { merge, specMarkdown } from "./merge.js";
 import { normalize, type Spec, type StyleIndex, tokens, typeStyles } from "./normalize.js";
 
@@ -32,6 +33,7 @@ export interface SpecResult {
   designs: string; // folder with <width>.png, for lawha check --against
   assets: { photos: string[]; icons: string[] };
   breakpoints: { name: string; width: number }[];
+  motion: number; // prototype interactions found
   calls: number;
   notes: number;
   restructured: number;
@@ -76,14 +78,25 @@ export async function figmaSpec(root: string, ref: FigmaRef, ids: string[], opts
   };
   frames.forEach((f) => nameFills(f.spec));
   for (const [ref2, file] of Object.entries(fetched.fills)) {
-    const name = `${names.get(ref2) ?? ref2.slice(0, 8)}.${extension(file)}`;
+    // Designers reuse layer names ("Rectangle 6" holding three different photos): number repeats,
+    // never overwrite.
+    const base = names.get(ref2) ?? ref2.slice(0, 8);
+    let name = `${base}.${extension(file)}`;
+    for (let n = 2; Object.values(photoNames).some((p) => p.endsWith(`/${name}`)); n++) name = `${base}-${n}.${extension(file)}`;
     copyFileSync(file, join(assetsDir, name));
     photoNames[ref2] = relative(root, join(assetsDir, name));
   }
 
-  // Icons: one SVG export call for every icon in the widest frame (cached).
-  const widest = frames.reduce((a, b) => (b.width > a.width ? b : a));
-  const icons = vectors(widest.spec);
+  // Icons: one SVG export call for every icon in every frame (cached). The same icon in several frames
+  // (same name and size) is exported once; icons that only exist on the phone or tablet (a menu
+  // button, a fold arrow) are included.
+  const byWidth = [...frames].sort((a, b) => b.width - a.width);
+  const iconKeys = new Set<string>();
+  const icons: Spec[] = [];
+  for (const f of byWidth) for (const v of vectors(f.spec)) {
+    const key = `${v.name}|${Math.round(v.width.px)}x${Math.round(v.height.px)}`;
+    if (!iconKeys.has(key)) { iconKeys.add(key); icons.push(v); }
+  }
   const svgs = await svgExports(root, ref, fetched.version, icons.map((i) => i.id));
   const iconNames: Record<string, string> = {};
   for (const icon of icons) {
@@ -130,7 +143,23 @@ export async function figmaSpec(root: string, ref: FigmaRef, ids: string[], opts
   ].join("\n");
   writeFileSync(join(out, "theme.css"), css);
 
+  // Prototype motion: interactions on every fetched layer, with destinations named and, when a
+  // destination was fetched too (pass its id with the frames), what changes between the two.
+  const layers = new Map<string, string>();
+  for (const n of Object.values(data.nodes)) if (n?.document) layerNames(n.document as never, layers);
+  const byId = new Map<string, Spec>();
+  const index = (s: Spec) => { byId.set(s.id, s); s.children.forEach(index); };
+  for (const n of Object.values(data.nodes)) { const s = n?.document ? normalize(n.document, n.styles ?? {}) : null; if (s) index(s); }
+  const motion: MotionStep[] = [];
+  const seen = new Set<string>();
+  for (const id of ids) for (const step of extractMotion(data.nodes[id]!.document as never, layers, byId)) {
+    const key = `${step.layer}|${step.trigger}|${step.action}|${step.transition.figma}`;
+    if (!seen.has(key)) { seen.add(key); motion.push(step); } // the same button in every breakpoint frame
+  }
+  const unresolved = new Set(motion.filter((m) => m.destination && !byId.has(m.destination.id) && !m.action.startsWith("goes to")).map((m) => m.destination!.id)).size;
+
   let md = specMarkdown(merged, opts.title ?? data.name ?? "Figma design");
+  md += motionMarkdown(motion, unresolved);
   md += "\n## Tokens\n\n" + Object.entries(t.colors).map(([n, h]) => `- \`--color-${n}\` ${h}`).join("\n") + "\n";
   if (t.untokened.length) md += "\nColours used without a named style: " + t.untokened.slice(0, 12).map((c) => `${c.hex} (${c.uses}×)`).join(", ") + "\n";
   md += "\n## Type styles (largest first)\n\n" + type.map((s) => `- ${s.family} ${s.weight}, ${s.size}px${s.lineHeight ? `/${s.lineHeight}px` : ""}${s.letterSpacing ? `, tracking ${s.letterSpacing}px` : ""}${s.transform !== "none" ? `, ${s.transform}case` : ""} · ${s.uses}× · e.g. "${s.sample}"`).join("\n") + "\n";
@@ -141,14 +170,14 @@ export async function figmaSpec(root: string, ref: FigmaRef, ids: string[], opts
   const specPath = join(out, "spec.md");
   writeFileSync(specPath, md);
   const jsonPath = join(out, "spec.json");
-  writeFileSync(jsonPath, JSON.stringify({ breakpoints: merged.breakpoints, root: merged.root, tokens: t, type, photos: photoNames, icons: iconNames }, null, 1));
+  writeFileSync(jsonPath, JSON.stringify({ breakpoints: merged.breakpoints, root: merged.root, tokens: t, type, photos: photoNames, icons: iconNames, motion }, null, 1));
 
   const countNotes = (m: typeof merged.root): number => m.notes.length + m.children.reduce((a, c) => a + countNotes(c), 0);
   const countRe = (m: typeof merged.root): number => (m.restructured ? 1 : 0) + m.children.reduce((a, c) => a + countRe(c), 0);
   return {
     dir: out, spec: specPath, json: jsonPath, tokensCss: join(out, "theme.css"), designs: join(out, "designs"),
     assets: { photos: Object.values(photoNames), icons: Object.values(iconNames) },
-    breakpoints: merged.breakpoints, calls: fetched.calls + svgs.calls, notes: countNotes(merged.root), restructured: countRe(merged.root),
+    breakpoints: merged.breakpoints, motion: motion.length, calls: fetched.calls + svgs.calls, notes: countNotes(merged.root), restructured: countRe(merged.root),
   };
 }
 

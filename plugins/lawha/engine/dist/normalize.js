@@ -63,15 +63,19 @@ function effectiveStyle(n) {
     const [top, topCount] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
     const style = top !== 0 && table[String(top)] && topCount / length >= 0.6 ? { ...base, ...table[String(top)] } : base;
     const mixed = [...counts.keys()]
-        .filter((id) => id !== 0 && id !== top && table[String(id)])
+        .filter((id) => id !== top && (id === 0 || table[String(id)]))
         .map((id) => {
-        const o = table[String(id)];
+        // The base style (run 0) is "different" when another run covers most of the text: "Mark Smith"
+        // at 28px before a longer "/ Travel Enthusiast" at 23px.
+        const o = id === 0 ? base : table[String(id)];
         const start = runs.indexOf(id);
         let end = start;
         while (runs[end + 1] === id)
             end++;
         const part = (n.characters ?? "").slice(start, end + 1);
-        const what = [o.fontWeight && `weight ${o.fontWeight}`, o.fontSize && `${o.fontSize}px`, o.fontFamily, o.textDecoration?.toLowerCase(), o.fills && "own colour"].filter(Boolean).join(", ");
+        const main = top === 0 ? base : { ...base, ...table[String(top)] };
+        const differs = (k) => (id === 0 ? o[k] !== undefined && JSON.stringify(o[k]) !== JSON.stringify(main[k]) : !!o[k]);
+        const what = [differs("fontWeight") && `weight ${o.fontWeight}`, differs("fontSize") && `${o.fontSize}px`, differs("fontFamily") && o.fontFamily, differs("textDecoration") && o.textDecoration?.toLowerCase(), differs("fills") && "own colour"].filter(Boolean).join(", ");
         return `"${part.slice(0, 40)}" is styled differently (${what || "own style"})`;
     });
     return { style, mixed };
@@ -208,10 +212,12 @@ export function tokens(specs) {
         for (const p of [...s.fills, ...(s.text?.color ? [s.text.color] : []), ...(s.border?.color ? [s.border.color] : [])]) {
             if (p.kind !== "solid" || !p.hex)
                 continue;
+            // A style's opacity is part of the colour (Grey 50% is not Grey): keep it as #RRGGBBAA.
+            const value = p.opacity !== undefined && p.opacity < 1 ? `${p.hex}${hex2(p.opacity)}`.toUpperCase() : p.hex;
             if (p.token)
-                colors[p.token] = p.hex;
+                colors[p.token] = value;
             else
-                raw.set(p.hex, (raw.get(p.hex) ?? 0) + 1);
+                raw.set(value, (raw.get(value) ?? 0) + 1);
         }
         s.children.forEach(visit);
     };

@@ -1,0 +1,89 @@
+{
+ "task": "figma",
+ "scored": "2026-10-07T13:32:44.678Z",
+ "widths": [
+  430,
+  768,
+  1024,
+  1280,
+  1440
+ ],
+ "results": [
+  {
+   "tool": "lawha",
+   "build": true,
+   "problems": {
+    "phone": {
+     "fail": 0,
+     "warn": 2
+    },
+    "rtl": {
+     "fail": 0,
+     "warn": 0
+    }
+   },
+   "looks": {
+    "430": {
+     "looks": 95.6,
+     "position": 91.8
+    },
+    "1024": {
+     "looks": 98.5,
+     "position": 96.8
+    },
+    "1440": {
+     "looks": 96.2,
+     "position": 94.8
+    }
+   },
+   "hardcodedColours": 28,
+   "notes": [],
+   "report": "runs/figma/lawha/.lawha/score/report.html"
+  },
+  {
+   "tool": "figma-mcp",
+   "build": true,
+   "problems": {
+    "phone": {
+     "fail": 14,
+     "warn": 9
+    },
+    "accessibility": {
+     "fail": 8,
+     "warn": 0
+    },
+    "rtl": {
+     "fail": 0,
+     "warn": 0
+    }
+   },
+   "looks": {
+    "430": {
+     "looks": 93,
+     "position": 81.8
+    },
+    "1024": {
+     "looks": 97.1,
+     "position": 90.8
+    },
+    "1440": {
+     "looks": 95.9,
+     "position": 93.5
+    }
+   },
+   "hardcodedColours": 19,
+   "notes": [],
+   "report": "runs/figma/figma-mcp/.lawha/score/report.html"
+  },
+  {
+   "tool": "builder-io",
+   "build": false,
+   "problems": {},
+   "looks": {},
+   "hardcodedColours": 0,
+   "notes": [
+    "npm install failed (npm crashes: 'Cannot read properties of null (reading edgesOut)'); the download is Builder's pnpm-based agent-native app, not the starter. Outside the scorer, unchanged: pnpm install + pnpm build pass, and pnpm start serves the page; lawha check on it gives looks 75.6% / 85.8% / 74.5% (430/1024/1440), must fix 3 (1 tap target, 2 accessibility: contrast, zoom disabled), should fix 1; the failing tap target is the template's own 'Configuration error' panel. Builder.io was given the desktop frame only (its plugin takes one frame), and its AI agent rewrote the page: invented text, three Pexels stock photos, 3 of the design's 9 sections. Colours hard-coded reads 0 only because the counter scans src/, which this project does not have."
+   ]
+  }
+ ]
+}

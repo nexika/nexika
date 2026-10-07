@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.lawha/
+**/public/design/
+**/public/design-assets/
+runs/figma/*/public/

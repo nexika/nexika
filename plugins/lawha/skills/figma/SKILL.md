@@ -42,6 +42,12 @@ How to read `spec.md`:
 - `trim cap` = Figma's vertical trim: use the `trim-cap` utility on a **block** element (wrap the
   text in a `<span class="block trim-cap">` inside buttons and flex items); `trim-none` resets it;
 - `"..." is styled differently` = mixed styles inside one text (a bold word): keep them.
+- `## Motion` = the prototype's interactions:
+  - Each line gives the trigger (click, while hovering, after a delay...), what happens, Figma's transition, and the exact Motion `transition={...}` to use, with the recipe that builds it.
+  - Directions are logical: `from end` mirrors in Arabic.
+  - Indented lines list what changes between a layer and its hover or press variant: animate only those, and only with transform and opacity where you can. A colour change is a CSS transition, not a movement.
+  - To see what changes in a variant, pass the variant's id along with the frames.
+  - With no prototype, use the recipes in `${CLAUDE_PLUGIN_ROOT}/recipes/motion/`.
 
 ## 3. Build it in the project's stack
 - Read `.lawha/system.json` (run `/lawha:system` first in an existing project): reuse its components
