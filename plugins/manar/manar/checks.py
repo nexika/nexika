@@ -1,6 +1,7 @@
 """Deterministic checks. Every finding says what is wrong, why it matters, and how to fix it."""
 from __future__ import annotations
 
+import re
 import urllib.parse
 import xml.etree.ElementTree as ET
 from collections import Counter
@@ -27,6 +28,72 @@ class Finding:
 
 
 # ---------------------------------------------------------------- pages
+
+# BCP 47 as hreflang uses it: language, optional script, optional region ("ar", "zh-Hant", "en-GB", "es-419")
+HREFLANG_CODE = re.compile(r"^[a-z]{2,3}(?:-[a-z]{4})?(?:-(?:[a-z]{2}|\d{3}))?$", re.I)
+
+
+def page_key(url: str) -> tuple[str, str]:
+    """The same page whatever the scheme, query, fragment, trailing slash or index.html."""
+    parts = urllib.parse.urlsplit(url)
+    path = re.sub(r"(?:/index)?\.html?$", "", parts.path).rstrip("/")
+    return parts.netloc.lower(), path
+
+
+def same_language(code: str, lang: str) -> bool:
+    return bool(lang) and code.lower().split("-")[0] == lang.lower().split("-")[0]
+
+
+def _hreflang_page(p: Page, add) -> None:
+    """hreflang problems visible on one page; return links and targets need the whole crawl."""
+    if not p.hreflang_raw:
+        return
+    bad = [code for code in p.hreflang_raw if code.lower() != "x-default" and not HREFLANG_CODE.match(code)]
+    if bad:
+        add("hreflang-invalid-code", "medium", "international", f"invalid hreflang code(s): {', '.join(bad)}",
+            'use a language code with an optional region, such as "ar", "ar-SA", "en-GB" or "x-default"')
+    relative = [href for href in p.hreflang_raw.values() if not re.match(r"https?://", href, re.I)]
+    if relative:
+        add("hreflang-relative", "medium", "international",
+            f"hreflang URL(s) are not absolute: {relative[0]}",
+            "hreflang links must be full URLs, including https:// and the host")
+    host = urllib.parse.urlsplit(p.url).netloc.lower()
+    other = [href for href in p.hreflang.values() if urllib.parse.urlsplit(href).netloc.lower() != host]
+    if other:
+        add("hreflang-other-host", "low", "international", f"hreflang points to another site: {other[0]}",
+            "fine for separate country domains; otherwise point it to this site's language version")
+    if "x-default" not in p.hreflang:
+        add("hreflang-no-x-default", "low", "international", "hreflang set has no x-default",
+            'add <link rel="alternate" hreflang="x-default" href="..."> for visitors in other languages')
+
+
+def hreflang_site_checks(pages: list[Page]) -> list[Finding]:
+    """Return links and alternates that point to broken pages, among the crawled pages."""
+    out: list[Finding] = []
+    by_key = {page_key(pg.url): pg for pg in pages}
+    for pg in pages:
+        if pg.status >= 400 or not pg.hreflang:
+            continue
+        broken, no_return = [], []
+        for href in dict.fromkeys(pg.hreflang.values()):
+            target = by_key.get(page_key(href))
+            if target is None or target is pg:
+                continue
+            if target.status >= 400:
+                broken.append(f"{href} (HTTP {target.status})")
+            elif not any(page_key(h) == page_key(pg.url) for code, h in target.hreflang.items()
+                         if code != "x-default"):
+                no_return.append(href)
+        if broken:
+            out.append(Finding("hreflang-broken-target", "high", "international",
+                               f"hreflang points to a broken page: {', '.join(broken[:3])}",
+                               "point hreflang only to live pages", pg.url))
+        if no_return:
+            out.append(Finding("hreflang-no-return", "medium", "international",
+                               f"no return link from {', '.join(no_return[:3])}: search engines ignore "
+                               "hreflang pairs that don't link back",
+                               "every language version must list all the others, and itself", pg.url))
+    return out
 
 
 def page_checks(p: Page) -> list[Finding]:
@@ -71,6 +138,20 @@ def page_checks(p: Page) -> list[Finding]:
     elif urllib.parse.urlsplit(p.canonical).netloc.lower() != urllib.parse.urlsplit(p.url).netloc.lower():
         add("canonical-other-host", "medium", "indexing", f"canonical points to another site: {p.canonical}",
             "make sure this is intended; otherwise point it to this page")
+    elif page_key(p.canonical) != page_key(p.url):
+        languages = [code for code, href in p.hreflang.items() if code != "x-default"
+                     and page_key(href) == page_key(p.canonical) and not same_language(code, p.lang)]
+        if languages:
+            add("canonical-other-language", "high", "international",
+                f"canonical points to the {languages[0]} version ({p.canonical}): search engines drop "
+                "this page and show the other language instead",
+                "point each language version's canonical to itself; hreflang links the versions")
+        else:
+            add("canonical-other-page", "medium", "indexing",
+                f"canonical points to another page: {p.canonical}",
+                "search engines index the target instead of this page; point it to this page unless "
+                "it is a true duplicate")
+    _hreflang_page(p, add)
     if not p.lang:
         add("lang-missing", "medium", "international", "no lang attribute on <html>",
             'set <html lang="en"> (or "ar" with dir="rtl" for Arabic) so engines know the language')
@@ -184,6 +265,7 @@ def site_checks(origin: str, home: Page | None, robots_txt: str | None, sitemap_
         if orgs and not any(o.get("sameAs") for o in orgs):
             add("entity-no-sameas", "low", "structured-data", "Organization has no sameAs links",
                 "list official profiles (GitHub, LinkedIn, X...) in sameAs: it ties mentions to you")
+    out += hreflang_site_checks(pages)
     titles = Counter(p.title for p in pages if p.title and p.status < 400)
     dupes = [t for t, n in titles.items() if n > 1]
     if dupes:

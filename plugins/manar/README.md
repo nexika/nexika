@@ -7,7 +7,7 @@ actually mention and cite you**, so you can see what each change did.
 
 | Skill | What it does |
 |---|---|
-| `/manar:audit <url or built folder>` | Deterministic checks of indexing, titles, descriptions, canonical, language, structured data, sitemap, robots.txt rules for every AI crawler, llms.txt, JavaScript-only content, and how quotable each passage is (English and Arabic) |
+| `/manar:audit <url or built folder>` | Deterministic checks of indexing, titles, descriptions, canonical, language and hreflang (codes, absolute URLs, return links, x-default), structured data, sitemap, robots.txt rules for every AI crawler, llms.txt, JavaScript-only content, and how quotable each passage is (English and Arabic) |
 | `/manar:fix` | Writes the fixes into your project with the framework's own conventions (Next.js, Astro, ASP.NET Core, static / GitHub Pages), re-audits the build, and opens a pull request (via itqan and amin when installed) |
 | `/manar:visibility` | Asks Gemini (Google Search grounded), Perplexity, ChatGPT search and Claude search your customers' real questions, several times each, and reports how often you are **mentioned** and **cited**, who is cited instead, and the change since the last release |
 

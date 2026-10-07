@@ -369,3 +369,45 @@ def test_generated_markup_cannot_break_out_of_script_or_markdown():
     hostile = p("<html><head><title>Hi](http://evil)\n# injected</title></head><body>x</body></html>")
     text = generate.llms_txt("N", "S", crawl.Site("https://x", [hostile]))
     assert "\n# injected" not in text and "](http://evil)" not in text
+
+
+# ---------------------------------------------------------------- issue #41: hreflang and canonicals
+
+
+def _alt_page(url, lang, alternates, canonical=None):
+    links = "".join(f'<link rel="alternate" hreflang="{code}" href="{href}">' for code, href in alternates)
+    return p(f'<html lang="{lang}"><head><link rel="canonical" href="{canonical or url}">{links}</head>'
+             f'<body>x</body></html>', url)
+
+
+HREFLANG_IDS = {"hreflang-invalid-code", "hreflang-relative", "hreflang-other-host", "hreflang-no-x-default"}
+
+
+def test_hreflang_codes_urls_and_x_default_are_checked():
+    pg = _alt_page("https://x.dev/ar/", "ar", [("arabic", "https://x.dev/ar/"), ("en", "/en/"),
+                                               ("fr", "https://other.dev/fr/")])
+    assert HREFLANG_IDS <= {f.id for f in checks.page_checks(pg)}
+    ok = _alt_page("https://x.dev/ar/", "ar", [("ar", "https://x.dev/ar/"), ("en-GB", "https://x.dev/en/"),
+                                               ("x-default", "https://x.dev/en/")])
+    assert not {f.id for f in checks.page_checks(ok)} & HREFLANG_IDS
+
+
+def test_canonical_to_another_language_or_page_is_flagged():
+    # the Arabic page says its canonical is the English home: search engines drop the Arabic page
+    ar = _alt_page("https://x.dev/ar/", "ar", [("ar", "https://x.dev/ar/"), ("en", "https://x.dev/"),
+                                               ("x-default", "https://x.dev/")], canonical="https://x.dev/")
+    assert "canonical-other-language" in {f.id for f in checks.page_checks(ar)}
+    other = _alt_page("https://x.dev/blog/a", "en", [], canonical="https://x.dev/blog/")
+    assert "canonical-other-page" in {f.id for f in checks.page_checks(other)}
+    same = _alt_page("https://x.dev/blog/a?utm=1", "en", [], canonical="https://x.dev/blog/a/")
+    assert not {f.id for f in checks.page_checks(same)} & {"canonical-other-page", "canonical-other-language"}
+
+
+def test_hreflang_return_links_and_targets_are_checked_across_pages():
+    en = _alt_page("https://x.dev/", "en", [("en", "https://x.dev/"), ("ar", "https://x.dev/ar/"),
+                                            ("fr", "https://x.dev/fr/"), ("x-default", "https://x.dev/")])
+    ar = _alt_page("https://x.dev/ar/", "ar", [("ar", "https://x.dev/ar/"), ("x-default", "https://x.dev/")])
+    fr = page.parse("<html><body>gone</body></html>", "https://x.dev/fr/", status=404)
+    found = {(f.id, f.url) for f in checks.site_checks("https://x.dev", en, None, None, "", None, [en, ar, fr])}
+    assert ("hreflang-no-return", "https://x.dev/") in found
+    assert ("hreflang-broken-target", "https://x.dev/") in found
