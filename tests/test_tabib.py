@@ -115,6 +115,21 @@ def test_matrix_only():
     assert classify.matrix_parts("lint") == ("lint", ())
 
 
+def test_one_failed_job_is_not_blamed_on_all_its_parameters():
+    # Run 37521330971: a race in one test failed one job; both of its values were "the cause".
+    one = jobs(("test (py3.13, macos-latest)", "failure"), ("test (py3.12, ubuntu-latest)", "success"),
+               ("test (py3.11, windows-latest)", "success"))
+    assert classify.matrix_only(one) == ""
+    verdict = classify.classify({"failures": FAIL, "jobs": one})
+    assert (verdict["kind"], verdict["confidence"], verdict["detail"].get("jobs")) == ("code", "low", 1)
+    assert "one job" in i18n.label(verdict["kind"], verdict["detail"], "en")
+    # One failed job whose only unshared value is the Python: still matrix.
+    assert classify.matrix_only(jobs(("t (py3.13, ubuntu)", "failure"), ("t (py3.12, ubuntu)", "success"))) == "py3.13"
+    # Two failed jobs that share the value: matrix.
+    two = jobs(("t (py3.13, macos)", "failure"), ("t (py3.13, windows)", "failure"), ("t (py3.12, ubuntu)", "success"))
+    assert classify.matrix_only(two) == "py3.13"
+
+
 FAIL = [{"framework": "pytest", "kind": "tests", "test": "tests/a.py::t", "file": "tests/a.py", "line": 1,
          "message": "AssertionError"}]
 

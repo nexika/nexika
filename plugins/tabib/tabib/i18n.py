@@ -9,7 +9,7 @@ TEXT = {
     "en": {
         "title": "CI run {run} ({workflow}) on {branch}, commit {sha}",
         "k_code_tests": "{count} failing test(s)", "k_code_lint": "{count} lint error(s)",
-        "k_code_build": "{count} build error(s)", "k_code_": "{count} failure(s)",
+        "k_code_build": "{count} build error(s)", "k_code_": "{count} failure(s)", "one_job": "{label}, in one job",
         "k_matrix": "fails only on {value}", "k_flaky": "likely flaky: the same commit passed",
         "k_infra": "outside the code: {signal}", "k_dependency": "a dependency problem",
         "k_unknown": "unclear: read the log",
@@ -33,7 +33,7 @@ TEXT = {
     "ar": {
         "title": "تشغيل CI رقم {run} ({workflow}) على {branch}، التعديل {sha}",
         "k_code_tests": "{count} اختبار فاشل", "k_code_lint": "{count} خطأ تنسيق",
-        "k_code_build": "{count} خطأ بناء", "k_code_": "{count} إخفاق",
+        "k_code_build": "{count} خطأ بناء", "k_code_": "{count} إخفاق", "one_job": "{label}، في مهمة واحدة",
         "k_matrix": "يفشل فقط على {value}", "k_flaky": "متقلّب على الأرجح: نفس التعديل نجح",
         "k_infra": "خارج الكود: {signal}", "k_dependency": "مشكلة في الاعتماديات",
         "k_unknown": "غير واضح: اقرأ السجل",
@@ -89,7 +89,8 @@ def label(kind: str, detail: dict, language: str = "") -> str:
     """A failure kind in a few words: '3 failing test(s)', 'fails only on py3.10', 'likely flaky ...'."""
     detail = detail or {}
     if kind == "code":
-        return t(f"k_code_{detail.get('what', '')}", language, count=detail.get("count", 0))
+        text = t(f"k_code_{detail.get('what', '')}", language, count=detail.get("count", 0))
+        return t("one_job", language, label=text) if detail.get("jobs") == 1 else text
     if kind == "infra":
         return t("k_infra", language, signal=t(f"s_{detail.get('signal', 'runner')}", language))
     if kind == "matrix":
