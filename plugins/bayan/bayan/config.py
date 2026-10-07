@@ -11,7 +11,7 @@ from pathlib import Path
 from . import family
 
 LEVELS = ("no-code", "junior", "developer")
-DEFAULTS = {"level": "no-code", "auto_clean": True, "block_signatures": True, "deny_signatures": False}
+DEFAULTS = {"level": "developer", "auto_clean": True, "block_signatures": True, "deny_signatures": False}
 ROLE_LEVEL = {"developer": "developer", "learner": "junior", "writer": "no-code"}
 
 
@@ -28,7 +28,7 @@ def _stored() -> dict:
 
 
 def load() -> dict:
-    base = ROLE_LEVEL.get(family.role(), DEFAULTS["level"])
+    base = ROLE_LEVEL[family.role() or family.DEFAULT_ROLE]
     cfg = {**DEFAULTS, "level": base, **_stored()}
     if os.environ.get("BAYAN_LEVEL") in LEVELS:
         cfg["level"] = os.environ["BAYAN_LEVEL"]

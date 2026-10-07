@@ -14,6 +14,7 @@ for root in (PLUGINS / "bayan", PLUGINS / "siyaq"):
     if str(root) not in sys.path:
         sys.path.insert(0, str(root))
 
+from bayan import check as bayan_check  # noqa: E402
 from bayan import config as bayan_config  # noqa: E402
 from bayan import hooks as bayan_hooks  # noqa: E402
 from siyaq import rank  # noqa: E402
@@ -161,3 +162,23 @@ def test_siyaq_threshold_follows_the_role(family_profile):
 def test_siyaq_project_setting_wins_over_the_role(family_profile):
     set_role(family_profile, "learner")
     assert rank.settings({"min_score": 2.5})["min_score"] == 2.5
+
+
+# ---------------------------------------------------------------- #51: no profile means a developer
+
+
+def test_without_a_profile_bayan_writes_for_a_developer(family_profile):
+    # bayan's default reader was no-code: every session told Claude the user had never written code
+    assert not family_profile.exists()
+    assert bayan_config.load()["level"] == "developer"
+    assert "Reader level: developer" in bayan_hooks.session_start({})
+
+
+def test_without_a_profile_bayan_check_does_not_flag_branch_as_jargon():
+    doc = "Merge the branch after the API review passes and the build is green."
+    findings = bayan_check.check(doc, bayan_config.load()["level"])
+    assert not [f for f in findings if "not explained" in f.advice]
+
+
+def test_without_a_profile_siyaq_keeps_the_developer_threshold():
+    assert rank.settings({})["min_score"] == rank.ROLE_MIN_SCORE["developer"]

@@ -48,7 +48,7 @@ bayan level [no-code|junior|developer]
 Put `bayan: off` anywhere in a file to leave it alone. Settings live in
 `~/.claude/nexika/bayan/config.json` (`level`, `auto_clean`, `block_signatures`, `deny_signatures`).
 Without a `level` there, the Nexika profile's role picks it (`developer` → developer, `learner` →
-junior, `writer` → no-code).
+junior, `writer` → no-code); with no role either, bayan writes for a developer.
 
 ## Honest limits
 - The plainness score measures the habits in [the guide](guide/writing.md). It is **not an AI

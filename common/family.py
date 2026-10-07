@@ -7,8 +7,9 @@
     writer      writes prose, not code: everyday words
 
 Each plugin turns the role into its own defaults (bayan's reader level, prof's teaching, siyaq's
-match threshold); a setting made in the plugin itself still wins. With no role, each plugin keeps
-its own default. The first session note asks the question once (ask_note); later sessions don't ask.
+match threshold); a setting made in the plugin itself still wins. With no role, the plugins assume
+a developer (DEFAULT_ROLE): most people running Claude Code write code. prof still teaches someone
+who has lessons on record. The first session note asks once (ask_note); later sessions don't ask.
 
 Answer from the command line:  python3 family.py role developer|learner|writer
 """
@@ -21,6 +22,7 @@ import sys
 from pathlib import Path
 
 ROLES = ("developer", "learner", "writer")
+DEFAULT_ROLE = "developer"
 SCHEMA = "nexika.profile/1"
 
 
@@ -70,10 +72,10 @@ def ask_note(helper: str) -> str:
         _write({**data, "asked": datetime.date.today().isoformat()})
     except OSError:
         return ""
-    return ("Nexika profile: not set yet. Ask the user once, in one short question, which fits best: "
-            "developer (writes code every day), learner (learning to code) or writer (writes prose, "
-            "not code). Save the answer with "
-            f"`{helper} role <answer>`. If they skip it, don't ask again.")
+    return ("Nexika profile: not set yet, so the plugins assume a developer. Ask the user once, in one "
+            "short question, which fits best: developer (writes code every day), learner (learning to "
+            f"code) or writer (writes prose, not code). Save the answer with `{helper} role <answer>`. "
+            "If they skip it, don't ask again.")
 
 
 def main(argv: list[str]) -> int:
@@ -86,7 +88,7 @@ def main(argv: list[str]) -> int:
     elif argv[1:] not in ([], ["role"]):
         print(f"usage: {argv[0]} [role {'|'.join(ROLES)}]", file=sys.stderr)
         return 2
-    print(f"Nexika profile ({path()}): role {role() or 'not chosen'}")
+    print(f"Nexika profile ({path()}): role {role() or DEFAULT_ROLE + ' (not chosen, the default)'}")
     return 0
 
 

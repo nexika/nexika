@@ -31,7 +31,7 @@ ROLE_MIN_SCORE = {"developer": 1.0, "learner": 0.7, "writer": 1.0}
 
 
 def settings(config: dict) -> dict:
-    role = {"min_score": ROLE_MIN_SCORE[r]} if (r := family.role()) else {}
+    role = {"min_score": ROLE_MIN_SCORE[family.role() or family.DEFAULT_ROLE]}
     return {**DEFAULTS, **role, **{k: config[k] for k in DEFAULTS if k in config}}
 
 
