@@ -185,6 +185,61 @@ def test_checks_and_runs():
     assert forge.parse_gh_jobs(jobs) == ["test (py3.12)"]
 
 
+def _forge_world(env, monkeypatch, ci_state="passed"):
+    info = {"repo": str(env / "r"), "branch": "feat/x", "head": "h1", "host": "github", "remote": "x"}
+    calls = {"prs": 0, "ci": 0}
+
+    def prs(_info):
+        calls["prs"] += 1
+        return {"state": "ok", "tool": "gh", "per_user": [], "branch_pr": None}
+
+    def ci(_info, _pr):
+        calls["ci"] += 1
+        return {"state": ci_state, "run": 7 if ci_state == "failed" else None, "failed": []}
+
+    monkeypatch.setattr(forge, "fetch_prs", prs)
+    monkeypatch.setattr(forge, "fetch_ci", ci)
+    return info, calls
+
+
+def test_refresh_honours_the_pr_ttl(env, monkeypatch):
+    info, calls = _forge_world(env, monkeypatch)
+    forge.refresh(info)
+    forge.refresh(info)  # CI is due every 90 s; the PR list is good for 5 minutes
+    assert calls == {"prs": 1, "ci": 2}
+
+
+def test_polling_backs_off_when_nothing_changes(env, monkeypatch):
+    info, _ = _forge_world(env, monkeypatch)
+    now = [1_000_000.0]
+    monkeypatch.setattr(forge.time, "time", lambda: now[0])
+    forge.refresh(info)
+    now[0] += forge.CI_TTL + 1
+    assert forge.cached(info)["due"]  # active: CI every 90 s
+    forge.refresh(info)
+    now[0] += forge.IDLE_AFTER + 1
+    forge.refresh(info)  # same results for over IDLE_AFTER: idle
+    now[0] += forge.CI_TTL + 1
+    assert not forge.cached(info)["due"], "idle: no gh call every 90 s"
+    now[0] += forge.CI_TTL * forge.IDLE_FACTOR
+    assert forge.cached(info)["due"]
+    assert forge.cached({**info, "head": "h2"})["due"], "a new commit is fetched at once"
+
+
+def test_ci_failure_is_saved_before_triage_runs(env, monkeypatch):
+    info, _ = _forge_world(env, monkeypatch, "failed")
+    seen = []
+
+    def triage(info_, ci, before):
+        seen.append((forge.load_cache(info_["repo"]).get("ci") or {}).get("feat/x", {}).get("state"))
+        return {**ci, "tabib": {"run": 7, "kind": "code"}}
+
+    monkeypatch.setattr(forge, "with_triage", triage)
+    forge.refresh(info)
+    assert seen == ["failed"], "the band shows the failure while tabib reads the log"
+    assert forge.load_cache(info["repo"])["ci"]["feat/x"]["tabib"]["kind"] == "code"
+
+
 def test_glab_pipeline():
     assert forge.parse_glab_pipeline(json.dumps({"status": "failed", "jobs": [{"name": "rspec", "status": "failed"}]}))[
         "failed"] == ["rspec"]

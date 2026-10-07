@@ -27,6 +27,9 @@ from . import config, family, status
 from .gitinfo import first_name
 
 PR_TTL, CI_TTL, CI_RUNNING_TTL, LOCK_TTL = 300, 90, 45, 360  # a refresh may wait up to 180 s for tabib
+# Nothing changed for IDLE_AFTER seconds (same commit, same PRs, same CI result, CI not running):
+# ask IDLE_FACTOR times less often. A new commit is still fetched at once.
+IDLE_AFTER, IDLE_FACTOR = 600, 4
 BIN = Path(__file__).resolve().parent.parent / "bin" / "mizan"
 TOOL = {"github": "gh", "gitlab": "glab"}
 
@@ -254,6 +257,12 @@ def ci_ttl(entry: dict | None) -> float:
     return CI_RUNNING_TTL if (entry or {}).get("state") == "running" else CI_TTL
 
 
+def idle(data: dict, ci: dict | None) -> bool:
+    """Nothing has changed for IDLE_AFTER seconds and no CI run is going: poll less."""
+    changed = float(data.get("changed") or 0)
+    return bool(changed) and time.time() - changed > IDLE_AFTER and (ci or {}).get("state") != "running"
+
+
 def cached(info: dict) -> dict:
     """{prs, ci} from the cache (either may be None: not fetched yet), and whether a refresh is due."""
     data = load_cache(info["repo"])
@@ -261,8 +270,16 @@ def cached(info: dict) -> dict:
     ci = (data.get("ci") or {}).get(info.get("branch", ""))
     if ci and ci.get("head") != info.get("head"):
         ci = {**ci, "stale": True}  # a new commit: the old result stays shown until the new one is in
-    due = not fresh(prs, PR_TTL) or not fresh(ci, ci_ttl(ci)) or bool(ci and ci.get("stale"))
+    factor = IDLE_FACTOR if idle(data, ci) else 1
+    due = not fresh(prs, PR_TTL * factor) or not fresh(ci, ci_ttl(ci) * factor) or bool(ci and ci.get("stale"))
     return {"prs": prs, "ci": ci, "due": due}
+
+
+def _gist(prs: dict | None, ci: dict | None) -> list:
+    """What the person would see change: not when it was fetched."""
+    prs, ci = prs or {}, ci or {}
+    return [prs.get("state"), prs.get("per_user"), prs.get("branch_pr"),
+            ci.get("state"), ci.get("run"), ci.get("failed"), ci.get("head")]
 
 
 def refresh(info: dict) -> dict:
@@ -273,13 +290,27 @@ def refresh(info: dict) -> dict:
         save_cache(info["repo"], data)
         return data
     data = load_cache(info["repo"])
-    prs = {**fetch_prs(info), "fetched": time.time()}
+    branch = info.get("branch", "")
+    before = (data.get("ci") or {}).get(branch)
+    prs = data.get("prs")
+    if not fresh(prs, PR_TTL) or (prs or {}).get("state") != "ok":
+        prs = {**fetch_prs(info), "fetched": time.time()}
     ci = {**fetch_ci(info, prs.get("branch_pr")), "fetched": time.time(), "head": info.get("head")}
-    ci = with_triage(info, ci, (data.get("ci") or {}).get(info.get("branch", "")))
+    if before and before.get("tabib") and before.get("run") == ci.get("run"):
+        ci["tabib"] = before["tabib"]
+    if _gist(prs, ci) != _gist(data.get("prs"), before) or not data.get("changed"):
+        data["changed"] = time.time()
     data["prs"] = prs
-    data["ci"] = {**{k: v for k, v in (data.get("ci") or {}).items()
-                     if time.time() - float(v.get("fetched") or 0) < 86400}, info.get("branch", ""): ci}
-    save_cache(info["repo"], data)
+
+    def store(found: dict) -> None:
+        data["ci"] = {**{k: v for k, v in (data.get("ci") or {}).items()
+                         if time.time() - float(v.get("fetched") or 0) < 86400}, branch: found}
+        save_cache(info["repo"], data)
+
+    store(ci)  # shown now: tabib's triage below can take seconds
+    triaged = with_triage(info, ci, before)
+    if triaged != ci:
+        store(triaged)
     return data
 
 
