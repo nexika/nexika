@@ -1,6 +1,6 @@
 ---
 name: check
-description: Check a web page on every screen - six widths from phone to wide desktop, light and dark, LTR and RTL, with reduced motion - and fix what fails. Finds sideways scrolling, clipped or overlapping text, small tap targets, accessibility problems (axe), layout shift, motion that ignores "reduce motion", and left/right CSS that breaks Arabic; measures alignment, spacing rhythm, type scale and colour; compares with Figma exports. Use when the user says "check this page", "is it responsive", "does it work on mobile", "lawha check", "افحص الصفحة", "هل الصفحة متجاوبة", or after building or changing a page.
+description: Check a web page on every screen - six widths from phone to wide desktop, light and dark, LTR and RTL, with reduced motion - and fix what fails. Finds sideways scrolling, clipped or overlapping text, small tap targets, accessibility problems (axe), Tab order against the reading order and missing focus rings, layout shift, motion that ignores "reduce motion", and left/right CSS that breaks Arabic; measures alignment, spacing rhythm, type scale and colour; compares with Figma exports. Use when the user says "check this page", "is it responsive", "does it work on mobile", "lawha check", "افحص الصفحة", "هل الصفحة متجاوبة", or after building or changing a page.
 argument-hint: "[url] [--fix]"
 ---
 

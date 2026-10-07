@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Focus faults</title>
+<style>
+  body { margin: 0; font: 16px/1.5 system-ui, sans-serif; color: #111; background: #fff; }
+  header, main, footer { padding: 16px; }
+  nav { display: flex; gap: 16px; }
+  a, button { display: inline-block; min-width: 44px; min-height: 44px; padding: 8px 12px; color: #1d3a8a; }
+  button { font: inherit; background: #e8edf8; border: 1px solid #1d3a8a; border-radius: 6px; }
+  /* Planted: shown right to left, so Tab walks it against the reading order. */
+  .toolbar { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 16px; margin-top: 16px; }
+  /* Planted: the focus ring removed with nothing in its place. */
+  .ghost:focus { outline: none; }
+  /* Not a fault: the ring is replaced by a shadow. */
+  .ring:focus-visible { outline: none; box-shadow: 0 0 0 3px #1d3a8a; }
+  .tall { height: 1400px; }
+</style>
+</head>
+<body>
+  <header><nav aria-label="Main"><a href="#home">Home</a><a href="#about">About</a><a href="#contact">Contact</a></nav></header>
+  <main>
+    <h1>Focus faults</h1>
+    <div class="toolbar"><button id="first">First</button><button id="second">Second</button></div>
+    <p><button class="ghost" id="ghost">Invisible focus</button> <button class="ring" id="ring">Custom ring</button></p>
+    <div class="tall"></div>
+  </main>
+  <!-- Planted: a positive tabindex puts this footer link before everything above it. -->
+  <footer><a href="#top" id="jump" tabindex="1">Back to top</a></footer>
+</body>
+</html>

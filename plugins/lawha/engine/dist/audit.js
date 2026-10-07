@@ -378,6 +378,103 @@ async function scriptMotion(page) {
         return []; // a blinking caret or a pixel of noise
     return [{ selector: moved[0] ?? "(something on the page)", box: { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 } }];
 }
+const MAX_STOPS = 60;
+/** The focused element, measured; null when focus left the page (or sits on the body). */
+function focusedStop() {
+    const el = document.activeElement;
+    if (!el || el === document.body || el === document.documentElement)
+        return null;
+    const sel = (e) => {
+        if (e.id)
+            return `#${CSS.escape(e.id)}`;
+        const parts = [];
+        for (let node = e; node && node !== document.body && parts.length < 4; node = node.parentElement) {
+            const parent = node.parentElement;
+            let part = node.tagName.toLowerCase() + [...node.classList].slice(0, 2).map((c) => `.${CSS.escape(c)}`).join("");
+            const tag = node.tagName;
+            const same = parent ? [...parent.children].filter((c) => c.tagName === tag) : [];
+            if (same.length > 1)
+                part += `:nth-of-type(${same.indexOf(node) + 1})`;
+            parts.unshift(part);
+        }
+        return parts.join(" > ");
+    };
+    let pinned = false;
+    for (let e = el; e; e = e.parentElement) {
+        const p = getComputedStyle(e).position;
+        if (p === "fixed" || p === "sticky") {
+            pinned = true;
+            break;
+        }
+    }
+    const r = el.getBoundingClientRect();
+    const pad = 8;
+    const x = Math.max(0, Math.floor(r.left - pad)), y = Math.max(0, Math.floor(r.top - pad));
+    const right = Math.min(innerWidth, Math.ceil(r.right + pad)), bottom = Math.min(innerHeight, Math.ceil(r.bottom + pad));
+    const label = (el.innerText || el.getAttribute("aria-label") || el.getAttribute("title") || el.getAttribute("placeholder") || "").trim().replace(/\s+/g, " ").slice(0, 40);
+    return {
+        selector: sel(el),
+        label: label || sel(el),
+        box: { x: Math.round(r.left + scrollX), y: Math.round(r.top + scrollY), w: Math.round(r.width), h: Math.round(r.height) },
+        pinned,
+        clip: r.width > 0 && r.height > 0 && right - x > 0 && bottom - y > 0 ? { x, y, width: right - x, height: bottom - y } : null,
+    };
+}
+/**
+ * Walk the page with Tab, as a keyboard user does. At each stop the element is photographed with
+ * focus and again after blur (Tab then carries on from it): no pixel changed means no visible
+ * focus. The stops are then read against the visual order.
+ */
+async function focusWalk(page) {
+    await page.evaluate(() => { document.activeElement?.blur?.(); window.scrollTo(0, 0); });
+    const stops = [];
+    const seen = new Set();
+    try {
+        for (let i = 0; i < MAX_STOPS; i++) {
+            await page.keyboard.press("Tab");
+            const stop = await page.evaluate(focusedStop);
+            if (!stop || seen.has(stop.selector))
+                break; // left the page, or came round again
+            seen.add(stop.selector);
+            let visible = null;
+            if (stop.clip) {
+                const focused = await page.screenshot({ clip: stop.clip, animations: "disabled" });
+                await page.evaluate(() => document.activeElement?.blur?.());
+                const blurred = await page.screenshot({ clip: stop.clip, animations: "disabled" });
+                visible = !focused.equals(blurred);
+            }
+            stops.push({ ...stop, visible });
+        }
+    }
+    finally {
+        await page.evaluate(() => { document.activeElement?.blur?.(); window.scrollTo(0, 0); });
+    }
+    return stops;
+}
+/**
+ * Tab steps that go against the reading order: back up the page within the same column, or back
+ * along a row (leftwards in LTR, rightwards in RTL). Moving up into the next column (a sidebar
+ * then the main content) is reading order, as is anything fixed or sticky.
+ */
+export function focusOrderJumps(stops, dir) {
+    const jumps = [];
+    const slack = 4;
+    for (let i = 1; i < stops.length; i++) {
+        const a = stops[i - 1], b = stops[i];
+        if (a.pinned || b.pinned || !a.box.w || !b.box.w)
+            continue;
+        const [aStart, aEnd] = dir === "ltr" ? [a.box.x, a.box.x + a.box.w] : [-(a.box.x + a.box.w), -a.box.x];
+        const [bStart, bEnd] = dir === "ltr" ? [b.box.x, b.box.x + b.box.w] : [-(b.box.x + b.box.w), -b.box.x];
+        const above = b.box.y + b.box.h <= a.box.y + slack;
+        const nextColumn = bStart >= aEnd - slack;
+        const rowOverlap = Math.min(a.box.y + a.box.h, b.box.y + b.box.h) - Math.max(a.box.y, b.box.y);
+        const sameRow = rowOverlap > 0.5 * Math.min(a.box.h, b.box.h);
+        const backAlongRow = sameRow && bEnd <= aStart + slack;
+        if ((above && !nextColumn) || backAlongRow)
+            jumps.push({ from: a.label, to: b.label, selector: b.selector, box: b.box });
+    }
+    return jumps;
+}
 export async function audit(page, v, opts) {
     const facts = await page.evaluate(collect);
     const where = { width: v.width, theme: v.theme, dir: v.dir, motion: v.motion };
@@ -485,6 +582,14 @@ export async function audit(page, v, opts) {
                 selector: violation.nodes[0]?.target.join(" "),
             });
         }
+    }
+    // Keyboard users: Tab must follow the reading order (WCAG 2.4.3) and show where it is (2.4.7).
+    const stops = await focusWalk(page);
+    for (const j of focusOrderJumps(stops, v.dir).slice(0, 5)) {
+        add({ check: "a11y.focus-order", severity: "warn", message: `Tab goes from "${j.from}" to "${j.to}", against the reading order. A positive tabindex, or CSS order, row-reverse or grid placement, usually does this; make the DOM order match what is seen.`, selector: j.selector, box: j.box });
+    }
+    for (const s of stops.filter((s) => s.visible === false).slice(0, 10)) {
+        add({ check: "a11y.focus-visible", severity: "fail", message: `"${s.label}" shows no focus when reached with Tab: keyboard users lose their place. Keep the outline, or style :focus-visible (a ring or a shadow).`, selector: s.selector, box: s.box });
     }
     return { findings, facts: { cls: round(facts.cls, 3), shifted: facts.shifted, targets: facts.targets.length, axeViolations } };
 }
