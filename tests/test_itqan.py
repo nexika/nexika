@@ -303,6 +303,20 @@ def test_proof_uses_the_project_venv(proof, tmp_path):
     assert sys.executable not in pytest_check["argv"]
 
 
+def test_proof_checks_lists_the_root_suite_and_its_command(proof, tmp_path, monkeypatch, capsys):
+    # #47: ship runs the tests itqan's proof detects, so `checks` has to name the command
+    root = python_project(tmp_path)
+    engine = root / "plugins" / "lawha" / "engine"
+    engine.mkdir(parents=True)
+    (engine / "package.json").write_text('{"scripts": {"test": "node --test"}}')
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.chdir(root)
+    assert proof.main(["checks"]) == 0
+    out = capsys.readouterr().out
+    assert "tests: pytest" in out and "-m pytest -q" in out
+    assert "npm" not in out and "node --test" not in out
+
+
 def test_stacks_are_detected_from_the_repo_root(tmp_path, repo):
     (repo / "pyproject.toml").write_text("[project]\nname='x'\n")
     (repo / "web").mkdir()

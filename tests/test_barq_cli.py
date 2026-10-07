@@ -156,6 +156,29 @@ def test_info_detects_dotnet_and_node(project, barq_run):
     assert "also detected:" in out and "cd web && pnpm test" in out
 
 
+def test_info_prefers_the_root_python_suite_over_a_nested_package(project, barq_run):
+    # #47: this repo's plugins/lawha/engine/package.json won run:test over the root pytest suite
+    (project / "pyproject.toml").write_text("[project]\nname = 'x'\n")
+    (project / "tests").mkdir()
+    (project / "tests" / "test_app.py").write_text("def test_x():\n    pass\n")
+    engine = project / "plugins" / "lawha" / "engine"
+    engine.mkdir(parents=True)
+    (engine / "package.json").write_text('{"scripts": {"test": "node --test"}}')
+    _, out = barq_run("info")
+    assert "stacks: python (pyproject.toml); node (npm) (plugins/lawha/engine/package.json)" in out
+    assert "test   python -m pytest   [python]" in out
+    assert "also detected:" in out and "cd plugins/lawha/engine && npm test" in out
+
+
+def test_info_keeps_a_root_node_project_first(project, barq_run):
+    (project / "package.json").write_text('{"scripts": {"test": "vitest"}}')
+    (project / "pyproject.toml").write_text("[project]\nname = 'x'\n")
+    (project / "tests").mkdir()
+    (project / "tests" / "test_app.py").write_text("def test_x():\n    pass\n")
+    _, out = barq_run("info")
+    assert "test   npm test   [node (npm)]" in out
+
+
 def test_barq_json_commands_override_and_run_compresses(project, barq_run):
     script = (
         "import sys; print('noise\\n' * 50); "

@@ -24,13 +24,16 @@ Launch `itqan:test-writer` with the approved plan. Check its report: the new tes
 fail because the behaviour is missing.
 
 ## 3. Implement (gate: green)
-Implement the plan step by step, smallest change first. After each step run the tests
-(`barq run:test`). On build or type errors, launch `itqan:build-fixer`. Never make a test pass
-by weakening, skipping or deleting it.
+Implement the plan step by step, smallest change first. After each step run the tests itqan
+detects: `itqan_proof.py checks` (the helper the session note names for `/itqan:proof`) lists
+each check with its command; run the `tests:` ones. These are the same checks the proof in step 6
+runs, so the suite you go green on is the one the proof records. On build or type errors, launch
+`itqan:build-fixer`. Never make a test pass by weakening, skipping or deleting it.
 
 ## 4. Verify (gate: everything green)
-Run the full checks in one call: `barq run:build run:test run:lint` (or the project's
-commands). All must pass.
+Run every check `itqan_proof.py checks` lists (tests, lint, build). All must pass. With barq
+installed you may run them through it to save tokens (`barq run:build run:test run:lint`) only
+when `barq info` shows the same commands; if barq picked a different suite, use itqan's.
 
 **Pages too, when the change touches the UI** (`.tsx`, `.jsx`, `.vue`, `.svelte`, `.css`, `.html`,
 or the Tailwind theme) and lawha is installed (its session note names the helper): follow
