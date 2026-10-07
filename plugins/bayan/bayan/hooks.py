@@ -1,6 +1,7 @@
 """Claude Code hooks. They must never break the session: any error means "do nothing"."""
 from __future__ import annotations
 
+import difflib
 import os
 import re
 import shlex
@@ -13,6 +14,9 @@ CLEAN_SUFFIXES = {".md", ".mdx", ".markdown"}      # cleaned and checked
 CHECK_SUFFIXES = CLEAN_SUFFIXES | {".txt", ".rst"}  # .txt/.rst: checked only (rst code is indented prose)
 SKIP_DIRS = {"node_modules", ".git", "vendor", ".venv", "venv", "site-packages", "dist", "build",
              "fixtures", "testdata", "__snapshots__", "snapshots"}
+# prompts and instructions for Claude: a changed word or a dropped line changes what Claude does
+PROMPT_FILES = {"skill.md", "claude.md", "claude.local.md", "agents.md"}
+PROMPT_DIRS = {".claude", "agents", "output-styles"}
 OPT_OUT = "bayan: off"
 # git's global options come before the subcommand: git -c k=v, -C dir, --no-pager, --git-dir=x, --work-tree x
 _GIT_OPTS = (r"(?:\s+(?:-[cC]\s*\S+|--(?:git-dir|work-tree|namespace|exec-path|config-env)(?:=|\s+)\S+"
@@ -81,7 +85,10 @@ def _eligible(path: Path, project: Path) -> bool:
     resolved = path.resolve()
     if not resolved.is_relative_to(project):
         return False
-    skipped = SKIP_DIRS.intersection(resolved.relative_to(project).parts)
+    parts = resolved.relative_to(project).parts
+    if resolved.name.lower() in PROMPT_FILES or PROMPT_DIRS.intersection(parts[:-1]):
+        return False
+    skipped = SKIP_DIRS.intersection(parts)
     return not skipped and resolved.stat().st_size < 1_000_000
 
 
@@ -99,11 +106,23 @@ def _write(path: Path, text: str) -> None:
     os.replace(tmp, path)
 
 
+def _changed(old: str, new: str) -> list[tuple[int, int]]:
+    """The lines a Write changed in an existing file, as character ranges of the new text."""
+    lines = new.splitlines(keepends=True)
+    offsets = [0]
+    for line in lines:
+        offsets.append(offsets[-1] + len(line))
+    matcher = difflib.SequenceMatcher(None, old.splitlines(keepends=True), lines, autojunk=False)
+    return [(offsets[j1], offsets[j2]) for tag, _, _, j1, j2 in matcher.get_opcodes()
+            if tag in ("replace", "insert") and j2 > j1]
+
+
 def _regions(hook: dict, text: str) -> list[tuple[int, int]] | None:
     """What Claude just wrote: None = the whole file (Write), [] = can't tell (report only)."""
     tool_input = hook.get("tool_input") or {}
     if hook.get("tool_name") == "Write" or "content" in tool_input:
-        return None
+        old = (hook.get("tool_response") or {}).get("originalFile")
+        return _changed(old, text) if isinstance(old, str) else None
     pieces = [tool_input.get("new_string")] + [e.get("new_string") for e in tool_input.get("edits") or []]
     regions = []
     for piece in pieces:

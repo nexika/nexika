@@ -311,3 +311,41 @@ def test_git_global_options_do_not_hide_a_commit():
                    "git --work-tree /w", "git -c core.hooksPath=/dev/null --no-pager"):
         assert decision(f"{prefix} {signed}") == "suggest", prefix
     assert decision('git -c x=y commit -m "Fix​ parser"') == "deny"
+
+
+# ---------------------------------------------------------------- issue #26: prompt files and human text
+
+
+def test_word_ranges_tables_and_headings_keep_their_dashes():
+    for text in ("Open Mon – Fri.\n", "| step — result | ok |\n", "## Setup — the short way\n"):
+        assert cleaned(text) == text, text
+    assert cleaned("Fast — and free.\n") == "Fast, and free.\n"
+
+
+def test_prompt_files_are_never_rewritten(tmp_path):
+    body = "1. Run the step — result goes to out.json.\nGreat question! Keep this line.\n"
+    for rel in ("SKILL.md", "skills/x/SKILL.md", "CLAUDE.md", "agents/reviewer.md",
+                "output-styles/plain.md", ".claude/commands/go.md", "AGENTS.md"):
+        path = tmp_path / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(body)
+        hooks.post_write({"tool_name": "Write", "cwd": str(tmp_path), "tool_input": {"file_path": str(path)}})
+        assert path.read_text() == body, rel
+
+
+def test_a_write_over_an_existing_file_cleans_only_the_changed_lines(tmp_path):
+    doc = tmp_path / "CHANGELOG.md"
+    old = "# Changes\n\nOpen Mon — Fri, we did it in order to learn.\n"
+    new = old + "\nNew: we did it in order to learn.\n"
+    doc.write_text(new)
+    hooks.post_write({"tool_name": "Write", "cwd": str(tmp_path),
+                      "tool_input": {"file_path": str(doc), "content": new},
+                      "tool_response": {"type": "update", "originalFile": old}})
+    assert doc.read_text() == old + "\nNew: we did it to learn.\n"
+    # a new file is all Claude's text
+    fresh = tmp_path / "new.md"
+    fresh.write_text("We did it in order to learn.\n")
+    hooks.post_write({"tool_name": "Write", "cwd": str(tmp_path),
+                      "tool_input": {"file_path": str(fresh), "content": "x"},
+                      "tool_response": {"type": "create", "originalFile": None}})
+    assert fresh.read_text() == "We did it to learn.\n"

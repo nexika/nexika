@@ -10,8 +10,14 @@ from . import prose, rules
 
 _MARK = "\x00"   # where a phrase was dropped at the start of a sentence: capitalise what follows
 _LETTER = r"[^\W\d_]"
-# only between two letters: tables (| — |), quotes (> — Name) and ranges (10 – 20) stay
-_DASH = re.compile(rf"(?<={_LETTER})[ \t]*—[ \t]*(?={_LETTER})|(?<={_LETTER})[ \t]+–[ \t]+(?={_LETTER})")
+# em dashes only, between two letters: tables (| — |), quotes (> — Name) and ranges (10 – 20, Mon – Fri)
+# stay; so do dashes in headings and table rows (see _keeps_dashes)
+_DASH = re.compile(rf"(?<={_LETTER})[ \t]*—[ \t]*(?={_LETTER})")
+
+
+def _keeps_dashes(line_before: str) -> bool:
+    """Headings and table rows keep their dashes: "## Setup — the short way", "| step — result |"."""
+    return line_before.lstrip(" \t>").startswith(("#", "|"))
 
 
 def _at_sentence_start(text: str, pos: int) -> bool:
@@ -31,7 +37,8 @@ def _replace(text: str, pattern: re.Pattern, repl, changes: Counter) -> str:
     return pattern.sub(sub, text)
 
 
-def _prose(chunk: str, changes: Counter, dashes: bool) -> str:
+def _prose(chunk: str, changes: Counter, dashes: bool, head: str = "") -> str:
+    """`head` is the start of the line the chunk begins in, for the dash rule."""
     fixed = chunk.translate(rules.HIDDEN)
     if fixed != chunk:
         changes["hidden character"] += sum(1 for c in chunk if ord(c) in rules.HIDDEN)
@@ -46,6 +53,8 @@ def _prose(chunk: str, changes: Counter, dashes: bool) -> str:
     fixed = fixed.replace(_MARK, "")
     if dashes:
         def dash(m: re.Match) -> str:
+            if _keeps_dashes((head + fixed[:m.start()]).rsplit("\n", 1)[-1]):
+                return m.group(0)
             changes["em dash"] += 1
             return "، " if prose.ARABIC.search(fixed[max(0, m.start() - 20):m.start()]) else ", "
         fixed = _DASH.sub(dash, fixed)
@@ -74,6 +83,10 @@ def _drop_signatures(text: str, region, changes: Counter):
     return "".join(kept), (lo, hi - removed_in_region) if region else None
 
 
+def _line_head(text: str, pos: int) -> str:
+    return text[text.rfind("\n", 0, pos) + 1:pos]
+
+
 def clean(text: str, dashes: bool = True, region: tuple[int, int] | None = None) -> tuple[str, Counter]:
     """(cleaned text, what was changed)."""
     changes: Counter = Counter()
@@ -85,14 +98,14 @@ def clean(text: str, dashes: bool = True, region: tuple[int, int] | None = None)
         if not is_prose:
             out.append(chunk)
         elif region is None:
-            out.append(_prose(chunk, changes, dashes))
+            out.append(_prose(chunk, changes, dashes, _line_head(text, start)))
         else:
             a, b = max(start, region[0]), min(end, region[1])
             if a >= b:
                 out.append(chunk)
             else:
-                out.append(chunk[:a - start] + _prose(chunk[a - start:b - start], changes, dashes)
-                           + chunk[b - start:])
+                out.append(chunk[:a - start] + _prose(chunk[a - start:b - start], changes, dashes,
+                                                      _line_head(text, a)) + chunk[b - start:])
     fixed = "".join(out)
     changes = +changes
     if changes and region is None and text.endswith("\n"):
