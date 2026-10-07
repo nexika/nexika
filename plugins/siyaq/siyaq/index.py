@@ -23,7 +23,7 @@ from pathlib import Path
 
 from . import __version__, text
 
-INDEX_VERSION = 2
+INDEX_VERSION = 3
 DEFAULT_SOURCES = [
     "docs/**/*.md", "doc/**/*.md", "adr/**/*.md", "**/README.md", "CONTRIBUTING.md", "ARCHITECTURE.md",
 ]

@@ -14,6 +14,7 @@ from .index import data_home, project_dir
 SESSION_TTL_DAYS = 7
 LOCK_WAIT = 3.0    # seconds a hook waits for another hook of the same session
 STALE_LOCK = 30    # seconds; a lock older than this was left by a killed process
+EVENTS_LIMIT = 1_000_000  # bytes; events.jsonl is then moved to events.1.jsonl and a new one started
 
 
 def _now() -> str:
@@ -109,23 +110,35 @@ def gc(max_age_days: int = SESSION_TTL_DAYS) -> None:
 
 
 def log_event(root: Path, event: dict) -> None:
+    """Append one usage event; the file is readable only by you (it holds words from prompts)."""
     folder = project_dir(root)
     folder.mkdir(parents=True, exist_ok=True)
-    with open(folder / "events.jsonl", "a", encoding="utf-8") as fh:
-        fh.write(json.dumps({"ts": _now(), **event}, ensure_ascii=False) + "\n")
+    with contextlib.suppress(OSError):
+        os.chmod(folder, 0o700)
+    path = folder / "events.jsonl"
+    try:
+        if path.exists() and path.stat().st_size > EVENTS_LIMIT:
+            os.replace(path, folder / "events.1.jsonl")
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+        os.fchmod(fd, 0o600)  # files written by older versions were 0644
+        with os.fdopen(fd, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"ts": _now(), **event}, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
 
 
 def read_events(root: Path, since: str = "") -> list[dict]:
-    try:
-        lines = (project_dir(root) / "events.jsonl").read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return []
     out = []
-    for line in lines:
+    for name in ("events.1.jsonl", "events.jsonl"):
         try:
-            item = json.loads(line)
-        except ValueError:
+            lines = (project_dir(root) / name).read_text(encoding="utf-8").splitlines()
+        except OSError:
             continue
-        if isinstance(item, dict) and item.get("ts", "") >= since:
-            out.append(item)
+        for line in lines:
+            try:
+                item = json.loads(line)
+            except ValueError:
+                continue
+            if isinstance(item, dict) and item.get("ts", "") >= since:
+                out.append(item)
     return out

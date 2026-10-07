@@ -111,7 +111,7 @@ def test_english_stemming_and_code_words():
 
 
 def test_stop_words_and_generic_words_are_ignored():
-    assert text.tokens("please fix the bug in this file") == ["bug"]
+    assert text.tokens("please fix the bug in this file") == ["fix", "bug"]
     assert text.tokens("كيف ممكن هذا") == []
 
 
@@ -410,3 +410,26 @@ def test_session_state_is_written_atomically(repo):
     state.save_session("s1", {"shown": {"a": "full"}, "opened": []})
     folder = state.data_home() / "sessions"
     assert [p.name for p in folder.iterdir()] == ["s1.json"]
+
+
+# ---------------------------------------------------------------- developer words and events (#80)
+
+
+def test_developer_words_are_kept():
+    assert text.tokens("run the tests locally") == text.tokens("run test local")
+    assert "test" in text.tokens("run the tests locally")
+    for word in ("index", "fix", "docs", "spec", "readme"):
+        assert text.tokens(word), word
+
+
+def test_events_file_is_private_and_rotated(repo, monkeypatch):
+    import stat as stat_module
+
+    monkeypatch.setattr(state, "EVENTS_LIMIT", 300)
+    for n in range(20):
+        state.log_event(repo, {"session": "s1", "type": "miss", "terms": [f"word{n}"]})
+    folder = idx.project_dir(repo)
+    assert stat_module.S_IMODE((folder / "events.jsonl").stat().st_mode) == 0o600
+    assert (folder / "events.1.jsonl").exists() and (folder / "events.jsonl").stat().st_size <= 600
+    terms = [e["terms"][0] for e in state.read_events(repo)]
+    assert terms[-1] == "word19" and len(terms) < 20

@@ -6,7 +6,8 @@
   (أ إ آ ٱ -> ا, ى -> ي, ة -> ه, ؤ -> و, ئ -> ي) and tatweel is dropped.
 - Light stemming for English (validation / validating / validated -> validat) and Arabic
   (prefixes ال وال بال كال فال لل, common suffixes).
-- Stop words and generic development words are ignored: they match everything.
+- Stop words and generic development words are ignored: they match everything. Words that say
+  what the work is about (test, fix, index, docs, spec, readme) are kept.
 """
 from __future__ import annotations
 
@@ -25,8 +26,8 @@ shall may might must this that these those it its i me my we our you your he she
 what which who whom whose why how when where there here not no yes so than too very just also only
 all any some each every both either neither more most less least much many few one two
 please thanks thank hi hello ok okay let lets want need like get got make made use used using
-add fix change update create new file files code thing things way something work works
-src lib libs dist bin obj app apps pkg internal cmd test tests spec specs main index readme docs doc
+add change update create new file files code thing things way something work works
+src lib libs dist bin obj app apps pkg internal cmd main
 md txt json yaml yml toml xml html css scss cs py js jsx ts tsx go rs java kt rb php sh ps1 sql csproj sln
 """.split())
 STOP_AR = {

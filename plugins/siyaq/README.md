@@ -75,7 +75,8 @@ what would be injected; `siyaq entries`, `siyaq index` (sources, dead references
 ```
 
 `"mode": "off"` or `SIYAQ=off` disables it. CLAUDE.md and CHANGELOG.md are never indexed
-(CLAUDE.md is already loaded). Data lives in `~/.claude/nexika/siyaq/` (`SIYAQ_HOME` to move it).
+(CLAUDE.md is already loaded). Data lives in `~/.claude/nexika/siyaq/` (`SIYAQ_HOME` to move it);
+the usage events (which hold words from your prompts) are readable only by you and rotate at 1 MB.
 
 ## Limits
 - Matching is lexical (words, stems, synonyms you add), not semantic: a question in Arabic
