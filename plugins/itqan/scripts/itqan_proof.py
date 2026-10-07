@@ -26,6 +26,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -337,7 +338,8 @@ def main(argv: list[str] | None = None) -> int:
     root = project_root(Path.cwd())
     if args.command == "checks":
         found = detect(root)
-        print("\n".join(f"{c['kind']}: {c['name']}" for c in found) or "No checks found for this project.")
+        print("\n".join(f"{c['kind']}: {c['name']}  ({shlex.join(c['argv'])})" for c in found)
+              or "No checks found for this project.")
         return 0
     if args.command == "show":
         try:

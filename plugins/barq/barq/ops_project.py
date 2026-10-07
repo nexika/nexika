@@ -44,7 +44,12 @@ def _package_manager(folder: Path) -> str:
 
 
 def _stacks(root: Path, all_files: list[Path]) -> list[dict]:
-    """Every build stack found, most specific first: {name, where, commands}."""
+    """Every build stack found, root project first: {name, where, commands}.
+
+    A package.json or Python marker below the root (say plugins/x/engine/package.json) is a
+    sub-project, so it ranks after anything at the root; run:test then runs the repo's own
+    suite and the nested one stays listed under "also detected".
+    """
     rels = [files.rel(f, root) for f in all_files]
     shallow = [r for r in rels if r.count("/") <= 3]
     stacks: list[dict] = []
@@ -72,7 +77,8 @@ def _stacks(root: Path, all_files: list[Path]) -> list[dict]:
         for name in ("build", "lint"):
             if name in scripts:
                 cmds[name] = f"{prefix}{pm} run {name}"
-        stacks.append({"name": f"node ({pm})", "where": pkg, "commands": cmds})
+        stacks.append({"name": f"node ({pm})", "where": pkg, "commands": cmds,
+                       "nested": folder != root})
 
     py_markers = [r for r in shallow if r.rsplit("/", 1)[-1] in ("pyproject.toml", "setup.py",
                                                                 "requirements.txt", "pytest.ini")]
@@ -85,7 +91,8 @@ def _stacks(root: Path, all_files: list[Path]) -> list[dict]:
             cmds["test"] = "python -m pytest"
         if "[tool.ruff" in text or (root / "ruff.toml").exists():
             cmds["lint"] = "ruff check ."
-        stacks.append({"name": "python", "where": ", ".join(py_markers[:3]), "commands": cmds})
+        stacks.append({"name": "python", "where": ", ".join(py_markers[:3]), "commands": cmds,
+                       "nested": all("/" in r for r in py_markers)})
 
     if (root / "go.mod").exists():
         stacks.append({"name": "go", "where": "go.mod", "commands": {
@@ -107,6 +114,9 @@ def _stacks(root: Path, all_files: list[Path]) -> list[dict]:
         cmds = {t: f"make {t}" for t in ("build", "test", "lint") if t in targets}
         if cmds:
             stacks.append({"name": "make", "where": "Makefile", "commands": cmds})
+    stacks.sort(key=lambda s: s.get("nested", False))  # stable: order within each group is kept
+    for stack in stacks:
+        stack.pop("nested", None)
     return stacks
 
 
