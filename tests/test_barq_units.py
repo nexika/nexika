@@ -64,6 +64,43 @@ def test_config_files_mask_secret_keys():
     assert "plainvalue" not in text
 
 
+@pytest.mark.parametrize(("line", "filename"), [
+    ('MAX_TOKENS = "4096"', "settings.py"),               # a count, not a token
+    ('token_type = "bearer"', "auth.py"),                 # describes a token
+    ('const tokenizerVersion = "1.2.10";', "app.ts"),
+    ('secret_name = "orders-db"', "deploy.py"),           # names a secret, isn't one
+    ('"jsonwebtoken": "^9.0.2",', "package.json"),        # a dependency
+    ('"tokenizerVersion": "1.2.10"', "package.json"),
+    ('"max_tokens": 4096', "config.json"),
+    ('password_hash = "sha256"', "models.py"),
+    ('api_key = "${API_KEY}"', "config.py"),              # placeholder
+    ('"password": null', "fixture.json"),
+    ("require_password: true", "config.yaml"),
+    ("{ apiKey: process.env.ANALYTICS_A2A_KEY },", "SKILL.md"),       # code, not a value
+    ("const strokeToken = n.styles?.stroke ? a : b;", "normalize.ts"),
+    ("'@tokenizer/token': 0.3.0", "pnpm-lock.yaml"),                 # a version
+    ('"egress-secret": "sends a secret off this computer",', "cli.py"),  # prose
+    ('return Stage(secret="secret" in marks)', "classify.py"),
+])
+def test_ordinary_code_is_not_masked(line, filename):
+    """Issue #22: masked source code ends up in edits, so false positives corrupt files."""
+    assert mask_text(line, filename) == (line, 0)
+
+
+@pytest.mark.parametrize(("line", "filename"), [
+    ('GITHUB_TOKEN = "a8f3k2m9q1w7e5r4t6y8"', "ci.py"),
+    ('db_password = "hunter2"', "settings.py"),
+    ("SECRET_KEY = 'django-insecure-x9#k2!v'", "settings.py"),
+    ('"ClientSecret": "plainvalue"', "appsettings.json"),
+    ("aws_secret_access_key = wJalrXUtnFEMI/K7MDENG", "credentials.cfg"),
+    ('const apiKey = "Zx81kLmn0pQrStUv";', "client.ts"),
+    ("DB_PASS: s3cret", "docker-compose.yml"),
+])
+def test_secret_values_are_still_masked(line, filename):
+    text, n = mask_text(line, filename)
+    assert MASK in text and n == 1, text
+
+
 def test_masking_can_be_disabled(monkeypatch):
     monkeypatch.setenv("BARQ_NO_MASK", "1")
     assert mask_text("ghp_" + "a" * 36)[1] == 0

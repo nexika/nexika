@@ -77,6 +77,15 @@ def test_read_masks_secrets(project, barq_run):
     (project / ".env").write_text("DB_PASSWORD=hunter2\n")
     _, out = barq_run("read:.env")
     assert "hunter2" not in out and "DB_PASSWORD=[masked]" in out and "1 secret(s) masked" in out
+    assert "read:.env:raw" in out  # masked lines must not be copied into an edit
+
+
+def test_raw_read_returns_exact_text_and_keeps_the_cache(project, barq_run):
+    (project / ".env").write_text("DB_PASSWORD=hunter2\n")
+    _, out = barq_run("read:.env:raw")
+    assert "DB_PASSWORD=hunter2" in out and "[masked]" not in out
+    _, out = barq_run("read:.env")
+    assert "unchanged" in out
 
 
 # ---------------------------------------------------------------- fence

@@ -19,6 +19,7 @@ barq 'read:src/app.py' 'grep:TODO:src' 'git-status'
 | `read:PATH@Symbol` | Just one class / function / method (`@UserService.Login` works too) |
 | `read:PATH:outline` | Signatures only, with line ranges |
 | `read:PATH:full` | Whole file, bypassing the cache |
+| `read:PATH:raw` | Whole file, exact text without secret masking (use it before editing a masked file) |
 | `grep:REGEX[:PATH[:MAX]]` | Search the project (respects `.gitignore`) |
 | `glob:PATTERN[:PATH]` | Files matching `**/*.cs`, ... |
 | `tree[:PATH[:DEPTH]]` | Directory tree, deep folders summarized |
@@ -68,7 +69,11 @@ Ops marked `"safety": "read"` may run in parallel with other read ops.
   symlinks. `BARQ_ALLOW_OUTSIDE=1` lifts it.
 - **Secret masking:** tokens (GitHub, GitLab, Anthropic, OpenAI, AWS, Slack, Google, JWT),
   bearer tokens, private keys, passwords in URLs, every value in `.env` files, and values of
-  secret-looking keys are printed as `[masked]`. Best effort; `BARQ_NO_MASK=1` disables it.
+  keys whose last word names a secret (`DB_PASSWORD`, `GITHUB_TOKEN`, `ClientSecret`, `api_key`)
+  are printed as `[masked]`. Keys that only mention one (`MAX_TOKENS`, `token_type`,
+  `jsonwebtoken`), versions, code expressions and placeholders are left as written. When a read
+  masks something its header says so; `read:PATH:raw` gives the exact text for editing.
+  Best effort; `BARQ_NO_MASK=1` disables it.
 - Read ops run in parallel; `run` and custom exec ops always run one after another.
 
 ## How it plugs into Claude Code

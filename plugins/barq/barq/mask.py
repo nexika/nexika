@@ -28,16 +28,24 @@ PRIVATE_KEY = re.compile(
 )
 URL_CREDENTIALS = re.compile(r"(\b[a-z][a-z0-9+.-]*://[^:/\s@]+:)([^@\s/]+)(@)", re.I)
 
-_SECRET_WORDS = (
-    r"secret|token|passw(?:or)?d|pwd|api[_-]?key|apikey|private[_-]?key|access[_-]?key"
-    r"|client[_-]?secret|connection[_-]?string|connstr|credentials?"
-)
+_SECRET_WORDS = r"secret|token|pass|pwd|key|connection|connstr|credential"
+# Finds candidates only; _secret_key() then decides from the key's last word, so MAX_TOKENS,
+# token_type, jsonwebtoken and secret_name stay as written (issue #22).
 ASSIGN = re.compile(
     r"""(?P<key>["']?[\w.-]*(?:""" + _SECRET_WORDS + r""")[\w.-]*["']?)"""
     r"""(?P<sep>\s*[:=]\s*)(?P<q>["']?)(?P<val>[^\s"'`,;()\[\]{}]{4,})""",
     re.I,
 )
-STRONG_KEY = re.compile(r"passw|pwd|secret", re.I)
+SECRET_NOUNS = {
+    "secret", "token", "password", "passwd", "pass", "pwd", "passphrase", "apikey",
+    "credential", "credentials", "connstr", "connectionstring",
+}
+KEY_QUALIFIERS = {"api", "private", "access", "secret", "signing", "encryption", "master", "client"}
+STRONG_NOUNS = {"secret", "password", "passwd", "pass", "pwd", "passphrase"}
+NOT_SECRETS = {"true", "false", "null", "none", "nil", "undefined", "yes", "no", "on", "off"}
+PLACEHOLDER = ("$", "<", "%", "{{", MASK)
+VERSION = re.compile(r"[~^>=<v]*\d+(?:\.\d+)+(?:[-+][\w.]+)?")
+EXPRESSION = re.compile(r"[A-Za-z_$][\w$]*(?:\??\.[A-Za-z_$][\w$]*)+\??")  # process.env.KEY
 ENV_LINE = re.compile(r"^(\s*(?:export\s+)?[A-Za-z_][A-Za-z0-9_.]*\s*=\s*)(.+?)\s*$")
 
 CONFIG_SUFFIXES = {
@@ -64,6 +72,31 @@ def _is_config(filename: str | None) -> bool:
         return False
     path = PurePath(filename)
     return path.suffix.lower() in CONFIG_SUFFIXES or path.name.lower().startswith(".env")
+
+
+def _key_words(key: str) -> list[str]:
+    key = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", key.strip("\"'"))
+    return [w for w in re.split(r"[^A-Za-z0-9]+", key.lower()) if w]
+
+
+def _secret_key(key: str) -> str | None:
+    """'strong' for passwords and secrets, 'weak' for tokens and keys, None for anything else.
+
+    Judged by the last word, which names what the value is: GITHUB_TOKEN holds a token,
+    token_type holds a type.
+    """
+    words = _key_words(key)
+    if not words:
+        return None
+    last = words[-1]
+    joined = "".join(words[-2:])
+    if last in STRONG_NOUNS:
+        return "strong"
+    if last in SECRET_NOUNS or joined in SECRET_NOUNS:
+        return "weak"
+    if last == "key" and len(words) > 1 and words[-2] in KEY_QUALIFIERS:
+        return "strong" if words[-2] == "secret" else "weak"
+    return None
 
 
 def _secretish(value: str) -> bool:
@@ -104,11 +137,16 @@ def mask_text(text: str, filename: str | None = None) -> tuple[str, int]:
     def assign(m: re.Match) -> str:
         nonlocal count
         val = m.group("val")
-        if val == MASK or val.startswith(("$", "<", "%")):
+        kind = _secret_key(m.group("key"))
+        quote = m.group("q")
+        if (kind is None or val.startswith(PLACEHOLDER) or val.lower() in NOT_SECRETS
+                or VERSION.fullmatch(val) or val.lower() in _key_words(m.group("key"))
+                or (not quote and EXPRESSION.fullmatch(val))
+                or (quote and m.string[m.end():m.end() + 1].isspace())):  # prose: "a secret here"
             return m.group(0)
-        quoted = bool(m.group("q"))
-        strong = bool(STRONG_KEY.search(m.group("key")))
-        if quoted or config or (strong and _secretish(val)) or (len(val) >= 16 and _secretish(val)):
+        literal = bool(quote) or config
+        if (literal and (kind == "strong" or _secretish(val) or len(val) >= 8)) \
+                or (kind == "strong" and _secretish(val)) or (len(val) >= 16 and _secretish(val)):
             count += 1
             return m.group("key") + m.group("sep") + m.group("q") + MASK
         return m.group(0)

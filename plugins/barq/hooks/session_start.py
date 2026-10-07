@@ -19,7 +19,8 @@ you need next into one command. Quote every op (the shell would expand `*` and `
   {cmd} info  git-status  run:test  run:build  run:lint  stats
 JSON form for args containing ':' or spaces: {cmd} '[{{"op":"grep","pattern":"a: b","path":"src"}}]'
 Re-reading an unchanged file returns "unchanged"; a changed one returns a diff. If you no longer
-have the content in context, use 'read:PATH:full'. `{cmd} ops` lists every op."""
+have the content in context, use 'read:PATH:full'. Never copy a [masked] line into an edit: use
+'read:PATH:raw' for exact text. `{cmd} ops` lists every op."""
 
 
 def main() -> None:
