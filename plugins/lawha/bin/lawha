@@ -32,6 +32,7 @@ case "${1:-help}" in
     echo "{\"installed\": \"$installed\", \"version\": \"$version\"}"
     ;;
   hook)
+    [ "${NEXIKA_BACKGROUND:-}" = "1" ] && exit 0  # inside a family background model call: no hooks (#45)
     if [ -n "$(engine_dir)" ]; then state="ready"; else state="not installed (run: lawha setup, after asking the user)"; fi
     echo "lawha: frontend design, Figma to code and checks on every screen. Helper: $here/bin/lawha · engine $version $state."
     ;;

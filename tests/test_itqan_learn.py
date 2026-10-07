@@ -108,7 +108,9 @@ def test_correction_exchanges_pair_with_preceding_assistant_text(learn, tmp_path
     assert learn.correction_exchanges(path) == [("Added tests with npm test.", "no, we use pnpm here")]
 
 
-def test_extract_only_runs_for_sessions_with_signals(learn, repo, tmp_path, monkeypatch):
+def test_extract_only_runs_for_sessions_with_signals(learn, repo, tmp_path, monkeypatch, nexika_home):
+    nexika_home.mkdir()
+    (nexika_home / "settings.json").write_text('{"background_calls": "on"}')  # consent (#45)
     calls = []
     monkeypatch.setattr(learn, "project_root", lambda cwd: repo)  # git also uses Popen
     monkeypatch.setattr(learn.subprocess, "Popen", lambda *a, **kw: calls.append((a, kw)))

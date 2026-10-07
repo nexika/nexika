@@ -36,6 +36,10 @@ usage ─────────────► shown / opened / no-match event
 - **Less as the context fills:** with mizan installed, siyaq reads its context level: normal when
   fresh, half the budget and one entry fewer at mid, only the strongest match as a summary when
   full.
+- **Fast on big repos:** hooks reuse the list of doc files for up to 30 seconds (sooner after a
+  commit, checkout or staging, a config change, or a new doc Claude writes), so a tool call does
+  not list and match every file in the repo again. A changed doc is still noticed at once; a new
+  doc made outside Claude shows up within 30 seconds. `siyaq index` lists them again at once.
 
 ## Works with Claude Code's built-ins
 

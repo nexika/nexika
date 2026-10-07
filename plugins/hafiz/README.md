@@ -68,7 +68,12 @@ linked to the branch (`gh`). Sections: issue and branch, goal, what was done, de
 problems and fixes, files, commits and links, still open. Saved in the data folder, and with
 `--out` also in your repo. A long session is read in parts (about 60,000 characters each): the
 model takes notes on each part, then writes the summary from all the notes, so the middle of the
-session is not lost.
+session is not lost. The result says how many model calls it made; `background_calls: off` refuses
+to make any.
+One family setting covers every Nexika background model call: `background_calls` in
+`~/.claude/nexika/settings.json` is `ask` (the default), `on` or `off`, and
+`python3 hafiz/background.py status` shows it with how many calls ran or were skipped in the last 30 days.
+Background calls run with `NEXIKA_BACKGROUND=1`, so no Nexika plugin's hooks fire inside them.
 
 The model only writes text: it runs with no tools, no MCP servers and none of the project's
 settings, in an empty folder, and the session log is passed as data it must not take orders from.

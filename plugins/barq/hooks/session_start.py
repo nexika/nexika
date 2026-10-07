@@ -24,6 +24,8 @@ Never copy a [masked] line into an edit; Read the file instead."""
 
 
 def main() -> None:
+    if os.environ.get("NEXIKA_BACKGROUND") == "1":
+        return  # inside a family background model call: no hooks (#45)
     try:
         hook = json.loads(sys.stdin.read() or "{}")
     except ValueError:

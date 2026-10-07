@@ -64,7 +64,12 @@ they are off until you agree: in your first tutoring session Claude asks once an
 answer (`python3 scripts/prof_store.py auto-report on|off|status`). They only run for tutoring
 sessions (you ran a `/prof:` command, Claude used a `prof:` skill, or the output style is
 Professor; a message that only mentions `/prof:` doesn't count) with at least 3 learner messages,
-and never twice for the same session.
+and never twice for the same session. `background_calls: off` stops them even after a yes, and
+`on` allows them without asking.
+One family setting covers every Nexika background model call: `background_calls` in
+`~/.claude/nexika/settings.json` is `ask` (the default), `on` or `off`, and
+`python3 scripts/prof_background.py status` shows it with how many calls ran or were skipped in the last 30 days.
+Background calls run with `NEXIKA_BACKGROUND=1`, so no Nexika plugin's hooks fire inside them.
 
 ## Try it locally
 

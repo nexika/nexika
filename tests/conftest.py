@@ -24,6 +24,14 @@ def family_profile(tmp_path, monkeypatch):
     return path
 
 
+@pytest.fixture(autouse=True)
+def nexika_home(tmp_path, monkeypatch):
+    """The family's shared settings and background-call log stay out of ~/.claude (#45)."""
+    monkeypatch.setenv("NEXIKA_HOME", str(tmp_path / "nexika"))
+    monkeypatch.delenv("NEXIKA_BACKGROUND", raising=False)
+    return tmp_path / "nexika"
+
+
 @pytest.fixture
 def store(tmp_path, monkeypatch):
     """A fresh prof_store module whose data lives in tmp_path/prof (never ~/.claude)."""

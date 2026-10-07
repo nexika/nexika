@@ -11,14 +11,13 @@ Approvals are never added here: only what you type in Claude Code (/haris:allow)
 """
 from __future__ import annotations
 
-import argparse
 import datetime
 import json
 import os
 import sys
 from pathlib import Path
 
-from . import __version__, hooks, policy, state
+from . import __version__, config, hooks, state
 
 CLASS_HELP = {
     "self": "changes or switches off haris itself; only you can do that, outside Claude",
@@ -62,7 +61,7 @@ def helper_command() -> str:
 
 
 def _root() -> str:
-    return policy.project_root(os.getcwd())
+    return config.project_root(os.getcwd())
 
 
 def _latest_session(root: str) -> tuple[str, dict]:
@@ -95,6 +94,8 @@ def _approvals(root: str) -> list[dict]:
 
 
 def cmd_why(args) -> int:
+    from . import policy
+
     entries = [e for e in _entries(_root(), every_project=args.all) if e.get("decision") in ("ask", "deny",
                                                                                              "taint")]
     if not entries:
@@ -112,7 +113,7 @@ def cmd_why(args) -> int:
 
 def cmd_status(args) -> int:
     root = _root()
-    cfg = policy.effective_config(root)
+    cfg = config.effective_config(root)
     _, data = _latest_session(root)
     print(f"haris {__version__}: {cfg['mode']} (profile {cfg['profile']})")
     print(f"  project: {root}")
@@ -134,6 +135,8 @@ def cmd_status(args) -> int:
 
 
 def cmd_audit(args) -> int:
+    from . import policy
+
     entries = _entries(_root(), args.days, args.decision or "", args.all)[-args.limit:]
     if args.json:
         print(json.dumps(entries, ensure_ascii=False, indent=1))
@@ -147,10 +150,12 @@ def cmd_audit(args) -> int:
 
 
 def cmd_check(args) -> int:
+    from . import policy
+
     key = {"Bash": "command", "PowerShell": "command", "WebFetch": "url", "WebSearch": "query"}.get(args.tool,
                                                                                                    "file_path")
     event = {"tool_name": args.tool, "tool_input": {key: " ".join(args.command)}, "cwd": os.getcwd()}
-    cfg = policy.effective_config(_root())
+    cfg = config.effective_config(_root())
     if args.profile:
         cfg["profile"] = args.profile
     decision = policy.decide(event, cfg)
@@ -171,7 +176,7 @@ def cmd_approvals(args) -> int:
     root = _root()
     if args.remove:
         session, _ = _latest_session(root)
-        print(f"Removed {state.remove_approval(session, root, policy.normalize(args.remove))} approval(s).")
+        print(f"Removed {state.remove_approval(session, root, config.normalize(args.remove))} approval(s).")
         return 0
     items = _approvals(root)
     if not items:
@@ -183,7 +188,7 @@ def cmd_approvals(args) -> int:
 
 def cmd_export(args) -> int:
     root = _root()
-    cfg = policy.effective_config(root)
+    cfg = config.effective_config(root)
     session, data = _latest_session(root)
     recent = [e for e in _entries(root, days=7) if e.get("decision") in ("ask", "deny", "approval")]
     print(json.dumps({
@@ -224,11 +229,19 @@ def run_hook(name: str) -> int:
     return 0
 
 
+HOOKS = ("pre-tool-use", "post-tool-use", "user-prompt-submit", "session-start")
+
+
 def main(argv: list[str] | None = None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    if len(argv) == 2 and argv[0] == "hook" and argv[1] in HOOKS:
+        return run_hook(argv[1])  # every tool call runs a hook: skip argparse (#50)
+    import argparse
+
     parser = argparse.ArgumentParser(prog="haris", description="haris: guards against harmful agent actions")
     sub = parser.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("hook")
-    p.add_argument("event", choices=["pre-tool-use", "post-tool-use", "user-prompt-submit", "session-start"])
+    p.add_argument("event", choices=HOOKS)
     p = sub.add_parser("why")
     p.add_argument("-n", type=int, default=3)
     p.add_argument("--all", action="store_true", help="every project, not only this one")

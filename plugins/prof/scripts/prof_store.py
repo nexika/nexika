@@ -34,6 +34,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import prof_background  # noqa: E402
 import prof_family  # noqa: E402
 
 HOME = Path(os.environ.get("PROF_HOME") or Path.home() / ".claude" / "nexika" / "prof")
@@ -173,6 +174,16 @@ def auto_report_setting() -> bool | None:
     except (OSError, ValueError, AttributeError):
         return None
     return value if isinstance(value, bool) else None
+
+
+def auto_report_state() -> bool | None:
+    """Whether automatic reports run: the family's background_calls "off" or "on" (#45) answers
+    for the learner who was never asked; "off" also wins over an earlier yes."""
+    family = prof_background.setting()
+    if family == "off":
+        return False
+    answer = auto_report_setting()
+    return True if answer is None and family == "on" else answer
 
 
 def set_auto_report(on: bool) -> None:
@@ -361,14 +372,14 @@ def _section(text: str, heading: str, limit: int) -> list[str]:
 # ---------------------------------------------------------------- hooks
 
 def session_start(hook: dict) -> None:
-    if os.environ.get(GUARD_ENV):
+    if os.environ.get(GUARD_ENV) or prof_background.in_background():  # no hooks inside a background call
         return
     sid = hook.get("session_id", "")
     script = Path(__file__).resolve()
     p = print
     topics = topic_summaries()
     pending = [t for t in topics if t[3] or t[4]]
-    ask = "" if auto_report_setting() is not None else " " + AUTO_REPORT_NOTE[None].format(script=script)
+    ask = "" if auto_report_state() is not None else " " + AUTO_REPORT_NOTE[None].format(script=script)
     role = prof_family.role()
     profile_ask = "" if role else prof_family.ask_note(f"python3 {Path(prof_family.__file__).resolve()}")
     if role and role != "learner":
@@ -424,7 +435,7 @@ def session_start(hook: dict) -> None:
           "the learner missed something from earlier sessions, re-teach it before any new "
           "concept. Do the warm-up once per topic per session.")
     p("\nAt the end of a tutoring session (learner says bye/done/that's all), run prof:report.")
-    p(AUTO_REPORT_NOTE[auto_report_setting()].format(script=script))
+    p(AUTO_REPORT_NOTE[auto_report_state()].format(script=script))
     if profile_ask:
         p(profile_ask)
 
@@ -489,7 +500,7 @@ def extract_conversation(transcript: Path) -> tuple[str, bool, int]:
 
 
 def session_end(hook: dict) -> None:
-    if os.environ.get(GUARD_ENV):
+    if os.environ.get(GUARD_ENV) or prof_background.in_background():  # no hooks inside a background call
         return
     sid = hook.get("session_id", "")
     transcript = Path(hook.get("transcript_path") or "")
@@ -500,13 +511,16 @@ def session_end(hook: dict) -> None:
         tutoring = _settings_style_is_professor(hook.get("cwd") or os.getcwd())
     if not tutoring or turns < 3:
         return
-    if auto_report_setting() is not True:
-        _log(f"auto-report for {sid[:8]} skipped: not enabled (prof_store.py auto-report on)")
+    # The learner's answer for prof, or the family's "background_calls": "on" (#45); "off" always wins.
+    if not auto_report_state():
+        prof_background.record("prof", "auto-report", "sonnet", ran=False)
+        _log(f"auto-report for {sid[:8]} skipped: not enabled (prof_store.py auto-report on; "
+             f"background calls: {prof_background.setting()})")
         return
     TMP.mkdir(parents=True, exist_ok=True)
     convo_path = TMP / f"{sid[:8]}.txt"
     convo_path.write_text(convo, encoding="utf-8")
-    env = dict(os.environ, **{GUARD_ENV: "1"})
+    env = prof_background.child_env({GUARD_ENV: "1"})
     # Detached: Claude Code does not wait for this, so exiting stays instant.
     with open(LOG, "a", encoding="utf-8") as log:
         subprocess.Popen(
@@ -526,9 +540,11 @@ def write_auto_report(sid: str, convo_path: Path) -> int:
     prompt = AUTO_REPORT_PROMPT.format(fmt=fmt, known=known_topics_text())
     cmd = [claude, "-p", prompt, "--model", "sonnet",
            "--tools", "", "--no-session-persistence"]
+    prof_background.record("prof", "auto-report", "sonnet")
     try:
         with open(convo_path, encoding="utf-8") as stdin:
-            res = subprocess.run(cmd, stdin=stdin, capture_output=True, text=True, timeout=600)
+            res = subprocess.run(cmd, stdin=stdin, capture_output=True, text=True, timeout=600,
+                                 env=prof_background.child_env({GUARD_ENV: "1"}))
     except (OSError, subprocess.TimeoutExpired) as exc:
         _log(f"auto-report {sid[:8]}: {exc}")
         return 1

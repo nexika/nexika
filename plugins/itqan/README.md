@@ -38,6 +38,13 @@ Nothing becomes a rule without your approval. Edit `.itqan/rules.md` freely: you
 and deleting a line retires the rule. Turn learning off with `"learn": {"mode": "off"}` in
 `.itqan.json` or `ITQAN_LEARN=off`.
 
+Extracting lessons runs Claude (Sonnet) in the background on your plan or API credits, so it only
+runs once you allow background model calls; until then itqan skips it and asks you once.
+One family setting covers every Nexika background model call: `background_calls` in
+`~/.claude/nexika/settings.json` is `ask` (the default), `on` or `off`, and
+`python3 scripts/itqan_background.py status` shows it with how many calls ran or were skipped in the last 30 days.
+Background calls run with `NEXIKA_BACKGROUND=1`, so no Nexika plugin's hooks fire inside them.
+
 ## Insights
 
 `/itqan:insights` answers "is this helping?" from real usage:

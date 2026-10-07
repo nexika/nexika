@@ -22,6 +22,11 @@
       "plugins/bayan/bayan/family.py",
       "plugins/prof/scripts/prof_family.py",
       "plugins/siyaq/siyaq/family.py"
+    ],
+    "common/background.py": [
+      "plugins/prof/scripts/prof_background.py",
+      "plugins/itqan/scripts/itqan_background.py",
+      "plugins/hafiz/hafiz/background.py"
     ]
   }
 }

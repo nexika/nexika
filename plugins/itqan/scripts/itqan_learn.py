@@ -30,8 +30,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import itqan_background  # noqa: E402
 import itqan_files  # noqa: E402
-import itqan_secrets  # noqa: E402
 
 PROPOSE_AT = 2
 MAX_EXCHANGES = 15
@@ -255,6 +255,22 @@ def session_note(root: Path) -> str:
 # ---------------------------------------------------------------- hooks
 
 
+def consent_note() -> str:
+    """Asks once, after an extraction was skipped, whether background model calls may run (#45)."""
+    if itqan_background.setting() != "ask":
+        return ""
+    skipped = itqan_background.counts().get("itqan", {}).get("skipped", 0)
+    if not skipped:
+        return ""
+    helper = Path(itqan_background.__file__).resolve()
+    return (f"itqan skipped learning from {skipped} session(s) with corrections in the last 30 days: "
+            "that runs Claude (Sonnet) in the background on the user's plan or API credits, and "
+            "background model calls are not allowed yet. Ask the user once: \"May Nexika plugins run "
+            "Claude in the background (itqan learning from corrections, prof's automatic reports)? "
+            f"It uses your plan or API credits.\" Store the answer with python3 {helper} on (or off), "
+            "and don't ask again.")
+
+
 def hook_signal(hook: dict) -> None:
     prompt = str(hook.get("prompt") or "").strip()
     if not prompt or prompt.startswith("/") or not CORRECTION.search(prompt):
@@ -263,7 +279,7 @@ def hook_signal(hook: dict) -> None:
     if not learning_enabled(cwd):
         return
     _append("signals.jsonl", {"ts": _now(), "session": str(hook.get("session_id") or ""),
-                              "cwd": str(cwd), "prompt": itqan_secrets.redact(prompt)[:1000]})
+                              "cwd": str(cwd), "prompt": _redact(prompt)[:1000]})
 
 
 def hook_usage(hook: dict) -> None:
@@ -277,6 +293,12 @@ def hook_usage(hook: dict) -> None:
         return
     _append("usage.jsonl", {"ts": _now(), "session": str(hook.get("session_id") or "")[:8],
                             "cwd": str(hook.get("cwd") or os.getcwd()), "kind": kind, "name": str(name)})
+
+
+def _redact(text: str) -> str:
+    import itqan_secrets  # its patterns take a while to compile: only for text that is kept (#50)
+
+    return itqan_secrets.redact(text)
 
 
 def _text_of(content) -> str:
@@ -325,7 +347,10 @@ def hook_extract(hook: dict) -> None:
     pairs = correction_exchanges(transcript)
     if not pairs:
         return
-    payload = itqan_secrets.redact("\n\n".join(f"ASSISTANT: {a}\nUSER: {u}" for a, u in pairs))
+    if not itqan_background.allowed():  # a paid model call: only with the family's consent (#45)
+        itqan_background.record("itqan", "learn-extract", "sonnet", ran=False)
+        return
+    payload = _redact("\n\n".join(f"ASSISTANT: {a}\nUSER: {u}" for a, u in pairs))
     itqan_files.private_dir(data_home())
     payload_path = itqan_files.private_dir(data_home() / "tmp") / f"{session[:8]}.txt"
     itqan_files.write_private(payload_path, payload)
@@ -335,7 +360,7 @@ def hook_extract(hook: dict) -> None:
         subprocess.Popen(
             [sys.executable, script, "run-extract", session, str(payload_path), str(root)],
             stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True,
-            env={**os.environ, GUARD_ENV: "1"},
+            env=itqan_background.child_env({GUARD_ENV: "1"}),
         )
 
 
@@ -396,9 +421,11 @@ def run_extract(session: str, payload_path: Path, root: Path) -> int:
                          for lid, les in store["lessons"].items()) or "(none yet)"
     cmd = [claude, "-p", EXTRACT_PROMPT.format(existing=existing), "--model", "sonnet",
            "--tools", "", "--no-session-persistence", "--output-format", "json"]
+    itqan_background.record("itqan", "learn-extract", "sonnet")
     try:
         with open(payload_path, encoding="utf-8") as stdin:
-            res = subprocess.run(cmd, stdin=stdin, capture_output=True, text=True, timeout=300)
+            res = subprocess.run(cmd, stdin=stdin, capture_output=True, text=True, timeout=300,
+                                 env=itqan_background.child_env({GUARD_ENV: "1"}))
     except (OSError, subprocess.TimeoutExpired) as exc:
         print(f"{_now()} extract {session[:8]}: {exc}")
         return 1
@@ -560,6 +587,8 @@ def cmd_insights(root: Path, days: int = 30) -> str:
 def main(argv: list[str]) -> int:
     cmd = argv[1] if len(argv) > 1 else ""
     if cmd in ("signal", "usage", "extract"):
+        if itqan_background.in_background():
+            return 0  # inside a family background model call: no hooks (#45)
         try:
             hook = json.loads(sys.stdin.read() or "{}")
             {"signal": hook_signal, "usage": hook_usage, "extract": hook_extract}[cmd](hook)
