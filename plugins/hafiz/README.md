@@ -22,7 +22,8 @@ every reply (Stop) ──► read only the new part of the transcript ─► fix
                        ─► memories + the handoff note for this branch (always fresh)
 before compaction ───► snapshot: what you are working on now (the note or latest request), open tasks,
                        decisions, problems, files (most recently touched first, only inside the repo)
-after compaction ────► the snapshot is given back to Claude (up to ~3 KB)
+after compaction ────► the exact items of the snapshot are given back to Claude (up to ~3 KB),
+                       next to Claude Code's own summary
 session start ───────► a short card (under 1.5 KB): last session, open tasks, problems, decisions
                        (open tasks and problems untouched for 14 days are marked expired)
 on request ──────────► search (Arabic and English), handoff note, detailed summary
@@ -78,6 +79,15 @@ The session card prints its path. `hafiz recall "argon2"`, `hafiz list --type de
 `hafiz remember decision "..." --project`, `hafiz forget m1a2b3c4 --dry-run`, `hafiz handoff`,
 `hafiz summary --dry-run` (see what would be sent, call nothing), `hafiz export --json`,
 `hafiz status`.
+
+## Works with Claude Code's built-ins
+
+- **Compaction summary:** Claude Code summarizes the conversation itself, including the requests
+  and what got done. hafiz's restore doesn't repeat those: it adds the exact items a summary
+  paraphrases or drops (decisions with their wording, open tasks and problems, files, commit
+  hashes, your handoff note) and says the built-in summary is the main account.
+- **CLAUDE.md and auto memory** hold standing instructions; hafiz holds what happened in the work
+  (dated, per branch, with its source), and the start card stays under 1.5 KB.
 
 ## Working with the other Nexika plugins
 

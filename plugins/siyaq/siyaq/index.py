@@ -27,7 +27,10 @@ INDEX_VERSION = 4
 DEFAULT_SOURCES = [
     "docs/**/*.md", "doc/**/*.md", "adr/**/*.md", "**/README.md", "CONTRIBUTING.md", "ARCHITECTURE.md",
 ]
-DEFAULT_EXCLUDE = ["**/node_modules/**", "**/vendor/**", "**/CHANGELOG.md", "**/CLAUDE.md", "**/LICENSE*"]
+# Claude Code loads these itself (CLAUDE.md files, .claude/rules with paths:, skills, agents):
+# indexing them would send the same text twice. They stay excluded whatever .siyaq.json says.
+DEFAULT_EXCLUDE = ["**/node_modules/**", "**/vendor/**", "**/CHANGELOG.md", "**/CLAUDE.md",
+                   "**/CLAUDE.local.md", ".claude/**", "**/.claude/**", "**/LICENSE*"]
 MANUAL_DIR = ".siyaq/entries"
 MIN_SECTION_CHARS = 80
 MAX_BODY_CHARS = 6000

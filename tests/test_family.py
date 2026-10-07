@@ -35,6 +35,7 @@ def bayan_home(tmp_path, monkeypatch):
     monkeypatch.setenv("BAYAN_HOME", str(tmp_path / "bayan-home"))
     monkeypatch.delenv("BAYAN_LEVEL", raising=False)
     monkeypatch.delenv("CLAUDE_ENV_FILE", raising=False)
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path / "claude-config"))
 
 
 def set_role(path, role):

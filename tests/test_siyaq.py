@@ -459,3 +459,17 @@ def test_summaries_keep_tables_and_code(repo):
     picked = rank.select_for_prompt(index, "rate limits per plan", rank.settings({"full_max_chars": 100}), {})
     assert picked[0]["level"] == "summary"
     assert table in picked[0]["text"] and code in picked[0]["text"]
+
+
+# ---------------------------------------------------------------- what Claude Code already loads (#49)
+
+
+def test_files_claude_code_loads_itself_are_never_indexed(repo):
+    for rel in (".claude/rules/billing.md", "src/CLAUDE.local.md", "src/CLAUDE.md"):
+        path = repo / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("---\npaths: src/**\n---\n# Billing rules\n\n" + "Always round invoice totals "
+                        "to cents before saving them to the ledger table. " * 3 + "\n", encoding="utf-8")
+    (repo / ".siyaq.json").write_text(json.dumps({"sources": ["**/*.md"], "exclude": ["docs/archive/**"]}))
+    sources = {e.get("source") for e in idx.load(repo, idx.load_config(repo))["entries"]}
+    assert not [s for s in sources if s and (".claude/" in s or "CLAUDE" in s)], sources

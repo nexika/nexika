@@ -36,6 +36,15 @@ of the other Nexika plugins: prof's lessons and reports, amin's release notes, m
 Both languages are covered: for example `من الجدير بالذكر أن`, `تجدر الإشارة إلى أن` and
 `علاوة على ذلك` are removed or flagged, and Arabic gets an Arabic comma when a dash is replaced.
 
+## Works with Claude Code's built-ins
+
+- **The `attribution` setting** decides whether Claude Code signs commits and pull requests. When
+  you set it to keep the signature (or set the older `includeCoAuthoredBy` to `true`), bayan says
+  nothing about it; it only suggests the setting when you haven't chosen. `deny_signatures` is
+  still bayan's own stricter switch.
+- **Output styles** change how Claude talks; bayan's note is about how the words read, so the two
+  stack.
+
 ## Commands (used by the skills; also handy in CI)
 
 ```

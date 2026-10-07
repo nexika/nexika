@@ -220,16 +220,18 @@ def restore_text(folder: Path, session: str, helper: str, budget: int = RESTORE_
     data = store.read_json(folder / "snapshots" / f"{store.safe_name(session, 64)}.json", {})
     if not data:
         return ""
+    # Claude Code's own summary carries the requests, the work and what got done: hafiz adds the
+    # exact items a summary paraphrases or drops, and leaves the rest to it.
     lines = ["## hafiz: restored after compaction",
-             f"The conversation was just compacted. Before it, on branch {data.get('branch') or '(none)'}:"]
+             "Claude Code's compaction summary is the main account; these are the exact items hafiz "
+             f"recorded before it, on branch {data.get('branch') or '(none)'}:"]
     if data.get("note"):
         lines.append(f"Where we stopped: {data['note']}")
     if data.get("goal") and data.get("goal") != data.get("note"):
         lines.append(f"Working on: {data['goal']}")
-    lines += [f"Latest request: {p}" for p in data.get("prompts", [])[-2:]]
     for title, key, limit in (("Open tasks", "tasks", 8), ("Decisions", "decisions", 6),
                               ("Open problems", "problems", 3), ("Files changed", "files", 12),
-                              ("Commits", "commits", 5), ("Done", "done", 5)):
+                              ("Commits", "commits", 5)):
         if data.get(key):
             lines.append(f"{title}: " + _join(data[key], limit, 160))
     lines.append(f"More: `{helper} recall \"words\"`.")

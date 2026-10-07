@@ -853,3 +853,14 @@ def test_a_short_session_is_summarised_in_one_call(log, capsys, repo, counting_c
     stop(work_session(log), capsys)
     assert cli.main(["summary"]) == 0
     assert len(counting_claude.read_text().splitlines()) == 1
+
+
+# ---------------------------------------------------------------- next to Claude Code's compaction summary (#49)
+
+
+def test_restore_does_not_repeat_what_the_compaction_summary_carries(log, capsys, repo):
+    work_session(log)
+    text = restored(log, capsys, repo)
+    assert "Latest request:" not in text and "Done:" not in text      # the summary has both, word for word
+    assert "summary" in text.splitlines()[1]                            # it says the built-in summary leads
+    assert "argon2" in text and "1a2b3c4" in text and "Add refresh tokens" in text
