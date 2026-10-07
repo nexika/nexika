@@ -304,3 +304,55 @@ def test_bin_launcher_runs(project):
     res = subprocess.run([str(BARQ_ROOT / "bin" / "barq"), "read:README.md"],
                          capture_output=True, text=True)
     assert res.returncode == 0 and "# Demo" in res.stdout
+
+
+# ---------------------------------------------------------------- issue #39: savings, capped reads, agents
+
+
+def logged_ops():
+    from barq import stats
+    return [op for line in stats.log_path().read_text().splitlines() for op in json.loads(line)["ops"]]
+
+
+def test_partial_reads_and_grep_use_the_built_in_tools_output_as_baseline(project, barq_run):
+    (project / "big.py").write_text("".join(f"value_{i} = {i}  # padding padding\n" for i in range(1200)))
+    barq_run("read:big.py:1:5")
+    barq_run("grep:value_1:.")
+    rng, grep = logged_ops()
+    assert rng["baseline"] < 500            # Read with offset/limit returns about the same 5 lines, not 50 KB
+    assert grep["baseline"] < 100           # Grep's default output is the file names
+
+
+def test_stats_count_negative_savings(project, barq_run):
+    from barq import stats
+    stats.record([{"op": "read", "out": 3000, "baseline": 1000, "hit": False},
+                  {"op": "grep", "out": 0, "baseline": 3048, "hit": False}], 1, "s", ".")
+    _, out = barq_run("stats")
+    assert "avoided: 1.0 KB" in out                 # 3048 - 2000 lost on the read, not 3 KB
+
+
+def test_a_full_read_is_capped_near_25_kb_and_not_cached(project, barq_run):
+    (project / "wide.txt").write_text("".join(f"{i:04d} " + "x" * 95 + "\n" for i in range(600)))  # 60 KB
+    _, out = barq_run("read:wide.txt")
+    assert "truncated" in out and "Next: read:wide.txt:" in out
+    assert len(out.encode()) < 27_000
+    _, again = barq_run("read:wide.txt")
+    assert "unchanged" not in again                 # Claude never saw it all
+
+
+def test_the_seen_before_cache_is_per_agent(project, barq_run, monkeypatch):
+    barq_run("read:src/app.py")
+    monkeypatch.setenv("BARQ_AGENT", "sub-1")       # a subagent has its own context
+    assert "def total" in barq_run("read:src/app.py")[1]
+    assert "unchanged" in barq_run("read:src/app.py")[1]
+    monkeypatch.delenv("BARQ_AGENT")
+    assert "unchanged" in barq_run("read:src/app.py")[1]
+
+
+def test_subagent_start_tells_the_subagent_its_barq_agent_id(barq_env):
+    res = subprocess.run([sys.executable, str(BARQ_ROOT / "hooks" / "subagent_start.py")],
+                         input=json.dumps({"session_id": "s1", "agent_id": "ag-42", "agent_type": "Explore"}),
+                         capture_output=True, text=True)
+    assert res.returncode == 0
+    context = json.loads(res.stdout)["hookSpecificOutput"]["additionalContext"]
+    assert "BARQ_AGENT=ag-42" in context

@@ -67,11 +67,12 @@ def op_grep(ctx: Context, pattern: str, path: str = ".", max=50, ignore_case=Fal
                 total += 1
                 file_hit = True
                 entry = f"{shown}:{n}: {line.strip()}"
-                baseline += len(entry) + 1
                 if len(hits) < limit:
                     shortened = entry if len(entry) <= 240 else entry[:237] + "..."
                     hits.append(mask_text(shortened, f.name)[0])
         matched_files += file_hit
+        if file_hit:   # the built-in Grep returns matching file names by default
+            baseline += len(shown) + 1
         if total >= GREP_SCAN_LIMIT:
             break
     label = f"grep /{pattern}/ in {path}: {total} matches in {matched_files} files{note}"

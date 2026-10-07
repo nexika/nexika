@@ -9,6 +9,7 @@ from .mask import mask_text
 from .outline import SUPPORTED, find_symbol, outline
 
 MAX_LINES = 1500
+MAX_BYTES = 25_000   # Claude Code cuts tool output at about 30K characters: Claude never sees the rest
 RANGE_DEFAULT = 200
 
 
@@ -23,6 +24,16 @@ def _split_lines(text: str) -> list[str]:
     return lines
 
 
+def _fits(lines: list[str]) -> int:
+    """How many lines a full read can show: at most MAX_LINES and about MAX_BYTES of numbered text."""
+    size = 0
+    for n, line in enumerate(lines[:MAX_LINES]):
+        size += len(line.encode("utf-8")) + len(str(n + 1)) + 2
+        if size > MAX_BYTES:
+            return max(n, 1)
+    return min(len(lines), MAX_LINES)
+
+
 def op_read(ctx: Context, path: str, start=None, end=None, symbol: str | None = None,
             mode: str | None = None) -> Result:
     p = files.resolve(path, ctx.cwd, ctx.root)
@@ -35,7 +46,8 @@ def op_read(ctx: Context, path: str, start=None, end=None, symbol: str | None = 
     text, n_masked = (raw, 0) if mode == "raw" else mask_text(raw, p.name)
     lines = _split_lines(text)
     total = len(lines)
-    baseline = len(raw.encode("utf-8"))
+    # what the built-in Read would have returned: the whole file, but capped like any tool output
+    baseline = min(len(raw.encode("utf-8")), MAX_BYTES)
     masked_note = (f", {n_masked} secret(s) masked: don't copy [masked] lines into an edit,"
                    f" use read:{shown}:raw for exact text" if n_masked else "")
 
@@ -64,14 +76,17 @@ def op_read(ctx: Context, path: str, start=None, end=None, symbol: str | None = 
         last = min(total, int_arg(end, "end") if end is not None else first + RANGE_DEFAULT - 1)
         if first > total:
             raise OpError(f"{shown} has only {total} lines")
+        body = numbered(lines[first - 1:last], first)
+        # Read with offset/limit returns the same lines: no saving beyond the round-trip
         return Result(f"read {shown} (lines {first}-{last} of {total}{masked_note})",
-                      numbered(lines[first - 1:last], first), baseline=baseline, masked=True)
+                      body, baseline=len(body.encode("utf-8")), masked=True)
 
-    if total > MAX_LINES:
+    cut = _fits(lines)
+    if cut < total:
         return Result(
-            f"read {shown} (lines 1-{MAX_LINES} of {total}{masked_note}, truncated)",
-            numbered(lines[:MAX_LINES], 1)
-            + f"\n... {total - MAX_LINES} more lines. Next: read:{shown}:{MAX_LINES + 1}:{2 * MAX_LINES}"
+            f"read {shown} (lines 1-{cut} of {total}{masked_note}, truncated)",
+            numbered(lines[:cut], 1)
+            + f"\n... {total - cut} more lines. Next: read:{shown}:{cut + 1}:{2 * cut}"
             f" or read:{shown}:outline",
             baseline=baseline, masked=True,
         )

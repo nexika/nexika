@@ -14,7 +14,7 @@ barq 'read:src/app.py' 'grep:TODO:src' 'git-status'
 
 | Op | What it does |
 |---|---|
-| `read:PATH` | Whole file. **Seen-before cache:** a repeated read of an unchanged file returns one line; a changed file returns only the diff |
+| `read:PATH` | Whole file (up to 1,500 lines or about 25 KB, since Claude Code cuts longer tool output). **Seen-before cache:** a repeated read of an unchanged file returns one line; a changed file returns only the diff |
 | `read:PATH:START[:END]` | A line range |
 | `read:PATH@Symbol` | Just one class / function / method (`@UserService.Login` works too) |
 | `read:PATH:outline` | Signatures only, with line ranges |
@@ -27,7 +27,7 @@ barq 'read:src/app.py' 'grep:TODO:src' 'git-status'
 | `info` | Languages, stacks, manifests and the build/test/lint commands |
 | `run:test` / `run:build` / `run:lint` | Runs the command and returns **only** the verdict, failures and errors |
 | `git-status[:full]` | Branch, ahead/behind, changes, stashes, and the suggested next step |
-| `stats[:today\|week\|month\|all]` | What barq saved: round-trips, bytes, estimated tokens |
+| `stats[:today\|week\|month\|all]` | What barq saved: round-trips, bytes, estimated tokens. Savings are measured against what the built-in tool would have returned (a line range against the same range, grep against Grep's file list, a whole file capped like any tool output), and ops that sent more count as negative |
 
 Symbols and outlines: Python (exact, via `ast`), C#, Java, Kotlin, JS/TS, Go, Rust, C/C++, PHP,
 Swift, Dart, Scala (declaration patterns + brace matching), Markdown (headings).
@@ -80,7 +80,9 @@ Ops marked `"safety": "read"` may run in parallel with other read ops.
 
 The SessionStart hook puts `bin/` on `PATH` (via `CLAUDE_ENV_FILE`), passes the session id to
 barq for the cache, resets the cache after `/compact` or `/clear` (Claude no longer has the
-old content), and tells Claude how to use barq.
+old content), and tells Claude how to use barq. The SubagentStart hook gives each subagent its
+own cache (`BARQ_AGENT`): a subagent starts with an empty context, so it never gets "unchanged"
+for a file only the main agent read.
 
 Data lives in `~/.claude/nexika/barq/` (`BARQ_HOME` to move it): `stats.jsonl` and
 per-session cache files, deleted after 7 days.

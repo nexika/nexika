@@ -167,7 +167,10 @@ def main(argv: list[str]) -> int:
         return 0 if spec else 2
 
     session = os.environ.get("BARQ_SESSION", "")
-    ctx = Context(cwd=cwd, root=root, cache=Cache(session), config=config, fresh=fresh)
+    # a subagent has its own context, without what the main agent read (BARQ_AGENT: subagent_start.py)
+    agent = os.environ.get("BARQ_AGENT", "")
+    cache = Cache(f"{session}--{agent}" if session and agent else session)
+    ctx = Context(cwd=cwd, root=root, cache=cache, config=config, fresh=fresh)
     started = time.monotonic()
     requests = parse_requests(args, specs)
     results = execute(requests, specs, ctx)

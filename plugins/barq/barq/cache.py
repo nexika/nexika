@@ -1,9 +1,9 @@
 """Seen-before cache: don't send Claude a file it already has.
 
-Per Claude session (BARQ_SESSION), remembers the exact text of every full read. A repeated
-full read of an unchanged file returns a one-line notice; a changed file returns only the
-diff when that is smaller. The SessionStart hook resets a session's cache after compaction,
-because Claude no longer holds the earlier content then.
+Per Claude session (BARQ_SESSION) and agent (BARQ_AGENT, set in subagents), remembers the
+exact text of every full read. A repeated full read of an unchanged file returns a one-line
+notice; a changed file returns only the diff when that is smaller. The SessionStart hook resets
+a session's cache after compaction, because Claude no longer holds the earlier content then.
 """
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def _sessions_dir() -> Path:
 
 
 def _safe_id(session: str) -> str:
-    return "".join(c for c in session if c.isalnum() or c in "-_")[:64]
+    return "".join(c for c in session if c.isalnum() or c in "-_")[:128]
 
 
 def _digest(text: str) -> str:
