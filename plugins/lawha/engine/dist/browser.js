@@ -95,6 +95,23 @@ export async function revealAll(page) {
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(300);
 }
+/**
+ * Where the page ended up, when that is not where it was sent: a login wall, a locale redirect.
+ * Origin and path are compared (a trailing slash, the query and the hash do not count), so
+ * /private landing on /login.html?next=/private is caught.
+ */
+export function redirectedTo(requested, final) {
+    const key = (u) => {
+        try {
+            const p = new URL(u);
+            return `${p.origin === "null" ? p.protocol : p.origin}${p.pathname.replace(/\/+$/, "") || "/"}`;
+        }
+        catch {
+            return u;
+        }
+    };
+    return key(requested) === key(final) ? null : final;
+}
 export async function closePage(page) {
     await page.context().close();
 }

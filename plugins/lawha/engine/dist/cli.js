@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { audit } from "./audit.js";
-import { closePage, launch, openVariant, variantName } from "./browser.js";
+import { closePage, launch, openVariant, redirectedTo, variantName } from "./browser.js";
 import { ab, readTaste, reveal } from "./ab.js";
 import { diff } from "./diff.js";
 import { iconFindings, icons } from "./icons.js";
@@ -75,8 +75,14 @@ async function check(url, a) {
     try {
         for (const v of variants) {
             const name = variantName(v);
-            const page = await openVariant(browser, { url, rtlUrl: typeof a["rtl-url"] === "string" ? a["rtl-url"] : undefined }, v);
+            const rtlUrl = typeof a["rtl-url"] === "string" ? a["rtl-url"] : undefined;
+            const page = await openVariant(browser, { url, rtlUrl }, v);
             try {
+                // Checking the login page and recording it as the page asked for is worse than no check.
+                const requested = v.dir === "rtl" && rtlUrl ? rtlUrl : url;
+                const landed = redirectedTo(requested, page.url());
+                if (landed)
+                    run.findings.push({ check: "page.redirected", severity: "fail", message: `Asked for ${requested} but the browser ended on ${landed} (a redirect, often a login page); the results are for that page, not the one asked for.`, width: v.width, theme: v.theme, dir: v.dir, motion: v.motion });
                 const file = join(out, "shots", `${name}.png`);
                 await page.screenshot({ path: file, fullPage: true, animations: "disabled" });
                 const height = await page.evaluate(() => document.documentElement.scrollHeight);

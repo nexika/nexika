@@ -46,6 +46,17 @@ test("a fail verdict exits 1 so gates stop; --no-fail-exit keeps 0 for callers t
   assert.equal(JSON.parse(parsed.stdout).verdict, "fail");
 });
 
+test("a page that redirects elsewhere (a login wall) fails instead of passing as the page asked for", () => {
+  const out = tmp();
+  const summary = lawha("check", page("private.html"), "--widths", "390", "--no-see", "--out", out);
+  assert.equal(summary.verdict, "fail");
+  const run = JSON.parse(readFileSync(join(out, "run.json"), "utf8"));
+  const moved = run.findings.filter((f) => f.check === "page.redirected");
+  assert.ok(moved.length >= 1 && moved.every((f) => f.severity === "fail"));
+  assert.match(moved[0].message, /good\.html/);
+  assert.ok(summary.top.some((t) => t.includes("page.redirected")));
+});
+
 test("every planted fault is found, once per problem", () => {
   const out = tmp();
   const summary = lawha("check", page("bad.html"), "--widths", "390,1280", "--out", out);
