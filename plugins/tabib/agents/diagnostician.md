@@ -11,8 +11,12 @@ commands (git log, git show, git diff, git blame, the tabib helper's `show`).
 The path of tabib's diagnosis file (JSON, schema `nexika.tabib/1`). Read it. It holds:
 - `failures`: each failing test or check, with file, line and message, taken from the log
 - `kind`, `detail`, `evidence`: tabib's sorting (code, matrix, flaky, infra, dependency, unknown)
-- `suspects`: the commits since the last green run (`suspect: true` touched a failing file), and
-  dependency files that changed
+- `flaky_tests`: failing tests that also passed on the same commit in another run, with the run links
+  (a likely flaky test, not the cause)
+- `suspects`: the commits since the last green run, most likely first: `blamed` lists the failing
+  lines (assertion, stack frames) each one last wrote, by git blame, with a `score`; `suspect: true`
+  also marks a commit that touched a failing file; and dependency files that changed
+- `frames`: the `path:line` places named in the log's stack traces
 - `reproduction`: whether the failing tests also fail at that commit on this machine
 - `excerpts`: log lines around each failure
 

@@ -16,11 +16,8 @@ import json
 import os
 import re
 import shlex
-from dataclasses import dataclass, field
-from urllib.parse import urlsplit
 
-from . import classify as c
-from . import powershell, secrets
+from . import targets as c
 from .config import (  # noqa: F401  (settings live in config, kept here by name)
     PROFILE_INDEX,
     READ_TOOLS,
@@ -38,13 +35,25 @@ MCP_DESTRUCTIVE = re.compile(r"(?i)(?:^|[_-])(?:delete|remove|drop|destroy|purge
                              r"(?:[_-]|$)")
 
 
-@dataclass
 class Decision:
-    verdict: str
-    cls: str
-    reason: str
-    findings: list = field(default_factory=list)
-    tainted: bool = False
+    """allow, pass, ask or deny, with the class and reason behind it (a plain class, like Finding)."""
+    __slots__ = ("verdict", "cls", "reason", "findings", "tainted")
+
+    def __init__(self, verdict: str, cls: str, reason: str, findings: list | None = None,
+                 tainted: bool = False):
+        self.verdict, self.cls, self.reason = verdict, cls, reason
+        self.findings = [] if findings is None else findings
+        self.tainted = tainted
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Decision):
+            return NotImplemented
+        return all(getattr(self, k) == getattr(other, k) for k in self.__slots__)
+
+    __hash__ = None
+
+    def __repr__(self) -> str:
+        return "Decision(" + ", ".join(f"{k}={getattr(self, k)!r}" for k in self.__slots__) + ")"
 
 
 # ---------------------------------------------------------------- settings
@@ -55,9 +64,13 @@ class Decision:
 
 
 def findings_for(tool: str, tool_input: dict, ctx: c.Ctx) -> list[c.Finding]:
+    # The command parser is loaded only for shell commands; file and web tools need just the path
+    # helpers (#102).
     if tool == "Bash":
-        return c.classify(str(tool_input.get("command") or ""), ctx)
+        from . import classify
+        return classify.classify(str(tool_input.get("command") or ""), ctx)
     if tool == "PowerShell":
+        from . import powershell
         powershell.classify(str(tool_input.get("command") or ""), ctx)
     elif tool in READ_TOOLS:
         path = str(tool_input.get("file_path") or tool_input.get("notebook_path")
@@ -71,6 +84,7 @@ def findings_for(tool: str, tool_input: dict, ctx: c.Ctx) -> list[c.Finding]:
     elif tool == "WebFetch":
         web_fetch(str(tool_input.get("url") or ""), ctx)
     elif tool == "WebSearch":
+        from . import secrets
         if secrets.has_secret(str(tool_input.get("query") or "")):
             ctx.add("egress-secret", "The web search contains what looks like a secret; it would be sent "
                                      "to the "
@@ -85,6 +99,7 @@ def findings_for(tool: str, tool_input: dict, ctx: c.Ctx) -> list[c.Finding]:
 def write_tool(tool_input: dict, ctx: c.Ctx) -> None:
     path = str(tool_input.get("file_path") or tool_input.get("notebook_path") or "")
     c.write_paths([c.arg(path or c.UNKNOWN)], ctx, "writes to")
+    from . import secrets
     text = "\n".join(str(tool_input.get(k) or "") for k in ("content", "new_string", "new_source"))
     for edit in tool_input.get("edits") or []:
         if isinstance(edit, dict):
@@ -96,6 +111,9 @@ def write_tool(tool_input: dict, ctx: c.Ctx) -> None:
 
 
 def web_fetch(url: str, ctx: c.Ctx) -> None:
+    from urllib.parse import urlsplit
+
+    from . import secrets
     try:
         parts = urlsplit(url)
         host = (parts.hostname or "").lower()
@@ -115,6 +133,7 @@ def mcp_tool(tool: str, tool_input: dict, ctx: c.Ctx) -> None:
     parts = tool.split("__", 2)
     server, name = (parts[1] if len(parts) > 1 else "?"), parts[-1]
     payload = json.dumps(tool_input, ensure_ascii=False)[:20000]
+    from . import secrets
     if secrets.has_secret(payload):
         ctx.add("egress-secret", f"The request to {server} contains what looks like a secret.")
     elif MCP_DESTRUCTIVE.search(re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", name)):

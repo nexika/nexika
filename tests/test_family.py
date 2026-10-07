@@ -39,7 +39,8 @@ def bayan_home(tmp_path, monkeypatch):
 
 
 def set_role(path, role):
-    path.write_text(json.dumps({"schema": "nexika.profile/1", "role": role}), encoding="utf-8")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"schema": "nexika.settings/1", "role": role}), encoding="utf-8")
 
 
 # ---------------------------------------------------------------- the file
@@ -49,7 +50,7 @@ def test_role_is_saved_owner_only_and_read_back(family, family_profile):
     assert family.role() == ""
     family.save_role("learner")
     assert family.role() == "learner"
-    assert json.loads(family_profile.read_text())["schema"] == "nexika.profile/1"
+    assert json.loads(family_profile.read_text())["schema"] == "nexika.settings/1"
     assert stat.S_IMODE(family_profile.stat().st_mode) == 0o600
 
 

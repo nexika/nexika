@@ -16,4 +16,7 @@ description: Check how the Nexika plugins installed here work together - which a
    - **A slow, failing or timed-out hook:** name the plugin and the event.
    - **A status file stale, of an unknown schema or readable by others:** say which; a stale file
      only means that plugin has not run lately.
+   - **The family settings file readable by others:** suggest `chmod 600` on the path shown.
+   Then mention the family settings (role, background calls) only if the user asked about them or
+   the role is not chosen.
 3. If nothing is wrong, say so in one line and list the plugins found.

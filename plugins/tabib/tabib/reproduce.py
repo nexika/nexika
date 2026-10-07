@@ -70,6 +70,9 @@ def command(root: Path, failures: list[dict]) -> tuple[list[str], str] | None:
         runner = _runner(root)
         extra = ["--", *files] if runner == "npm" else files
         return ([runner, "run", "test", *extra], f"{runner} test") if files else None
+    if framework == "playwright":
+        files = _safe_paths([f["file"] for f in mine])
+        return (["npx", "--no-install", "playwright", "test", *files], "playwright test") if files else None
     if framework == "go":
         names = [f["test"] for f in mine if GO_NAME.match(f["test"])]
         packages = _safe_paths([f.get("package", "") for f in mine]) or ["./..."]
