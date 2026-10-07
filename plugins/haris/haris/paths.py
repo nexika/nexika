@@ -21,7 +21,6 @@ from __future__ import annotations
 import fnmatch
 import os
 import re
-import tempfile
 from pathlib import Path
 
 PLUGIN_ROOT = str(Path(__file__).resolve().parent.parent)
@@ -110,6 +109,7 @@ class Where:
         self.root = norm(os.path.realpath(root))
         self.home = norm(os.path.realpath(os.path.expanduser("~")))
         self.secret_globs = list(secret_globs or [])
+        import tempfile  # loads shutil and random: only when a Where is built
         temp = norm(os.path.realpath(tempfile.gettempdir()))
         self.temps = tuple(sorted({*TEMP_DIRS, temp}))
         self.self_paths = (PLUGIN_ROOT, data_home(), *guarded_homes(), norm(self.root + "/.haris.json"))
