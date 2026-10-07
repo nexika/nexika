@@ -13,7 +13,7 @@ USAGE = f"""amin {__version__} - repository maintainer; you always merge (Nexika
 
   amin projects                          projects, versions, version files, last tags
   amin plan                              what would be released, from the change notes
-  amin prepare [NAME[=VERSION] ...]      bump versions, write CHANGELOGs, consume notes (then: a PR)
+  amin prepare [NAME[=VERSION] ...] [--allow-lower]   bump versions, write CHANGELOGs, consume notes
   amin publish NAME [--dry-run]          after the release PR is merged: checks, tag, GitHub Release
   amin fragment add NAME TYPE TEXT [--id ID]   add a change note (TYPE: {', '.join(proj.TYPES)})
   amin fragment list                     notes waiting to be released
@@ -48,6 +48,8 @@ def cmd_projects(root: Path, runner: gitops.Runner) -> str:
 def cmd_prepare(root: Path, runner: gitops.Runner, args: list[str]) -> str:
     projects = proj.detect(root)
     plans = {pl.project.name: pl for pl in release.plan(root, runner, projects)}
+    allow_lower = "--allow-lower" in args
+    args = [a for a in args if a != "--allow-lower"]
     wanted: dict[str, str | None] = {}
     for arg in args:
         name, _, version = arg.partition("=")
@@ -64,7 +66,7 @@ def cmd_prepare(root: Path, runner: gitops.Runner, args: list[str]) -> str:
         if not (version or pl.next):
             raise release.ReleaseError(f"{name}: no proposed version ({pl.reason})")
         chosen.append((pl, version or pl.next))
-    changed = release.prepare(root, chosen)
+    changed = release.prepare(root, chosen, allow_lower=allow_lower)
     summary = ", ".join(f"{pl.project.name} {v}" for pl, v in chosen)
     return f"prepared: {summary}\nchanged files:\n" + "\n".join(f"  {c}" for c in changed)
 

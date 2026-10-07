@@ -87,8 +87,12 @@ def render_plan(plans: list[Plan]) -> str:
     return "\n".join(lines) or "no projects detected (see /amin:setup)"
 
 
-def prepare(root: Path, chosen: list[tuple[Plan, str]], date: str | None = None) -> list[str]:
-    """Apply chosen (plan, version) pairs. Returns the files changed (to commit as one PR)."""
+def prepare(root: Path, chosen: list[tuple[Plan, str]], date: str | None = None,
+            allow_lower: bool = False) -> list[str]:
+    """Apply chosen (plan, version) pairs. Returns the files changed (to commit as one PR).
+
+    A version below what the notes require (a breaking note released as a minor) is refused
+    unless allow_lower."""
     date = date or datetime.date.today().isoformat()
     changed: list[str] = []
     for pl, version in chosen:
@@ -97,6 +101,10 @@ def prepare(root: Path, chosen: list[tuple[Plan, str]], date: str | None = None)
             last = pl.last_tag[len(pl.project.tag_prefix()):]
             if proj.parse(version) <= proj.parse(last):
                 raise ReleaseError(f"{pl.project.name}: {version} is not newer than {last}")
+            required, reason = proj.bump(last, {n.type for n in pl.notes})
+            if not allow_lower and proj.parse(version) < proj.parse(required):
+                raise ReleaseError(f"{pl.project.name}: {version} is too low: {reason}, so it needs at "
+                                   f"least {required} (pass --allow-lower to release {version} anyway)")
         if not pl.notes:
             raise ReleaseError(f"{pl.project.name}: no notes to release")
         for vf in pl.project.version_files:

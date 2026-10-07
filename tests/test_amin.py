@@ -202,6 +202,28 @@ def test_changelog_insert_and_extract(tmp_path):
         changelog.insert(path, "alpha", "0.2.0", "2026-10-06", {"Fixed": ["- again"]})
 
 
+def test_new_versions_go_below_unreleased(tmp_path):
+    # issue #35: the new version was inserted above "## [Unreleased]"
+    path = tmp_path / "CHANGELOG.md"
+    path.write_text("# Changelog\n\n## [Unreleased]\n\n## [0.1.0] - 2026-10-01\n### Added\n- First.\n")
+    changelog.insert(path, "alpha", "0.2.0", "2026-10-06", {"Fixed": ["- Second."]})
+    text = path.read_text()
+    assert text.index("## [Unreleased]") < text.index("## [0.2.0]") < text.index("## [0.1.0]")
+    assert changelog.extract(path, "0.2.0") == "### Fixed\n- Second."
+
+
+def test_a_version_override_below_what_the_notes_require_is_refused(market):
+    # issue #35: with a breaking note, prepare beta=1.3.0 on 1.2.0 went through silently
+    _git(market, "tag", "-a", "beta-v1.2.0", "-m", "x")
+    fragments.add(market, projects_of(market)["beta"], "breaking", "Renamed option.", "6")
+    pl = plan_by_name(market)["beta"]
+    with pytest.raises(release.ReleaseError, match="breaking.*needs at least 2.0.0"):
+        release.prepare(market, [(pl, "1.3.0")])
+    assert proj.read_version(market, pl.project.version_files[0]) == "1.2.0"
+    release.prepare(market, [(pl, "1.3.0")], allow_lower=True)
+    assert proj.read_version(market, pl.project.version_files[0]) == "1.3.0"
+
+
 # ---------------------------------------------------------------- plan and prepare
 
 

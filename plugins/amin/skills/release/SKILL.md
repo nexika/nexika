@@ -27,7 +27,8 @@ explicitly before any major version.
 ## 4. Release pull request
 1. From an up-to-date default branch with a clean tree, create `release/<project>-<version>`
    (several projects: `release/<date>`).
-2. Run `amin prepare <project>[=<version>] ...`; show the CHANGELOG sections it wrote.
+2. Run `amin prepare <project>[=<version>] ...`; show the CHANGELOG sections it wrote. A version
+   below what the notes require is refused; add `--allow-lower` only if the user insists.
 3. Commit (`Release <project> <version>, ...`), push, and open the PR with the sections in the
    body. **Stop and ask the user to review and merge it.**
 
