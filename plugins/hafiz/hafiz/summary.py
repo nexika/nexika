@@ -14,7 +14,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from . import capture, card, secrets, store, transcript
+from . import background, capture, card, secrets, store, transcript
 
 MODELS = {"sonnet", "opus", "haiku"}
 DEFAULT_MODEL = "sonnet"
@@ -224,11 +224,12 @@ def model_name(value: str) -> str:
 
 
 def call_claude(prompt: str, model: str) -> tuple[str, str]:
-    """(summary, error). HAFIZ=off keeps this plugin's hooks out of the child session."""
+    """(summary, error). NEXIKA_BACKGROUND=1 keeps every family hook out of the child session (#45)."""
     binary = os.environ.get("HAFIZ_CLAUDE") or shutil.which("claude")
     if not binary:
         return "", "the `claude` command was not found"
-    env = {**os.environ, "HAFIZ": "off"}
+    env = background.child_env({"HAFIZ": "off"})
+    background.record("hafiz", "summary", model)
     # The child only writes text: no tools, no MCP servers, no project settings, an empty folder.
     args = [binary, "-p", "--model", model, "--output-format", "text", "--tools", "", "--strict-mcp-config",
             "--setting-sources", "user", "--no-session-persistence"]
@@ -255,6 +256,11 @@ def pick_session(folder: Path, prefix: str = "") -> dict:
 def run(root: Path, session: str = "", model: str = DEFAULT_MODEL, lang: str = "", dry_run: bool = False,
         out: str = "") -> tuple[int, str]:
     model = model_name(model)
+    if not dry_run and not background.allowed(asked=True):  # asked for, so only "off" stops it (#45)
+        settings = background.home() / "settings.json"
+        helper = Path(background.__file__).resolve()
+        return 1, (f"Background model calls are off (background_calls in {settings}). Turn them on with: "
+                   f"python3 {helper} on, or write the summary in this session instead.")
     memory = store.Memory(root)
     state = pick_session(memory.dir, session)
     if not state:
@@ -303,4 +309,6 @@ def run(root: Path, session: str = "", model: str = DEFAULT_MODEL, lang: str = "
             target = Path.cwd() / target
         store.write_text(target, text, private=False)
         where.append(str(target))
-    return 0, f"{text}\n---\nSummary ({model}) saved to: " + ", ".join(where)
+    calls = len(pieces) + 1 if len(pieces) > 1 else 1
+    return 0, (f"{text}\n---\nSummary ({model}, {calls} background model call(s) on your plan or API "
+               "credits) saved to: " + ", ".join(where))

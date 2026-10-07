@@ -5,10 +5,13 @@ without the file. Must never fail the subagent."""
 from __future__ import annotations
 
 import json
+import os
 import sys
 
 
 def main() -> None:
+    if os.environ.get("NEXIKA_BACKGROUND") == "1":
+        return  # inside a family background model call: no hooks (#45)
     try:
         hook = json.loads(sys.stdin.read() or "{}")
     except ValueError:

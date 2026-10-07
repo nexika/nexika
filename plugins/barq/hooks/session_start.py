@@ -24,6 +24,8 @@ have the content in context, use 'read:PATH:full'. Never copy a [masked] line in
 
 
 def main() -> None:
+    if os.environ.get("NEXIKA_BACKGROUND") == "1":
+        return  # inside a family background model call: no hooks (#45)
     try:
         hook = json.loads(sys.stdin.read() or "{}")
     except ValueError:

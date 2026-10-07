@@ -19,7 +19,8 @@ COPIES = proj.copies(REPO)
 
 
 def test_every_shared_file_is_listed():
-    assert set(COPIES) == {f"common/{n}" for n in ("secrets.py", "inject.py", "status.py", "gitinfo.py")}
+    names = ("secrets.py", "inject.py", "status.py", "gitinfo.py", "background.py")
+    assert set(COPIES) == {f"common/{n}" for n in names}
     assert all((REPO / source).is_file() for source in COPIES)
 
 

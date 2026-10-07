@@ -17,6 +17,7 @@ from pathlib import Path
 PLUGIN = Path(__file__).resolve().parent.parent
 PACKS = PLUGIN / "packs"
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import itqan_background  # noqa: E402
 import itqan_files  # noqa: E402
 
 SKIP_DIRS = {"node_modules", "bin", "obj", "dist", "build", "venv", "__pycache__", "target", "vendor"}
@@ -92,10 +93,10 @@ def session_start(hook: dict) -> None:
     try:
         import itqan_learn
         rules = itqan_learn.session_note(itqan_learn.project_root(cwd))
+        consent = itqan_learn.consent_note()
     except Exception:  # learning data must never break the session note
-        rules = ""
-    if rules:
-        lines.append(rules)
+        rules = consent = ""
+    lines += [text for text in (rules, consent) if text]
     print("\n".join(lines))
 
 
@@ -147,6 +148,8 @@ def session_end(hook: dict) -> None:
 
 
 def main(argv: list[str]) -> int:
+    if itqan_background.in_background():
+        return 0  # inside a family background model call: no hooks (#45)
     try:
         hook = json.loads(sys.stdin.read() or "{}")
     except ValueError:
