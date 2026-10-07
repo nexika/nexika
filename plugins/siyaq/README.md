@@ -24,10 +24,15 @@ usage ─────────────► shown / opened / no-match event
   removed, and light stemming handles both English (`validation` = `validating`) and Arabic
   (`الخصم` = `خصم`).
 - **Code words:** `OrderService` and `order_service` both become `order service`.
-- **Relevance, not keyword hits:** one shared body word is never enough; a title/keyword hit or
-  two different words are required, and the best matches win.
+- **Relevance, not keyword hits:** one shared body word is never enough; a hit on the section's
+  own heading (not the doc title above it) or a keyword, or two different words, is required. A
+  short prompt needs two words or a keyword, acknowledgements ("ok thanks", "تمام") match
+  nothing, and the best matches win: a repeat never pulls in weaker sections instead.
+- **Back-links are not topics:** a "Part of ..." link to a parent README does not tie the
+  section to that README.
 - **Bounded cost:** at most `top_k` entries and `budget_tokens` per prompt; big sections are sent
-  as a summary with the exact lines to read for more.
+  as a summary with the exact lines to read for more. Tables and code blocks in a summary are kept
+  whole, never cut halfway.
 - **Less as the context fills:** with mizan installed, siyaq reads its context level: normal when
   fresh, half the budget and one entry fewer at mid, only the strongest match as a summary when
   full.
@@ -71,9 +76,12 @@ what would be injected; `siyaq entries`, `siyaq index` (sources, dead references
 ```
 
 `"mode": "off"` or `SIYAQ=off` disables it. CLAUDE.md and CHANGELOG.md are never indexed
-(CLAUDE.md is already loaded). Data lives in `~/.claude/nexika/siyaq/` (`SIYAQ_HOME` to move it).
+(CLAUDE.md is already loaded). Data lives in `~/.claude/nexika/siyaq/` (`SIYAQ_HOME` to move it);
+the usage events (which hold words from your prompts) are readable only by you and rotate at 1 MB.
 
 ## Limits
-- Matching is lexical (words, stems, synonyms you add), not semantic: a question in Arabic
-  matches English docs only through `keywords` you add (as `/siyaq:add` does).
+- Matching is lexical (words, stems, synonyms you add), not semantic. A built-in glossary of
+  common software and business words (deploy = نشر, invoice = فاتورة, rollback = تراجع ...) lets an
+  Arabic question find English docs and the reverse; other terms match across languages only
+  through `keywords` you add (as `/siyaq:add` does).
 - Docs can be wrong; injected text tells Claude to trust the code when they disagree.

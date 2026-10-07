@@ -68,7 +68,25 @@ def problem_title(text: str) -> str:
 
 
 def files(state: dict) -> list[str]:
-    return [f for f, _ in sorted(state.get("files", {}).items(), key=lambda kv: -kv[1])]
+    """Changed files, the most recently touched first."""
+    touched = state.get("touched", {})
+    inside = {f: n for f, n in state.get("files", {}).items() if not _outside(f)}
+    return [f for f, _ in sorted(inside.items(), key=lambda kv: (-touched.get(kv[0], 0), -kv[1]))]
+
+
+def _outside(path: str) -> bool:
+    """An absolute path: a file outside the repository (older sessions recorded those too)."""
+    return path.startswith(("/", "\\", "~", "../")) or bool(re.match(r"^[A-Za-z]:[\\/]", path))
+
+
+def working_on(state: dict) -> str:
+    """What the session is about now: the note, else the latest real request ("yes", "ok" skipped)."""
+    if state.get("note"):
+        return state["note"]
+    for prompt in reversed(state.get("prompts") or []):
+        if len(prompt) >= 15 and not capture._approves(prompt):
+            return prompt
+    return state.get("first_prompt", "")
 
 
 # ------------------------------------------------------------------ sessions
@@ -161,7 +179,7 @@ def start_card(root: Path, branch: str, helper: str, session: str = "", budget: 
         for state, where in ((last, "here"), (elsewhere, f"on {elsewhere.get('branch') or '(no branch)'}")):
             if state:
                 when = state.get("updated", "")[:16].replace("T", " ")
-                latest = state.get("note") or (state.get("prompts") or [state.get("first_prompt", "")])[-1]
+                latest = working_on(state)
                 lines.append(f"Last session {where} ({when}, {state['session'][:8]}): {latest}")
         mine = search.newest_first([i for i in items if search.keep(i, branch=branch)])
         todo = [i["text"] for i in mine if i["type"] == "task" and i.get("status") == "open"]
@@ -186,7 +204,7 @@ def start_card(root: Path, branch: str, helper: str, session: str = "", budget: 
 def snapshot(folder: Path, state: dict) -> Path:
     data = {
         "created": store.now(), "session": state["session"], "branch": state.get("branch", ""),
-        "goal": state.get("first_prompt", ""), "prompts": state.get("prompts", [])[-3:],
+        "goal": working_on(state), "prompts": state.get("prompts", [])[-3:],
         "note": state.get("note", ""), "tasks": open_tasks(state), "done": done_tasks(state)[-5:],
         "decisions": state.get("decisions", [])[-8:],
         "problems": [problem_title(p) for p in problems(state, "open")],
@@ -206,8 +224,8 @@ def restore_text(folder: Path, session: str, helper: str, budget: int = RESTORE_
              f"The conversation was just compacted. Before it, on branch {data.get('branch') or '(none)'}:"]
     if data.get("note"):
         lines.append(f"Where we stopped: {data['note']}")
-    if data.get("goal"):
-        lines.append(f"Goal of this session: {data['goal']}")
+    if data.get("goal") and data.get("goal") != data.get("note"):
+        lines.append(f"Working on: {data['goal']}")
     lines += [f"Latest request: {p}" for p in data.get("prompts", [])[-2:]]
     for title, key, limit in (("Open tasks", "tasks", 8), ("Decisions", "decisions", 6),
                               ("Open problems", "problems", 3), ("Files changed", "files", 12),

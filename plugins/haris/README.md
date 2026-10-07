@@ -93,9 +93,13 @@ a plain warning, exactly as if the commands had been typed directly.
 After each tool call haris scans the output (web pages, files, command output, MCP results) for
 text that tries to give Claude orders: "ignore previous instructions", fake system messages,
 "do not tell the user", requests to send secrets somewhere, hidden characters, instructions in
-HTML comments, in English and Arabic. Claude is told the text is data, not a request from you,
-and for your next 3 messages sending data out and irreversible remote actions are raised one
-level (pass becomes ask, ask becomes deny).
+HTML comments, in English and Arabic, paraphrases included ("set aside everything you were told").
+A short phrase in quotes is a mention, not an order, so docs about attacks are not flagged. The
+patterns are checked in CI against a labelled corpus (`tests/haris_inject_corpus.tsv`): every
+injection must be found and no ordinary text flagged. Claude is told the text is data, not a
+request from you, and for your next 3 messages (1 when the text came from a file git tracks in
+this repository) sending data out and irreversible remote actions are raised one level (pass
+becomes ask, ask becomes deny).
 
 ## Profiles
 

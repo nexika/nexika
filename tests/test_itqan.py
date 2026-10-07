@@ -267,3 +267,82 @@ def test_quiet_session_adds_no_note(tmp_path, repo):
     run_hooks("session-end", {"session_id": "cccc3333"}, home)
     out = run_hooks("session-start", {"cwd": str(repo), "session_id": "dddd4444"}, home)
     assert "Last session" not in out
+
+
+# ---------------------------------------------------------------- the proof runs the project's Python (#88)
+
+
+@pytest.fixture
+def proof():
+    return load(ITQAN / "scripts" / "itqan_proof.py", "itqan_proof_t")
+
+
+def python_project(tmp_path):
+    root = tmp_path / "py"
+    (root / "tests").mkdir(parents=True)
+    (root / "pyproject.toml").write_text("[project]\nname='x'\n[tool.ruff]\n")
+    return root
+
+
+def test_proof_uses_uv_when_the_project_has_uv_lock(proof, tmp_path, monkeypatch):
+    root = python_project(tmp_path)
+    (root / "uv.lock").write_text("")
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+    checks = {c["name"]: c["argv"] for c in proof.detect(root)}
+    assert checks["pytest"][:3] == ["uv", "run", "pytest"] and checks["ruff"][:3] == ["uv", "run", "ruff"]
+
+
+def test_proof_uses_the_project_venv(proof, tmp_path):
+    root = python_project(tmp_path)
+    venv_python = root / ".venv" / "bin" / "python"
+    venv_python.parent.mkdir(parents=True)
+    venv_python.write_text("#!/bin/sh\n")
+    venv_python.chmod(0o755)
+    [pytest_check] = [c for c in proof.detect(root) if c["name"] == "pytest"]
+    assert pytest_check["argv"][:3] == [str(venv_python), "-m", "pytest"]
+    assert sys.executable not in pytest_check["argv"]
+
+
+def test_stacks_are_detected_from_the_repo_root(tmp_path, repo):
+    (repo / "pyproject.toml").write_text("[project]\nname='x'\n")
+    (repo / "web").mkdir()
+    (repo / "web" / "package.json").write_text("{}")
+    out = run_hooks("session-start", {"cwd": str(repo / "web"), "session_id": "s1"}, tmp_path / "h")
+    assert "Project stacks: python, node." in out
+
+
+# ---------------------------------------------------------------- gates in code (#76)
+
+
+def test_proof_refuses_approve_with_a_critical_note_open(proof, tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("ITQAN_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("NEXIKA_STATUS_HOME", str(tmp_path / "status"))
+    root = tmp_path / "proj"
+    root.mkdir()
+    monkeypatch.chdir(root)
+    code = proof.main(["run", "--review", "approve", "--note", "[critical] SQL injection in /login"])
+    assert code == 2 and "critical" in capsys.readouterr().err.lower()
+    assert not list((tmp_path / "home").glob("proofs/*/latest.json"))
+    assert proof.main(["run", "--review", "approve", "--note", "high: token logged in plain text"]) == 2
+    saved = list((tmp_path / "home").glob("proofs/*/latest.json"))
+    assert not saved
+    # saved (exit 1 only because this empty project has no checks to pass)
+    assert proof.main(["run", "--review", "changes", "--note", "[critical] SQL injection in /login"]) == 1
+    assert proof.main(["run", "--review", "approve", "--note", "[low] rename a variable"]) == 1
+    assert list((tmp_path / "home").glob("proofs/*/latest.json"))
+
+
+def test_session_end_counts_asks_the_user_approved(tmp_path, repo):
+    home = tmp_path / "h"
+    for n, command in enumerate(("npm publish", "sudo apt install x")):
+        run_guard({"tool_name": "Bash", "session_id": "eeee5555zz", "cwd": str(repo),
+                   "tool_use_id": f"toolu_{n}", "tool_input": {"command": command}}, home)
+    transcript = tmp_path / "t.jsonl"
+    results = [{"type": "tool_result", "tool_use_id": "toolu_0", "content": "+ pkg@1.0.0"},
+               {"type": "tool_result", "tool_use_id": "toolu_1", "is_error": True,
+                "content": "The user doesn't want to proceed with this tool use. The tool use was rejected."}]
+    records = [{"type": "user", "message": {"role": "user", "content": [r]}} for r in results]
+    transcript.write_text("".join(json.dumps(r) + "\n" for r in records))
+    run_hooks("session-end", {"session_id": "eeee5555zz", "transcript_path": str(transcript)}, home)
+    summary = json.loads((home / "sessions.jsonl").read_text().splitlines()[-1])
+    assert (summary["ask"], summary["ask_approved"]) == (2, 1)

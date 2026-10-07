@@ -11,16 +11,20 @@ compaction, a handoff note between sessions, and a search when you ask.
 
 ```
 every reply (Stop) ──► read only the new part of the transcript ─► fixed rules, no AI:
-                         decision  answers to Claude's questions, approved plans,
+                         decision  answers to Claude's questions, approved plans, proposals
+                                   you said yes to ("I suggest ..." -> "yes" / "تمام"),
                                    "let's go with ...", "don't use ...", "قررنا", "خلينا نستخدم"
-                         task      Claude's task list, kept up to date (open / done)
-                         problem   a failing test, build or lint command; solved when it passes again
+                         task      Claude's task list, kept up to date (open / done), in any session
+                         problem   a failing test, build or lint command; solved when it passes again,
+                                   in this session or a later one
                          file      files Claude changed
                          link      URLs you share, pull requests and issues created
                        ─► memories + the handoff note for this branch (always fresh)
-before compaction ───► snapshot: goal, latest requests, open tasks, decisions, problems, files
+before compaction ───► snapshot: what you are working on now (the note or latest request), open tasks,
+                       decisions, problems, files (most recently touched first, only inside the repo)
 after compaction ────► the snapshot is given back to Claude (up to ~3 KB)
 session start ───────► a short card (under 1.5 KB): last session, open tasks, problems, decisions
+                       (open tasks and problems untouched for 14 days are marked expired)
 on request ──────────► search (Arabic and English), handoff note, detailed summary
 ```
 
@@ -61,7 +65,9 @@ so your main conversation does not pay for it. It finds the issue from the branc
 (`feat/123-login`), then the branch's commit messages (`fixes #123`), then the pull request
 linked to the branch (`gh`). Sections: issue and branch, goal, what was done, decisions,
 problems and fixes, files, commits and links, still open. Saved in the data folder, and with
-`--out` also in your repo.
+`--out` also in your repo. A long session is read in parts (about 60,000 characters each): the
+model takes notes on each part, then writes the summary from all the notes, so the middle of the
+session is not lost.
 
 The model only writes text: it runs with no tools, no MCP servers and none of the project's
 settings, in an empty folder, and the session log is passed as data it must not take orders from.

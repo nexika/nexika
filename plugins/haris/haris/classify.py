@@ -2580,10 +2580,12 @@ def h_gh(argv, ctx, stdin):
         ctx.add("remote-irreversible", "Changes who can see the repository.")
         return Stage()
     if group == "api":
-        method = (values(opts, "-X", "--method") or [arg("GET")])[0].upper()
         fields = values(opts, "-f", "--field", "-F", "--raw-field")
-        if method != "GET" or fields or values(opts, "--input"):
-            ctx.add("remote-irreversible", f"Changes data on {program} through the raw API ({method}).")
+        body = bool(fields or values(opts, "--input"))
+        method = (values(opts, "-X", "--method") or [arg("POST" if body else "GET")])[0].upper()  # as gh
+        if method != "GET" or body:
+            api = "GraphQL API" if pos[1:2] == ["graphql"] else "raw API"
+            ctx.add("remote-irreversible", f"Changes data on {program} through the {api} ({method}).")
             egress_payload(ctx, program, fields, values(opts, "--input"), [], stdin, True)
             return Stage()
         ctx.add("egress", f"Reads data from the {program} API.")

@@ -7,7 +7,9 @@ a repository shares one memory.
 A memory is one JSON line in memories.jsonl:
     id, type (decision|task|problem|file|link), text, date, branch, commit, session,
     source (where it came from: "transcript <session> L<line>" or "manual"),
-    origin (auto|manual), scope (branch|project), status (open|done|solved|""), key (for updates)
+    reason (why, for a decision, when it was given),
+    origin (auto|manual), scope (branch|project), status (open|done|solved|dropped|expired|""),
+    key (for updates)
 """
 from __future__ import annotations
 
@@ -25,9 +27,10 @@ from pathlib import Path
 from . import secrets
 
 TYPES = ("decision", "task", "problem", "file", "link")
-MAX_MEMORIES = 3000          # per project; auto file/link memories go first when over
+MAX_MEMORIES = 3000          # per project; over it, routine automatic memories go first (see prune)
 MAX_TEXT = 500               # characters per memory
 SESSION_KEEP_DAYS = 60
+OPEN_KEEP_DAYS = 14          # an open task or problem not touched for this long is marked expired
 SNAPSHOT_KEEP_DAYS = 7
 STALE_LOCK = 120             # seconds; far longer than any hook may run
 
@@ -214,6 +217,7 @@ class Memory:
             "session": fields.get("session", "")[:8], "source": fields.get("source", "manual"),
             "origin": fields.get("origin", "manual"), "scope": fields.get("scope", "branch"),
             "status": fields.get("status", ""), "key": secrets.redact(fields.get("key", "")),
+            "reason": secrets.redact(re.sub(r"\s+", " ", fields.get("reason") or "")).strip()[:300],
         }
         item["source"] = secrets.redact(item["source"])
         seed = item["key"] or f"{kind}|{clean}|{item['date']}|{item['session']}"
@@ -253,6 +257,19 @@ class Memory:
                 self._save(prune(items))
             return changed
 
+    def expire_open(self, days: int = OPEN_KEEP_DAYS) -> int:
+        """Mark open tasks and problems older than `days` as expired, so stale ones stop showing."""
+        cutoff = (datetime.datetime.now() - datetime.timedelta(days=days)).isoformat(timespec="seconds")
+        with locked(self.dir):
+            items = self.all()
+            stale = [i for i in items if i["type"] in ("task", "problem") and i.get("status") == "open"
+                     and i.get("date", "")[:19] < cutoff]
+            for item in stale:
+                item["status"] = "expired"
+            if stale:
+                self._save(items)
+            return len(stale)
+
     def forget(self, match) -> list[dict]:
         """Remove memories for which match(item) is true; auto capture never brings them back."""
         with locked(self.dir):
@@ -265,14 +282,28 @@ class Memory:
             return gone
 
 
+CLOSED = ("done", "solved", "dropped", "expired")
+
+
+def _keep_rank(item: dict) -> int:
+    """Lower goes first when over the cap: routine automatic memories before decisions, and anything
+    automatic before what you wrote yourself."""
+    if item.get("origin") != "auto":
+        return 9
+    kind, status = item["type"], item.get("status", "")
+    if kind in ("file", "link"):
+        return 0
+    if kind in ("problem", "task"):
+        return 1 if status in CLOSED else 2
+    return 3  # decisions
+
+
 def prune(items: list[dict], limit: int = MAX_MEMORIES) -> list[dict]:
-    """Over the cap, drop the oldest automatic file and link memories first, then the oldest rest."""
+    """Over the cap, drop by type: old automatic files and links first, then closed tasks and problems,
+    then open ones, then decisions; what you wrote yourself goes last."""
     if len(items) <= limit:
         return items
-    order = sorted(range(len(items)), key=lambda n: (
-        0 if items[n].get("origin") == "auto" and items[n]["type"] in ("file", "link") else
-        1 if items[n].get("origin") == "auto" else 2,
-        items[n].get("date", "")))
+    order = sorted(range(len(items)), key=lambda n: (_keep_rank(items[n]), items[n].get("date", "")))
     drop = set(order[: len(items) - limit])
     return [i for n, i in enumerate(items) if n not in drop]
 

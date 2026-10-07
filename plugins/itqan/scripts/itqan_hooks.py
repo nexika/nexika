@@ -17,6 +17,8 @@ from pathlib import Path
 PLUGIN = Path(__file__).resolve().parent.parent
 PACKS = PLUGIN / "packs"
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import itqan_files  # noqa: E402
+
 SKIP_DIRS = {"node_modules", "bin", "obj", "dist", "build", "venv", "__pycache__", "target", "vendor"}
 MAX_DEPTH = 3
 
@@ -46,18 +48,7 @@ def detect_stacks(root: Path) -> list[str]:
     return [s for s in STACK_MARKERS if s in found]
 
 
-def _read_jsonl(path: Path) -> list[dict]:
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return []
-    out = []
-    for line in lines:
-        try:
-            out.append(json.loads(line))
-        except ValueError:
-            continue
-    return out
+_read_jsonl = itqan_files.read_jsonl
 
 
 def last_session_note(current: str) -> str:
@@ -74,7 +65,12 @@ def last_session_note(current: str) -> str:
 
 def session_start(hook: dict) -> None:
     cwd = Path(hook.get("cwd") or os.getcwd())
-    stacks = detect_stacks(cwd)
+    try:
+        import itqan_learn
+        root = itqan_learn.project_root(cwd)
+    except Exception:  # the repo root is a nicety: fall back to the current folder
+        root = cwd
+    stacks = detect_stacks(root)
     packs = [(s, PACKS / f"{s}.md") for s in stacks if (PACKS / f"{s}.md").is_file()]
     lines = ["## itqan (Nexika): plan, test-first, review, ship"]
     if stacks:
@@ -103,23 +99,51 @@ def session_start(hook: dict) -> None:
     print("\n".join(lines))
 
 
+REJECTED = ("doesn't want to proceed", "was rejected", "permission denied by user")
+
+
+def approved_asks(transcript: str, asked: set[str]) -> int:
+    """How many of the guard's questions the user answered yes: the tool then ran (its result is not
+    a rejection). A yes means the guard asked about something the user wanted: a likely false alarm."""
+    if not transcript or not asked:
+        return 0
+    approved = set()
+    try:
+        with open(transcript, encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                if '"tool_result"' not in line:
+                    continue
+                try:
+                    content = json.loads(line).get("message", {}).get("content")
+                except (ValueError, AttributeError):
+                    continue
+                for block in content if isinstance(content, list) else []:
+                    if not isinstance(block, dict) or block.get("tool_use_id") not in asked:
+                        continue
+                    body = json.dumps(block.get("content"), ensure_ascii=False).lower()
+                    if not (block.get("is_error") and any(r in body for r in REJECTED)):
+                        approved.add(block["tool_use_id"])
+    except OSError:
+        return 0
+    return len(approved)
+
+
 def session_end(hook: dict) -> None:
     session = str(hook.get("session_id") or "")[:8]
     if not session:
         return
     events = [e for e in _read_jsonl(data_home() / "guard.jsonl") if e.get("session") == session]
     counts = Counter(e.get("decision") for e in events)
+    asked = {e["tool_use_id"] for e in events if e.get("decision") == "ask" and e.get("tool_use_id")}
     entry = {
         "ts": datetime.datetime.now().isoformat(timespec="seconds"),
         "session": session,
         "deny": counts.get("deny", 0),
         "ask": counts.get("ask", 0),
+        "ask_approved": approved_asks(str(hook.get("transcript_path") or ""), asked),
         "rules": sorted({e.get("rule", "?") for e in events}),
     }
-    home = data_home()
-    home.mkdir(parents=True, exist_ok=True)
-    with open(home / "sessions.jsonl", "a", encoding="utf-8") as fh:
-        fh.write(json.dumps(entry) + "\n")
+    itqan_files.append_jsonl(data_home() / "sessions.jsonl", entry)
 
 
 def main(argv: list[str]) -> int:

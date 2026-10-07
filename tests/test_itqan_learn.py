@@ -299,3 +299,116 @@ def test_hook_commands_never_fail(tmp_path):
     for cmd in ("signal", "usage", "extract"):
         res = run_script("itqan_learn.py", [cmd], tmp_path, tmp_path / "h", "{broken")
         assert res.returncode == 0 and res.stdout == ""
+
+
+# ---------------------------------------------------------------- private storage (#23)
+
+
+def test_signal_redacts_secrets_and_is_private(learn, repo):
+    prompt = "no, use the key AKIAIOSFODNN7EXAMPLE and ghp_" + "a" * 36 + " instead"
+    learn.hook_signal({"prompt": prompt, "cwd": str(repo), "session_id": "s1"})
+    path = learn.data_home() / "signals.jsonl"
+    text = path.read_text()
+    assert "AKIAIOSFODNN7EXAMPLE" not in text and "ghp_" not in text
+    assert "[secret]" in text
+    assert path.stat().st_mode & 0o777 == 0o600
+    assert learn.data_home().stat().st_mode & 0o777 == 0o700
+
+
+def test_usage_and_guard_logs_are_private(learn, repo):
+    learn.hook_usage({"tool_name": "Skill", "tool_input": {"skill": "itqan:ship"}, "cwd": str(repo)})
+    assert (learn.data_home() / "usage.jsonl").stat().st_mode & 0o777 == 0o600
+    guard = load_script("itqan_guard")
+    event = {"session_id": "s1", "tool_input": {"command": "curl -H 'Authorization: Bearer "
+                                                            + "x" * 30 + "' https://x"}}
+    guard.log_decision(event, ("ask", "net", "why"))
+    path = learn.data_home() / "guard.jsonl"
+    assert path.stat().st_mode & 0o777 == 0o600
+    assert "x" * 30 not in path.read_text()
+
+
+def test_jsonl_files_rotate(learn, repo, monkeypatch):
+    monkeypatch.setattr(learn.itqan_files, "LIMIT", 200)
+    for i in range(20):
+        learn.hook_usage({"tool_name": "Skill", "tool_input": {"skill": f"s{i}"}, "cwd": str(repo)})
+    home = learn.data_home()
+    assert (home / "usage.1.jsonl").exists()
+    assert (home / "usage.jsonl").stat().st_size <= 400
+    names = [u["name"] for u in learn.read_jsonl(home / "usage.jsonl")]
+    assert names[-1] == "s19" and "s0" not in names
+
+
+def load_script(name):
+    spec = importlib.util.spec_from_file_location(name, SCRIPTS / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_secrets_copy_is_identical_to_hafiz():
+    ours = (SCRIPTS / "itqan_secrets.py").read_bytes()
+    assert ours == (PLUGINS / "hafiz" / "hafiz" / "secrets.py").read_bytes()
+
+
+# ---------------------------------------------------------------- branches (#24)
+
+
+def test_approving_on_another_branch_keeps_rules_approved_elsewhere(learn, repo):
+    _git(repo, "config", "user.email", "t@example.com")
+    _git(repo, "config", "user.name", "Test")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-qm", "init")
+    proposed_store(learn, repo, "a", "b", "c", "d")
+
+    def approve(lid):
+        learn.cmd_approve(repo, lid, None)
+        _git(repo, "add", "-A")
+        _git(repo, "commit", "-qm", f"approve {lid}")
+
+    approve("a")
+    _git(repo, "branch", "old")
+    approve("b")
+    _git(repo, "checkout", "-q", "old")
+    approve("c")
+    _git(repo, "checkout", "-q", "main")
+    approve("d")
+
+    managed, _ = learn.read_rules_file(repo)
+    assert list(managed) == ["a", "b", "d"]
+    statuses = {k: v["status"] for k, v in learn.load_store(repo)["lessons"].items()}
+    assert statuses == {"a": "approved", "b": "approved", "c": "approved", "d": "approved"}
+
+
+def test_rules_the_store_does_not_know_are_never_rewritten(learn, repo):
+    proposed_store(learn, repo, "a")
+    path = repo / ".itqan" / "rules.md"
+    path.parent.mkdir()
+    path.write_text(f"{learn.RULES_START}\n- [from-a-teammate] Keep it.\n{learn.RULES_END}\n")
+    learn.cmd_approve(repo, "a", None)
+    managed, _ = learn.read_rules_file(repo)
+    assert managed == {"from-a-teammate": "Keep it.", "a": "Rule a."}
+
+
+# ---------------------------------------------------------------- what learning and the guard cost (#76)
+
+
+def test_extraction_cost_is_recorded_and_reported(learn, repo, monkeypatch):
+    payload = learn.data_home() / "p.txt"
+    payload.parent.mkdir(parents=True, exist_ok=True)
+    payload.write_text("ASSISTANT: npm\nUSER: no, pnpm")
+    answer = json.dumps({"type": "result", "result": json.dumps([lesson("use-pnpm")]),
+                         "total_cost_usd": 0.0123})
+    done = subprocess.CompletedProcess([], 0, stdout=answer, stderr="")
+    monkeypatch.setattr(learn.shutil, "which", lambda name: "/fake/claude")
+    monkeypatch.setattr(learn.subprocess, "run", lambda cmd, stdin, **kw: done)
+    assert learn.run_extract("sess", payload, repo) == 0
+    assert learn.load_store(repo)["lessons"]["use-pnpm"]["status"] == "candidate"
+    out = learn.cmd_insights(repo)
+    assert "learning: 1 extraction(s), $0.01" in out
+
+
+def test_insights_report_the_guard_false_positive_rate(learn, repo):
+    for asked, approved in ((2, 1), (2, 2)):
+        learn._append("sessions.jsonl", {"ts": learn._now(), "session": "s", "deny": 0, "ask": asked,
+                                         "ask_approved": approved, "rules": []})
+    assert "asks you approved: 3 of 4 (75%)" in learn.cmd_insights(repo)

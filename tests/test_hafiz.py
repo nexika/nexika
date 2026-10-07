@@ -604,3 +604,252 @@ def test_new_transcript_file_is_read_from_the_start(log, capsys, repo, tmp_path)
 def test_notifications_are_not_prompts():
     assert transcript.clean_prompt("<task-notification><task-id>x</task-id></task-notification>") == ""
     assert transcript.clean_prompt("[SYSTEM NOTIFICATION - NOT USER INPUT] go with X") == ""
+
+
+# ---------------------------------------------------------------- open items across sessions (#36)
+
+
+def test_a_pass_in_a_later_session_closes_the_problem(log, capsys, repo, tmp_path):
+    stop(log.user("Go").tool("Bash", {"command": "pytest tests/test_a.py"}, "FAILED test_x", error=True), capsys)
+    later = Log(tmp_path / "later.jsonl", repo)
+    later.user("Again").tool("Bash", {"command": "pytest tests/test_a.py -q"}, "1 passed")
+    hook("stop", {"session_id": "b" * 8 + "-later", "transcript_path": later.write(), "cwd": str(repo)}, capsys)
+    problems = [i for i in store.Memory(repo).all() if i["type"] == "problem"]
+    assert [p["status"] for p in problems] == ["solved"]
+    third = hook("session-start", {"session_id": "c" * 8, "cwd": str(repo), "source": "startup"}, capsys)
+    assert "Open problems" not in third
+
+
+def test_a_task_finished_in_a_later_session_is_closed(log, capsys, repo, tmp_path):
+    stop(log.user("Go").tool("TodoWrite", {"todos": [{"content": "Add refresh tokens", "status": "pending"}]}),
+         capsys)
+    later = Log(tmp_path / "later.jsonl", repo)
+    later.user("Again").tool("TodoWrite", {"todos": [{"content": "Add refresh tokens", "status": "completed"}]})
+    hook("stop", {"session_id": "b" * 8 + "-later", "transcript_path": later.write(), "cwd": str(repo)}, capsys)
+    assert [i["status"] for i in store.Memory(repo).all() if i["type"] == "task"] == ["done"]
+
+
+def test_old_open_items_expire(repo, capsys):
+    old = (store.datetime.datetime.now() - store.datetime.timedelta(days=store.OPEN_KEEP_DAYS + 1)).isoformat()
+    memory = store.Memory(repo)
+    memory.upsert([store.Memory.make("task", "Ancient task", status="open", key="task|x", date=old,
+                                     branch=BRANCH, origin="auto"),
+                   store.Memory.make("problem", "`pytest` failed: old", status="open", key="problem|pytest",
+                                     date=old, branch=BRANCH, origin="auto"),
+                   store.Memory.make("task", "Fresh task", status="open", key="task|y", branch=BRANCH,
+                                     origin="auto")])
+    text = hook("session-start", {"session_id": "c" * 8, "cwd": str(repo), "source": "startup"}, capsys)
+    assert "Fresh task" in text and "Ancient task" not in text and "Open problems" not in text
+    status = {i["text"]: i["status"] for i in memory.all()}
+    assert status["Ancient task"] == "expired" and status["Fresh task"] == "open"
+
+
+# ---------------------------------------------------------------- decisions and commits (#37)
+
+
+def test_quiet_commits_are_read_from_git_log(log, capsys, repo):
+    old = {**os.environ, "GIT_COMMITTER_DATE": "2026-01-01T00:00:00"}
+    subprocess.run(["git", "commit", "-q", "--amend", "--no-edit"], cwd=repo, env=old, check=True)
+    started = store.now()
+    (repo / "src" / "new.py").write_text("x = 1\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "Add the new module")
+    head = store.head_commit(repo)
+    log.user("Commit it").tool("Bash", {"command": "git add -A && git commit -q -m 'Add the new module'"}, "")
+    for record in log.records:
+        record["timestamp"] = started
+    stop(log, capsys)
+    commits = capture.load_state(store.project_dir(repo), SESSION)["commits"]
+    assert [(c["hash"][:7], c["message"]) for c in commits] == [(head[:7], "Add the new module")]
+
+
+@pytest.mark.parametrize("prompt", [
+    "Switch to the main branch and pull.",
+    "Explain why this code uses Redis instead of Postgres.",
+    "Show me what was decided in the last PR.",
+    "I prefer to see the full diff first.",
+    "Run the tests; we will see what fails.",
+])
+def test_ordinary_requests_are_not_decisions(log, capsys, repo, prompt):
+    stop(log.user(prompt), capsys)
+    assert not [i for i in store.Memory(repo).all() if i["type"] == "decision"]
+
+
+@pytest.mark.parametrize("prompt, expected", [
+    ("Ok, use argon2 instead of bcrypt.", "use argon2 instead of bcrypt"),
+    ("We decided to drop Python 3.9 support.", "drop Python 3.9"),
+    ("Never use print for logging in this repo.", "print for logging"),
+    ("Here is the context. " + "The old service did many things. " * 25 + "We'll use pnpm for all scripts. "
+     + "More background follows here. " * 5, "pnpm for all scripts"),
+])
+def test_decisions_are_found_in_short_and_long_prompts(log, capsys, repo, prompt, expected):
+    stop(log.user(prompt), capsys)
+    decisions = [i["text"] for i in store.Memory(repo).all() if i["type"] == "decision"]
+    assert len(decisions) == 1 and expected in decisions[0]
+
+
+# ---------------------------------------------------------------- proposals you agree to (#57)
+
+
+def decisions_of(repo):
+    return [i for i in store.Memory(repo).all() if i["type"] == "decision"]
+
+
+def test_a_proposal_followed_by_yes_is_a_decision(log, capsys, repo):
+    log.user("The cache is slow, what should we do?")
+    log.say("I looked at it. I suggest we use SQLite for the cache because it needs no server. "
+            "Want me to go ahead?")
+    stop(log.user("yes, go ahead"), capsys)
+    [decision] = decisions_of(repo)
+    assert "SQLite for the cache" in decision["text"] and decision["text"].startswith("Agreed: ")
+    assert decision["reason"] == "it needs no server"
+
+
+def test_the_yes_can_come_in_a_later_turn_and_in_arabic(log, capsys, repo):
+    log.user("Which queue?").say("Shall I switch the jobs to Redis streams? That way retries are built in.")
+    stop(log, capsys)
+    assert decisions_of(repo) == []
+    stop(log.user("تمام"), capsys)
+    [decision] = decisions_of(repo)
+    assert "Redis streams" in decision["text"] and decision["reason"] == "retries are built in"
+
+
+@pytest.mark.parametrize("reply", ["no, keep Postgres", "yes but use Postgres", "what about Postgres?",
+                                   "Explain the trade-offs first and list the risks in detail please"])
+def test_other_replies_do_not_agree(log, capsys, repo, reply):
+    log.user("Which store?").say("I recommend moving the sessions to Redis.")
+    stop(log.user(reply), capsys)
+    assert not [d for d in decisions_of(repo) if d["text"].startswith("Agreed")]
+
+
+@pytest.mark.parametrize("prompt, expected", [
+    ("نستخدم Redis للكاش في كل الخدمات", "Redis"),
+    ("خلّي الكاش في الذاكرة حاليا", "الكاش"),
+])
+def test_arabic_verb_forms_are_decisions(log, capsys, repo, prompt, expected):
+    stop(log.user(prompt), capsys)
+    [decision] = decisions_of(repo)
+    assert expected in decision["text"]
+
+
+def test_a_stated_decision_keeps_its_reason(log, capsys, repo):
+    stop(log.user("Let's use pnpm because it is faster on CI."), capsys)
+    [decision] = decisions_of(repo)
+    assert decision["reason"] == "it is faster on CI"
+
+
+# ---------------------------------------------------------------- restore follows recent work (#58)
+
+
+def restored(log, capsys, repo):
+    hook("pre-compact", {"session_id": SESSION, "transcript_path": log.write(), "cwd": str(repo)}, capsys)
+    return hook("session-start", {"session_id": SESSION, "source": "compact", "cwd": str(repo)}, capsys)
+
+
+def test_restore_uses_the_latest_request_as_the_goal(log, capsys, repo):
+    log.user("Build the login page with a remember-me checkbox").say("Done.")
+    log.user("Now fix the flaky payment test in the checkout suite").say("Looking.").user("yes")
+    text = restored(log, capsys, repo)
+    assert "Working on: Now fix the flaky payment test" in text
+    assert "Build the login page" not in text.split("Working on:")[1].split("\n")[0]
+
+
+def test_restore_ranks_files_by_last_touch(log, capsys, repo):
+    for _ in range(3):
+        log.tool("Edit", {"file_path": str(repo / "src" / "auth.py")})
+    log.tool("Write", {"file_path": str(repo / "src" / "pay.py")})
+    log.user("Go")
+    text = restored(log, capsys, repo)
+    files_line = next(line for line in text.splitlines() if line.startswith("Files changed:"))
+    assert files_line.index("src/pay.py") < files_line.index("src/auth.py")
+
+
+def test_pasted_content_wrappers_are_stripped(log, capsys, repo):
+    stop(log.user('<pasted_content id="ab12">Fix the checkout totals rounding</pasted_content> please'), capsys)
+    state = capture.load_state(store.project_dir(repo), SESSION)
+    assert "pasted_content" not in state["first_prompt"] and "checkout totals" in state["first_prompt"]
+
+
+def test_files_outside_the_repo_are_dropped(log, capsys, repo, tmp_path):
+    outside = tmp_path / "elsewhere" / "notes.md"
+    log.user("Go").tool("Write", {"file_path": str(outside)}).tool("Edit", {"file_path": "src/auth.py"})
+    stop(log, capsys)
+    assert capture.load_state(store.project_dir(repo), SESSION)["files"] == {"src/auth.py": 1}
+
+
+# ---------------------------------------------------------------- the cap, other repos, empty queries (#81)
+
+
+def test_pruning_keeps_decisions_over_newer_routine_memories():
+    old = store.Memory.make("decision", "Use argon2 for passwords", date="2026-01-01T10:00:00", origin="auto",
+                            key="decision|old")
+    routine = [store.Memory.make("problem", f"`pytest t{n}` failed (passed again)", status="solved",
+                                 date=f"2026-10-01T10:00:{n:02d}", origin="auto", key=f"problem|t{n}")
+               for n in range(6)]
+    kept = store.prune([old, *routine], limit=5)
+    assert old in kept and len(kept) == 5
+    opened = store.Memory.make("task", "Add refresh tokens", status="open", date="2026-10-02T10:00:00",
+                               origin="auto", key="task|open")
+    kept = store.prune([old, opened, *routine], limit=5)
+    assert old in kept and opened in kept
+
+
+def test_files_from_other_repos_are_not_in_play(repo, capsys):
+    folder = store.project_dir(repo)
+    state = capture.new_state("e" * 8, "")
+    state.update(prompt_count=1, branch=BRANCH, updated=store.now(),
+                 files={"/home/someone/other-repo/app.py": 9, "src/auth.py": 1})
+    capture.save_state(folder, state)
+    text = hook("session-start", {"session_id": "f" * 8, "cwd": str(repo), "source": "startup"}, capsys)
+    assert "src/auth.py" in text and "other-repo" not in text
+
+
+def test_a_query_of_only_stop_words_finds_nothing():
+    items = [store.Memory.make("decision", "Use argon2 for passwords", origin="manual")]
+    assert search.find(items, "what did we do there") == []
+    assert search.find(items, "") != []  # no query at all: newest first
+
+
+# ---------------------------------------------------------------- long sessions in chunks (#73)
+
+
+@pytest.fixture
+def counting_claude(tmp_path, monkeypatch):
+    """A stand-in `claude` that logs every call and answers part prompts with notes."""
+    script = tmp_path / "claude-many"
+    calls = tmp_path / "claude-calls.jsonl"
+    script.write_text(textwrap.dedent(f"""\
+        #!{sys.executable}
+        import json, sys
+        prompt = sys.stdin.read()
+        with open({str(calls)!r}, "a") as fh:
+            fh.write(json.dumps({{"prompt": prompt}}) + "\\n")
+        if "<session_part" in prompt:
+            print("- notes of this part")
+        else:
+            print("# #12 · feat/12-login\\n## Goal\\nThe whole session.")
+        """))
+    script.chmod(script.stat().st_mode | stat.S_IEXEC)
+    monkeypatch.setenv("HAFIZ_CLAUDE", str(script))
+    return calls
+
+
+def test_a_long_session_is_summarised_in_chunks_then_merged(log, capsys, repo, counting_claude, monkeypatch):
+    monkeypatch.setattr(summary, "MATERIAL_CHARS", 3000)
+    for n in range(40):
+        log.user(f"Step {n}: " + ("adjust the checkout flow " * 6) + ("MIDDLE-MARKER" if n == 20 else ""))
+        log.say("Done with that step.")
+    stop(log, capsys)
+    assert cli.main(["summary"]) == 0
+    calls = [json.loads(line)["prompt"] for line in counting_claude.read_text().splitlines()]
+    parts, final = calls[:-1], calls[-1]
+    assert len(parts) >= 2 and all("<session_part" in p for p in parts)
+    assert any("MIDDLE-MARKER" in p for p in parts)  # the middle of the session is read, not cut
+    assert "notes of this part" in final and "<session_part" not in final
+    assert "The whole session." in capsys.readouterr().out
+
+
+def test_a_short_session_is_summarised_in_one_call(log, capsys, repo, counting_claude):
+    stop(work_session(log), capsys)
+    assert cli.main(["summary"]) == 0
+    assert len(counting_claude.read_text().splitlines()) == 1

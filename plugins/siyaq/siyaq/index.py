@@ -21,9 +21,9 @@ import subprocess
 from collections import Counter
 from pathlib import Path
 
-from . import __version__, text
+from . import __version__, glossary, text
 
-INDEX_VERSION = 1
+INDEX_VERSION = 4
 DEFAULT_SOURCES = [
     "docs/**/*.md", "doc/**/*.md", "adr/**/*.md", "**/README.md", "CONTRIBUTING.md", "ARCHITECTURE.md",
 ]
@@ -173,7 +173,8 @@ def _refs(body: str, source: str, fileset: set[str],
         hit = next((c for c in candidates if c in fileset or c in dirs), None)
         if hit in fileset:
             refs.append(hit)
-            triggers.append(hit)
+            if not _back_link(hit, doc_dir):
+                triggers.append(hit)
         elif hit is not None:
             refs.append(hit + "/")
             if dirs[hit] <= MAX_TRIGGER_DIR_FILES:
@@ -187,6 +188,15 @@ def _refs(body: str, source: str, fileset: set[str],
     return unique(triggers), unique(refs), unique(dead)
 
 
+def _back_link(target: str, doc_dir: str) -> bool:
+    """A link to the README of a folder above the doc ("Part of Nexika" in every plugin's README):
+    it says where the doc belongs, not what it is about, so it never makes the README a trigger."""
+    if posixpath.basename(target).lower() != "readme.md":
+        return False
+    folder = posixpath.dirname(target)
+    return folder == "" or doc_dir == folder or doc_dir.startswith(folder + "/")
+
+
 def _terms(title: str, keywords: list[str], body: str) -> Counter:
     terms: Counter = Counter()
     for tok in text.tokens(title + " " + " ".join(keywords)):
@@ -195,10 +205,20 @@ def _terms(title: str, keywords: list[str], body: str) -> Counter:
     return terms
 
 
-def _finish(entry: dict) -> dict:
-    terms = _terms(entry["title"], entry["keywords"], entry["body"])
+def _finish(entry: dict, heading: str) -> dict:
+    """`heading` is the section's own heading: the doc title and parent headings in the breadcrumb are
+    shared by every section below them, so they never count as a title hit."""
+    terms = _terms(heading, entry["keywords"], entry["body"])
+    head = set(text.tokens(heading + " " + " ".join(entry["keywords"])))
+    # the other language's words for the terms used here (glossary.py), weighted like the originals
+    translated_head = glossary.other_language(sorted(head))
+    for word in translated_head:
+        terms[word] += TITLE_WEIGHT
+    for word in glossary.other_language(sorted(set(terms) - head)):
+        terms[word] += 1
     entry["terms"] = dict(terms)
-    entry["head"] = sorted(set(text.tokens(entry["title"] + " " + " ".join(entry["keywords"]))))
+    entry["head"] = sorted(head | set(translated_head))
+    entry["key_terms"] = sorted(set(text.tokens(" ".join(entry["keywords"]))))
     entry["length"] = sum(terms.values())
     entry["body"] = entry["body"][:MAX_BODY_CHARS]
     return entry
@@ -238,7 +258,7 @@ def doc_entries(rel: str, content: str, fileset: set[str], dirs: dict[str, int])
             "id": base if seen[base] == 1 else f"{base}-{seen[base]}", "title": breadcrumb, "source": rel,
             "start": i + 2, "end": end, "body": body, "kind": "doc", "keywords": [], "paths": triggers,
             "refs": refs, "dead_refs": dead, "inject": "auto",
-        }))
+        }, title))
     return entries
 
 
@@ -268,7 +288,7 @@ def manual_entry(rel: str, content: str, fileset: set[str], dirs: dict[str, int]
         "body": body, "kind": "manual", "keywords": _split_list(meta.get("keywords", "")),
         "paths": _split_list(meta.get("paths", "")) + triggers, "refs": refs, "dead_refs": dead,
         "inject": inject if inject in ("summary", "full") else "auto",
-    })
+    }, title)
 
 
 def build(root: Path, config: dict | None = None) -> dict:
@@ -317,8 +337,7 @@ def load(root: Path, config: dict | None = None) -> dict:
     except (OSError, ValueError):
         pass
     index = build(root, config)
-    cache.parent.mkdir(parents=True, exist_ok=True)
-    tmp = cache.with_suffix(".tmp")
-    tmp.write_text(json.dumps(index, ensure_ascii=False), encoding="utf-8")
-    tmp.replace(cache)
+    from .state import write_atomic  # state imports this module
+
+    write_atomic(cache, json.dumps(index, ensure_ascii=False))
     return index

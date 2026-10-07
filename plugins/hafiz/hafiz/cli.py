@@ -28,7 +28,9 @@ def line_of(item: dict, score: float | None = None) -> str:
         where += " (project)"
     lead = f"{score:5.2f} " if score else ""
     commit = f", {item['commit']}" if item.get("commit") else ""
-    return (f"{lead}{item['id']} [{item['type']}{status}] {item.get('date', '')[:10]} {where}: {item['text']}"
+    why = f" (why: {item['reason']})" if item.get("reason") else ""
+    return (f"{lead}{item['id']} [{item['type']}{status}] {item.get('date', '')[:10]} {where}: "
+            f"{item['text']}{why}"
             f"  ({item.get('source', '')}{commit})")
 
 

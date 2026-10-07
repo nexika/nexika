@@ -29,6 +29,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import itqan_files  # noqa: E402
+import itqan_secrets  # noqa: E402
+
 PROPOSE_AT = 2
 MAX_EXCHANGES = 15
 RULES_START = "<!-- itqan rules start -->"
@@ -113,33 +117,19 @@ def load_store(root: Path) -> dict:
 
 def save_store(root: Path, store: dict) -> None:
     path = _store_path(root)
-    path.parent.mkdir(parents=True, exist_ok=True)
+    itqan_files.private_dir(data_home())
+    itqan_files.private_dir(path.parent.parent)
     tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(store, indent=1, ensure_ascii=False), encoding="utf-8")
+    itqan_files.write_private(tmp, json.dumps(store, indent=1, ensure_ascii=False))
     tmp.replace(path)
 
 
 def _append(name: str, entry: dict) -> None:
-    home = data_home()
-    home.mkdir(parents=True, exist_ok=True)
-    with open(home / name, "a", encoding="utf-8") as fh:
-        fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    itqan_files.private_dir(data_home())
+    itqan_files.append_jsonl(data_home() / name, entry)
 
 
-def read_jsonl(path: Path) -> list[dict]:
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return []
-    out = []
-    for line in lines:
-        try:
-            item = json.loads(line)
-        except ValueError:
-            continue
-        if isinstance(item, dict):
-            out.append(item)
-    return out
+read_jsonl = itqan_files.read_jsonl
 
 
 def learning_enabled(root: Path) -> bool:
@@ -182,35 +172,67 @@ def read_rules_file(root: Path) -> tuple[dict[str, str], list[str]]:
     return managed, manual
 
 
+def current_branch(root: Path) -> str:
+    try:
+        res = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=root, capture_output=True,
+                             text=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    branch = res.stdout.strip() if res.returncode == 0 else ""
+    return "" if branch == "HEAD" else branch
+
+
 def sync_from_file(root: Path, store: dict) -> None:
-    """The user may edit or delete rules in .itqan/rules.md: text edits win, deleted = retired."""
+    """The user may edit or delete rules in .itqan/rules.md: text edits win, deleted = retired.
+
+    A rule missing from the file is retired only on the branch where it was approved: another
+    branch's copy of the file may simply predate it.
+    """
     if not rules_file(root).exists():
         return
     managed, _ = read_rules_file(root)
+    branch = current_branch(root)
     for lid, lesson in store["lessons"].items():
         if lesson.get("status") != "approved":
             continue
         if lid in managed:
             lesson["rule"] = managed[lid]
-        else:
+        elif not lesson.get("branch") or lesson.get("branch") == branch:
             lesson["status"] = "retired"
 
 
-def write_rules_file(root: Path, store: dict) -> Path:
+def write_rules_file(root: Path, store: dict, add: str | None = None, remove: str | None = None) -> Path:
+    """Add or remove one rule in the managed block; every other line, known to the store or not, stays."""
     path = rules_file(root)
-    approved = [(lid, les) for lid, les in store["lessons"].items() if les.get("status") == "approved"]
-    block = [RULES_START] + [f"- [{lid}] {les['rule']}" for lid, les in approved] + [RULES_END]
-    if path.exists():
-        text = path.read_text(encoding="utf-8")
-        if RULES_START in text and RULES_END in text:
-            before, rest = text.split(RULES_START, 1)
-            after = rest.split(RULES_END, 1)[1]
-            path.write_text(before + "\n".join(block) + after, encoding="utf-8")
-            return path
+    lessons = store["lessons"]
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
+    if RULES_START in text and RULES_END in text:
+        before, rest = text.split(RULES_START, 1)
+        inside, after = rest.split(RULES_END, 1)
+        lines = [line for line in inside.strip("\n").splitlines() if line.strip()]
+    else:
+        branch = current_branch(root)
+        lines = [f"- [{lid}] {les['rule']}" for lid, les in lessons.items()
+                 if les.get("status") == "approved" and lid != add and les.get("branch", branch) == branch]
+        before = after = None
+    kept = []
+    for line in lines:
+        m = RULE_LINE.match(line.strip())
+        if m and m.group("id") == remove:
+            continue
+        if m and m.group("id") == add:
+            line = f"- [{add}] {lessons[add]['rule']}"
+        kept.append(line)
+    if add and f"- [{add}] {lessons[add]['rule']}" not in kept:
+        kept.append(f"- [{add}] {lessons[add]['rule']}")
+    block = "\n".join([RULES_START, *kept, RULES_END])
+    if before is not None:
+        path.write_text(before + block + after, encoding="utf-8")
+        return path
     path.parent.mkdir(parents=True, exist_ok=True)
     header = ("# Project rules\n\nLessons approved with /itqan:learn. Claude loads them at session start.\n"
               "Edit the wording freely; delete a line to retire a rule.\n\n")
-    path.write_text(header + "\n".join(block) + "\n", encoding="utf-8")
+    path.write_text(header + block + "\n", encoding="utf-8")
     return path
 
 
@@ -241,7 +263,7 @@ def hook_signal(hook: dict) -> None:
     if not learning_enabled(cwd):
         return
     _append("signals.jsonl", {"ts": _now(), "session": str(hook.get("session_id") or ""),
-                              "cwd": str(cwd), "prompt": prompt[:1000]})
+                              "cwd": str(cwd), "prompt": itqan_secrets.redact(prompt)[:1000]})
 
 
 def hook_usage(hook: dict) -> None:
@@ -303,13 +325,13 @@ def hook_extract(hook: dict) -> None:
     pairs = correction_exchanges(transcript)
     if not pairs:
         return
-    payload = "\n\n".join(f"ASSISTANT: {a}\nUSER: {u}" for a, u in pairs)
-    tmp = data_home() / "tmp"
-    tmp.mkdir(parents=True, exist_ok=True)
-    payload_path = tmp / f"{session[:8]}.txt"
-    payload_path.write_text(payload, encoding="utf-8")
+    payload = itqan_secrets.redact("\n\n".join(f"ASSISTANT: {a}\nUSER: {u}" for a, u in pairs))
+    itqan_files.private_dir(data_home())
+    payload_path = itqan_files.private_dir(data_home() / "tmp") / f"{session[:8]}.txt"
+    itqan_files.write_private(payload_path, payload)
     script = str(Path(__file__).resolve())
-    with open(data_home() / "learn.log", "a", encoding="utf-8") as log:
+    fd = os.open(data_home() / "learn.log", os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+    with os.fdopen(fd, "a", encoding="utf-8") as log:
         subprocess.Popen(
             [sys.executable, script, "run-extract", session, str(payload_path), str(root)],
             stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True,
@@ -373,7 +395,7 @@ def run_extract(session: str, payload_path: Path, root: Path) -> int:
     existing = "\n".join(f"- {lid}: {les['rule']} ({les['status']})"
                          for lid, les in store["lessons"].items()) or "(none yet)"
     cmd = [claude, "-p", EXTRACT_PROMPT.format(existing=existing), "--model", "sonnet",
-           "--tools", "", "--no-session-persistence"]
+           "--tools", "", "--no-session-persistence", "--output-format", "json"]
     try:
         with open(payload_path, encoding="utf-8") as stdin:
             res = subprocess.run(cmd, stdin=stdin, capture_output=True, text=True, timeout=300)
@@ -383,7 +405,17 @@ def run_extract(session: str, payload_path: Path, root: Path) -> int:
     if res.returncode != 0:
         print(f"{_now()} extract {session[:8]}: rc={res.returncode} {res.stderr[:300]!r}")
         return 1
-    lessons = parse_lessons(res.stdout)
+    answer, cost = res.stdout, None
+    try:
+        data = json.loads(res.stdout)
+        if isinstance(data, dict) and isinstance(data.get("result"), str):
+            answer, cost = data["result"], data.get("total_cost_usd")
+    except ValueError:
+        pass
+    lessons = parse_lessons(answer)
+    _append("extract.jsonl", {"ts": _now(), "session": session[:8], "cwd": str(root),
+                              "cost_usd": cost if isinstance(cost, (int, float)) else None,
+                              "lessons": len(lessons)})
     store = load_store(root)  # re-read: the user may have approved something meanwhile
     merge_lessons(store, lessons)
     save_store(root, store)
@@ -424,7 +456,8 @@ def cmd_approve(root: Path, lid: str, text: str | None) -> str:
         lesson["rule"] = text.strip()
     lesson["status"] = "approved"
     lesson["approved"] = _now()
-    path = write_rules_file(root, store)
+    lesson["branch"] = current_branch(root)
+    path = write_rules_file(root, store, add=lid)
     save_store(root, store)
     return f"Approved [{lid}] {lesson['rule']}\nWritten to {path} (commit it to share with your team)."
 
@@ -437,7 +470,7 @@ def cmd_reject(root: Path, lid: str) -> str:
     was_approved = lesson["status"] == "approved"
     lesson["status"] = "rejected"
     if was_approved:
-        write_rules_file(root, store)
+        write_rules_file(root, store, remove=lid)
     save_store(root, store)
     return f"Rejected [{lid}]; it will not be proposed again."
 
@@ -489,7 +522,20 @@ def cmd_insights(root: Path, days: int = 30) -> str:
     decisions = [g.get("decision") for g in guard]
     out.append(f"guard (all projects): {decisions.count('deny')} refused, {decisions.count('ask')} asked"
                + (" | top: " + _counts([g.get("rule", "?") for g in guard]) if guard else ""))
+    sessions = [s for s in read_jsonl(home / "sessions.jsonl")
+                if s.get("ts", "") >= since and "ask_approved" in s]
+    asked = sum(int(s.get("ask") or 0) for s in sessions)
+    if asked:
+        yes = sum(int(s.get("ask_approved") or 0) for s in sessions)
+        out.append(f"  asks you approved: {yes} of {asked} ({round(100 * yes / asked)}%): "
+                   "each one is likely a false alarm worth a rule in .itqan.json")
     out.append(f"corrections captured: {len(signals)}")
+    runs = [r for r in read_jsonl(home / "extract.jsonl")
+            if r.get("ts", "") >= since and _within(r.get("cwd", ""), root)]
+    if runs:
+        costs = [r["cost_usd"] for r in runs if isinstance(r.get("cost_usd"), (int, float))]
+        spent = f", ${sum(costs):.2f}" if costs else ""
+        out.append(f"learning: {len(runs)} extraction(s){spent} (Sonnet, in the background)")
 
     lessons = store["lessons"]
     approved = {k: v for k, v in lessons.items() if v["status"] == "approved"}

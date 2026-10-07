@@ -13,7 +13,7 @@ heavy: it stays out of the way until something is actually risky.
 | Skill | `/itqan:plan <task>` | A verified plan: acceptance criteria, existing code (file:line), tests first, steps, risks. No code edits |
 | Skill | `/itqan:review [PR \| base \| paths]` | Code + security reviewers in parallel; every serious finding is re-checked against the code before it is reported |
 | Skill | `/itqan:ship <task>` | The full pipeline with gates: branch check → plan approval → red tests → green → build/test/lint → review → proof → commit proposal |
-| Skill | `/itqan:proof` | The proof a change is done, saved as JSON: itqan runs the project's own tests, lint and build checks itself (found from its files, never a command Claude passes in), and records the review verdict and the requirement checklist, marked as reported by Claude |
+| Skill | `/itqan:proof` | The proof a change is done, saved as JSON: itqan runs the project's own tests, lint and build checks itself (found from its files, never a command Claude passes in), and records the review verdict and the requirement checklist, marked as reported by Claude. An `approve` verdict is refused while a critical or high finding is still open |
 | Skill | `/itqan:learn` | Approve, reword or reject rules learned from your repeated corrections → `.itqan/rules.md` |
 | Skill | `/itqan:insights [days]` | What is actually used and whether each rule works |
 | Agents | `planner`, `code-reviewer`, `security-reviewer`, `test-writer`, `build-fixer` | Specialists the skills launch |
@@ -47,7 +47,9 @@ workflows: itqan:review 6, itqan:ship 2
 agents: itqan:code-reviewer 6, itqan:security-reviewer 5, Explore 3
 other skills used: prof:learn 2, ecc:code-review 1   (plugins whose skills were used: ecc, prof)
 guard (all projects): 1 refused, 3 asked | top: reset-hard-dirty 2, force-push-protected 1
+  asks you approved: 2 of 3 (67%): each one is likely a false alarm worth a rule in .itqan.json
 corrections captured: 9
+learning: 4 extraction(s), $0.06 (Sonnet, in the background)
 rules: 3 approved, 1 waiting for approval, 4 seen once
   [use-file-scoped-namespaces] 12d old: working (no repeat corrections)
   [run-tests-before-commit] 5d old: corrected again 2x since approval: reword it or check it is followed
@@ -80,8 +82,10 @@ A plugin with hundreds of skills of which you used one is a context cost worth q
   `kubectl delete`, publishing a package
 - editing `.env` / key files or lock files; writing content that contains a secret token
 
-Everything else passes silently. When [haris](../haris/README.md) is installed, this guard steps
-aside in the sessions haris guards: haris covers these rules and more.
+Everything else passes silently. When [haris](../haris/README.md) is installed and on, haris
+covers the safety rules in the sessions it guards, and this guard keeps only its quality rules:
+editing secret files and lock files, writing a secret, and skipping hooks with `--no-verify`.
+If haris is switched off, set to watch, or disabled with `/plugin`, the full guard is back.
 
 Configure per project in `.itqan.json`:
 
@@ -97,6 +101,8 @@ In `~/.claude/nexika/itqan/` (`ITQAN_HOME` to move it): `guard.jsonl` (guard dec
 `sessions.jsonl` (per-session guard summary), `signals.jsonl` (messages flagged as corrections),
 `usage.jsonl` (skills/agents used), `projects/<name>-<hash>/learn.json` (lessons and their
 evidence). In the project: `.itqan/rules.md` (approved rules, meant to be committed).
+Files are readable only by you (0600 in a 0700 folder), known secret shapes are replaced with
+`[secret]` before anything is written, and each `.jsonl` file is rotated to `<name>.1.jsonl` at 1 MB.
 
 ## Works with the family
 - **barq**: agents and skills use `barq` for cheap, batched context and short test/build output

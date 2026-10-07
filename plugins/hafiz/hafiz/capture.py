@@ -1,17 +1,21 @@
 """Turn transcript events into session state and typed memories, with fixed rules (no AI).
 
 What is captured, and from where:
-    decision  answers to Claude's multiple-choice questions, approved plans, and user messages
-              that state a choice ("let's go with", "don't use", "قررنا", "خلينا نستخدم" ...)
+    decision  answers to Claude's multiple-choice questions, approved plans, Claude's proposals the
+              user agrees to ("I suggest ..." then "yes" / "تمام"), and sentences of user messages
+              that start with a choice ("let's go with", "don't use", "قررنا", "نستخدم" ...), with
+              the reason when one is given ("because ...", "لأن ...")
     task      Claude's task list (TodoWrite, TaskCreate/TaskUpdate), kept up to date
     problem   a failing test/build/lint command, marked solved when the same command passes
     file      files Claude changed (Edit, Write, MultiEdit, NotebookEdit), one memory per file
     link      URLs the user shares and pull requests or issues created during the session
+    commit    commits made in the session, from `git commit` output or, when it prints nothing, `git log`
 
 Every memory keeps its source ("transcript <session> L<line>") so it can be checked.
 """
 from __future__ import annotations
 
+import datetime
 import hashlib
 import os
 import re
@@ -23,12 +27,41 @@ EDIT_TOOLS = {"Edit", "Write", "MultiEdit", "NotebookEdit"}
 KEEP_PROMPTS = 6
 PROMPT_CHARS = 400
 
+# A decision is a sentence that *starts* with a choice ("let's use", "we'll go with", "don't use",
+# "use X instead of Y"); the same words in the middle of a request ("explain why it uses X instead
+# of Y") are not one.
 DECISION_EN = re.compile(
-    r"\b(let'?s (?:go with|use|keep|stick with|switch to|drop)|(?:we|i)(?:'ll| will) (?:go with|use)|"
-    r"go with|decided|we decide|i prefer|prefer to|stick with|switch to|don'?t use|do not use|"
-    r"never use|always use|instead of)\b", re.I)
-DECISION_AR = re.compile(r"(قررنا|قررت|القرار|خلينا|خلّينا|نعتمد|اعتمد|بدلا من|بدل ما|لا تستخدم|لا نستخدم|"
-                         r"دايما|دائما|نمشي على|امشي على|سنستخدم)")
+    r"^(?:[\w-]+:\s+)?(?:(?:ok(?:ay)?|yes|yeah|yep|no|nope|fine|so|then|alright|right|good|great|and|but)\b[,.!:]?\s+)*"
+    r"(?:let'?s (?:go with|use|keep|stick with|switch to|move to|drop|not use|avoid)|"
+    r"(?:we|i)(?:'ll| will| are going to| am going to|'re going to|'m going to) "
+    r"(?:go with|use|keep|stick with|switch to|move to|drop|avoid)|"
+    r"(?:we|i)(?: have|'ve)? decided\b|we decide\b|"
+    r"(?:don'?t|do not|never|always) use|stick with|go with|"
+    r"(?:use|switch to|move to|change to) [^,;]{1,60}? instead of|prefer [^,;]{1,60}? over)\b", re.I)
+DECISION_AR = re.compile(r"(قررنا|قررت|خلينا|خلّينا|نعتمد|اعتمد|بدلا من|بدل ما|لا تستخدم|لا نستخدم|"
+                         r"دايما استخدم|دائما استخدم|نمشي على|امشي على|سنستخدم|"
+                         r"(?:^|\s)(?:نستخدم|خلّ?ي|خليه|خليها)(?=\s|$))")
+# Claude proposes ("I suggest ...", "Shall I ...?") and the user agrees ("yes", "تمام"): that is
+# how most decisions are made in Claude Code.
+PROPOSAL = re.compile(
+    r"\b(?:i (?:suggest|recommend|propose|would|'d)\b|my (?:recommendation|suggestion)\b|"
+    r"i think we should|we should\b|the best option is|let'?s\b)", re.I)
+OFFER = re.compile(r"^(?:shall i|should i|do you want me to|want me to|would you like me to|how about)\b",
+                   re.I)
+CONTINUE_ONLY = re.compile(r"\b(?:go ahead|proceed|continue|start|do (?:it|that|this)|"
+                           r"implement (?:it|this|that))\W*$", re.I)
+APPROVAL = re.compile(
+    r"^(?:yes|yep|yeah|yup|sure|ok(?:ay)?|go ahead|do it|sounds good|agreed|approved|lgtm|perfect|"
+    r"great|let'?s do it|please do|go for it|نعم|ايوه|أيوه|تمام|اوكي|أوكي|موافق|ماشي|يلا|اعمل|اكيد|أكيد)"
+    r"(?=$|[\s,.!،])", re.I)
+NOT_PLAIN_YES = re.compile(r"\b(?:but|however|instead|no|not|don'?t|rather|what|why|which)\b|"
+                           r"[?؟]|(?:^|\s)(?:لكن|بس|لا|بدل)(?=\s|$)", re.I)
+REASON = re.compile(r"\s*(?:,\s*)?\b(?:because|since|as it|so that)\b\s*|\s*(?:لأن|لان|عشان|علشان)\s*", re.I)
+REASON_NEXT = re.compile(r"^(?:because|that way|this way|it|this|لأن|لان|عشان|كذا|بهذا)\b,?\s*", re.I)
+SENTENCE_END = re.compile(r"(?<=[.!?؟])\s+|\n+")
+CODE_BLOCK = re.compile(r"```.*?(?:```|\Z)|<pasted_content\b.*?(?:</pasted_content[^>]*>|\Z)", re.S | re.I)
+PASTE_TAG = re.compile(r"</?pasted_content\b[^>]*>", re.I)
+MAX_DECISIONS_PER_PROMPT = 3
 QUESTION = re.compile(r"^(why|what|which|how|should|shall|could|can|would|do|does|did|is|are|"
                       r"هل|ليش|لماذا|ليه|كيف|ايش|شو|ماذا)\b", re.I)
 URL = re.compile(r"https?://[^\s<>\"'`)\]]+")
@@ -50,10 +83,17 @@ def _short(text: str, limit: int) -> str:
     return flat if len(flat) <= limit else flat[: limit - 1].rsplit(" ", 1)[0] + "…"
 
 
-def _sentence_with(text: str, match: re.Match) -> str:
-    start = max(text.rfind(c, 0, match.start()) for c in ".!?\n؟")
-    ends = [i for i in (text.find(c, match.end()) for c in ".!?\n؟") if i >= 0]
-    return text[start + 1: min(ends) + 1 if ends else len(text)].strip()
+def _split_reason(sentence: str) -> tuple[str, str]:
+    """("use X", "it is faster") from "use X because it is faster."."""
+    parts = REASON.split(sentence, maxsplit=1)
+    if len(parts) == 2 and parts[1].strip():
+        return parts[0].strip().rstrip(","), parts[1].strip().rstrip(".!")
+    return sentence, ""
+
+
+def _approves(prompt: str) -> bool:
+    words = prompt.split()
+    return 0 < len(words) <= 12 and bool(APPROVAL.match(prompt.strip())) and not NOT_PLAIN_YES.search(prompt)
 
 
 def _first_error(text: str) -> str:
@@ -64,20 +104,27 @@ def _first_error(text: str) -> str:
     return lines[-1] if lines else ""
 
 
+_TOPS: dict[str, Path] = {}
+
+
 def _rel(path: str, cwd: str, root: Path) -> str:
+    """The path relative to the repository (this worktree or the main one); "" when outside it."""
     if not path:
         return ""
     p = Path(path)
     if not p.is_absolute() and cwd:
         p = Path(cwd) / p
-    for base in (Path(cwd) if cwd else None, root):
-        if base is None:
-            continue
+    bases = [root]
+    if cwd:
+        if cwd not in _TOPS:
+            _TOPS[cwd] = store.worktree_root(Path(cwd))
+        bases.insert(0, _TOPS[cwd])
+    for base in bases:
         try:
             return p.resolve().relative_to(base.resolve()).as_posix()
         except (ValueError, OSError):
             continue
-    return p.as_posix()
+    return ""
 
 
 def new_state(session: str, transcript_path: str) -> dict:
@@ -85,6 +132,7 @@ def new_state(session: str, transcript_path: str) -> dict:
             "started": store.now(), "updated": "", "ended": "", "branch": "", "cwd": "",
             "first_prompt": "", "prompts": [], "prompt_count": 0, "files": {}, "commits": [],
             "tasks": {}, "task_ids": {}, "problems": {}, "decisions": [], "links": [], "pending": {},
+            "proposal": {}, "touched": {},
             "note": "", "compactions": 0, "private_salt": "", "private": []}
 
 
@@ -112,6 +160,7 @@ class Capture:
     def __init__(self, root: Path, state: dict, commit: str):
         self.root, self.state, self.commit = root, state, commit
         self.memories: list[dict] = []
+        self._memories: list[dict] | None = None
         self.sid = state["session"][:8]
 
     def clean(self, text: str) -> str:
@@ -143,27 +192,59 @@ class Capture:
             return
         state = self.state
         state["prompt_count"] += 1
+        shown = _short(PASTE_TAG.sub(" ", text), PROMPT_CHARS)
         if not state["first_prompt"]:
-            state["first_prompt"] = _short(text, PROMPT_CHARS)
-        state["prompts"] = (state["prompts"] + [_short(text, PROMPT_CHARS)])[-KEEP_PROMPTS:]
+            state["first_prompt"] = shown
+        state["prompts"] = (state["prompts"] + [shown])[-KEEP_PROMPTS:]
         for url in dict.fromkeys(URL.findall(text)):
             url = url.rstrip(".,;:")
             if url not in state["links"]:
                 state["links"].append(url)
                 self._add("link", f"{url} (shared: {_short(text.replace(url, ''), 120)})", event,
                           key=f"link|{url}", scope="project")
-        if len(text) <= 600:
-            for pattern in (DECISION_EN, DECISION_AR):
-                match = pattern.search(text)
-                if match:
-                    sentence = _short(_sentence_with(text, match), 300)
-                    if sentence.endswith(("?", "؟")) or QUESTION.match(sentence):
-                        break  # a question is not a decision
-                    if len(sentence) >= 12 and sentence not in state["decisions"]:
-                        state["decisions"].append(sentence)
-                        self._add("decision", f"User: {sentence}", event,
-                                  key=f"decision|{self.sid}|{sentence[:80]}")
+        proposal, state["proposal"] = state.get("proposal") or {}, {}
+        if proposal and _approves(text):
+            sentence = proposal["text"]
+            if sentence not in state["decisions"]:
+                state["decisions"].append(sentence)
+                digest = hashlib.sha1(sentence.encode()).hexdigest()[:12]
+                self._add("decision", f"Agreed: {sentence}", event, key=f"decision|{self.sid}|a{digest}",
+                          reason=proposal.get("reason", ""))
+        found = 0
+        for sentence in SENTENCE_END.split(CODE_BLOCK.sub("\n", text)[:8000]):
+            sentence = sentence.strip(" \t-*>")
+            if not (DECISION_EN.search(sentence) or DECISION_AR.search(sentence)):
+                continue
+            if sentence.endswith(("?", "؟")) or QUESTION.match(sentence):
+                continue  # a question is not a decision
+            sentence = _short(sentence, 300)
+            if len(sentence) >= 12 and sentence not in state["decisions"]:
+                state["decisions"].append(sentence)
+                self._add("decision", f"User: {sentence}", event, key=f"decision|{self.sid}|{sentence[:80]}",
+                          reason=_split_reason(sentence)[1])
+                found += 1
+                if found >= MAX_DECISIONS_PER_PROMPT:
                     break
+
+    def say(self, event: dict) -> None:
+        """Remember Claude's latest proposal, so a "yes" in the next prompt records it as a decision."""
+        prose = CODE_BLOCK.sub("\n", event["text"])[-4000:]
+        sentences = [x.strip(" \t-*>") for x in SENTENCE_END.split(prose)]
+        sentences = [x for x in sentences if x]
+        picked = None
+        for n, sentence in enumerate(sentences):
+            if PROPOSAL.search(sentence) and not sentence.endswith(("?", "؟")):
+                picked = n
+            elif OFFER.match(sentence) and not CONTINUE_ONLY.search(sentence.rstrip("?؟ ")):
+                picked = n
+        if picked is None:
+            self.state["proposal"] = {}
+            return
+        text, reason = _split_reason(sentences[picked])
+        if not reason and picked + 1 < len(sentences) and REASON_NEXT.match(sentences[picked + 1]):
+            reason = REASON_NEXT.sub("", sentences[picked + 1]).rstrip(".!")
+        self.state["proposal"] = {"text": _short(self.clean(text), 300),
+                                  "reason": _short(self.clean(reason), 200), "line": event["line"]}
 
     def tool(self, event: dict) -> None:
         name, data = event["name"], event["input"]
@@ -188,6 +269,7 @@ class Capture:
             keep["path"] = str(data.get("file_path") or data.get("notebook_path") or "")
         elif name == "Bash":
             keep["command"] = self.clean(str(data.get("command") or "")[:2000])
+            keep["time"] = event.get("time", "")
         elif name == "TaskCreate":
             keep["subject"] = self.clean(str(data.get("subject") or ""))
         elif name == "AskUserQuestion":
@@ -212,10 +294,11 @@ class Capture:
             if rel:
                 count = self.state["files"].get(rel, 0) + 1
                 self.state["files"][rel] = count
+                self.state["touched"][rel] = event["line"]
                 self._add("file", f"Changed {rel} ({count} edit{'s' if count > 1 else ''})", event,
                           key=f"file|{self.sid}|{rel}")
         elif name == "Bash":
-            self._bash(call["command"], event, ok)
+            self._bash(call["command"], event, ok, call.get("time", ""))
         elif name == "TaskCreate" and ok:
             number = re.search(r"#(\d+)", event["text"])
             subject = call.get("subject", "")
@@ -244,7 +327,7 @@ class Capture:
 
     def _task(self, subject: str, status: str, event: dict, source: str = "task") -> str:
         subject = _short(self.clean(subject), 200)
-        key = f"task|{self.sid}|{subject.lower()[:100]}"
+        key = f"task|{subject.lower()[:100]}"  # the same task in a later session is the same memory
         before = self.state["tasks"].get(key)
         if before and before["status"] == status:
             return key
@@ -252,12 +335,15 @@ class Capture:
         self._add("task", subject, event, key=key, status=status)
         return key
 
-    def _bash(self, command: str, event: dict, ok: bool) -> None:
+    def _bash(self, command: str, event: dict, ok: bool, started: str = "") -> None:
         if ok and re.search(r"\bgit\b[^|;&]*\bcommit\b", command):
-            for found_branch, sha, message in COMMIT_LINE.findall(event["text"]):
+            found = [(b, sha, msg) for b, sha, msg in COMMIT_LINE.findall(event["text"])]
+            if not found and started:  # `git commit -q` prints nothing: ask git what was committed
+                found = self._commits_since(started, event)
+            for found_branch, sha, message in found:
                 entry = {"hash": sha[:9], "message": _short(self.clean(message), 160),
                          "branch": found_branch, "time": event.get("time", "")}
-                if entry not in self.state["commits"]:
+                if not any(c["hash"][:7] == entry["hash"][:7] for c in self.state["commits"]):
                     self.state["commits"].append(entry)
                     self.commit = sha[:9]
         if ok and re.search(r"\bgh (pr|issue) create\b", command):
@@ -272,7 +358,7 @@ class Capture:
         family = runner.group(1)
         targets = sorted(a for a in runner.group(2).split() if not a.startswith("-"))[:6]
         name = " ".join([family, *targets])
-        key = f"problem|{self.sid}|{name}"
+        key = f"problem|{name}"  # by command, so a pass in any later session closes it
         if not ok:
             detail = _short(self.clean(_first_error(event["text"])), 220)
             text = f"`{name}` failed: {detail}" if detail else f"`{name}` failed"
@@ -280,13 +366,39 @@ class Capture:
                                            "family": family}
             self._add("problem", text, event, key=key, status="open")
             return
+
         # a pass solves the same run, or every run of that tool when it ran without targets
+        def same(other: str) -> bool:
+            ran = other.rsplit("|", 1)[-1]
+            return ran == name or (not targets and (ran == family or ran.startswith(family + " ")))
+
         for other, problem in list(self.state["problems"].items()):
-            same = other == key or (not targets and problem.get("family") == family)
-            if same and problem["status"] == "open":
+            if same(other) and problem["status"] == "open":
                 text = f"{problem['text']} (passed again at L{event['line']})"
                 self.state["problems"][other] = {**problem, "text": text, "status": "solved"}
                 self._add("problem", text, event, key=other, status="solved")
+        for item in self._stored():
+            if (item["type"] == "problem" and item.get("status") == "open" and item.get("key")
+                    and item["key"] not in self.state["problems"] and same(item["key"])):
+                text = f"{item['text']} (passed again in session {self.sid})"
+                self._add("problem", text, event, key=item["key"], status="solved")
+
+    def _commits_since(self, started: str, event: dict) -> list[tuple[str, str, str]]:
+        try:
+            since = datetime.datetime.fromisoformat(started) - datetime.timedelta(seconds=2)
+        except ValueError:
+            return []
+        cwd = Path(event.get("cwd") or self.state["cwd"] or self.root)
+        out = store._git(cwd, "log", "-n", "20", "--reverse", f"--since={since.isoformat()}",
+                         "--format=%H%x09%s")
+        branch = event.get("branch") or self.state["branch"]
+        return [(branch, sha, message) for sha, _, message in
+                (line.partition("\t") for line in out.splitlines()) if sha]
+
+    def _stored(self) -> list[dict]:
+        if self._memories is None:
+            self._memories = store.Memory(self.root).all()
+        return self._memories
 
 
 def update(root: Path, session: str, transcript_path: str, cwd: str = "") -> dict:
@@ -312,7 +424,7 @@ def _update(memory: store.Memory, root: Path, session: str, transcript_path: str
             state["branch"] = event["branch"]
         if event.get("cwd"):
             state["cwd"] = event["cwd"]
-        if event["kind"] in ("prompt", "tool", "result"):
+        if event["kind"] in ("prompt", "say", "tool", "result"):
             getattr(capture, event["kind"])(event)
     memory.upsert(capture.memories)
     save_state(memory.dir, state)

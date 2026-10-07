@@ -111,7 +111,7 @@ def test_english_stemming_and_code_words():
 
 
 def test_stop_words_and_generic_words_are_ignored():
-    assert text.tokens("please fix the bug in this file") == ["bug"]
+    assert text.tokens("please fix the bug in this file") == ["fix", "bug"]
     assert text.tokens("كيف ممكن هذا") == []
 
 
@@ -222,9 +222,9 @@ def test_prompt_hook_injects_once_per_session(repo):
     assert "### Deployment > Rollback  (docs/deploy.md:4-" in data["additionalContext"]
     assert "(more: read docs/deploy.md" in data["additionalContext"]  # weak match: summary first
     assert hooks.on_prompt(prompt_event(repo, "how do we roll back a release?")) is None  # already sent
-    upgraded = hooks.on_prompt(prompt_event(repo, "rollback again please"))  # strong match: full, once
+    upgraded = hooks.on_prompt(prompt_event(repo, "rollback the release again"))  # strong: full, once
     assert "ask the DBA first" in context_of(upgraded)
-    assert hooks.on_prompt(prompt_event(repo, "rollback again please")) is None
+    assert hooks.on_prompt(prompt_event(repo, "rollback the release again")) is None
     assert hooks.on_prompt(prompt_event(repo, "how do we roll back?", session="other")) is not None
 
 
@@ -312,3 +312,150 @@ def test_hook_entry_point_never_fails(tmp_path):
     res = subprocess.run([sys.executable, str(SIYAQ_ROOT / "bin" / "siyaq"), "hook", "prompt"], input="{bad",
                          capture_output=True, text=True, cwd=tmp_path)
     assert res.returncode == 0 and res.stdout == ""
+
+
+# ---------------------------------------------------------------- relevance (#38)
+
+
+def test_only_a_sections_own_heading_counts(repo):
+    (repo / "docs" / "hafiz.md").write_text(
+        "# Hafiz\n\nHafiz keeps the memory of a project between sessions, with nothing sent anywhere.\n\n"
+        "## Storage\nMemories are JSON lines in the data folder, owner-only, capped at three thousand.\n\n"
+        "## Search\nSearch ranks memories by words, branch and date, in Arabic and in English.\n")
+    picked = picked_titles(repo, "what does hafiz remember between sessions?")
+    assert "Hafiz" in picked and "Hafiz > Storage" not in picked and "Hafiz > Search" not in picked
+
+
+def test_a_short_prompt_needs_more_than_one_hit(repo):
+    (repo / "docs" / "amin.md").write_text(
+        "# Amin\n\n## Merges\nAmin prepares the release notes and the version but never merges a pull "
+        "request by itself; a person merges after review.\n")
+    assert picked_titles(repo, "merged") == []
+    assert picked_titles(repo, "عندي مشكلة في الكوبون") == ["Coupon codes"]  # a written keyword still counts
+
+
+@pytest.mark.parametrize("prompt", ["ok thanks", "yes, rollback it", "great, merged", "تمام شكرا",
+                                    "lgtm, go ahead"])
+def test_acknowledgements_inject_nothing(repo, prompt):
+    assert hooks.on_prompt(prompt_event(repo, prompt)) is None
+
+
+def test_back_links_are_not_triggers(repo):
+    (repo / "README.md").write_text("# Shop\n")
+    (repo / "docs" / "guide.md").write_text("# Guide\n\n## Links\nPart of [Shop](../README.md). The deploy "
+                                           "notes are in deploy.md, worth reading before a release.\n")
+    guide = entries_by_title(idx.build(repo))["Guide > Links"]
+    assert "README.md" in guide["refs"] and "README.md" not in guide["paths"]
+    assert "docs/deploy.md" in guide["paths"]
+
+
+def test_top_results_are_picked_before_dropping_ones_already_shown(repo):
+    prompt = "roll back the release from production staging"
+    assert picked_titles(repo, prompt, top_k=2) == ["Deployment > Rollback", "Deployment > Environments"]
+    shown = {"docs/deploy.md#deployment-rollback": "full"}
+    assert picked_titles(repo, "roll back the release from production staging", shown=shown, top_k=1) == []
+
+
+# ---------------------------------------------------------------- parallel hooks (#79)
+
+
+def test_parallel_reads_inject_a_block_once(repo, monkeypatch):
+    import threading
+
+    barrier = threading.Barrier(2, timeout=0.5)
+    real_load = state.load_session
+
+    def slow_load(session):
+        data = real_load(session)
+        try:
+            barrier.wait()  # both hooks have read the session before either writes it
+        except threading.BrokenBarrierError:
+            pass
+        return data
+
+    idx.load(repo)  # built once, so only the session state is shared
+    monkeypatch.setattr(state, "load_session", slow_load)
+    outputs = []
+    threads = [threading.Thread(target=lambda: outputs.append(
+        hooks.on_tool(tool_event(repo, "src/Orders/DiscountService.cs", tool="Edit")))) for _ in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert sum(1 for out in outputs if out) == 1
+    shown = [e for e in state.read_events(repo) if e["type"] == "shown" and e["id"].endswith("coupons.md")]
+    assert len(shown) == 1
+
+
+def test_parallel_index_builds_do_not_crash(repo):
+    import threading
+
+    errors = []
+
+    def build():
+        try:
+            idx.load(repo)
+        except Exception as exc:  # noqa: BLE001
+            errors.append(exc)
+
+    threads = [threading.Thread(target=build) for _ in range(6)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert errors == []
+
+
+def test_session_state_is_written_atomically(repo):
+    state.save_session("s1", {"shown": {"a": "full"}, "opened": []})
+    folder = state.data_home() / "sessions"
+    assert [p.name for p in folder.iterdir()] == ["s1.json"]
+
+
+# ---------------------------------------------------------------- developer words and events (#80)
+
+
+def test_developer_words_are_kept():
+    assert text.tokens("run the tests locally") == text.tokens("run test local")
+    assert "test" in text.tokens("run the tests locally")
+    for word in ("index", "fix", "docs", "spec", "readme"):
+        assert text.tokens(word), word
+
+
+def test_events_file_is_private_and_rotated(repo, monkeypatch):
+    import stat as stat_module
+
+    monkeypatch.setattr(state, "EVENTS_LIMIT", 300)
+    for n in range(20):
+        state.log_event(repo, {"session": "s1", "type": "miss", "terms": [f"word{n}"]})
+    folder = idx.project_dir(repo)
+    assert stat_module.S_IMODE((folder / "events.jsonl").stat().st_mode) == 0o600
+    assert (folder / "events.1.jsonl").exists() and (folder / "events.jsonl").stat().st_size <= 600
+    terms = [e["terms"][0] for e in state.read_events(repo)]
+    assert terms[-1] == "word19" and len(terms) < 20
+
+
+# ---------------------------------------------------------------- Arabic and English together (#72)
+
+
+def test_an_arabic_question_finds_an_english_section(repo):
+    assert picked_titles(repo, "كيف نعمل تراجع للإصدار؟")[0] == "Deployment > Rollback"
+    assert "Deployment > Environments" in picked_titles(repo, "متى يتم النشر على بيئة الإنتاج؟")
+
+
+def test_an_english_question_finds_an_arabic_section(repo):
+    expected = ["الفواتير > إصدار الفاتورة"]
+    assert picked_titles(repo, "can an invoice be edited after it is issued?") == expected
+
+
+def test_summaries_keep_tables_and_code(repo):
+    table = "| plan | requests |\n|------|----------|\n| free | 60 |\n| pro | 600 |"
+    code = "```sh\nadmin limits set --plan pro 900\n```"
+    (repo / "docs" / "limits.md").write_text(
+        "# Limits\n\n## Rate limits\nEach plan has its own request limits, enforced per API key at the "
+        f"gateway and reset every minute for all endpoints.\n\n{table}\n\nRaise them with:\n\n{code}\n\n"
+        + "More background on how limits evolved over the years. " * 20 + "\n")
+    index = idx.load(repo)
+    picked = rank.select_for_prompt(index, "rate limits per plan", rank.settings({"full_max_chars": 100}), {})
+    assert picked[0]["level"] == "summary"
+    assert table in picked[0]["text"] and code in picked[0]["text"]

@@ -27,7 +27,10 @@ The helper is named in the session note ("itqan proof (for /itqan:proof): python
 
 3. **Run it.**
    `itqan_proof.py run --review approve --done "<requirement met>" --open "<requirement not met>" --note "<open finding>"`
-   Repeat `--done`, `--open` and `--note` as needed. It exits 1 when a check failed.
+   Repeat `--done`, `--open` and `--note` as needed. Start each note with its severity, as the
+   review gave it: `--note "[high] token written to the log"`. It exits 1 when a check failed,
+   and refuses `--review approve` (exit 2, nothing saved) while a `[critical]` or `[high]` note is
+   open: fix it, or record `--review changes`.
 
 4. **Tell the user** in two or three plain lines: checks passed or which failed, the review
    verdict, requirements met out of total. With mizan installed they can open it with

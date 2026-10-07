@@ -46,8 +46,11 @@ def find(items: list[dict], query: str, limit: int = 10, prefer_branch: str = ""
          **filters) -> list[tuple[float, dict]]:
     pool = newest_first([i for i in items if keep(i, **filters)])
     words = list(dict.fromkeys(text.tokens(query)))
-    if not words:  # nothing to rank by: newest first
-        return [(0.0, i) for i in pool[:limit]]
+    exact = [w.lower() for w in re.findall(r"[\w./#-]{4,}", query) if any(c in w for c in "./#_-")]
+    if not words and not exact:
+        if query.strip():  # only stop words ("what did we do"): nothing to match, not "everything"
+            return []
+        return [(0.0, i) for i in pool[:limit]]  # no query at all: newest first
     docs = [_tokens(i) for i in pool]
     n = len(docs) or 1
     avg = sum(len(d) for d in docs) / n or 1.0
@@ -55,7 +58,6 @@ def find(items: list[dict], query: str, limit: int = 10, prefer_branch: str = ""
     for doc in docs:
         for token in set(doc):
             df[token] = df.get(token, 0) + 1
-    exact = [w.lower() for w in re.findall(r"[\w./#-]{4,}", query) if any(c in w for c in "./#_-")]
     results = []
     for item, doc in zip(pool, docs, strict=True):
         score = 0.0

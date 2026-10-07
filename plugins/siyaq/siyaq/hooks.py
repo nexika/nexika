@@ -70,13 +70,15 @@ def on_prompt(event: dict) -> str | None:
     if not index["n"]:
         return None
     cfg = rank.squeeze(rank.settings(config), context_level(session))
-    picked = rank.select_for_prompt(index, prompt, cfg, state.load_session(session)["shown"])
+    with state.session_lock(session):
+        picked = rank.select_for_prompt(index, prompt, cfg, state.load_session(session)["shown"])
+        if picked:
+            _remember(root, session, picked, "prompt")
     if not picked:
         unknown = [t for t in dict.fromkeys(text.tokens(prompt)) if t not in index["df"]]
         if unknown:
             state.log_event(root, {"session": session[:8], "type": "miss", "terms": unknown[:6]})
         return None
-    _remember(root, session, picked, "prompt")
     return _output("UserPromptSubmit", HEADER.format(what="prompt") + "\n\n".join(p["text"] for p in picked))
 
 
@@ -95,8 +97,16 @@ def on_tool(event: dict) -> str | None:
         return None
     session = str(event.get("session_id") or "")
     index = idx.load(root, config)
+    with state.session_lock(session):
+        picked = _pick_for_path(root, rel, index, config, session, event.get("tool_name") == "Read")
+    if not picked:
+        return None
+    return _output("PreToolUse", HEADER.format(what=f"file ({rel})") + "\n\n".join(p["text"] for p in picked))
+
+
+def _pick_for_path(root: Path, rel: str, index: dict, config: dict, session: str, read: bool) -> list[dict]:
     data = state.load_session(session)
-    if event.get("tool_name") == "Read":
+    if read:
         opened = [e["id"] for e in index["entries"]
                   if e["source"] == rel and e["id"] in data["shown"] and e["id"] not in data["opened"]]
         for entry_id in opened:
@@ -106,10 +116,9 @@ def on_tool(event: dict) -> str | None:
             state.save_session(session, data)
     picked = rank.select_for_path(index, rel, rank.squeeze(rank.settings(config), context_level(session)),
                                   data["shown"])
-    if not picked:
-        return None
-    _remember(root, session, picked, "path")
-    return _output("PreToolUse", HEADER.format(what=f"file ({rel})") + "\n\n".join(p["text"] for p in picked))
+    if picked:
+        _remember(root, session, picked, "path")
+    return picked
 
 
 def on_session_start(event: dict, helper: str) -> str:

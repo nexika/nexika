@@ -13,7 +13,10 @@ argument-hint: "[days, default 30]"
    - proposals waiting → suggest `/itqan:learn`;
    - an installed plugin whose skills were never used → it costs context every session and may
      be worth disabling;
-   - many guard refusals of the same kind → a workflow habit worth changing.
+   - many guard refusals of the same kind → a workflow habit worth changing;
+   - a high share of "asks you approved" → the guard asks about things the user wants: suggest a
+     narrower rule in `.itqan.json`;
+   - the learning cost line → whether background extraction is worth it (`ITQAN_LEARN=off`).
 3. If barq is installed, `barq stats:month` adds token savings; include it if the user wants
    the full picture.
 
