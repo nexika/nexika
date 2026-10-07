@@ -29,7 +29,8 @@ The helper is named in the session note ("Helper: .../bin/lawha"); below it is w
    - `--against <dir> --against-scale 0.5` when design exports exist (`.lawha/figma/<page>/`,
      images named by width, 2x exports).
    - `--widths` only if the user asks for other widths.
-   It prints a summary with `verdict`, counts, `top` problems and the `report` path.
+   It prints a summary with `verdict`, counts, `top` problems and the `report` path, and exits 1
+   when the verdict is `fail` (the summary is still printed; that is a result, not a crash).
 
 4. **Explain plainly.** Lead with the verdict and the "must fix" problems, each in one sentence a
    backend developer understands ("on phones the page scrolls sideways because the pricing table

@@ -30,6 +30,7 @@ const HELP = `lawha ${VERSION} - see and check web pages
       --against-scale <n>  scale of those images (Figma 2x exports: 0.5)
       --no-audit --no-see  skip parts      --out <dir>   default .lawha/runs/<time>
       --no-record          do not share the result with mizan and itqan (status/lawha.json)
+      --no-fail-exit       exit 0 on a fail verdict (for callers that read the JSON)
   lawha diff <actual.png> <expected.png> [--scale n] [--heatmap out.png]
   lawha index [project]  [--out <file>]   default <project>/.lawha/system.json
   lawha figma outline <figma link>           pages and top-level frames (1 call, cached by version)
@@ -53,7 +54,8 @@ const HELP = `lawha ${VERSION} - see and check web pages
   (Figma needs FIGMA_TOKEN: a personal access token with read-only file content)
   lawha version
 
-Prints JSON on standard output: for check, the summary and the report path.`;
+Prints JSON on standard output: for check, the summary and the report path.
+check exits 1 when the verdict is fail (unless --no-fail-exit), so it can gate CI.`;
 
 async function check(url: string, a: ReturnType<typeof parseArgs>): Promise<number> {
   const widths = list(a.widths, DEFAULT_WIDTHS.map(String)).map(Number).filter((n) => n >= 200 && n <= 4000);
@@ -141,12 +143,12 @@ async function check(url: string, a: ReturnType<typeof parseArgs>): Promise<numb
 
   const top = problems.filter((p) => p.severity !== "info").slice(0, 15).map((p) => `[${p.severity}] ${p.message} (${p.check} at ${p.where.join(", ")})`);
   process.stdout.write(JSON.stringify({ verdict: run.summary.verdict, fail: run.summary.fail, warn: run.summary.warn, info: run.summary.info, report: join(out, "report.html"), run: join(out, "run.json"), recorded, top }, null, 2) + "\n");
-  return 0;
+  return run.summary.verdict === "fail" && a["no-fail-exit"] !== true ? 1 : 0;
 }
 
 async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
-  const a = parseArgs(rest, ["expect-rtl", "no-audit", "no-see", "no-record", "refresh"]);
+  const a = parseArgs(rest, ["expect-rtl", "no-audit", "no-see", "no-record", "no-fail-exit", "refresh"]);
   switch (command) {
     case "check": {
       const url = a._[0];

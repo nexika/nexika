@@ -121,7 +121,7 @@ test("ab hides which side is which, and reveal turns a pick back into a version"
 
 test("a canvas that ignores reduce motion fails, and pale text over it fails; a careful scene passes", () => {
   const bad = tmp();
-  lawha("check", page("scene-bad.html"), "--widths", "1280", "--no-see", "--no-record", "--out", bad);
+  lawha("check", page("scene-bad.html"), "--widths", "1280", "--no-see", "--no-record", "--no-fail-exit", "--out", bad);
   const found = JSON.parse(readFileSync(join(bad, "run.json"), "utf8")).findings.map((f) => f.check);
   assert.ok(found.includes("motion.webgl-reduced"), found.join(", "));
   assert.ok(found.includes("a11y.contrast-over-media"), found.join(", "));
@@ -134,7 +134,7 @@ test("a canvas that ignores reduce motion fails, and pale text over it fails; a 
 
 test("the eye ranks where the eye lands first", () => {
   const out = tmp();
-  lawha("check", page("inspire.html"), "--widths", "1280", "--no-record", "--out", out);
+  lawha("check", page("inspire.html"), "--widths", "1280", "--no-record", "--no-fail-exit", "--out", out);
   const seen = JSON.parse(readFileSync(join(out, "run.json"), "utf8")).seen[0];
   assert.ok(seen.focus.length >= 2);
   assert.equal(seen.focus[0].weight, 1);

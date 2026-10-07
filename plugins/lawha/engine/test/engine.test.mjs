@@ -1,6 +1,6 @@
 // lawha engine tests: run the built CLI against fixture pages with known faults.
 import { strict as assert } from "node:assert";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -14,7 +14,16 @@ const FIX = join(ROOT, "test", "fixtures");
 const tmp = () => mkdtempSync(join(tmpdir(), "lawha-test-"));
 // Never touch the real ~/.claude/nexika: every run gets throwaway homes.
 const HOMES = { LAWHA_HOME: tmp(), NEXIKA_STATUS_HOME: tmp() };
-const run = (args, opts = {}) => JSON.parse(execFileSync(process.execPath, [CLI, ...args], { encoding: "utf8", timeout: 240_000, env: { ...process.env, ...HOMES, ...opts.env }, cwd: opts.cwd }));
+// A fail verdict exits 1 with the summary still on stdout; anything else non-zero is a crash.
+const exec = (args, opts = {}) => spawnSync(process.execPath, [CLI, ...args], { encoding: "utf8", timeout: 240_000, env: { ...process.env, ...HOMES, ...opts.env }, cwd: opts.cwd });
+const run = (args, opts = {}) => {
+  const r = exec(args, opts);
+  if (r.status !== 0 && r.status !== 1) throw new Error(`lawha ${args[0]} exited ${r.status}: ${r.stderr}`);
+  const out = JSON.parse(r.stdout);
+  if (out && typeof out === "object" && "verdict" in out) assert.equal(r.status, out.verdict === "fail" ? 1 : 0, `exit code for verdict ${out.verdict}`);
+  else assert.equal(r.status, 0, `lawha ${args[0]} exited ${r.status}`);
+  return out;
+};
 const lawha = (...args) => run(args);
 const page = (name) => pathToFileURL(join(FIX, name)).href;
 
@@ -26,6 +35,15 @@ test("a clean page passes with no problems", () => {
   const run = JSON.parse(readFileSync(join(out, "run.json"), "utf8"));
   assert.equal(run.shots.length, 3); // two widths and one reduced-motion pass
   assert.match(readFileSync(join(out, "report.html"), "utf8"), /Passes every required check/);
+});
+
+test("a fail verdict exits 1 so gates stop; --no-fail-exit keeps 0 for callers that read the JSON", () => {
+  const failing = exec(["check", page("bad.html"), "--widths", "390", "--no-see", "--out", tmp()]);
+  assert.equal(failing.status, 1, failing.stderr);
+  assert.equal(JSON.parse(failing.stdout).verdict, "fail");
+  const parsed = exec(["check", page("bad.html"), "--widths", "390", "--no-see", "--no-fail-exit", "--out", tmp()]);
+  assert.equal(parsed.status, 0, parsed.stderr);
+  assert.equal(JSON.parse(parsed.stdout).verdict, "fail");
 });
 
 test("every planted fault is found, once per problem", () => {

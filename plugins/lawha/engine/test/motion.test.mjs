@@ -15,7 +15,7 @@ const tmp = () => mkdtempSync(join(tmpdir(), "lawha-test-"));
 const HOMES = { LAWHA_HOME: tmp(), NEXIKA_STATUS_HOME: tmp() };
 const check = (name) => {
   const out = tmp();
-  const summary = JSON.parse(execFileSync(process.execPath, [CLI, "check", pathToFileURL(join(FIX, name)).href, "--widths", "1280", "--no-see", "--no-record", "--out", out], { encoding: "utf8", timeout: 240_000, env: { ...process.env, ...HOMES } }));
+  const summary = JSON.parse(execFileSync(process.execPath, [CLI, "check", pathToFileURL(join(FIX, name)).href, "--widths", "1280", "--no-see", "--no-record", "--no-fail-exit", "--out", out], { encoding: "utf8", timeout: 240_000, env: { ...process.env, ...HOMES } }));
   return { summary, findings: JSON.parse(readFileSync(join(out, "run.json"), "utf8")).findings };
 };
 
@@ -39,7 +39,7 @@ test("a small spinner and a quick entrance that respects reduce motion pass", ()
 
 test("RTL icons: arrows must mirror, media controls must not; swapping the icon counts as mirroring", () => {
   const out = tmp();
-  execFileSync(process.execPath, [CLI, "check", pathToFileURL(join(FIX, "icons.html")).href, "--widths", "1280", "--expect-rtl", "--no-see", "--no-record", "--out", out], { encoding: "utf8", timeout: 240_000, env: { ...process.env, ...HOMES } });
+  execFileSync(process.execPath, [CLI, "check", pathToFileURL(join(FIX, "icons.html")).href, "--widths", "1280", "--expect-rtl", "--no-see", "--no-record", "--no-fail-exit", "--out", out], { encoding: "utf8", timeout: 240_000, env: { ...process.env, ...HOMES } });
   const icons = JSON.parse(readFileSync(join(out, "run.json"), "utf8")).findings.filter((f) => f.check.startsWith("rtl.icon"));
   const said = icons.map((f) => `${f.check}: ${f.message}`);
   assert.ok(said.some((m) => m.startsWith("rtl.icon-not-mirrored") && m.includes('"Next"')), said.join("\n"));
