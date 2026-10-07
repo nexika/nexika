@@ -426,6 +426,7 @@ def ci(project, env, monkeypatch):
     monkeypatch.setattr(forge, "find_run", lambda info, run_id=None: fake_run(project))
     monkeypatch.setattr(forge, "failed_log", lambda info, run: log)
     monkeypatch.setattr(forge, "from_fork", lambda info, run: False)
+    monkeypatch.setattr(forge, "flaky_tests", lambda info, run, failures: [])
     monkeypatch.setattr(forge, "history", lambda info, run: {
         "same_commit_passed": None, "last_green": {"id": 7000, "sha": git(project, "rev-parse", "main"),
                                                     "branch": "main"}})
@@ -641,3 +642,250 @@ def test_triage_reuses_a_saved_run_without_an_updated_time(ci, monkeypatch):
     first = diagnosis.triage(ci)
     monkeypatch.setattr(diagnosis, "now", lambda: "2099-01-01T00:00:00")   # a later second
     assert diagnosis.triage(ci)["created"] == first["created"]
+
+
+# ---------------------------------------------------------------- flaky tests from past runs (#103)
+
+def test_a_test_that_failed_and_passed_on_the_same_commit_is_flaky(ci, project, monkeypatch):
+    monkeypatch.undo()
+    run = {**fake_run(project), "attempt": 2}
+    job = run["jobs"][0]["name"]
+    failing = [{"framework": "pytest", "kind": "tests", "test": "tests/test_a.py::test_a", "job": job,
+                "file": "tests/test_a.py", "message": "assert 2 == 3"},
+               {"framework": "pytest", "kind": "tests", "test": "tests/test_a.py::test_b", "job": job,
+                "file": "tests/test_a.py", "message": "assert 0"}]
+    # run 7003: same commit and event, test_b failed but test_a passed; 7004: another commit;
+    # 7005: same commit, every job green; attempt 1 of the run itself failed test_a too
+    other = {**run, "id": 7003, "attempt": 1, "url": "https://github.com/o/r/actions/runs/7003"}
+    listed = [run, other, {**run, "id": 7004, "sha": "e" * 40, "conclusion": "success"},
+              {**run, "id": 7005, "attempt": 1, "conclusion": "success",
+               "url": "https://github.com/o/r/actions/runs/7005"},
+              {**run, "id": 7006, "event": "pull_request", "conclusion": "success"}]
+    calls = []
+
+    def tool(argv, cwd, timeout=60, accept=(0,)):
+        calls.append(argv)
+        if argv[:3] == ["gh", "run", "list"]:
+            return json.dumps([])
+        if argv[:3] == ["gh", "run", "view"] and "--log-failed" in argv:
+            if argv[3] == "7003":
+                return gh_log(job, ["FAILED tests/test_a.py::test_b - assert 0"])
+            return gh_log(job, ["FAILED tests/test_a.py::test_a - assert 2 == 3"])  # attempt 1 of 7001
+        if argv[:3] == ["gh", "run", "view"]:
+            ident = int(argv[3])
+            data = {"databaseId": ident, "conclusion": "failure", "headSha": run["sha"], "attempt": 1,
+                    "jobs": [{"databaseId": 9, "name": job, "conclusion": "failure", "steps": []}]}
+            return json.dumps(data)
+        raise AssertionError(argv)
+
+    monkeypatch.setattr(forge, "runs", lambda info, branch="", workflow="": listed)
+    monkeypatch.setattr(forge, "run_tool", tool)
+    found = forge.flaky_tests(ci, run, failing)
+    assert [f["test"] for f in found] == ["tests/test_a.py::test_a", "tests/test_a.py::test_b"]
+    assert found[1]["passed"] == ["https://github.com/o/r/actions/runs/7001/attempts/1",
+                                  "https://github.com/o/r/actions/runs/7005"]
+    assert found[0]["passed"] == ["https://github.com/o/r/actions/runs/7003",
+                                  "https://github.com/o/r/actions/runs/7005"]
+    assert found[0]["failed"] == ["https://github.com/o/r/actions/runs/7001/attempts/1"]
+    assert not any(a[3] in ("7004", "7006", "7005") for a in calls if a[:3] == ["gh", "run", "view"])
+    verdict = classify.classify({"failures": failing[:1], "flaky_tests": found})
+    assert verdict["kind"] == "flaky" and verdict["confidence"] == "high"
+    assert "runs/7003" in " ".join(verdict["evidence"])
+    real = {"framework": "pytest", "kind": "tests", "test": "tests/test_a.py::test_c", "job": job,
+            "file": "tests/test_a.py", "message": "assert 1"}
+    mixed = classify.classify({"failures": [*failing, real], "flaky_tests": found})
+    assert mixed["kind"] == "code" and any("flaky" in e for e in mixed["evidence"])
+    monkeypatch.setattr(forge, "runs", lambda info, branch="", workflow="": (_ for _ in ()).throw(forge.Off("x")))
+    assert forge.flaky_tests(ci, {**run, "attempt": 1}, failing) == []
+    assert forge.flaky_tests({**ci, "host": "gitlab"}, {**run, "provider": "gitlab"}, failing) == []
+
+
+def test_triage_reports_flaky_tests_with_their_runs(ci, monkeypatch):
+    found = [{"test": "tests/test_a.py::test_a", "job": "test (py3.12, ubuntu-latest)",
+              "passed": ["https://github.com/o/r/actions/runs/7003"], "failed": []}]
+    monkeypatch.setattr(forge, "flaky_tests", lambda info, run, failures: found)
+    record = diagnosis.triage(ci)
+    assert record["kind"] == "flaky" and record["flaky_tests"] == found
+    assert record["rerun"] == "gh run rerun 7001 --failed"
+
+
+# ---------------------------------------------------------------- suspects ranked by git blame (#104)
+
+def test_frames_are_read_from_stack_traces():
+    lines = ['Traceback (most recent call last):',
+             '  File "/home/runner/work/shop/shop/cart/tax.py", line 18, in rate',
+             '  File "/opt/hostedtoolcache/Python/3.12.1/x64/lib/python3.12/site-packages/x/y.py", line 9, in f',
+             "tests/test_cart.py:42: AssertionError",
+             "    at Object.<anonymous> (/home/runner/work/web/web/src/cart.test.ts:7:22)",
+             "    at node_modules/jest-circus/build/utils.js:298:28",
+             "thread 'tests::total' panicked at src/cart.rs:12:5:",
+             "    cart_test.go:31: got 41, want 42",
+             "\tat com.shop.CartTest.total(CartTest.java:15)"]
+    assert parse.frames(lines) == [("/home/runner/work/shop/shop/cart/tax.py", 18), ("tests/test_cart.py", 42),
+                                   ("/home/runner/work/web/web/src/cart.test.ts", 7), ("src/cart.rs", 12),
+                                   ("cart_test.go", 31), ("CartTest.java", 15)]
+
+
+def test_suspects_are_ranked_by_blame_on_the_failing_lines(project):
+    git(project, "switch", "-q", "feat/x")
+    (project / "tests" / "test_a.py").write_text("def test_a():\n    assert 1 + 1 == 3\n# a note\n")
+    git(project, "commit", "-qam", "touch the test file")
+    (project / "README.md").write_text("x\n")
+    git(project, "add", "-A")
+    git(project, "commit", "-qm", "unrelated")
+    green, bad = git(project, "rev-parse", "main"), git(project, "rev-parse", "feat/x")
+    plain = compare.compare(str(project), green, bad, ["tests/test_a.py"])
+    assert [c["subject"] for c in plain["commits"]] == ["touch the test file", "break it", "unrelated"]
+    where = [("tests/test_a.py", 2, 2), ("/home/runner/work/p/p/tests/test_a.py", 2, 1), ("../../etc/passwd", 1, 1),
+             ("-rf", 1, 1), ("tests/test_a.py", 999, 1)]
+    ranked = compare.compare(str(project), green, bad, ["tests/test_a.py"], where)
+    assert [c["subject"] for c in ranked["commits"]] == ["break it", "touch the test file", "unrelated"]
+    first = ranked["commits"][0]
+    assert first["blamed"] == ["tests/test_a.py:2"] and first["score"] == 2 and first["suspect"]
+    assert ranked["commits"][1]["suspect"] and ranked["commits"][1]["score"] == 0
+    assert not ranked["commits"][2]["suspect"]
+
+
+def test_triage_blames_the_lines_in_the_log(ci):
+    record = diagnosis.triage(ci)
+    assert record["frames"] == ["tests/test_a.py:2"]
+    assert record["suspects"]["commits"][0]["blamed"] == ["tests/test_a.py:2"]
+    from tabib import cli
+    assert "blame: tests/test_a.py:2" in cli.report(record, "en")
+
+
+# ---------------------------------------------------------------- Playwright, JUnit XML, segfaults (#105)
+
+PLAYWRIGHT_LOG = """\
+Running 4 tests using 2 workers
+
+  ✓  1 [chromium] › tests/example.spec.ts:3:5 › has title (1.2s)
+  ✘  2 [chromium] › tests/example.spec.ts:8:5 › get started link (5.1s)
+  ✘  3 [firefox] › tests/cart.spec.ts:20:7 › cart › adds an item (2.0s)
+  ✘  4 [chromium] › tests/example.spec.ts:8:5 › get started link (retry #1) (5.0s)
+  ✓  5 [firefox] › tests/cart.spec.ts:20:7 › cart › adds an item (retry #1) (1.9s)
+
+  1) [chromium] › tests/example.spec.ts:8:5 › get started link ─────────────────────────────────
+
+    Error: Timed out 5000ms waiting for expect(locator).toBeVisible()
+
+    Locator: getByRole('heading', { name: 'Installation' })
+    Expected: visible
+    Received: <element(s) not found>
+
+      12 |
+      13 |   // Expects page to have a heading with the name of Installation.
+    > 14 |   await expect(page.getByRole('heading', { name: 'Installation' })).toBeVisible();
+         |                                                                     ^
+      15 | });
+
+        at /home/runner/work/web/web/tests/example.spec.ts:14:69
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────
+
+    Error: Timed out 5000ms waiting for expect(locator).toBeVisible()
+
+  2) [firefox] › tests/cart.spec.ts:20:7 › cart › adds an item ─────────────────────────────────
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 1
+    Received: 0
+
+        at /home/runner/work/web/web/tests/cart.spec.ts:24:31
+
+  1 failed
+    [chromium] › tests/example.spec.ts:8:5 › get started link ──────────────────────────────────
+  1 flaky
+    [firefox] › tests/cart.spec.ts:20:7 › cart › adds an item ───────────────────────────────────
+  1 passed (12.3s)
+##[error]Process completed with exit code 1.
+""".splitlines()
+
+
+def test_playwright_failures_leave_out_flaky_tests():
+    found = parse.failures(PLAYWRIGHT_LOG)
+    assert [(f["framework"], f["test"], f["file"], f["line"]) for f in found] == [
+        ("playwright", "[chromium] get started link", "tests/example.spec.ts", 14)]
+    assert found[0]["message"].startswith("Error: Timed out 5000ms waiting for expect(locator).toBeVisible()")
+    without_summary = parse.failures(PLAYWRIGHT_LOG[:PLAYWRIGHT_LOG.index("  1 failed")])
+    assert {f["test"] for f in without_summary} == {"[chromium] get started link", "[firefox] cart > adds an item"}
+    assert reproduce.command(Path("/x"), found)[0] == ["npx", "--no-install", "playwright", "test",
+                                                       "tests/example.spec.ts"]
+
+
+JUNIT_LOG = """\
+$ cat build/test-results/test/TEST-com.shop.CartTest.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.shop.CartTest" tests="3" skipped="0" failures="1" errors="1" timestamp="2026-10-06T07:17:41" hostname="fv-az1" time="0.042">
+  <properties/>
+  <testcase name="totalAddsTax()" classname="com.shop.CartTest" time="0.012">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;42&gt; but was: &lt;41&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;42&gt; but was: &lt;41&gt;
+	at app//org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:151)
+	at app//com.shop.CartTest.totalAddsTax(CartTest.java:27)
+</failure>
+  </testcase>
+  <testcase name="emptyCart()" classname="com.shop.CartTest" time="0.001">
+    <error message="java.lang.NullPointerException" type="java.lang.NullPointerException">java.lang.NullPointerException
+	at app//com.shop.Cart.total(Cart.java:12)
+</error>
+  </testcase>
+  <testcase name="passes()" classname="com.shop.CartTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+</testsuite>
+""".splitlines()
+
+
+def test_junit_xml_in_the_log():
+    found = parse.failures(JUNIT_LOG)
+    assert [(f["framework"], f["test"], f["file"], f["line"]) for f in found] == [
+        ("junit", "com.shop.CartTest.totalAddsTax()", "CartTest.java", 27),
+        ("junit", "com.shop.CartTest.emptyCart()", "Cart.java", 12)]
+    assert found[0]["message"] == "org.opentest4j.AssertionFailedError: expected: <42> but was: <41>"
+    pytest_xml = ('<testsuites><testsuite name="pytest" failures="1"><testcase classname="tests.test_cart" '
+                  'name="test_total" file="tests/test_cart.py" line="41"><failure message="assert 41 == 42">'
+                  'tests/test_cart.py:42: AssertionError</failure></testcase></testsuite></testsuites>')
+    assert [(f["test"], f["file"], f["line"]) for f in parse.junit_xml(pytest_xml)] == [
+        ("tests.test_cart.test_total", "tests/test_cart.py", 42)]
+    bomb = '<?xml version="1.0"?><!DOCTYPE l [<!ENTITY a "aaaa">]><testsuite><testcase name="x">' \
+           '<failure message="&a;"/></testcase></testsuite>'
+    assert parse.junit_xml(bomb) == [] and parse.junit_xml("<testsuite><testcase") == []
+
+
+SEGFAULT_LOGS = [
+    ("""\
+tests/test_native.py Fatal Python error: Segmentation fault
+
+Current thread 0x00007f3a1c8b1740 (most recent call first):
+  File "/home/runner/work/shop/shop/.venv/lib/python3.12/site-packages/fastcart/_core.py", line 88 in total
+  File "/home/runner/work/shop/shop/tests/test_native.py", line 12 in test_crash
+  File "/home/runner/work/shop/shop/.venv/lib/python3.12/site-packages/_pytest/python.py", line 159 in pytest_pyfunc_call
+/home/runner/work/_temp/a1b2.sh: line 1:  2291 Segmentation fault      (core dumped) pytest -q
+##[error]Process completed with exit code 139.""", ("test_crash", "/home/runner/work/shop/shop/tests/test_native.py", 12)),
+    ("""\
+     Running unittests src/lib.rs (target/debug/deps/cart-3f2a1b)
+error: test failed, to rerun pass `--lib`
+
+Caused by:
+  process didn't exit successfully: `/home/runner/work/cart/cart/target/debug/deps/cart-3f2a1b` (signal: 11, SIGSEGV: invalid memory reference)
+##[error]Process completed with exit code 101.""", ("", "", 0)),
+]
+
+
+@pytest.mark.parametrize("log, where", SEGFAULT_LOGS, ids=["python", "rust"])
+def test_segfaults_are_a_signal_and_a_failure(log, where):
+    lines = log.splitlines()
+    assert "segfault" in [s["kind"] for s in parse.signals(lines)]
+    found = parse.failures(lines)
+    assert len(found) == 1 and found[0]["framework"] == "crash" and found[0]["kind"] == "tests"
+    assert (found[0]["test"], found[0]["file"], found[0]["line"]) == where
+    assert "egmentation fault" in found[0]["message"] or "SIGSEGV" in found[0]["message"]
+    verdict = classify.classify({"failures": found, "signals": parse.signals(lines)})
+    assert verdict["kind"] == "code" and any("crashed" in e for e in verdict["evidence"])
+
+
+def test_a_crash_is_not_added_when_the_tests_name_their_failure():
+    lines = ["=== RUN   TestTotal", "panic: runtime error: invalid memory address or nil pointer dereference",
+             "[signal SIGSEGV: segmentation violation code=0x1 addr=0x0 pc=0x4f1c2a]", "--- FAIL: TestTotal (0.00s)",
+             "FAIL\texample.com/shop/cart\t0.012s"]
+    assert [f["framework"] for f in parse.failures(lines)] == ["go"]
