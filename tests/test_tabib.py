@@ -635,3 +635,9 @@ def test_the_worktree_lives_in_a_private_folder(project, monkeypatch):
     monkeypatch.setattr(compare, "git", spy)
     reproduce.run(str(project), git(project, "rev-parse", "feat/x"), "feat/x", FAILING, [])
     assert seen == ["0o700"]
+
+
+def test_triage_reuses_a_saved_run_without_an_updated_time(ci, monkeypatch):
+    first = diagnosis.triage(ci)
+    monkeypatch.setattr(diagnosis, "now", lambda: "2099-01-01T00:00:00")   # a later second
+    assert diagnosis.triage(ci)["created"] == first["created"]

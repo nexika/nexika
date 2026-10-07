@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import sys
 
-from . import check, clean, config, hooks, prose
+from . import config, hooks
 
 USAGE = """usage:
   bayan check [FILE|-] [--level no-code|junior|developer] [--json] [--min-score N]
@@ -31,6 +31,8 @@ def _flag(args: list[str], name: str) -> str | None:
 
 
 def cmd_check(args: list[str]) -> int:
+    from . import check, prose
+
     as_json = "--json" in args
     args = [a for a in args if a != "--json"]
     level = _flag(args, "--level") or config.load()["level"]
@@ -65,6 +67,8 @@ def cmd_check(args: list[str]) -> int:
 
 
 def cmd_clean(args: list[str]) -> int:
+    from . import clean
+
     write = "--write" in args
     dashes = "--keep-dashes" not in args
     files = [a for a in args if not a.startswith("--")]

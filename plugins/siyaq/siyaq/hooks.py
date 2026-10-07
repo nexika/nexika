@@ -66,7 +66,7 @@ def on_prompt(event: dict) -> str | None:
     if prompt.startswith("/"):
         prompt = prompt.split(maxsplit=1)[1] if " " in prompt else ""
     session = str(event.get("session_id") or "")
-    index = idx.load(root, config)
+    index = idx.load(root, config, max_age=idx.FILES_MAX_AGE)
     if not index["n"]:
         return None
     cfg = rank.squeeze(rank.settings(config), context_level(session))
@@ -96,7 +96,9 @@ def on_tool(event: dict) -> str | None:
     except (ValueError, OSError):
         return None
     session = str(event.get("session_id") or "")
-    index = idx.load(root, config)
+    index = idx.load(root, config, max_age=idx.FILES_MAX_AGE)
+    if event.get("tool_name") != "Read" and rel.endswith(".md") and rel not in index["sources"]:
+        idx.forget_files(root)  # a new doc: the next call lists the files again and indexes it
     with state.session_lock(session):
         picked = _pick_for_path(root, rel, index, config, session, event.get("tool_name") == "Read")
     if not picked:
@@ -130,7 +132,7 @@ def on_session_start(event: dict, helper: str) -> str:
     if not ctx:
         return ""
     root, config = ctx
-    index = idx.load(root, config)
+    index = idx.load(root, config, max_age=idx.FILES_MAX_AGE)
     manual = sum(1 for e in index["entries"] if e["kind"] == "manual")
     lines = ["## siyaq (Nexika): project knowledge on demand"]
     if index["n"]:

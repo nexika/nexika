@@ -3,6 +3,11 @@
 import os
 import sys
 
+# Inside a family background model call (#45) the context hooks stay quiet; the tool guard never does.
+if sys.argv[1:3] in (["hook", "session-start"], ["hook", "user-prompt-submit"]) \
+        and os.environ.get("NEXIKA_BACKGROUND") == "1":
+    sys.exit(0)
+
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 
 from haris.cli import entry  # noqa: E402

@@ -21,6 +21,11 @@
     "common/gitinfo.py": [
       "plugins/mizan/mizan/gitinfo.py",
       "plugins/tabib/tabib/gitinfo.py"
+    ],
+    "common/background.py": [
+      "plugins/prof/scripts/prof_background.py",
+      "plugins/itqan/scripts/itqan_background.py",
+      "plugins/hafiz/hafiz/background.py"
     ]
   }
 }

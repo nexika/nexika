@@ -372,6 +372,7 @@ def test_summary_uses_sonnet_names_issue_and_branch(log, capsys, repo, fake_clau
     assert "sk-ant-abcdefghijklmnopqrstuvwx" not in call["prompt"] and "salary" not in call["prompt"]
     saved = next((store.project_dir(repo) / "summaries").glob("*-feat-12-login-0a1b2c3d.md"))
     assert "ghp_" not in saved.read_text(encoding="utf-8") and str(saved) in out
+    assert "sonnet, 1 background model call(s)" in out  # the cost is shown (#45)
 
 
 def test_summary_model_option_and_failures(log, capsys, repo, fake_claude, monkeypatch):

@@ -22,7 +22,10 @@ HOOKED = {p.parent.parent.name: json.loads(p.read_text(encoding="utf-8"))
           for p in sorted(PLUGINS.glob("*/hooks/hooks.json"))}
 DATA_HOMES = {"NEXIKA_STATUS_HOME", "CLAUDE_CONFIG_DIR", "HARIS", "HAFIZ", "ITQAN_LEARN",
               *(f"{name.upper()}_HOME" for name in HOOKED)}
-GUARDS = {"prof": {"PROF_REPORTING": "1"}, "itqan": {"ITQAN_LEARNING": "1"}, "hafiz": {"HAFIZ": "off"}}
+# What each plugin's background job runs with (its own flag plus the family marker, #45)
+GUARDS = {"prof": {"PROF_REPORTING": "1", "NEXIKA_BACKGROUND": "1"},
+          "itqan": {"ITQAN_LEARNING": "1", "NEXIKA_BACKGROUND": "1"},
+          "hafiz": {"HAFIZ": "off", "NEXIKA_BACKGROUND": "1"}}
 SESSION = "together-0001"
 RANK = {"deny": 3, "ask": 2, "allow": 1}
 
@@ -299,7 +302,13 @@ def started(family: Family) -> set[str]:
     return found
 
 
-def test_a_normal_session_end_starts_the_background_jobs(family):
+def _allow_background_calls(nexika_home):
+    nexika_home.mkdir(parents=True, exist_ok=True)
+    (nexika_home / "settings.json").write_text(json.dumps({"background_calls": "on"}))
+
+
+def test_a_normal_session_end_starts_the_background_jobs(family, nexika_home):
+    _allow_background_calls(nexika_home)   # paid background calls need consent since #45
     path = _background_session(family)
     family.fire("SessionEnd", {"reason": "exit", "transcript_path": str(path)})
     assert started(family) == {"prof", "itqan"}  # the harness sees a launch, so the checks below count
@@ -317,10 +326,9 @@ def test_hafiz_hooks_stay_out_of_its_own_summary(family):
     assert not family.data("hafiz").exists()
 
 
-@pytest.mark.xfail(strict=True, reason="#45: each plugin silences only its own hooks; the others still "
-                                       "start their paid background job inside it")
 @pytest.mark.parametrize("plugin", sorted(GUARDS))
-def test_no_background_job_starts_inside_another(family, plugin):
+def test_no_background_job_starts_inside_another(family, plugin, nexika_home):
+    _allow_background_calls(nexika_home)   # consent given, so only the guard can stop them
     path = _background_session(family)
     family.fire("SessionEnd", {"reason": "exit", "transcript_path": str(path)}, env=GUARDS[plugin])
     assert started(family) == set()
