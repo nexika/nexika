@@ -63,6 +63,15 @@ RUFF_CODE = re.compile(r"^([A-Z]+\d+) (.+)$")
 RUFF_ARROW = re.compile(r"^\s*--> (\S+\.py):(\d+):\d+")
 ESLINT_FILE = re.compile(r"^(/\S+\.[cm]?[jt]sx?|\S+/\S+\.[cm]?[jt]sx?)$")
 ESLINT = re.compile(r"^\s+(\d+):\d+\s+error\s+(.+?)\s{2,}(\S+)$")
+# Stack frames and other `path:line` places in a traceback, for git blame (#104).
+FRAMES = [re.compile(r'^\s*File "([^"<>]+)", line (\d+)'),                    # Python (and faulthandler)
+          re.compile(r"^(\S+\.py):(\d+): \w"),                                # pytest
+          re.compile(r"(?:\bat |❯)\s*.*?\(?(?:file://)?([^\s()]+?\.[cm]?[jt]sx?):(\d+):\d+"),   # node
+          re.compile(r"panicked at (\S+?\.rs):(\d+):\d+"),                    # rust
+          re.compile(r"^\s+(\S+\.go):(\d+)(?::\d+)?[: ]"),                      # go
+          re.compile(r"^\s*at [\w.$]+\((\w+\.(?:java|kt|scala)):(\d+)\)")]     # JVM
+FOREIGN = re.compile(r"(?:^|/)(?:site-packages|dist-packages|node_modules|\.cargo/registry|go/pkg/mod|"
+                     r"lib/python\d|hostedtoolcache)/|^(?:/usr|internal|node:)")
 ERROR_LINE = re.compile(r"(?i)^(?:##\[error\]|error(?:\[\w+\])?:|fatal:|npm ERR!|E\s{3})"
                         r"|\b\w+(?:Error|Exception): ")
 
@@ -215,6 +224,22 @@ def failures(lines: list[str]) -> list[dict]:
     return unique[:50]
 
 
+def frames(lines: list[str], limit: int = 30) -> list[tuple[str, int]]:
+    """`(path, line)` places named in stack traces, in log order, without libraries; untrusted paths."""
+    found: list[tuple[str, int]] = []
+    for line in lines:
+        for pattern in FRAMES:
+            m = pattern.search(line)
+            if m and not FOREIGN.search(m.group(1)) and 0 < int(m.group(2)) < 1_000_000:
+                place = (m.group(1), int(m.group(2)))
+                if place not in found:
+                    found.append(place)
+                    if len(found) >= limit:
+                        return found
+                break
+    return found
+
+
 def signals(lines: list[str]) -> list[dict]:
     found = []
     for kind, pattern in SIGNALS:
@@ -237,11 +262,11 @@ def errors(lines: list[str], limit: int = 12) -> list[str]:
 
 
 def read_log(text: str) -> dict:
-    """{job: {failures, signals, errors, lines}} for each job in a failed log."""
+    """{job: {failures, signals, errors, frames, lines}} for each job in a failed log."""
     out = {}
     for job, lines in split_jobs(text).items():
         out[job] = {"failures": failures(lines), "signals": signals(lines), "errors": errors(lines),
-                    "lines": lines}
+                    "frames": frames(lines), "lines": lines}
     return out
 
 

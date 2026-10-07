@@ -49,8 +49,8 @@ def rerun_command(run: dict) -> str:
     return f"gh run rerun {int(run['id'])} --failed"
 
 
-def _gather(log: str) -> tuple[list[dict], list[dict], list[str], dict]:
-    failures, signals, errors, excerpts = [], [], [], {}
+def _gather(log: str) -> tuple[list[dict], list[dict], list[str], dict, list[str]]:
+    failures, signals, errors, excerpts, frames = [], [], [], {}, []
     seen = set()
     for job, found in parse.read_log(log).items():
         for f in found["failures"]:
@@ -60,11 +60,22 @@ def _gather(log: str) -> tuple[list[dict], list[dict], list[str], dict]:
                 seen.add(s["kind"])
                 signals.append({**s, "job": job, "line": secrets.redact(s["line"])})
         errors += [secrets.redact(e) for e in found["errors"] if e not in errors][:12]
+        frames += [f"{path}:{line}" for path, line in found["frames"] if f"{path}:{line}" not in frames]
         if len(excerpts) < 4:
             needles = [f["test"].split("::")[-1] or f["file"] for f in found["failures"][:4]]
             needles += [s["line"][:60] for s in found["signals"][:2]]
             excerpts[job or "log"] = secrets.redact(parse.excerpt(found["lines"], needles))
-    return failures[:50], signals, errors[:12], excerpts
+    return failures[:50], signals, errors[:12], excerpts, frames[:30]
+
+
+def places(failures: list[dict], frames: list[str]) -> list[tuple[str, int, int]]:
+    """Where to run git blame: each failure's own line (weight 2), then the stack frames (weight 1)."""
+    found = [(f["file"], int(f["line"]), 2) for f in failures if f.get("file") and f.get("line")]
+    for frame in frames:
+        path, _, line = frame.rpartition(":")
+        if path and line.isdigit():
+            found.append((path, int(line), 1))
+    return found
 
 
 def publish(record: dict) -> None:
@@ -104,7 +115,7 @@ def triage(info: dict, run_id: int | None = None, refresh: bool = False) -> dict
     if not same:
         existing = {}
     log = secrets.redact(forge.failed_log(info, run))  # whole blocks (keys) before anything is cut
-    failures, signals, errors, excerpts = _gather(log)
+    failures, signals, errors, excerpts, frames = _gather(log)
     fork = forge.from_fork(info, run)
     hist = forge.history(info, run)
     flaky = forge.flaky_tests(info, run, failures) if not hist.get("same_commit_passed") else []
@@ -112,7 +123,7 @@ def triage(info: dict, run_id: int | None = None, refresh: bool = False) -> dict
     files = [f["file"] for f in failures]
     suspects = {"available": False}
     if green:
-        suspects = compare.compare(info["repo"], green["sha"], run["sha"], files)
+        suspects = compare.compare(info["repo"], green["sha"], run["sha"], files, places(failures, frames))
     facts = {"failures": failures, "signals": signals, "errors": errors, "jobs": run["jobs"],
              "same_commit_passed": hist.get("same_commit_passed"), "event": run.get("event"),
              "from_fork": fork, "flaky_tests": flaky,
@@ -124,7 +135,7 @@ def triage(info: dict, run_id: int | None = None, refresh: bool = False) -> dict
                                                   "event", "number", "created", "updated")},
                       "from_fork": fork},
               "jobs": run["jobs"], "failures": failures, "flaky_tests": flaky, "signals": signals,
-              "errors": errors,
+              "errors": errors, "frames": frames,
               "kind": verdict["kind"], "detail": verdict["detail"], "confidence": verdict["confidence"],
               "evidence": [secrets.redact(e) for e in verdict["evidence"]], "history": hist,
               "suspects": {**suspects, "green_run": green.get("id")},
@@ -152,7 +163,8 @@ def diagnose(info: dict, run_id: int | None = None, local_run: bool = True) -> d
     if green and compare.fetch(info["repo"], green["sha"], green.get("branch", "")) and \
             compare.fetch(info["repo"], run["sha"], record["branch"]):
         record["suspects"] = {**compare.compare(info["repo"], green["sha"], run["sha"],
-                                                [f["file"] for f in record["failures"]]),
+                                                [f["file"] for f in record["failures"]],
+                                                places(record["failures"], record.get("frames") or [])),
                               "green_run": green.get("id")}
     if local_run and record["kind"] not in ("flaky", "infra"):
         record["reproduction"] = reproduce.run(info["repo"], run["sha"], record["branch"], record["failures"],

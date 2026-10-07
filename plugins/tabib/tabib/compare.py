@@ -1,7 +1,8 @@
 """What changed between the last green run and the failing one: commits, files, dependency files.
 
 Local git only (diagnose may fetch the two commits first); a commit that touched a file named in a
-failure is marked a suspect.
+failure is marked a suspect. With the places in the failure (the failing line, stack frames), git
+blame at the failing commit ranks the commits: one that last wrote a failing line comes first.
 """
 from __future__ import annotations
 
@@ -100,10 +101,56 @@ def advertised_tip(repo: str, sha: str) -> bool:
     return False
 
 
-def compare(repo: str, green_sha: str, failing_sha: str, failure_files: list[str]) -> dict:
+def resolve(path: str, tracked: set[str], names: dict[str, list[str]]) -> str:
+    """A path from a log (relative, a CI runner's absolute path, or a bare JVM file name) as a file tracked
+    at the failing commit; '' when it is none."""
+    path = path.removeprefix("./")
+    if path in tracked:
+        return path
+    parts = [p for p in path.split("/") if p]
+    if ".." in parts:
+        return ""
+    for i in range(1, len(parts)):
+        if "/".join(parts[i:]) in tracked:
+            return "/".join(parts[i:])
+    found = names.get(path, []) if len(parts) == 1 else []
+    return found[0] if len(found) == 1 else ""
+
+
+def blame(repo: str, failing_sha: str, places: list[tuple[str, int, int]],
+          limit: int = 20) -> dict[str, dict]:
+    """{full sha: {score, blamed}} for the commits that last wrote these lines at the failing commit.
+
+    Each place is (path, line, weight); its path comes from an untrusted log, so only a file tracked at
+    that commit is ever passed to git, after "--".
+    """
+    _, listed = git(repo, "ls-tree", "-r", "--name-only", failing_sha)
+    tracked = set(listed.splitlines())
+    names: dict[str, list[str]] = {}
+    for name in tracked:
+        names.setdefault(name.rsplit("/", 1)[-1], []).append(name)
+    weights: dict[tuple[str, int], int] = {}
+    for path, line, weight in places:
+        file = resolve(path, tracked, names)
+        if file and not file.startswith("-") and 0 < int(line) < 1_000_000:
+            weights[(file, int(line))] = max(weight, weights.get((file, int(line)), 0))
+    found: dict[str, dict] = {}
+    for (file, line), weight in list(weights.items())[:limit]:
+        code, out = git(repo, "blame", "--porcelain", "-L", f"{line},{line}", failing_sha, "--", file)
+        sha = out.split(maxsplit=1)[0] if code == 0 and out else ""
+        if SHA.match(sha):
+            entry = found.setdefault(sha, {"score": 0, "blamed": []})
+            entry["score"] += weight
+            entry["blamed"].append(f"{file}:{line}")
+    return found
+
+
+def compare(repo: str, green_sha: str, failing_sha: str, failure_files: list[str],
+            places: list[tuple[str, int, int]] | None = None) -> dict:
     if not (have(repo, green_sha) and have(repo, failing_sha)):
         return {"available": False, "green_sha": green_sha}
-    _, log = git(repo, "log", "--format=%h%x09%an%x09%s", "--max-count=50", f"{green_sha}..{failing_sha}")
+    _, log = git(repo, "log", "--format=%H%x09%h%x09%an%x09%s", "--max-count=50",
+                 f"{green_sha}..{failing_sha}")
     _, names = git(repo, "diff", "--name-only", green_sha, failing_sha)
     files = [n for n in names.splitlines() if n]
     touched = set()
@@ -111,11 +158,17 @@ def compare(repo: str, green_sha: str, failing_sha: str, failure_files: list[str
     if wanted:
         _, hits = git(repo, "log", "--format=%h", f"{green_sha}..{failing_sha}", "--", *wanted[:20])
         touched = set(hits.split())
+    blamed = blame(repo, failing_sha, places) if places else {}
     commits = []
     for line in log.splitlines():
-        sha, _, rest = line.partition("\t")
+        full, _, rest = line.partition("\t")
+        sha, _, rest = rest.partition("\t")
         author, _, subject = rest.partition("\t")
-        commits.append({"sha": sha, "author": author, "subject": subject[:200], "suspect": sha in touched})
+        hit = blamed.get(full) or {"score": 0, "blamed": []}
+        commits.append({"sha": sha, "author": author, "subject": subject[:200],
+                        "suspect": sha in touched or bool(hit["score"]), **hit})
+    # most blamed first, then those that touched a failing file; newest first otherwise (git log's order)
+    commits.sort(key=lambda c: (-c["score"], not c["suspect"]))
     lock = deps_changed(files)
     return {"available": True, "green_sha": green_sha, "commits": commits, "files": files[:200],
             "deps_changed": lock, "lock_changed": bool(lock)}

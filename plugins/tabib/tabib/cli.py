@@ -56,6 +56,8 @@ def report(record: dict, language: str = "") -> str:
         out.append("  " + t("since", lg, count=len(suspects["commits"]), run=suspects.get("green_run")))
         for c in suspects["commits"][:8]:
             mark = f"  <- {t('suspect', lg)}" if c["suspect"] else ""
+            if c.get("blamed"):
+                mark += f" (blame: {', '.join(c['blamed'][:3])})"
             out.append(f"    {c['sha']} {c['author']}: {c['subject']}{mark}")
         if suspects.get("deps_changed"):
             out.append("  " + t("deps", lg, files=", ".join(suspects["deps_changed"][:5])))

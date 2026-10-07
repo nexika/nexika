@@ -707,3 +707,48 @@ def test_triage_reports_flaky_tests_with_their_runs(ci, monkeypatch):
     record = diagnosis.triage(ci)
     assert record["kind"] == "flaky" and record["flaky_tests"] == found
     assert record["rerun"] == "gh run rerun 7001 --failed"
+
+
+# ---------------------------------------------------------------- suspects ranked by git blame (#104)
+
+def test_frames_are_read_from_stack_traces():
+    lines = ['Traceback (most recent call last):',
+             '  File "/home/runner/work/shop/shop/cart/tax.py", line 18, in rate',
+             '  File "/opt/hostedtoolcache/Python/3.12.1/x64/lib/python3.12/site-packages/x/y.py", line 9, in f',
+             "tests/test_cart.py:42: AssertionError",
+             "    at Object.<anonymous> (/home/runner/work/web/web/src/cart.test.ts:7:22)",
+             "    at node_modules/jest-circus/build/utils.js:298:28",
+             "thread 'tests::total' panicked at src/cart.rs:12:5:",
+             "    cart_test.go:31: got 41, want 42",
+             "\tat com.shop.CartTest.total(CartTest.java:15)"]
+    assert parse.frames(lines) == [("/home/runner/work/shop/shop/cart/tax.py", 18), ("tests/test_cart.py", 42),
+                                   ("/home/runner/work/web/web/src/cart.test.ts", 7), ("src/cart.rs", 12),
+                                   ("cart_test.go", 31), ("CartTest.java", 15)]
+
+
+def test_suspects_are_ranked_by_blame_on_the_failing_lines(project):
+    git(project, "switch", "-q", "feat/x")
+    (project / "tests" / "test_a.py").write_text("def test_a():\n    assert 1 + 1 == 3\n# a note\n")
+    git(project, "commit", "-qam", "touch the test file")
+    (project / "README.md").write_text("x\n")
+    git(project, "add", "-A")
+    git(project, "commit", "-qm", "unrelated")
+    green, bad = git(project, "rev-parse", "main"), git(project, "rev-parse", "feat/x")
+    plain = compare.compare(str(project), green, bad, ["tests/test_a.py"])
+    assert [c["subject"] for c in plain["commits"]] == ["touch the test file", "break it", "unrelated"]
+    where = [("tests/test_a.py", 2, 2), ("/home/runner/work/p/p/tests/test_a.py", 2, 1), ("../../etc/passwd", 1, 1),
+             ("-rf", 1, 1), ("tests/test_a.py", 999, 1)]
+    ranked = compare.compare(str(project), green, bad, ["tests/test_a.py"], where)
+    assert [c["subject"] for c in ranked["commits"]] == ["break it", "touch the test file", "unrelated"]
+    first = ranked["commits"][0]
+    assert first["blamed"] == ["tests/test_a.py:2"] and first["score"] == 2 and first["suspect"]
+    assert ranked["commits"][1]["suspect"] and ranked["commits"][1]["score"] == 0
+    assert not ranked["commits"][2]["suspect"]
+
+
+def test_triage_blames_the_lines_in_the_log(ci):
+    record = diagnosis.triage(ci)
+    assert record["frames"] == ["tests/test_a.py:2"]
+    assert record["suspects"]["commits"][0]["blamed"] == ["tests/test_a.py:2"]
+    from tabib import cli
+    assert "blame: tests/test_a.py:2" in cli.report(record, "en")

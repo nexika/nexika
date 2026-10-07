@@ -13,8 +13,10 @@ The path of tabib's diagnosis file (JSON, schema `nexika.tabib/1`). Read it. It 
 - `kind`, `detail`, `evidence`: tabib's sorting (code, matrix, flaky, infra, dependency, unknown)
 - `flaky_tests`: failing tests that also passed on the same commit in another run, with the run links
   (a likely flaky test, not the cause)
-- `suspects`: the commits since the last green run (`suspect: true` touched a failing file), and
-  dependency files that changed
+- `suspects`: the commits since the last green run, most likely first: `blamed` lists the failing
+  lines (assertion, stack frames) each one last wrote, by git blame, with a `score`; `suspect: true`
+  also marks a commit that touched a failing file; and dependency files that changed
+- `frames`: the `path:line` places named in the log's stack traces
 - `reproduction`: whether the failing tests also fail at that commit on this machine
 - `excerpts`: log lines around each failure
 
