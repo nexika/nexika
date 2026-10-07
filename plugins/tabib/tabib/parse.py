@@ -1,13 +1,15 @@
 """Reading a failed CI log: which tests or checks failed, where, and signs of trouble outside the code.
 
 The log is untrusted text (anyone can open a pull request): it is only matched against fixed
-patterns here, never run or followed. Parsers cover pytest, jest and vitest, go test, dotnet test,
-cargo test, tsc, mypy, ruff and eslint, plus generic error lines; signals cover timeouts, running out of
-memory, the network, rate limits, the runner, credentials and dependency resolution.
+patterns here, never run or followed. Parsers cover pytest, jest and vitest, Playwright, go test,
+dotnet test, cargo test, JUnit XML printed in the log, tsc, mypy, ruff and eslint, plus generic error
+lines and crashes (a segmentation fault); signals cover timeouts, running out of memory, crashes, the
+network, rate limits, the runner, credentials and dependency resolution.
 """
 from __future__ import annotations
 
 import re
+import xml.etree.ElementTree as ET
 
 ANSI = re.compile(r"\x1b(?:\[[0-9;?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)|[@-Z\\-_])")
 CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]")
@@ -31,12 +33,16 @@ SIGNALS = [
                           r"no space left on device|hosted runner encountered an error")),
     ("auth", re.compile(r"(?i)bad credentials|401 Unauthorized|403 Forbidden|input required and not supplied|"
                         r"permission denied \(publickey\)|resource not accessible by integration")),
+    ("segfault", re.compile(r"(?i)segmentation (?:fault|violation)|\bSIGSEGV\b|exit code 139\b|"
+                            r"Windows fatal exception: access violation")),
     # GitHub prints this after a timeout, a shutdown and a cancel alike: the weakest sign.
     ("cancelled", re.compile(r"(?i)the operation was canceled")),
     ("dependency", re.compile(r"(?i)could not find a version that satisfies|no matching distribution|"
                               r"\bERESOLVE\b|npm ERR! code ETARGET|version solving failed|"
                               r"unable to resolve dependency|no solution found when resolving")),
 ]
+
+SIGNALS_BY_KIND = dict(SIGNALS)
 
 # ------------------------------------------------------------------ failures (in the code)
 
@@ -63,6 +69,26 @@ RUFF_CODE = re.compile(r"^([A-Z]+\d+) (.+)$")
 RUFF_ARROW = re.compile(r"^\s*--> (\S+\.py):(\d+):\d+")
 ESLINT_FILE = re.compile(r"^(/\S+\.[cm]?[jt]sx?|\S+/\S+\.[cm]?[jt]sx?)$")
 ESLINT = re.compile(r"^\s+(\d+):\d+\s+error\s+(.+?)\s{2,}(\S+)$")
+# Stack frames and other `path:line` places in a traceback, for git blame (#104).
+FRAMES = [re.compile(r'^\s*File "([^"<>]+)", line (\d+)'),                    # Python (and faulthandler)
+          re.compile(r"^(\S+\.py):(\d+): \w"),                                # pytest
+          re.compile(r"(?:\bat |❯)\s*.*?\(?(?:file://)?([^\s()]+?\.[cm]?[jt]sx?):(\d+):\d+"),   # node
+          re.compile(r"panicked at (\S+?\.rs):(\d+):\d+"),                    # rust
+          re.compile(r"^\s+(\S+\.go):(\d+)(?::\d+)?[: ]"),                      # go
+          re.compile(r"^\s*at (?:[\w.@-]+/+)?(?!(?:java|javax|jdk|sun|kotlin|junit|org\.junit|"   # JVM, not
+                     r"org\.opentest4j|org\.gradle|org\.apache\.maven)\.)"                     # the libraries
+                     r"[\w.$<>]+\((\w+\.(?:java|kt|scala)):(\d+)\)")]
+FOREIGN = re.compile(r"(?:^|/)(?:site-packages|dist-packages|node_modules|\.cargo/registry|go/pkg/mod|"
+                     r"lib/python\d|hostedtoolcache)/|^(?:/usr|internal|node:)")
+# Playwright: "  1) [chromium] › tests/a.spec.ts:8:5 › describe › title ───", the "✘  2 [...] › ..."
+# lines of the list reporter, and the summary's "  1 failed" / "  1 flaky" groups that follow.
+PW_ENTRY = re.compile(r"^\s*(?:(\d+)\) |✘\s+\d+ )?\[([^\]]+)\] › (\S+?):(\d+):\d+ › (.+?)"
+                      r"(?: \(retry #\d+\))?(?: \(\d+(?:\.\d+)?m?s\))?(?:\s*─+)?\s*$")
+PW_GROUP = re.compile(r"^\s*\d+ (failed|flaky|passed|skipped|interrupted|did not run)\b")
+PW_ERROR = re.compile(r"^\s*(?:\w+)?Error\b")
+JUNIT_START = re.compile(r"<(testsuites|testsuite)\b")
+FAULT_HEADER = re.compile(r"Fatal Python error: Segmentation fault")
+FAULT_FRAME = re.compile(r'^\s*File "([^"]+)", line (\d+) in (test\w*)')
 ERROR_LINE = re.compile(r"(?i)^(?:##\[error\]|error(?:\[\w+\])?:|fatal:|npm ERR!|E\s{3})"
                         r"|\b\w+(?:Error|Exception): ")
 
@@ -99,6 +125,115 @@ def _failure(framework: str, kind: str, test: str = "", file: str = "", line: in
              message: str = "") -> dict:
     return {"framework": framework, "kind": kind, "test": _short(test, 200), "file": file, "line": line,
             "message": _short(message), "package": ""}
+
+
+def playwright(lines: list[str]) -> list[dict]:
+    """Playwright's failed tests: the summary's "failed" group when there is one (a test in its "flaky"
+    group passed on a retry), else the numbered error blocks, else the list reporter's ✘ lines."""
+    blocks: dict[tuple[str, str, str], dict] = {}
+    listed: list[tuple[str, str, str]] = []
+    groups: dict[str, list[tuple[str, str, str]]] = {}
+    block: dict | None = None
+    group = ""
+    for line in lines:
+        if m := PW_GROUP.match(line):
+            group, block = m.group(1), None
+            groups.setdefault(group, [])
+            continue
+        if m := PW_ENTRY.match(line):
+            key = (m.group(2), m.group(3), m.group(5).replace(" › ", " > "))
+            if m.group(1):
+                group = ""
+                block = blocks.setdefault(key, _failure("playwright", "tests", f"[{key[0]}] {key[2]}", key[1],
+                                                        int(m.group(4))))
+                block["placed"] = False
+            elif line.lstrip().startswith("✘"):
+                listed.append(key)
+            elif group:
+                groups[group].append(key)
+            continue
+        group = "" if line.strip() else group
+        if block is not None and not block.get("done"):
+            if not block["message"] and PW_ERROR.match(line):
+                block["message"] = _short(line)
+            if (m := JS_LOC.search(line)) and not block["placed"] \
+                    and m.group(1).split("/")[-1] == block["file"].split("/")[-1]:
+                block.update(line=int(m.group(2)), placed=True)
+            if line.strip().startswith("Retry #"):
+                block["done"] = True
+    if "failed" in groups or "interrupted" in groups:
+        keys = groups.get("failed", []) + groups.get("interrupted", [])
+    else:
+        keys = list(blocks) or listed
+    out = []
+    for key in dict.fromkeys(keys):
+        failure = blocks.get(key) or _failure("playwright", "tests", f"[{key[0]}] {key[2]}", key[1])
+        failure.pop("placed", None)
+        failure.pop("done", None)
+        out.append(failure)
+    return out
+
+
+def junit_xml(text: str) -> list[dict]:
+    """Failed and errored test cases in a JUnit XML report (JUnit, Gradle, Maven, pytest --junitxml).
+
+    The report is untrusted: one with a DOCTYPE or an entity is refused, so nothing is ever expanded.
+    """
+    if len(text) > 4_000_000 or "<!DOCTYPE" in text.upper() or "<!ENTITY" in text.upper():
+        return []
+    try:
+        root = ET.fromstring(text)
+    except (ET.ParseError, ValueError):
+        return []
+    found = []
+    for case in root.iter("testcase"):
+        for child in case:
+            if child.tag not in ("failure", "error"):
+                continue
+            body = (child.text or "").strip()
+            places = frames(body.splitlines())
+            file = case.get("file") or ""
+            place = next((p for p in places if not file or p[0].split("/")[-1] == file.split("/")[-1]), None)
+            given = case.get("line") or ""
+            line = place[1] if place else int(given) if given.isdigit() else 0
+            name, owner = case.get("name") or "", case.get("classname") or ""
+            message = child.get("message") or (body.splitlines() or [child.get("type") or child.tag])[0]
+            found.append(_failure("junit", "tests", f"{owner}.{name}" if owner else name,
+                                  file or (place[0] if place else ""), line, message))
+            break
+        if len(found) >= 50:
+            break
+    return found
+
+
+def junit_blocks(lines: list[str]) -> list[str]:
+    """JUnit XML reports printed in the log (`cat build/test-results/...xml`), as text."""
+    out: list[str] = []
+    block: list[str] = []
+    root = ""
+    for line in lines:
+        if not block and (m := JUNIT_START.search(line)):
+            root, line = m.group(1), line[m.start():]
+        if root:
+            block.append(line)
+            if f"</{root}>" in line or len(block) > 20_000:
+                out.append("\n".join(block))
+                block, root = [], ""
+    return out
+
+
+def crash(lines: list[str]) -> dict | None:
+    """A segmentation fault, as a failure; with Python's faulthandler, at the test that was running."""
+    hit = next((line for line in lines if SIGNALS_BY_KIND["segfault"].search(line)), None)
+    if hit is None:
+        return None
+    failure = _failure("crash", "tests", message=hit)
+    started = next((i for i, line in enumerate(lines) if FAULT_HEADER.search(line)), -1)
+    for line in lines[started + 1:] if started >= 0 else []:
+        if m := FAULT_FRAME.match(line):
+            failure.update(test=m.group(3), file=m.group(1), line=int(m.group(2)))
+            break
+    return failure
 
 
 def failures(lines: list[str]) -> list[dict]:
@@ -206,6 +341,11 @@ def failures(lines: list[str]) -> list[dict]:
         for f in pending_jest:
             f["line"] = js_lines.get(f["file"].split("/")[-1], 0) if f["file"] else 0
         found += pending_jest
+    found += playwright(lines)
+    for block in junit_blocks(lines):
+        found += junit_xml(block)
+    if not found and (crashed := crash(lines)):
+        found.append(crashed)  # the tests stopped with the process; nothing else names the failure
     seen, unique = set(), []
     for f in found:
         key = (f["framework"], f["test"], f["file"], f["line"])
@@ -213,6 +353,22 @@ def failures(lines: list[str]) -> list[dict]:
             seen.add(key)
             unique.append(f)
     return unique[:50]
+
+
+def frames(lines: list[str], limit: int = 30) -> list[tuple[str, int]]:
+    """`(path, line)` places named in stack traces, in log order, without libraries; untrusted paths."""
+    found: list[tuple[str, int]] = []
+    for line in lines:
+        for pattern in FRAMES:
+            m = pattern.search(line)
+            if m and not FOREIGN.search(m.group(1)) and 0 < int(m.group(2)) < 1_000_000:
+                place = (m.group(1), int(m.group(2)))
+                if place not in found:
+                    found.append(place)
+                    if len(found) >= limit:
+                        return found
+                break
+    return found
 
 
 def signals(lines: list[str]) -> list[dict]:
@@ -237,11 +393,11 @@ def errors(lines: list[str], limit: int = 12) -> list[str]:
 
 
 def read_log(text: str) -> dict:
-    """{job: {failures, signals, errors, lines}} for each job in a failed log."""
+    """{job: {failures, signals, errors, frames, lines}} for each job in a failed log."""
     out = {}
     for job, lines in split_jobs(text).items():
         out[job] = {"failures": failures(lines), "signals": signals(lines), "errors": errors(lines),
-                    "lines": lines}
+                    "frames": frames(lines), "lines": lines}
     return out
 
 

@@ -46,12 +46,18 @@ def report(record: dict, language: str = "") -> str:
     out += ["", f"{t('h_kind', lg)}: {label(record['kind'], record['detail'], lg)} "
                 f"({t('confidence', lg, level=record['confidence'])})"]
     out += [f"  {e}" for e in record["evidence"][:5]]
+    for f in record.get("flaky_tests") or []:
+        out.append("  " + t("flaky_test", lg, test=f["test"], passed=len(f["passed"]),
+                            failed=len(f["failed"])))
+        out += [f"    {url}" for url in (f["passed"] + f["failed"])[:4] if url]
     suspects = record.get("suspects") or {}
     out += ["", t("h_since", lg)]
     if suspects.get("available"):
         out.append("  " + t("since", lg, count=len(suspects["commits"]), run=suspects.get("green_run")))
         for c in suspects["commits"][:8]:
             mark = f"  <- {t('suspect', lg)}" if c["suspect"] else ""
+            if c.get("blamed"):
+                mark += f" (blame: {', '.join(c['blamed'][:3])})"
             out.append(f"    {c['sha']} {c['author']}: {c['subject']}{mark}")
         if suspects.get("deps_changed"):
             out.append("  " + t("deps", lg, files=", ".join(suspects["deps_changed"][:5])))
