@@ -31,11 +31,13 @@ def op_read(ctx: Context, path: str, start=None, end=None, symbol: str | None = 
     except files.FileError as exc:
         raise OpError(str(exc)) from None
     shown = files.rel(p, ctx.cwd)
-    text, n_masked = mask_text(raw, p.name)
+    # raw: exact bytes, for editing (issue #22)
+    text, n_masked = (raw, 0) if mode == "raw" else mask_text(raw, p.name)
     lines = _split_lines(text)
     total = len(lines)
     baseline = len(raw.encode("utf-8"))
-    masked_note = f", {n_masked} secret(s) masked" if n_masked else ""
+    masked_note = (f", {n_masked} secret(s) masked: don't copy [masked] lines into an edit,"
+                   f" use read:{shown}:raw for exact text" if n_masked else "")
 
     if mode == "outline":
         symbols = outline(raw, p.suffix)
@@ -75,8 +77,9 @@ def op_read(ctx: Context, path: str, start=None, end=None, symbol: str | None = 
         )
 
     key = str(p)
-    state, extra = ("new", None) if ctx.fresh or mode == "full" else ctx.cache.check(key, text)
-    ctx.cache.remember(key, text)
+    seen = mask_text(raw, p.name)[0]  # the cache compares masked text, whichever way it was read
+    state, extra = ("new", None) if ctx.fresh or mode in ("full", "raw") else ctx.cache.check(key, seen)
+    ctx.cache.remember(key, seen)
     if state == "unchanged":
         return Result(
             f"read {shown} (unchanged, {total} lines)",
@@ -93,14 +96,14 @@ def op_read(ctx: Context, path: str, start=None, end=None, symbol: str | None = 
 
 def parse_read(parts: list[str]) -> dict:
     if not parts or not parts[0]:
-        raise OpError("usage: read:PATH[:START[:END]] | read:PATH@SYMBOL | read:PATH:outline|full")
+        raise OpError("usage: read:PATH[:START[:END]] | read:PATH@SYMBOL | read:PATH:outline|full|raw")
     path, rest = parts[0], parts[1:]
     out: dict = {"path": path}
     if "@" in path and not Path(path).exists():
         base, _, sym = path.rpartition("@")
         if base and sym:
             out.update(path=base, symbol=sym)
-    if rest and rest[0] in ("outline", "full"):
+    if rest and rest[0] in ("outline", "full", "raw"):
         out["mode"] = rest[0]
     elif rest and rest[0]:
         out["start"] = rest[0]
@@ -111,7 +114,9 @@ def parse_read(parts: list[str]) -> dict:
 
 OPS = [
     OpSpec("read", op_read, parse_read, READ,
-           "read:PATH  read:PATH:START[:END]  read:PATH@SYMBOL  read:PATH:outline  read:PATH:full",
+           "read:PATH  read:PATH:START[:END]  read:PATH@SYMBOL  read:PATH:outline  read:PATH:full"
+           "  read:PATH:raw",
            "Read a file. Repeated reads of unchanged files return a short notice, changed files "
-           "a diff. @SYMBOL returns one class/function; outline returns signatures only."),
+           "a diff. @SYMBOL returns one class/function; outline returns signatures only; raw returns "
+           "the exact text without secret masking."),
 ]
