@@ -114,10 +114,15 @@ def _stacks(root: Path, all_files: list[Path]) -> list[dict]:
         cmds = {t: f"make {t}" for t in ("build", "test", "lint") if t in targets}
         if cmds:
             stacks.append({"name": "make", "where": "Makefile", "commands": cmds})
-    stacks.sort(key=lambda s: s.get("nested", False))  # stable: order within each group is kept
     for stack in stacks:
-        stack.pop("nested", None)
+        stack.setdefault("nested", False)
+    stacks.sort(key=lambda s: s["nested"])  # stable: order within each group is kept
     return stacks
+
+
+# A nested build (benchmarks/starter, plugins/x/engine) builds one sub-project, not this one, so
+# run:build never falls back to it (#109). Nested test/lint still fill in, as before.
+ROOT_ONLY = {"build"}
 
 
 def commands_for(ctx: Context, stacks: list[dict] | None = None) -> dict[str, tuple[str, str]]:
@@ -129,7 +134,8 @@ def commands_for(ctx: Context, stacks: list[dict] | None = None) -> dict[str, tu
         stacks = _stacks(ctx.root, files.list_files(ctx.root))
     for stack in stacks:
         for kind, cmd in stack["commands"].items():
-            out.setdefault(kind, (cmd, stack["name"]))
+            if not (stack.get("nested") and kind in ROOT_ONLY):
+                out.setdefault(kind, (cmd, stack["name"]))
     return out
 
 
@@ -188,7 +194,16 @@ def _execute(cmd: str, cwd: Path, timeout: int) -> tuple[str, int | None, float]
 def op_run(ctx: Context, what: str = "test", cmd: str | None = None, timeout=RUN_TIMEOUT) -> Result:
     seconds = int_arg(timeout, "timeout")
     if cmd is None:
-        known = commands_for(ctx)
+        stacks = _stacks(ctx.root, files.list_files(ctx.root))
+        known = commands_for(ctx, stacks)
+        nested = [c for s in stacks if s["nested"] for k, c in s["commands"].items() if k == what]
+        if what not in known and nested:
+            raise OpError(
+                f"no '{what}' command at the project root, so barq won't run a sub-project's. "
+                "Nested ones: " + "; ".join(nested) +
+                f'. Run one with {{"op":"run","cmd":"..."}} or set {{"commands": {{"{what}": "..."}}}} '
+                "in .barq.json"
+            )
         if what not in known:
             raise OpError(
                 f"no '{what}' command detected for this project. Set one in .barq.json: "
