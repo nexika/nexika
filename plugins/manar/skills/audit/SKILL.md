@@ -10,9 +10,10 @@ The manar helper is printed in the session note ("manar helper: python3 .../bin/
 it is written `manar`.
 
 1. Target: $ARGUMENTS. A live URL, or a built folder (`dist/`, `_site/`, `out/`, `wwwroot/`) with
-   `--base-url https://the-real-domain`. For a local dev server add `--allow-local`.
+   `--base-url https://the-real-domain` (manar infers it from a CNAME file or the home page's
+   canonical, and stops if it can't). For a local dev server add `--allow-local`.
 2. Run `manar audit <target>` (default 50 pages; `--max-pages N`). It saves the result in
-   `.manar/audits/` so later audits can be compared with `manar diff`.
+   `.manar/audits/` so later audits of the same site can be compared with `manar diff [target]`.
 3. Explain the result in plain words:
    - the **checklist score** is "known problems found", not a ranking prediction;
    - **AI crawlers**: search/assistant bots must be allowed to be cited; training bots are a

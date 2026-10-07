@@ -236,6 +236,14 @@ def site_checks(origin: str, home: Page | None, robots_txt: str | None, sitemap_
             add("robots-blocks-ai-search", "high", "ai-visibility",
                 f"robots.txt blocks AI search/assistant crawlers: {', '.join(blocked)}",
                 "allow them so AI answers can read and cite the site (training bots can stay blocked)")
+        paths = [urllib.parse.urlsplit(pg.url).path or "/" for pg in pages]
+        partly = aibots.blocked_paths(robots_txt, paths)
+        partly.pop("Googlebot", None)
+        if partly:
+            sample = "; ".join(f"{bot}: {', '.join(p[:3])}" for bot, p in list(partly.items())[:4])
+            add("robots-blocks-ai-search-paths", "high", "ai-visibility",
+                f"robots.txt blocks AI search/assistant crawlers from parts of the site ({sample})",
+                "allow these sections unless they must stay out of AI answers")
         if "sitemap:" not in robots_txt.lower():
             add("robots-no-sitemap", "low", "indexing", "robots.txt has no Sitemap line",
                 "add 'Sitemap: <absolute URL of sitemap.xml>'")

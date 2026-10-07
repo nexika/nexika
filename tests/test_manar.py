@@ -480,3 +480,57 @@ def test_plan_shows_a_cost_estimate(tmp_path, monkeypatch, capsys):
     assert cli.main(["visibility", "plan"]) == 0
     out = capsys.readouterr().out
     assert "= 9 API calls" in out and "about $" in out and "estimate" in out
+
+
+# ---------------------------------------------------------------- issue #84: diff, robots paths, base URL
+
+
+def test_diff_compares_audits_of_the_same_site(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "project_root", lambda: tmp_path)
+    folder = tmp_path / ".manar" / "audits"
+    folder.mkdir(parents=True)
+
+    def audit(name, target, score, ids):
+        (folder / name).write_text(json.dumps({"target": target, "score": score, "date": "2026-10-07T10:00:00",
+                                               "site": [{"id": i, "url": target} for i in ids], "pages": []}))
+    audit("1-a.json", "https://a.dev", 50, ["sitemap-missing"])
+    audit("2-b.json", "https://b.dev", 90, [])
+    audit("3-a.json", "https://a.dev", 60, [])
+    assert cli.main(["diff"]) == 0
+    out = capsys.readouterr().out
+    assert "score 50 -> 60" in out and "https://a.dev" in out
+    audit("4-b.json", "https://b.dev", 95, [])
+    assert cli.main(["diff", "https://a.dev"]) == 0 and "score 50 -> 60" in capsys.readouterr().out
+
+
+def test_robots_blocking_a_section_for_ai_search_is_reported():
+    robots = "User-agent: OAI-SearchBot\nDisallow: /docs/\n\nUser-agent: *\nAllow: /\nSitemap: https://x.dev/s.xml\n"
+    home = p(GOOD, "https://x.dev/")
+    docs = p(GOOD, "https://x.dev/docs/guide")
+    findings = checks.site_checks("https://x.dev", home, robots, ["https://x.dev/"], "", None, [home, docs])
+    blocked = [f for f in findings if f.id == "robots-blocks-ai-search-paths"]
+    assert blocked and "OAI-SearchBot" in blocked[0].message and "/docs/" in blocked[0].message
+    assert "robots-blocks-ai-search" not in {f.id for f in findings}
+
+
+def test_folder_base_url_is_inferred_or_required(tmp_path):
+    (tmp_path / "index.html").write_text('<html><head><link rel="canonical" href="https://nexika.dev/">'
+                                         "</head><body>x</body></html>")
+    assert crawl.scan_folder(tmp_path).origin == "https://nexika.dev"
+    (tmp_path / "CNAME").write_text("docs.nexika.dev\n")
+    assert crawl.scan_folder(tmp_path).origin == "https://docs.nexika.dev"
+    bare = tmp_path / "bare"
+    bare.mkdir()
+    (bare / "index.html").write_text("<html><body>x</body></html>")
+    with pytest.raises(ValueError, match="--base-url"):
+        crawl.scan_folder(bare)
+
+
+def test_arabic_passages_are_not_scored_lower_for_having_no_capital_letters():
+    english = ("Riyadh Metro is a network of six lines that opened in 2024 and carries 3.6 million riders "
+               "a day across 85 stations, run by the Royal Commission for Riyadh City.")
+    arabic = ("مترو الرياض هو شبكة من ست خطوط افتتحت في 2024 وتنقل 3.6 مليون راكب يوميًا عبر 85 محطة، "
+              "وتديرها الهيئة الملكية لمدينة الرياض بعد سنوات من البناء والتجارب.")
+    gap = citability.block_score("What is Riyadh Metro?", english)[0] - \
+        citability.block_score("ما هو مترو الرياض؟", arabic)[0]
+    assert abs(gap) <= 2    # was 10: the Arabic passage could never earn the "names" points

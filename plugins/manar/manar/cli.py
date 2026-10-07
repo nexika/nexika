@@ -15,7 +15,7 @@ from .checks import ORDER
 USAGE = f"""manar {__version__} - be found by search engines and AI assistants, and measure it (Nexika)
 
   manar audit URL|FOLDER [--max-pages N] [--allow-local] [--base-url URL] [--json]
-  manar diff                                   compare the last two audits of this project
+  manar diff [TARGET]                          compare the last two audits of one site
   manar detect                                 web framework and where fixes go
   manar generate robots --origin URL [--block-training]
   manar generate sitemap|llms URL|FOLDER [--name N --summary S] [--base-url URL] [--allow-local]
@@ -50,7 +50,7 @@ def _flag(args: list[str], name: str, default: str | None = None) -> str | None:
 
 
 def _collect(target: str, args: list[str]) -> crawl.Site:
-    base_url = _flag(args, "--base-url", "https://example.com")
+    base_url = _flag(args, "--base-url")
     allow_local = "--allow-local" in args
     max_pages = int(_flag(args, "--max-pages", "50"))
     if re.match(r"https?://", target):
@@ -140,12 +140,23 @@ def cmd_audit(args: list[str]) -> int:
     return 0
 
 
-def cmd_diff() -> int:
-    files = sorted((project_root() / ".manar" / "audits").glob("*.json"), key=lambda f: f.stat().st_mtime_ns)
-    if len(files) < 2:
-        print("manar: need two audits to compare (run manar audit twice)")
+def cmd_diff(args: list[str] | None = None) -> int:
+    """The newest two audits of one site: the TARGET given, else the site audited last."""
+    files = sorted((project_root() / ".manar" / "audits").glob("*.json"),
+                   key=lambda f: (f.stat().st_mtime_ns, f.name))
+    audits = []
+    for f in files:
+        try:
+            audits.append(json.loads(f.read_text(encoding="utf-8")))
+        except (OSError, ValueError):
+            continue
+    target = (args[0] if args else audits[-1]["target"] if audits else "").rstrip("/")
+    same = [a for a in audits if str(a.get("target", "")).rstrip("/") == target]
+    if len(same) < 2:
+        print(f"manar: need two audits of {target or 'the same site'} to compare (run manar audit twice)")
         return 1
-    old, new = (json.loads(f.read_text(encoding="utf-8")) for f in files[-2:])
+    old, new = same[-2:]
+    print(f"site: {target}")
 
     def keys(audit):
         return {(i["id"], i["url"]) for i in audit["site"] + [i for p in audit["pages"] for i in p["issues"]]}
@@ -249,7 +260,7 @@ def main(argv: list[str]) -> int:
         if cmd == "audit" and args:
             return cmd_audit(args)
         if cmd == "diff":
-            return cmd_diff()
+            return cmd_diff(args)
         if cmd == "detect":
             print(json.dumps(framework.detect(project_root()), indent=1))
             return 0

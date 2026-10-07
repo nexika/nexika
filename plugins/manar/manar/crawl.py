@@ -113,8 +113,31 @@ def crawl(start: str, max_pages: int = 50, allow_local: bool = False, delay: flo
     return site
 
 
-def scan_folder(folder: Path, base_url: str = "https://example.com") -> Site:
-    """A built site on disk (dist/, _site/, out/, wwwroot/): no network needed."""
+def infer_base_url(folder: Path) -> str | None:
+    """The site's address from a built folder: a CNAME file (GitHub Pages), else the home page's
+    canonical or og:url."""
+    cname = folder / "CNAME"
+    if cname.is_file():
+        host = cname.read_text(encoding="utf-8", errors="replace").strip().splitlines()
+        if host and host[0].strip():
+            return "https://" + host[0].strip().removeprefix("https://").removeprefix("http://").rstrip("/")
+    index = folder / "index.html"
+    if index.is_file():
+        home = page.parse(index.read_text(encoding="utf-8", errors="replace"), "https://placeholder.invalid/")
+        for url in (home.canonical, home.meta.get("og:url", "")):
+            parts = urllib.parse.urlsplit(url)
+            if parts.scheme in ("http", "https") and parts.netloc and parts.netloc != "placeholder.invalid":
+                return f"{parts.scheme}://{parts.netloc}"
+    return None
+
+
+def scan_folder(folder: Path, base_url: str | None = None) -> Site:
+    """A built site on disk (dist/, _site/, out/, wwwroot/): no network needed. Without base_url the
+    address is inferred; a wrong guess would turn every canonical into a false warning, so no guess
+    means an error."""
+    base_url = base_url or infer_base_url(folder)
+    if not base_url:
+        raise ValueError(f"can't tell the address of the site in {folder}: pass --base-url https://your.site")
     base_url = base_url.rstrip("/")
     site = Site(base_url)
     robots = folder / "robots.txt"

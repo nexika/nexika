@@ -52,6 +52,27 @@ def access(robots_txt: str | None, path: str = "/") -> dict[str, bool]:
     return {b.name: parser.can_fetch(b.name, path) for b in BOTS}
 
 
+def blocked_paths(robots_txt: str | None, paths: list[str]) -> dict[str, list[str]]:
+    """Answer bots allowed on / but blocked on some of these paths (or on a path robots.txt names)
+    that Googlebot may fetch, e.g. Disallow: /docs/ for OAI-SearchBot only. Paths closed to every
+    crawler (/admin/) are a site decision, not an AI gap. bot -> blocked paths."""
+    if not robots_txt:
+        return {}
+    named = [ln.split(":", 1)[1].split("#")[0].strip() for ln in robots_txt.splitlines()
+             if ln.strip().lower().startswith("disallow:")]
+    parser = urllib.robotparser.RobotFileParser()
+    parser.parse(robots_txt.splitlines())
+    candidates = [p for p in dict.fromkeys([*paths, *named])
+                  if p.startswith("/") and p != "/" and parser.can_fetch("Googlebot", p)]
+    out: dict[str, list[str]] = {}
+    for b in BOTS:
+        if b.kind in VISIBILITY_KINDS and parser.can_fetch(b.name, "/"):
+            blocked = [p for p in candidates if not parser.can_fetch(b.name, p)]
+            if blocked:
+                out[b.name] = blocked
+    return out
+
+
 def blocked_for_visibility(allowed: dict[str, bool]) -> list[Bot]:
     return [b for b in BOTS if b.kind in VISIBILITY_KINDS and not allowed.get(b.name, True)]
 

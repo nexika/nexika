@@ -31,7 +31,7 @@ actually mention and cite you**, so you can see what each change did.
 
 ```
 manar audit URL|FOLDER [--max-pages N] [--allow-local] [--base-url URL] [--json]
-manar diff
+manar diff [TARGET]
 manar detect
 manar generate robots --origin URL [--block-training]
 manar generate sitemap|llms URL|FOLDER --name N --summary S
