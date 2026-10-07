@@ -129,7 +129,8 @@ def failures(lines: list[str]) -> list[dict]:
             node = m.group(2) + (m.group(3) or "")
             found.append(_failure("pytest", "tests", node, m.group(2), 0, m.group(4) or m.group(1).lower()))
         elif m := MYPY.match(line):
-            found.append(_failure("mypy", "build", m.group(4) or "mypy", m.group(1), int(m.group(2)), m.group(3)))
+            found.append(_failure("mypy", "build", m.group(4) or "mypy", m.group(1), int(m.group(2)),
+                                  m.group(3)))
         elif m := GO_RUN.match(line):
             go_run = m.group(1)
         elif GO_END.match(line):
@@ -166,7 +167,8 @@ def failures(lines: list[str]) -> list[dict]:
             if owner:
                 cargo_panics.setdefault(owner, (m.group(2), int(m.group(3)), message))
             else:
-                target = next((f for f in reversed(found) if f["framework"] == "cargo" and not f["file"]), None)
+                target = next((f for f in reversed(found)
+                               if f["framework"] == "cargo" and not f["file"]), None)
                 if target:
                     target.update(file=m.group(2), line=int(m.group(3)), message=_short(message))
         elif m := TSC.match(line):

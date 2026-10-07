@@ -7,7 +7,8 @@ these read commands run, with arguments as a list (no shell):
     gh pr list --state open --json number,author,headRefName,url --limit 200
     gh pr list --state open --search review-requested:@me --json number --limit 100
     gh pr checks <number> --json name,bucket,link
-    gh run list --branch=<branch> --json databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt --limit 20
+    gh run list --branch=<branch> --limit 20
+        --json databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt
     gh run view <id> --json jobs
     glab mr list --output json
     glab mr list --reviewer=@me --output json
@@ -141,7 +142,8 @@ def timing(all_runs: list[dict], running: list[dict], now: float | None = None) 
     took = sorted(int(end - start) for r in all_runs
                   if r.get("status") == "completed" and r.get("name") in names
                   and r.get("conclusion") in ("success", "failure")
-                  and (start := _when(r.get("startedAt"))) and (end := _when(r.get("updatedAt"))) and end > start)
+                  and (start := _when(r.get("startedAt")))
+                  and (end := _when(r.get("updatedAt"))) and end > start)
     if not took:
         return {"elapsed": elapsed, "eta": None}
     usual = took[len(took) // 2]
@@ -315,7 +317,8 @@ def cached(info: dict) -> dict:
     if ci and ci.get("head") != info.get("head"):
         ci = {**ci, "stale": True}  # a new commit: the old result stays shown until the new one is in
     factor = IDLE_FACTOR if idle(data, ci) else 1
-    due = not fresh(prs, PR_TTL * factor) or not fresh(ci, ci_ttl(ci) * factor) or bool(ci and ci.get("stale"))
+    due = (not fresh(prs, PR_TTL * factor) or not fresh(ci, ci_ttl(ci) * factor)
+           or bool(ci and ci.get("stale")))
     return {"prs": prs, "ci": ci, "due": due}
 
 

@@ -16,15 +16,15 @@ LOCKFILES = re.compile(r"(?:^|/)(?:package-lock\.json|npm-shrinkwrap\.json|pnpm-
 SHA = re.compile(r"^[0-9a-f]{7,64}$")
 # Which dependency files can change a failure, by the tool that reported it.
 ECOSYSTEMS = {
-    "python": re.compile(r"(?:^|/)(?:poetry\.lock|uv\.lock|Pipfile(?:\.lock)?|requirements[\w.-]*\.(?:txt|in)|"
-                         r"pyproject\.toml|setup\.(?:cfg|py))$"),
+    "python": re.compile(r"(?:^|/)(?:poetry\.lock|uv\.lock|Pipfile(?:\.lock)?|"
+                         r"requirements[\w.-]*\.(?:txt|in)|pyproject\.toml|setup\.(?:cfg|py))$"),
     "node": re.compile(r"(?:^|/)(?:package-lock\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock)$"),
     "go": re.compile(r"(?:^|/)go\.(?:mod|sum)$"),
     "rust": re.compile(r"(?:^|/)Cargo\.(?:toml|lock)$"),
     "dotnet": re.compile(r"(?:^|/)(?:packages\.lock\.json|[^/]+\.csproj|Directory\.Packages\.props)$"),
 }
-FRAMEWORK_ECOSYSTEM = {"pytest": "python", "ruff": "python", "mypy": "python", "jest": "node", "eslint": "node",
-                       "tsc": "node", "go": "go", "cargo": "rust", "dotnet": "dotnet"}
+FRAMEWORK_ECOSYSTEM = {"pytest": "python", "ruff": "python", "mypy": "python", "jest": "node",
+                       "eslint": "node", "tsc": "node", "go": "go", "cargo": "rust", "dotnet": "dotnet"}
 
 
 def git(cwd: str, *args: str, timeout: float = 30) -> tuple[int, str]:
@@ -74,7 +74,10 @@ def advertised_by_origin(repo: str, sha: str, branch: str) -> bool:
 
 
 def deps_changed(files: list[str], framework: str = "") -> list[str]:
-    """Dependency files among these; with a framework, only its ecosystem's (pytest ignores package-lock.json)."""
+    """Dependency files among these; with a framework, only its ecosystem's.
+
+    pytest ignores package-lock.json, jest ignores uv.lock.
+    """
     scope = ECOSYSTEMS.get(FRAMEWORK_ECOSYSTEM.get(framework, ""), LOCKFILES)
     return [f for f in files if scope.search(f)]
 

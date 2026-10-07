@@ -13,7 +13,8 @@ import re
 
 TAIL_BYTES = 4 * 1024 * 1024
 STATUSES = ("pending", "in_progress", "completed")
-NOTICE = re.compile(r"<task-notification>.*?<tool-use-id>([\w-]+)</tool-use-id>.*?<status>(\w+)</status>", re.S)
+NOTICE = re.compile(r"<task-notification>.*?<tool-use-id>([\w-]+)</tool-use-id>.*?<status>(\w+)</status>",
+                    re.S)
 FINISHED = ("completed", "failed", "killed", "stopped", "error")
 
 
@@ -55,7 +56,8 @@ def _text_of(content) -> str:
     if isinstance(content, str):
         return content
     if isinstance(content, list):
-        return "\n".join(str(b.get("text", "")) for b in content if isinstance(b, dict) and b.get("type") == "text")
+        return "\n".join(str(b.get("text", "")) for b in content
+                         if isinstance(b, dict) and b.get("type") == "text")
     return ""
 
 
@@ -64,7 +66,8 @@ def _is_prompt(row: dict) -> bool:
     if row.get("type") != "user" or row.get("isMeta"):
         return False
     content = (row.get("message") or {}).get("content")
-    if isinstance(content, list) and any(isinstance(b, dict) and b.get("type") == "tool_result" for b in content):
+    if isinstance(content, list) and any(isinstance(b, dict) and b.get("type") == "tool_result"
+                                         for b in content):
         return False
     text = _text_of(content)
     return bool(text.strip()) and "<task-notification>" not in text
@@ -91,11 +94,15 @@ def agents_from_transcript(path: str) -> list[dict]:
                 continue
             if block.get("type") == "tool_use" and block.get("name") == "Agent" and block.get("id"):
                 given = block.get("input") or {}
-                found[block["id"]] = {"id": block["id"], "type": str(given.get("subagent_type") or "general-purpose"),
+                found[block["id"]] = {"id": block["id"],
+                                      "type": str(given.get("subagent_type") or "general-purpose"),
                                       "description": str(given.get("description") or ""), "status": "running"}
             elif block.get("type") == "tool_result" and block.get("tool_use_id") in found:
-                launched = (row.get("toolUseResult") or {}).get("status") == "async_launched" \
-                    if isinstance(row.get("toolUseResult"), dict) else "launched" in _text_of(block.get("content"))
+                record = row.get("toolUseResult")
+                if isinstance(record, dict):
+                    launched = record.get("status") == "async_launched"
+                else:
+                    launched = "launched" in _text_of(block.get("content"))
                 if not launched:
                     found[block["tool_use_id"]]["status"] = "completed"
         for use_id, state in NOTICE.findall(_text_of(content)):

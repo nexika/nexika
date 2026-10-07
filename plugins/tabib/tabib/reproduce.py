@@ -151,7 +151,8 @@ def sweep(repo: str) -> None:
             continue
         place = Path(line[len("worktree "):])
         parent = place.parent
-        if place.name != "worktree" or not parent.name.startswith("tabib-") or parent.parent.resolve() != temp:
+        ours = place.name == "worktree" and parent.name.startswith("tabib-")
+        if not ours or parent.parent.resolve() != temp:
             continue
         try:
             owner = int((parent / "owner").read_text().strip())
