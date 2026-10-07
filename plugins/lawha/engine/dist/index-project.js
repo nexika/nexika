@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative, sep } from "node:path";
+import { basename, join, relative, sep } from "node:path";
 import ts from "typescript";
 const SKIP = new Set(["node_modules", ".git", "dist", "build", ".next", ".output", ".vinxi", ".lawha", "coverage", ".turbo"]);
 function walk(dir, match, out = []) {
@@ -86,17 +86,97 @@ function components(root, files) {
     }
     return out;
 }
+/** Props of a Vue single-file component: defineProps<{ ... }>() or defineProps({ name: Type }). */
+function vueProps(text) {
+    const typed = /defineProps\s*<\s*(\{[\s\S]*?\})\s*>\s*\(/.exec(text);
+    if (typed) {
+        const source = ts.createSourceFile("props.ts", `type P = ${typed[1]}`, ts.ScriptTarget.ES2022, true);
+        const alias = source.statements[0];
+        if (alias && ts.isTypeAliasDeclaration(alias) && ts.isTypeLiteralNode(alias.type)) {
+            return alias.type.members.filter(ts.isPropertySignature).slice(0, 40).map((m) => ({ name: m.name.getText(source), type: m.type?.getText(source) ?? "unknown", optional: !!m.questionToken }));
+        }
+    }
+    const runtime = /defineProps\s*\(\s*(\{[\s\S]*?\})\s*\)/.exec(text);
+    if (runtime) {
+        const source = ts.createSourceFile("props.ts", `const p = ${runtime[1]}`, ts.ScriptTarget.ES2022, true);
+        const init = source.statements[0]?.declarationList.declarations[0]?.initializer;
+        if (init && ts.isObjectLiteralExpression(init)) {
+            return init.properties.filter(ts.isPropertyAssignment).slice(0, 40).map((p) => {
+                const value = p.initializer;
+                const typeOf = (e) => (e ? e.getText(source).toLowerCase() : "unknown");
+                if (ts.isObjectLiteralExpression(value)) {
+                    const field = (k) => value.properties.find((q) => ts.isPropertyAssignment(q) && q.name.getText(source) === k)?.initializer;
+                    return { name: p.name.getText(source), type: typeOf(field("type")), optional: field("required")?.kind !== ts.SyntaxKind.TrueKeyword };
+                }
+                return { name: p.name.getText(source), type: typeOf(value), optional: true };
+            });
+        }
+    }
+    return [];
+}
+function vueComponents(root, files) {
+    return files.filter((f) => f.endsWith(".vue")).slice(0, 400).map((f) => ({ name: basename(f, ".vue"), file: relative(root, f), props: vueProps(read(f)) }));
+}
+/** Tailwind 3 keeps its tokens in tailwind.config.*: theme values, read without running the file. */
+function tailwindTokens(root) {
+    const file = ["tailwind.config.ts", "tailwind.config.js", "tailwind.config.mjs", "tailwind.config.cjs"].map((n) => join(root, n)).find((p) => existsSync(p));
+    if (!file)
+        return [];
+    const source = ts.createSourceFile(file, read(file), ts.ScriptTarget.ES2022, true);
+    const tokens = [];
+    const flatten = (node, path) => {
+        for (const p of node.properties) {
+            if (!ts.isPropertyAssignment(p) || tokens.length >= 300)
+                continue;
+            const key = ts.isStringLiteral(p.name) || ts.isIdentifier(p.name) || ts.isNumericLiteral(p.name) ? p.name.text : p.name.getText(source);
+            const at = key === "extend" && path.length === 0 ? path : [...path, key];
+            if (ts.isObjectLiteralExpression(p.initializer))
+                flatten(p.initializer, at);
+            else if (ts.isStringLiteralLike(p.initializer) || ts.isNumericLiteral(p.initializer))
+                tokens.push({ name: at.join("."), value: p.initializer.text, source: relative(root, file) });
+        }
+    };
+    const visit = (node) => {
+        if (ts.isPropertyAssignment(node) && node.name.getText(source) === "theme" && ts.isObjectLiteralExpression(node.initializer))
+            flatten(node.initializer, []);
+        else
+            ts.forEachChild(node, visit);
+    };
+    visit(source);
+    return tokens;
+}
+/** Next.js routes: the app router's page files (route groups and slots left out) and the pages router. */
+function nextRoutes(root) {
+    const routes = [];
+    for (const dir of [join(root, "app"), join(root, "src", "app")].filter((d) => existsSync(d))) {
+        for (const page of walk(dir, (p) => /[\\/]page\.(tsx|ts|jsx|js|mdx)$/.test(p))) {
+            const parts = relative(dir, page).split(sep).slice(0, -1).filter((s) => !/^\(.*\)$/.test(s) && !s.startsWith("@"));
+            routes.push("/" + parts.join("/"));
+        }
+    }
+    for (const dir of [join(root, "pages"), join(root, "src", "pages")].filter((d) => existsSync(d))) {
+        for (const page of walk(dir, (p) => /\.(tsx|ts|jsx|js|mdx)$/.test(p))) {
+            const parts = relative(dir, page).replace(/\.(tsx|ts|jsx|js|mdx)$/, "").split(sep);
+            if (parts[0] === "api" || parts.some((s) => s.startsWith("_")))
+                continue;
+            if (parts.at(-1) === "index")
+                parts.pop();
+            routes.push("/" + parts.join("/"));
+        }
+    }
+    return routes;
+}
 const HEX = /#[0-9a-fA-F]{3,8}\b/;
 const ARBITRARY = /\b[\w:-]+-\[(\d+(?:\.\d+)?(?:px|rem|em))\]/;
 const PHYSICAL = /(?<![\w-])(?:[\w-]+:)?(?:-?(?:ml|mr|pl|pr)-[\w./[\]-]+|text-(?:left|right)|(?:left|right)-[\w./[\]-]+|rounded-(?:l|r|tl|tr|bl|br)(?:-[\w-]+)?|border-(?:l|r)(?:-[\w-]+)?)(?![\w-])/;
 function drift(root, files) {
     const out = [];
-    for (const file of files.filter((f) => /\.(tsx|jsx)$/.test(f))) {
+    for (const file of files.filter((f) => /\.(tsx|jsx|vue)$/.test(f))) {
         read(file).split("\n").forEach((line, i) => {
             if (out.length >= 200)
                 return;
             const at = { file: relative(root, file), line: i + 1 };
-            const classAttr = /className=|cn\(|clsx\(|cva\(/.test(line);
+            const classAttr = /className=|cn\(|clsx\(|cva\(|\bclass=|:class=/.test(line);
             if (HEX.test(line) && !line.trim().startsWith("//"))
                 out.push({ ...at, kind: "hard-coded colour", text: line.trim().slice(0, 140) });
             if (classAttr && ARBITRARY.test(line))
@@ -112,8 +192,8 @@ export function indexProject(root) {
     const deps = { ...pkg.dependencies, ...pkg.devDependencies };
     const dep = (name) => deps[name] ?? null;
     const src = existsSync(join(root, "src")) ? join(root, "src") : root;
-    const files = walk(src, (p) => /\.(tsx|ts|jsx|css)$/.test(p) && !p.endsWith(".d.ts"));
-    const tokens = files.filter((f) => f.endsWith(".css")).flatMap((f) => cssTokens(f, read(f), root));
+    const files = walk(src, (p) => /\.(tsx|ts|jsx|css|vue)$/.test(p) && !p.endsWith(".d.ts"));
+    const tokens = [...files.filter((f) => f.endsWith(".css")).flatMap((f) => cssTokens(f, read(f), root)), ...tailwindTokens(root)];
     const shadcnConfig = JSON.parse(read(join(root, "components.json")) || "null");
     const uiAlias = shadcnConfig?.aliases?.ui ?? "@/components/ui";
     const uiDir = [join(root, "src", "components", "ui"), join(root, uiAlias.replace(/^@\//, "src/")), join(root, "components", "ui")].find((d) => existsSync(d)) ?? null;
@@ -123,9 +203,10 @@ export function indexProject(root) {
         components: uiDir ? readdirSync(uiDir).filter((n) => /\.(tsx|jsx)$/.test(n)).map((n) => n.replace(/\.(tsx|jsx)$/, "")).sort() : [],
     };
     const routesDir = join(src, "routes");
-    const routes = existsSync(routesDir)
-        ? walk(routesDir, (p) => /\.(tsx|ts|jsx)$/.test(p)).map((p) => "/" + relative(routesDir, p).replace(/\.(tsx|ts|jsx)$/, "").split(sep).join("/")).sort()
-        : [];
+    const routes = [...new Set([
+            ...(existsSync(routesDir) ? walk(routesDir, (p) => /\.(tsx|ts|jsx)$/.test(p)).map((p) => "/" + relative(routesDir, p).replace(/\.(tsx|ts|jsx)$/, "").split(sep).join("/")) : []),
+            ...nextRoutes(root),
+        ])].sort();
     const fonts = new Set();
     for (const name of Object.keys(deps))
         if (name.startsWith("@fontsource"))
@@ -138,6 +219,8 @@ export function indexProject(root) {
         root,
         stack: {
             react: dep("react"),
+            next: dep("next"),
+            vue: dep("vue"),
             tanstackRouter: dep("@tanstack/react-router"),
             tanstackStart: dep("@tanstack/react-start"),
             tailwind: dep("tailwindcss"),
@@ -146,7 +229,7 @@ export function indexProject(root) {
         },
         tokens,
         shadcn,
-        components: components(root, files).filter((c) => !uiDir || !c.file.startsWith(relative(root, uiDir))),
+        components: [...components(root, files), ...vueComponents(root, files)].filter((c) => !uiDir || !c.file.startsWith(relative(root, uiDir))),
         routes,
         fonts: [...fonts],
         drift: drift(root, files),

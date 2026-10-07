@@ -56,7 +56,7 @@ check exits 1 when the verdict is fail (unless --no-fail-exit), so it can gate C
 
 async function check(url: string, a: ReturnType<typeof parseArgs>): Promise<number> {
   const { closePage, launch, openVariant, redirectedTo, variantName } = await import("./browser.js");
-  const { audit } = await import("./audit.js");
+  const { audit, shiftFinding } = await import("./audit.js");
   const { iconFindings, icons } = await import("./icons.js");
   const { see } = await import("./see.js");
   const { diff } = await import("./diff.js");
@@ -102,7 +102,26 @@ async function check(url: string, a: ReturnType<typeof parseArgs>): Promise<numb
         await page.screenshot({ path: file, fullPage: true, animations: "disabled" });
         const height = await page.evaluate(() => document.documentElement.scrollHeight);
         run.shots.push({ variant: name, width: v.width, theme: v.theme, dir: v.dir, motion: v.motion, file: relative(out, file), height } satisfies Shot);
-        if (a["no-audit"] !== true) run.findings.push(...(await audit(page, v, { expectRtl })).findings);
+        if (a["no-audit"] !== true) {
+          const audited = await audit(page, v, { expectRtl });
+          const shift = audited.findings.findIndex((f) => f.check === "layout.shift");
+          if (shift >= 0) {
+            // CLS swings from load to load (cache, fonts, timing): load twice more and keep the median.
+            const loads = [audited.facts.cls];
+            for (let i = 0; i < 2; i++) {
+              const again = await openVariant(browser, { url, rtlUrl, ...load }, v);
+              try {
+                loads.push(await again.evaluate(() => (window as unknown as { __lawhaCls?: number }).__lawhaCls ?? 0));
+              } finally {
+                await closePage(again);
+              }
+            }
+            const median = [...loads].sort((x, y) => x - y)[1]!;
+            const where = { width: v.width, theme: v.theme, dir: v.dir, motion: v.motion };
+            audited.findings.splice(shift, 1, ...(median > 0.1 ? [{ ...shiftFinding(median, audited.facts.shifted, loads), ...where }] : []));
+          }
+          run.findings.push(...audited.findings);
+        }
         if (a["no-audit"] !== true && v.motion === "full" && dirs.length > 1) {
           const key = `${v.width}|${v.theme}`;
           iconsBy.set(key, { ...iconsBy.get(key), [v.dir]: await icons(page) });

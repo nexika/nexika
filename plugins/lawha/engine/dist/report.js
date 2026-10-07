@@ -54,16 +54,21 @@ function shotsSection(run) {
         .join("");
 }
 /** The same problem at several widths is one problem, seen in several places. */
+/** Checks that report one page-wide cause: one problem however many widths and elements it shows on. */
+const BY_CHECK = new Set(["layout.shift"]);
 export function groupFindings(findings) {
     const rank = { fail: 0, warn: 1, info: 2 };
     const groups = new Map();
     for (const f of findings) {
-        const key = [f.severity, f.check, f.selector ?? "", f.message.replace(/\d+(\.\d+)?/g, "#")].join("|");
+        const key = BY_CHECK.has(f.check) ? f.check : [f.severity, f.check, f.selector ?? "", f.message.replace(/\d+(\.\d+)?/g, "#")].join("|");
         const where = [`${f.width ?? "?"}px`, f.dir === "rtl" ? "RTL" : "", f.theme === "dark" ? "dark" : "", f.motion === "reduce" ? "reduced motion" : ""].filter(Boolean).join(" ");
         const g = groups.get(key);
         if (g) {
             if (!g.where.includes(where))
                 g.where.push(where);
+            // The worst one speaks for the group.
+            if (rank[f.severity] < rank[g.severity])
+                Object.assign(g, { severity: f.severity, message: f.message, selector: f.selector });
         }
         else
             groups.set(key, { severity: f.severity, check: f.check, message: f.message, selector: f.selector, where: [where] });

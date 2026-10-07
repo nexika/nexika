@@ -53,8 +53,8 @@ once with "reduce motion" on.
   exact Motion transitions), then `lawha check --against` compares it with each frame: how much it **looks**
   like the design, position for position, and where heights drift. See the
   [showcase](../../showcases/figma-portfolio/README.md): 95.4% / 91.4% / 93.2% at 387 / 1024 / 1440.
-- `/lawha:system` reads the project's design system: Tailwind `@theme` tokens and CSS variables,
-  shadcn/ui components, your components with their props, TanStack routes, fonts. It lists drift
+- `/lawha:system` reads the project's design system: Tailwind `@theme` tokens, `tailwind.config.js` and CSS variables,
+  shadcn/ui components, your React and Vue components with their props, TanStack and Next.js routes, fonts. It lists drift
   (hard-coded colours, `p-[13px]`, left/right utilities) and saves `.lawha/system.json` so new
   pages reuse what exists.
 - `/lawha:direct` gives a project a design when you cannot picture one.

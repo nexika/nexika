@@ -113,6 +113,34 @@ test("a broken module breaks only its own command", () => {
   assert.match(figma.stderr, /lawha:/);
 });
 
+test("one layout shift is one problem across widths, and one unlucky load is not reported", async () => {
+  const out = tmp();
+  const summary = lawha("check", page("shift.html"), "--widths", "390,1280", "--no-see", "--no-record", "--out", out);
+  assert.equal(summary.top.filter((t) => t.includes("layout.shift")).length, 1, summary.top.join("\n"));
+  assert.match(summary.top.find((t) => t.includes("layout.shift")), /median/);
+  const server = await app();
+  try {
+    assert.ok(!checks(await checkAsync([server.url("/shift")])).has("layout.shift"), "only the first of three loads shifted");
+  } finally {
+    server.stop();
+  }
+});
+
+test("index reads Next.js routes, Vue components and tailwind.config.js", () => {
+  const out = join(tmp(), "system.json");
+  lawha("index", join(FIX, "project-wide"), "--out", out);
+  const s = JSON.parse(readFileSync(out, "utf8"));
+  assert.deepEqual(s.routes, ["/", "/about", "/blog/[slug]", "/pricing"]);
+  assert.ok(s.tokens.some((t) => t.name === "colors.brand" && t.value === "#1f3a5f" && t.source === "tailwind.config.js"), JSON.stringify(s.tokens));
+  assert.ok(s.tokens.some((t) => t.name === "borderRadius.card" && t.value === "12px"));
+  const card = s.components.find((c) => c.name === "PriceCard");
+  assert.deepEqual(card?.props, [{ name: "title", type: "string", optional: false }, { name: "price", type: "number", optional: true }]);
+  assert.ok(s.drift.some((d) => d.file.endsWith("PriceCard.vue") && d.kind === "physical utility"));
+  assert.ok(s.drift.some((d) => d.file.endsWith("PriceCard.vue") && d.kind === "hard-coded colour"));
+  assert.equal(s.stack.next, "15.5.0");
+  assert.equal(s.stack.vue, "3.5.0");
+});
+
 test("every planted fault is found, once per problem", () => {
   const out = tmp();
   const summary = lawha("check", page("bad.html"), "--widths", "390,1280", "--out", out);

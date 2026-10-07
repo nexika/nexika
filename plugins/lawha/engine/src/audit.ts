@@ -207,7 +207,13 @@ const SAFE_PROPS = new Set(["transform", "opacity", "translate", "scale", "rotat
 
 export interface AuditResult {
   findings: Finding[];
-  facts: { cls: number; targets: number; axeViolations: number };
+  facts: { cls: number; shifted: string[]; targets: number; axeViolations: number };
+}
+
+/** The layout-shift finding; `loads` are the CLS of each load when it was measured more than once. */
+export function shiftFinding(cls: number, shifted: string[], loads: number[] = []): Omit<Finding, "width" | "theme" | "dir" | "motion"> {
+  const measured = loads.length > 1 ? `median CLS ${round(cls, 3)} of ${loads.length} loads, from ${round(Math.min(...loads), 3)} to ${round(Math.max(...loads), 3)}` : `CLS ${round(cls, 3)}`;
+  return { check: "layout.shift", severity: cls > 0.25 ? "fail" : "warn", message: `Layout shifts while loading (${measured}; good is 0.1 or less)${shifted.length ? `; what moved: ${shifted.join(", ")}` : ""}. Reserve the space (fixed heights, aspect-ratio, a skeleton the same size as the content).` };
 }
 
 /**
@@ -383,7 +389,7 @@ export async function audit(page: Page, v: Variant, opts: { expectRtl: boolean }
     for (const m of await scriptMotion(page)) {
       add({ check: "motion.reduced", severity: "fail", message: `Something moves by script (requestAnimationFrame or a timer) with "reduce motion" on; check matchMedia("(prefers-reduced-motion: reduce)") before animating.`, selector: m.selector, box: m.box });
     }
-    return { findings, facts: { cls: round(facts.cls, 3), targets: facts.targets.length, axeViolations: 0 } };
+    return { findings, facts: { cls: round(facts.cls, 3), shifted: facts.shifted, targets: facts.targets.length, axeViolations: 0 } };
   }
 
   if (facts.scrollWidth > facts.viewport + 1) {
@@ -419,9 +425,7 @@ export async function audit(page: Page, v: Variant, opts: { expectRtl: boolean }
     add({ check: "phone.tiny-text", severity: "warn", message: `Text at ${t.size}px is hard to read.`, selector: t.selector });
   }
 
-  if (facts.cls > 0.1) {
-    add({ check: "layout.shift", severity: facts.cls > 0.25 ? "fail" : "warn", message: `Layout shifts while loading (CLS ${round(facts.cls, 3)}; good is 0.1 or less)${facts.shifted.length ? `; what moved: ${facts.shifted.join(", ")}` : ""}. Reserve the space (fixed heights, aspect-ratio, a skeleton the same size as the content).` });
-  }
+  if (facts.cls > 0.1) add(shiftFinding(facts.cls, facts.shifted));
 
   const rtlSeverity = opts.expectRtl ? "fail" : "info";
   // At every width: a menu or a section a script draws only on phones has its own CSS.
@@ -477,5 +481,5 @@ export async function audit(page: Page, v: Variant, opts: { expectRtl: boolean }
       });
     }
   }
-  return { findings, facts: { cls: round(facts.cls, 3), targets: facts.targets.length, axeViolations } };
+  return { findings, facts: { cls: round(facts.cls, 3), shifted: facts.shifted, targets: facts.targets.length, axeViolations } };
 }
