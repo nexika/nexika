@@ -29,10 +29,18 @@ ENGINES = {
 DEFAULT_MAX_CALLS = 30
 
 
+# Rough cost of one call in US dollars (search fee plus typical tokens), for `plan` only; providers change
+# prices, so this is an estimate. Gemini's free tier often covers a small panel.
+COST_PER_CALL = {"gemini": 0.035, "perplexity": 0.008, "openai": 0.015, "anthropic": 0.035}
+
+
 @dataclass
 class Answer:
+    """`citations` are the sources the answer links to inline; that is what "cited" means for every
+    engine. `retrieved` are sources the engine only read."""
     text: str
-    citations: list[str] = field(default_factory=list)   # URLs (and source titles when engines give them)
+    citations: list[str] = field(default_factory=list)
+    retrieved: list[str] = field(default_factory=list)
 
 
 def _post(url: str, headers: dict, body: dict, timeout: int = 90) -> dict:
@@ -48,26 +56,51 @@ def _post(url: str, headers: dict, body: dict, timeout: int = 90) -> dict:
         raise RuntimeError(str(getattr(exc, "reason", exc))) from None
 
 
-def ask_gemini(prompt, key, model, post=_post) -> Answer:
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *args, **kwargs):
+        return None
+
+
+def resolve_redirect(url: str) -> str | None:
+    """Where a Gemini grounding redirect points (its Location header), without following it."""
+    opener = urllib.request.build_opener(_NoRedirect)
+    try:
+        opener.open(urllib.request.Request(url, method="HEAD"), timeout=10)
+    except urllib.error.HTTPError as exc:
+        return exc.headers.get("Location")
+    except (urllib.error.URLError, TimeoutError, ValueError):
+        return None
+    return None
+
+
+def ask_gemini(prompt, key, model, post=_post, resolve=resolve_redirect) -> Answer:
     data = post(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
                 {"x-goog-api-key": key},
                 {"contents": [{"parts": [{"text": prompt}]}], "tools": [{"google_search": {}}]})
     cand = (data.get("candidates") or [{}])[0]
     text = "".join(p.get("text", "") for p in (cand.get("content") or {}).get("parts", []))
-    cites = []
-    for chunk in (cand.get("groundingMetadata") or {}).get("groundingChunks", []):
+    meta = cand.get("groundingMetadata") or {}
+    chunks = meta.get("groundingChunks") or []
+    used = {i for s in meta.get("groundingSupports") or [] for i in s.get("groundingChunkIndices") or []}
+    cites, retrieved = [], []
+    for i, chunk in enumerate(chunks):
         web = chunk.get("web") or {}
-        cites += [v for v in (web.get("uri"), web.get("title")) if v]
-    return Answer(text, cites)
+        uri = web.get("uri") or ""
+        # Gemini links through a redirect: resolve it, so path-scoped domains (github.com/o/r) can match;
+        # the title (a bare host) is the fallback
+        source = (resolve(uri) if "vertexaisearch" in uri else uri) or web.get("title")
+        if source:
+            (cites if i in used else retrieved).append(source)
+    return Answer(text, cites, retrieved)
 
 
 def ask_perplexity(prompt, key, model, post=_post) -> Answer:
     data = post("https://api.perplexity.ai/chat/completions", {"Authorization": f"Bearer {key}"},
                 {"model": model, "messages": [{"role": "user", "content": prompt}]})
     text = ((data.get("choices") or [{}])[0].get("message") or {}).get("content", "")
-    cites = list(data.get("citations") or []) + [r.get("url") for r in data.get("search_results") or []
-                                                  if r.get("url")]
-    return Answer(text, cites)
+    cites = list(data.get("citations") or [])   # the [n] references in the answer
+    retrieved = [r.get("url") for r in data.get("search_results") or [] if r.get("url")]
+    return Answer(text, cites, retrieved)
 
 
 def ask_openai(prompt, key, model, post=_post) -> Answer:
@@ -86,14 +119,14 @@ def ask_anthropic(prompt, key, model, post=_post) -> Answer:
                 {"x-api-key": key, "anthropic-version": "2023-06-01"},
                 {"model": model, "max_tokens": 1024, "messages": [{"role": "user", "content": prompt}],
                  "tools": [{"type": "web_search_20250305", "name": "web_search", "max_uses": 3}]})
-    text, cites = [], []
+    text, cites, retrieved = [], [], []
     for block in data.get("content") or []:
         if block.get("type") == "text":
             text.append(block.get("text", ""))
             cites += [c.get("url") for c in block.get("citations") or [] if c.get("url")]
         elif block.get("type") == "web_search_tool_result" and isinstance(block.get("content"), list):
-            cites += [r.get("url") for r in block["content"] if r.get("url")]
-    return Answer("".join(text), cites)
+            retrieved += [r.get("url") for r in block["content"] if r.get("url")]
+    return Answer("".join(text), cites, retrieved)
 
 
 ASK = {"gemini": ask_gemini, "perplexity": ask_perplexity, "openai": ask_openai, "anthropic": ask_anthropic}
@@ -166,9 +199,10 @@ def run(panel: dict, engines: dict[str, tuple[str, str]], ask=None, ref: str = "
                     answer = ask[engine](prompt["text"], key, model)
                     position = is_cited(answer.citations, panel.get("domains", []))
                     rec.update(mentioned=mentions(answer.text, names), cited=position is not None,
-                               position=position, citations=answer.citations[:15], error="")
+                               position=position, citations=answer.citations[:15],
+                               retrieved=answer.retrieved[:15], error="")
                 except Exception as exc:  # one engine failing must not stop the run
-                    rec.update(mentioned=False, cited=False, position=None, citations=[],
+                    rec.update(mentioned=False, cited=False, position=None, citations=[], retrieved=[],
                                error=str(exc)[:300])
                 records.append(rec)
     return records

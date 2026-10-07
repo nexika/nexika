@@ -232,20 +232,21 @@ def fake_post(response):
 def test_engine_parsers():
     post, calls = fake_post({"candidates": [{"content": {"parts": [{"text": "Try Nexika."}]},
                                              "groundingMetadata": {"groundingChunks": [
-                                                 {"web": {"uri": "https://vertexaisearch/x", "title": "github.com"}}]}}]})
-    ans = visibility.ask_gemini("q", "K", "m", post)
+                                                 {"web": {"uri": "https://vertexaisearch/x", "title": "github.com"}}],
+                                                 "groundingSupports": [{"groundingChunkIndices": [0]}]}}]})
+    ans = visibility.ask_gemini("q", "K", "m", post, resolve=lambda url: None)   # unresolved: the title
     assert ans.text == "Try Nexika." and "github.com" in ans.citations
     assert calls[0][1] == {"x-goog-api-key": "K"} and calls[0][2]["tools"] == [{"google_search": {}}]
     post, _ = fake_post({"choices": [{"message": {"content": "A"}}], "citations": ["https://a.com"],
                          "search_results": [{"url": "https://b.com"}]})
-    assert visibility.ask_perplexity("q", "K", "sonar", post).citations == ["https://a.com", "https://b.com"]
+    assert visibility.ask_perplexity("q", "K", "sonar", post).citations == ["https://a.com"]
     post, _ = fake_post({"output": [{"type": "message", "content": [{"text": "B", "annotations": [
         {"type": "url_citation", "url": "https://c.com"}]}]}]})
     assert visibility.ask_openai("q", "K", "m", post).citations == ["https://c.com"]
     post, _ = fake_post({"content": [{"type": "web_search_tool_result", "content": [{"url": "https://d.com"}]},
                                      {"type": "text", "text": "C", "citations": [{"url": "https://e.com"}]}]})
     ans = visibility.ask_anthropic("q", "K", "m", post)
-    assert ans.text == "C" and ans.citations == ["https://d.com", "https://e.com"]
+    assert ans.text == "C" and ans.citations == ["https://e.com"]
 
 
 def test_mentions_and_citations():
@@ -440,3 +441,42 @@ def test_report_shows_ranges_and_only_compares_like_with_like():
     # same setup: a small change is within noise, a large one is a real change
     assert "within noise" in visibility.report(_records(3), _records(2))
     assert "real change" in visibility.report(_records(9), _records(0))
+
+
+# ---------------------------------------------------------------- issue #62: one meaning of "cited"
+
+
+def test_cited_means_linked_in_the_answer_for_every_engine():
+    # sources an engine only retrieved are not citations, for any engine
+    post, _ = fake_post({"choices": [{"message": {"content": "A [1]"}}], "citations": ["https://a.com"],
+                         "search_results": [{"url": "https://a.com"}, {"url": "https://b.com"}]})
+    ans = visibility.ask_perplexity("q", "K", "sonar", post)
+    assert ans.citations == ["https://a.com"] and "https://b.com" in ans.retrieved
+    post, _ = fake_post({"content": [{"type": "web_search_tool_result", "content": [{"url": "https://d.com"}]},
+                                     {"type": "text", "text": "C", "citations": [{"url": "https://e.com"}]}]})
+    ans = visibility.ask_anthropic("q", "K", "m", post)
+    assert ans.citations == ["https://e.com"] and ans.retrieved == ["https://d.com"]
+    post, _ = fake_post({"candidates": [{"content": {"parts": [{"text": "Use X."}]}, "groundingMetadata": {
+        "groundingChunks": [{"web": {"uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/1",
+                                     "title": "github.com"}},
+                            {"web": {"uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/2",
+                                     "title": "other.dev"}}],
+        "groundingSupports": [{"segment": {"text": "Use X."}, "groundingChunkIndices": [0]}]}}]})
+    resolved = {"https://vertexaisearch.cloud.google.com/grounding-api-redirect/1": "https://github.com/o/nexika/blob/main/README.md"}
+    ans = visibility.ask_gemini("q", "K", "m", post, resolve=resolved.get)
+    # the redirect is resolved, so a path-scoped domain (github.com/o/nexika) can match
+    assert ans.citations == ["https://github.com/o/nexika/blob/main/README.md"]
+    assert visibility.is_cited(ans.citations, ["github.com/o/nexika"]) == 1
+    assert "other.dev" in ans.retrieved
+
+
+def test_plan_shows_a_cost_estimate(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "project_root", lambda: tmp_path)
+    for var in ("GEMINI_API_KEY", "PERPLEXITY_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"):
+        monkeypatch.delenv(var, raising=False)
+    cli.main(["visibility", "init"])
+    monkeypatch.setenv("OPENAI_API_KEY", "k")
+    capsys.readouterr()
+    assert cli.main(["visibility", "plan"]) == 0
+    out = capsys.readouterr().out
+    assert "= 9 API calls" in out and "about $" in out and "estimate" in out

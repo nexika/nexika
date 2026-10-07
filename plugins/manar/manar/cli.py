@@ -223,6 +223,8 @@ def cmd_visibility(args: list[str]) -> int:
     max_calls = int(_flag(args, "--max-calls", str(visibility.DEFAULT_MAX_CALLS)))
     plan = (f"{len(panel['prompts'])} prompts x {len(engines)} engines ({', '.join(engines)}) x "
             f"{panel.get('samples', 3)} samples = {calls} API calls")
+    cost = calls / len(engines) * sum(visibility.COST_PER_CALL.get(e, 0.03) for e in engines)
+    plan += f" (about ${cost:.2f}, a rough estimate: check each provider's prices)"
     if action == "plan":
         print(plan)
         return 0
