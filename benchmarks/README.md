@@ -38,11 +38,11 @@ The design is the Responsive Travel Landing Page, with phone 430, tablet 1024 an
 
 | | lawha | Figma MCP + Claude Code | Builder.io |
 |---|---|---|---|
-| Builds | yes | yes | waiting |
-| Looks like the design (430 / 1024 / 1440) | **95.6% / 98.5% / 96.2%** | 93.0% / 97.1% / 95.9% | |
-| Must fix | **0** | 22 (14 tap targets, 8 accessibility) | |
-| Should fix | 2 | 9 | |
-| Colours hard-coded in components | 28 | **19** | |
+| Builds | yes | yes | **no** (npm install fails; builds with pnpm) |
+| Looks like the design (430 / 1024 / 1440) | **95.6% / 98.5% / 96.2%** | 93.0% / 97.1% / 95.9% | 75.6% / 85.8% / 74.5%* |
+| Must fix | **0** | 22 (14 tap targets, 8 accessibility) | 3* (1 tap target, 2 accessibility) |
+| Should fix | 2 | 9 | 1* |
+| Colours hard-coded in components | 28 | **19** | not counted (no `src/`) |
 
 Both match the design closely, and lawha is 0.3 to 2.6 points closer.
 
@@ -52,6 +52,18 @@ The real difference is what each did with the design's own flaws:
 - **Keyboard:** Figma MCP left two scrolling regions that the keyboard cannot reach.
 
 Figma MCP hard-coded fewer colours.
+
+**Builder.io did not convert the design.** Its Figma plugin takes one frame (desktop), and the code it hands back
+("Download code") is its AI agent's own page inside Builder's agent-native app template (React Router, server, database,
+pnpm), not the starter:
+- the text is mostly invented ("Plan a trip", "Find your next escape", "Amalfi Coast · from $1,240");
+- the images are three Pexels stock photos, none from the design;
+- it has 3 of the design's 9 sections (no partners, services, travel point, key features, testimonials or newsletter).
+
+`npm install` crashes on its `package.json`, so the scorer records it as not building. \*The Builder.io figures are from
+running it unchanged with its own `pnpm install`, `pnpm build` and `pnpm start`, then the same lawha check, outside the
+scorer. One of its must-fix problems is the template's own "Configuration error" panel.
+
 [Full table](runs/figma/results.md).
 
 ## Rules

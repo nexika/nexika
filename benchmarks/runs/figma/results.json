@@ -1,6 +1,6 @@
 {
  "task": "figma",
- "scored": "2026-10-07T11:16:49.306Z",
+ "scored": "2026-10-07T13:32:44.678Z",
  "widths": [
   430,
   768,
@@ -74,6 +74,16 @@
    "hardcodedColours": 19,
    "notes": [],
    "report": "runs/figma/figma-mcp/.lawha/score/report.html"
+  },
+  {
+   "tool": "builder-io",
+   "build": false,
+   "problems": {},
+   "looks": {},
+   "hardcodedColours": 0,
+   "notes": [
+    "npm install failed (npm crashes: 'Cannot read properties of null (reading edgesOut)'); the download is Builder's pnpm-based agent-native app, not the starter. Outside the scorer, unchanged: pnpm install + pnpm build pass, and pnpm start serves the page; lawha check on it gives looks 75.6% / 85.8% / 74.5% (430/1024/1440), must fix 3 (1 tap target, 2 accessibility: contrast, zoom disabled), should fix 1; the failing tap target is the template's own 'Configuration error' panel. Builder.io was given the desktop frame only (its plugin takes one frame), and its AI agent rewrote the page: invented text, three Pexels stock photos, 3 of the design's 9 sections. Colours hard-coded reads 0 only because the counter scans src/, which this project does not have."
+   ]
   }
  ]
 }
