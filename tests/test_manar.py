@@ -411,3 +411,32 @@ def test_hreflang_return_links_and_targets_are_checked_across_pages():
     found = {(f.id, f.url) for f in checks.site_checks("https://x.dev", en, None, None, "", None, [en, ar, fr])}
     assert ("hreflang-no-return", "https://x.dev/") in found
     assert ("hreflang-broken-target", "https://x.dev/") in found
+
+
+# ---------------------------------------------------------------- issue #42: numbers that support before/after
+
+
+def _records(cited_prompts, prompts=10, samples=3, model="m", engine="gemini", run="r"):
+    return [{"run": run, "ref": "v1", "engine": engine, "model": model, "prompt": f"q{i}", "lang": "en",
+             "sample": s, "mentioned": i < cited_prompts, "cited": i < cited_prompts, "position": None,
+             "citations": [], "error": ""} for i in range(prompts) for s in range(samples)]
+
+
+def test_wilson_interval():
+    lo, hi = visibility.wilson(6, 30)
+    assert 0.09 < lo < 0.11 and 0.37 < hi < 0.40
+    assert visibility.wilson(0, 0) == (0.0, 1.0)
+
+
+def test_report_shows_ranges_and_only_compares_like_with_like():
+    # 2 of 10 prompts cited, 3 correlated samples each: the range is wide, and it says so
+    text = visibility.report(_records(2))
+    assert "10 prompts" in text and "95% range" in text
+    # a run with another model is not a before/after
+    text = visibility.report(_records(2), _records(5, model="other"))
+    assert "not comparable" in text and "model" in text
+    text = visibility.report(_records(2), _records(5, prompts=9))
+    assert "not comparable" in text and "prompts" in text
+    # same setup: a small change is within noise, a large one is a real change
+    assert "within noise" in visibility.report(_records(3), _records(2))
+    assert "real change" in visibility.report(_records(9), _records(0))

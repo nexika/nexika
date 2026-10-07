@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import math
 import os
 import re
 import subprocess
@@ -178,6 +179,44 @@ def _rates(rows: list[dict]) -> tuple[float, float]:
     return sum(r["mentioned"] for r in rows) / n, sum(r["cited"] for r in rows) / n
 
 
+def wilson(k: float, n: float, z: float = 1.96) -> tuple[float, float]:
+    """95% Wilson score interval for k successes out of n."""
+    if n <= 0:
+        return 0.0, 1.0
+    p = k / n
+    centre = (p + z * z / (2 * n)) / (1 + z * z / n)
+    margin = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    return max(0.0, centre - margin), min(1.0, centre + margin)
+
+
+def _range(rows: list[dict], key: str) -> tuple[float, float]:
+    """Samples of one prompt are strongly correlated, so the prompt is the unit: n = prompts and k = the
+    sum of per-prompt rates. Wider than counting every answer, and honest."""
+    by_prompt: dict[str, list[bool]] = {}
+    for r in rows:
+        by_prompt.setdefault(r["prompt"], []).append(bool(r[key]))
+    return wilson(sum(sum(v) / len(v) for v in by_prompt.values()), len(by_prompt))
+
+
+def comparable(before: list[dict], after: list[dict], engine: str) -> str:
+    """Why two runs can't be compared for one engine ("" when they can)."""
+    old = [r for r in before if r["engine"] == engine]
+    new = [r for r in after if r["engine"] == engine]
+    if {r["prompt"] for r in old} != {r["prompt"] for r in new}:
+        return "the prompts differ"
+    old_models, new_models = {str(r.get("model")) for r in old}, {str(r.get("model")) for r in new}
+    if old_models != new_models:
+        return f"the model changed ({', '.join(sorted(old_models))} -> {', '.join(sorted(new_models))})"
+    return ""
+
+
+def _change(before: list[dict], after: list[dict], key: str) -> str:
+    """Real only when the 95% ranges don't overlap (conservative)."""
+    lo_b, hi_b = _range(before, key)
+    lo_a, hi_a = _range(after, key)
+    return "real change" if lo_a > hi_b or hi_a < lo_b else "within noise"
+
+
 def report(records: list[dict], previous: list[dict] | None = None, domains: list[str] | None = None) -> str:
     ok = [r for r in records if not r["error"]]
     errors = [r for r in records if r["error"]]
@@ -190,17 +229,28 @@ def report(records: list[dict], previous: list[dict] | None = None, domains: lis
             lines.append(f"  {engine:<11} all calls failed: {first_error}")
             continue
         m, c = _rates(rows)
+        (m_lo, m_hi), (c_lo, c_hi) = _range(rows, "mentioned"), _range(rows, "cited")
+        prompts = len({r["prompt"] for r in rows})
         line = (f"  {engine:<11} mentioned in {m:.0%} of answers, cited (linked) in {c:.0%}"
-                f"  [{len(rows)} answers]")
+                f"  [{len(rows)} answers, {prompts} prompts; 95% range: mentioned {m_lo:.0%}-{m_hi:.0%},"
+                f" cited {c_lo:.0%}-{c_hi:.0%}]")
         before = [r for r in prev if r["engine"] == engine]
         if before:
-            pm, pc = _rates(before)
-            line += f"  (before: {pm:.0%} / {pc:.0%}, ref {before[0].get('ref') or '?'})"
+            why = comparable(before, rows, engine)
+            if why:
+                line += f"  (before: not comparable, {why})"
+            else:
+                pm, pc = _rates(before)
+                line += (f"  (before: {pm:.0%} / {pc:.0%}, ref {before[0].get('ref') or '?'}; "
+                         f"mentioned: {_change(before, rows, 'mentioned')}, "
+                         f"cited: {_change(before, rows, 'cited')})")
         lines.append(line)
-    lines.append("by prompt:")
+    lines.append("by prompt (cited, with the 95% range over its samples):")
     for prompt in dict.fromkeys(r["prompt"] for r in ok):
-        m, c = _rates([r for r in ok if r["prompt"] == prompt])
-        lines.append(f"  {m:4.0%} mentioned, {c:4.0%} cited  - {prompt}")
+        rows = [r for r in ok if r["prompt"] == prompt]
+        m, c = _rates(rows)
+        lo, hi = wilson(sum(r["cited"] for r in rows), len(rows))
+        lines.append(f"  {m:4.0%} mentioned, {c:4.0%} cited ({lo:.0%}-{hi:.0%})  - {prompt}")
     own = [d.lower() for d in domains or []]
     hosts: Counter = Counter()
     for r in ok:

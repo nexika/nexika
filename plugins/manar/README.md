@@ -47,6 +47,8 @@ only (never stored). Override models with `MANAR_GEMINI_MODEL` etc. A run refuse
 ## Honest limits
 - Nobody can guarantee the first position in Google, ChatGPT or Gemini. manar removes known
   obstacles, makes the site easy to understand and cite, and measures the result.
-- A few samples are noisy: compare trends across runs and releases.
+- A few samples are noisy: each rate has a 95% range (counted per prompt, since samples of one
+  prompt move together), a before/after is called a real change only when the ranges don't
+  overlap, and runs with other prompts or models are not compared.
 - JavaScript is not executed; pages that need it are reported as a problem (as crawlers see them).
 - Pure Python standard library; no paid services required.
