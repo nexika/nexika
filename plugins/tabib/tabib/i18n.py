@@ -9,7 +9,10 @@ TEXT = {
     "en": {
         "title": "CI run {run} ({workflow}) on {branch}, commit {sha}",
         "k_code_tests": "{count} failing test(s)", "k_code_lint": "{count} lint error(s)",
-        "k_code_build": "{count} build error(s)", "k_code_": "{count} failure(s)", "one_job": "{label}, in one job",
+        "k_code_build": "{count} build error(s)", "k_code_check": "{count} failed check(s)",
+        "k_code_merge": "the branch does not merge into its base: rebase",
+        "k_code_generated": "{count} generated file(s) out of date",
+        "k_code_": "{count} failure(s)", "one_job": "{label}, in one job",
         "k_matrix": "fails only on {value}", "k_flaky": "likely flaky: the same commit passed",
         "k_infra": "outside the code: {signal}", "k_dependency": "a dependency problem",
         "k_dependency_module": "a dependency problem: {module} is not installed",
@@ -32,6 +35,11 @@ TEXT = {
         "r_skipped": "not run: {why}", "r_error": "could not run: {why}", "r_none": "not tried yet (/tabib:diagnose)",
         "next_fix": "Fix it with /itqan:ship, starting from the failing test above.",
         "next_hook": "Run the hook(s) locally and commit what they change: {commands}",
+        "next_format": "Run the formatter and commit what it changes: {commands}",
+        "next_regenerate": "Regenerate {files} and commit the result: {command}",
+        "next_rebase": "The branch does not merge into {base}: rebase it on {base} and resolve the conflicts "
+                       "in {files}.",
+        "next_check": "Do what the check's message above asks: it comes from the workflow, not from a test.",
         "next_unknown": "tabib could not tell from the log; read it: {url}",
         "next_setup": "Nothing to change in the code, and a re-run fails the same way: fix the workflow "
                       "(the line above says what it could not do).",
@@ -43,7 +51,10 @@ TEXT = {
     "ar": {
         "title": "تشغيل CI رقم {run} ({workflow}) على {branch}، التعديل {sha}",
         "k_code_tests": "{count} اختبار فاشل", "k_code_lint": "{count} خطأ تنسيق",
-        "k_code_build": "{count} خطأ بناء", "k_code_": "{count} إخفاق", "one_job": "{label}، في مهمة واحدة",
+        "k_code_build": "{count} خطأ بناء", "k_code_check": "{count} فحص فاشل",
+        "k_code_merge": "الفرع لا يندمج في الفرع الأساسي: أعد بناءه (rebase)",
+        "k_code_generated": "{count} ملف مولَّد غير محدَّث",
+        "k_code_": "{count} إخفاق", "one_job": "{label}، في مهمة واحدة",
         "k_matrix": "يفشل فقط على {value}", "k_flaky": "متقلّب على الأرجح: نفس التعديل نجح",
         "k_infra": "خارج الكود: {signal}", "k_dependency": "مشكلة في الاعتماديات",
         "k_dependency_module": "مشكلة في الاعتماديات: {module} غير مثبّت",
@@ -67,6 +78,11 @@ TEXT = {
         "r_none": "لم تُجرَّب بعد (‎/tabib:diagnose)",
         "next_fix": "أصلحه عبر ‎/itqan:ship بدءًا من الاختبار الفاشل أعلاه.",
         "next_hook": "شغّل الأداة محليًا ثم احفظ ما غيّرته في تعديل: {commands}",
+        "next_format": "شغّل أداة التنسيق ثم احفظ ما غيّرته في تعديل: {commands}",
+        "next_regenerate": "أعد توليد {files} ثم احفظ النتيجة في تعديل: {command}",
+        "next_rebase": "الفرع لا يندمج في {base}: أعد بناءه على {base} (rebase) "
+                       "وحلّ التعارض في {files}.",
+        "next_check": "نفّذ ما تطلبه رسالة الفحص أعلاه: مصدرها ملف سير العمل لا اختبار.",
         "next_unknown": "لم يستطع tabib الحكم من السجل؛ اقرأه: {url}",
         "next_setup": "لا شيء يتغيّر في الكود، وإعادة التشغيل تفشل بالطريقة نفسها: أصلح ملف سير العمل "
                       "(السطر أعلاه يقول ما تعذّر عليه).",

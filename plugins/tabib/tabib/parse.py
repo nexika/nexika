@@ -177,6 +177,117 @@ def conftest(lines: list[str]) -> list[dict]:
     return found
 
 
+REFORMAT = re.compile(r"^(would reformat|Would reformat:) (\S+)$")
+PRETTIER_FILE = re.compile(r"^\[warn\] (\S+)$")
+PRETTIER_END = re.compile(r"^\[warn\] Code style issues found")
+CHECKOUT = re.compile(r"^(?:.*?/work/[^/]+/[^/]+/|[A-Za-z]:/a/[^/]+/[^/]+/)")
+SAFE_PATH = re.compile(r"^[\w.@+-][\w./@+-]*$")   # it ends up in a command: nothing else gets through
+FORMAT_COMMANDS = {"black": "black", "ruff-format": "ruff format", "prettier": "prettier --write"}
+
+
+def formatter(lines: list[str]) -> list[dict]:
+    """Files a formatter's check would change: black ('would reformat <path>'), ruff format ('Would
+    reformat: <path>'), prettier ('[warn] <path>' before 'Code style issues found'); paths made relative
+    to the checkout."""
+    found = []
+    warned: list[str] = []
+    for line in lines:
+        line = line.strip()
+        tool, path = "", ""
+        if m := REFORMAT.match(line):
+            tool, path = ("black" if m.group(1) == "would reformat" else "ruff-format"), m.group(2)
+        elif PRETTIER_END.match(line):
+            found += [_failure("prettier", "lint", file=p, message="prettier --check") for p in warned]
+            warned = []
+        elif m := PRETTIER_FILE.match(line):
+            warned.append(CHECKOUT.sub("", m.group(1).replace("\\", "/")))
+        if path:
+            path = CHECKOUT.sub("", path.replace("\\", "/"))
+            if SAFE_PATH.match(path):
+                found.append(_failure(tool, "lint", file=path, message=f"{tool}: would reformat"))
+    return [f for f in found if SAFE_PATH.match(f["file"])]
+
+
+STEP_START = re.compile(r"^##\[group\]Run ")
+STEP_EXIT = re.compile(r"^##\[error\]Process completed with exit code [1-9]")
+ECHO = re.compile(r"""\becho\s+(?:-e\s+)?(["'])(.+?)\1""")
+
+
+def steps(lines: list[str]):
+    """Each step that failed: (its script and env, its output), from GitHub's '##[group]Run ...' header to
+    its '##[error]Process completed with exit code N'."""
+    header: list[str] = []
+    output: list[str] = []
+    in_header = False
+    for line in lines:
+        if STEP_START.match(line):
+            header, output, in_header = [line], [], True
+        elif in_header:
+            header.append(line)
+            in_header = line.strip() != "##[endgroup]"
+        elif STEP_EXIT.match(line):
+            if header:
+                yield header, output
+            header, output = [], []
+        elif header:
+            output.append(line)
+
+
+def step_message(lines: list[str]) -> list[dict]:
+    """A failed step's own message (#172): an output line the step's script prints with echo, such as
+    black's "Please add '(#5235)' change line to CHANGES.md"."""
+    found = []
+    for header, output in steps(lines):
+        echoed = [m.group(2).split("$")[0].strip() for line in header for m in ECHO.finditer(line)]
+        echoed = [e for e in echoed if len(e) >= 10]
+        said = [line.strip() for line in output
+                if not line.startswith("##[") and any(line.strip().startswith(e) for e in echoed)]
+        if said:
+            found.append(_failure("step", "check", message=said[-1]))
+    return found
+
+
+CONFLICT = re.compile(r"^CONFLICT \([\w/ -]+\): .*?(?:Merge conflict in|in) (\S+)$")
+MERGE_REF = re.compile(r"^\s*git (?:merge|rebase|pull)\b.*?\s(?:origin/)?([\w][\w./-]*)\s*$")
+
+
+def merge_conflict(lines: list[str]) -> list[dict]:
+    """A branch that does not merge into its base (#173): one failure per conflicting file, its test
+    'merge into <base>' when the step's 'git merge origin/<base>' is in the log."""
+    base = next((m.group(1) for line in lines if (m := MERGE_REF.match(line))), "")
+    found = []
+    for line in lines:
+        if (m := CONFLICT.match(line.strip())) and SAFE_PATH.match(m.group(1)):
+            found.append(_failure("git", "merge", f"merge into {base}" if base else "merge",
+                                  m.group(1), message=line.strip()))
+    return found
+
+
+GIT_DIFF_CHECK = re.compile(r"\bgit diff\b.*--(?:exit-code|quiet)\b")
+SAFE_COMMAND = re.compile(r"^[\w ./=:+-]+$")   # shown as advice to run: nothing else gets through
+
+
+def generated(lines: list[str]) -> list[dict]:
+    """Generated files out of date (#174): a step whose script ends in `git diff --exit-code` printed a diff;
+    the test is the script's other lines, the command that regenerates them, when it is plain."""
+    found = []
+    for header, output in steps(lines):
+        script = []
+        for line in header[1:]:
+            if line.startswith("shell: ") or line.strip() == "##[endgroup]":
+                break
+            script.append(line.strip())
+        if not any(GIT_DIFF_CHECK.search(line) for line in script):
+            continue
+        redo = [line for line in script if line and not GIT_DIFF_CHECK.search(line)]
+        command = " && ".join(redo) if redo and all(SAFE_COMMAND.match(line) for line in redo) else ""
+        for line in output:
+            if (m := DIFF_FILE.match(line.strip())) and SAFE_PATH.match(m.group(1)):
+                found.append(_failure("generated", "generated", command, m.group(1),
+                                      message="generated file out of date"))
+    return found
+
+
 def playwright(lines: list[str]) -> list[dict]:
     """Playwright's failed tests: the summary's "failed" group when there is one (a test in its "flaky"
     group passed on a retry), else the numbered error blocks, else the list reporter's ✘ lines."""
@@ -393,9 +504,14 @@ def failures(lines: list[str]) -> list[dict]:
         found += pending_jest
     found += pre_commit(lines)
     found += conftest(lines)
+    found += formatter(lines)
+    found += merge_conflict(lines)
+    found += generated(lines)
     found += playwright(lines)
     for block in junit_blocks(lines):
         found += junit_xml(block)
+    if not found:   # nothing a tool reports: the step's own words, when its script printed them
+        found += step_message(lines)
     if not found and (crashed := crash(lines)):
         found.append(crashed)  # the tests stopped with the process; nothing else names the failure
     seen, unique = set(), []

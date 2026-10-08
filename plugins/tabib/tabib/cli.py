@@ -88,6 +88,23 @@ def report(record: dict, language: str = "") -> str:
         hooks = dict.fromkeys(f["test"] for f in record["failures"])
         commands = "; ".join(f"pre-commit run {hook} --all-files" for hook in hooks)
         out.append("  " + t("next_hook", lg, commands=commands))
+    elif record["failures"] and all(f["framework"] in parse.FORMAT_COMMANDS for f in record["failures"]):
+        tools = {}
+        for f in record["failures"]:
+            tools.setdefault(f["framework"], {})[f["file"]] = None
+        commands = "; ".join(f"{parse.FORMAT_COMMANDS[tool]} {' '.join(list(files)[:10])}"
+                             for tool, files in tools.items())
+        out.append("  " + t("next_format", lg, commands=commands))
+    elif record["failures"] and all(f["framework"] == "git" for f in record["failures"]):
+        base = record["failures"][0]["test"].removeprefix("merge").removeprefix(" into ") or "the base branch"
+        files = ", ".join(dict.fromkeys(f["file"] for f in record["failures"]))
+        out.append("  " + t("next_rebase", lg, base=base, files=files))
+    elif record["failures"] and all(f["framework"] == "generated" for f in record["failures"]):
+        files = ", ".join(dict.fromkeys(f["file"] for f in record["failures"]))
+        command = record["failures"][0]["test"] or "the generator in the failed step"
+        out.append("  " + t("next_regenerate", lg, files=files, command=command))
+    elif record["failures"] and all(f["framework"] == "step" for f in record["failures"]):
+        out.append("  " + t("next_check", lg))
     elif record["failures"]:
         out.append("  " + t("next_fix", lg))
     else:

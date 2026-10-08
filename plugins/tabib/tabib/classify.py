@@ -86,7 +86,11 @@ def classify(facts: dict) -> dict:
                if not (s["kind"] == "cancelled" and a_job_failed)}
     evidence: list[str] = []
     passed_same = facts.get("same_commit_passed")
-    if passed_same:
+    if passed_same and failures and all(f.get("framework") == "step" for f in failures):
+        # A check the workflow wrote (a changelog line) does not flake: a label or setting changed (#172).
+        evidence.append(f"The same commit passed in run {passed_same}, likely after a label or a setting "
+                        "changed: the check itself does not flake.")
+    elif passed_same:
         evidence.append(f"The same commit passed in run {passed_same}.")
         return {"kind": "flaky", "detail": {}, "confidence": "high", "evidence": evidence}
     flaky = {(f.get("job") or "", f["test"]): f for f in facts.get("flaky_tests") or []}
