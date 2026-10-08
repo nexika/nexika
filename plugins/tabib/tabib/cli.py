@@ -80,6 +80,10 @@ def report(record: dict, language: str = "") -> str:
         out.append("  " + t("next_rerun", lg, command=record["rerun"]))
     elif record["kind"] == "infra":
         out.append("  " + t("next_infra", lg, command=record["rerun"]))
+    elif record["failures"] and all(f["framework"] == "pre-commit" for f in record["failures"]):
+        hooks = dict.fromkeys(f["test"] for f in record["failures"])
+        commands = "; ".join(f"pre-commit run {hook} --all-files" for hook in hooks)
+        out.append("  " + t("next_hook", lg, commands=commands))
     elif record["failures"]:
         out.append("  " + t("next_fix", lg))
     else:
