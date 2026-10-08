@@ -27,6 +27,19 @@ into the plugins that ship them; `.amin.json` "copies" lists every copy. **Edit 
 compares every copy byte for byte. A new shared file goes in `common/` and `.amin.json`, and in
 the list in `tests/test_common.py`.
 
+## Keep the logic portable
+
+Nexika runs inside Claude Code today, but its logic should not depend on Claude Code or on
+Claude: one day an adapter will run it with other agents and open-source models (#114).
+- Logic lives in plain functions and command-line tools (`bin/<plugin>`), standard library only.
+  They take plain values and return plain values, never Claude Code's hook JSON.
+- A hook entry point only translates: read Claude Code's JSON, call the logic, write Claude Code's
+  JSON. Keep it thin, with no decisions in it.
+- Model calls should have one door. Today hafiz, itqan and prof each start `claude -p`
+  themselves; `common/background.py` only checks consent and logs. Don't add a new place that
+  starts a model: extend `common/background.py` instead.
+- Skills and agent prompts say what to do, not which Claude feature does it, where they can.
+
 ## Family rules every plugin follows
 
 - One settings file for the family: `~/.claude/nexika/settings.json` (`NEXIKA_HOME` moves it),
