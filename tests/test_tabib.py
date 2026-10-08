@@ -613,6 +613,61 @@ def test_a_formatter_path_cannot_inject_a_command():
     assert found == []
 
 
+# psf/black run 29266969650 (#172): the changelog check fails with a message the workflow itself prints.
+CHANGELOG_LOG = [
+    '##[group]Run grep -Pz "\\((\\n\\s*)?#5235(\\n\\s*)?\\)" CHANGES.md || \\',
+    'grep -Pz "\\((\\n\\s*)?#5235(\\n\\s*)?\\)" CHANGES.md || \\',
+    "(echo \"Please add '(#5235)' change line to CHANGES.md (or if appropriate, ask a maintainer to add the "
+    "'ci: skip news' label)\" && \\",
+    "exit 1)",
+    "shell: /usr/bin/bash -e {0}",
+    "##[endgroup]",
+    "Please add '(#5235)' change line to CHANGES.md (or if appropriate, ask a maintainer to add the "
+    "'ci: skip news' label)",
+    "##[error]Process completed with exit code 1.",
+]
+# psf/black run 32564540905: diff-shades finds changes in the stable style and the step says so.
+DIFF_SHADES_LOG = [
+    "##[group]Run diff-shades compare --check \\",
+    "diff-shades compare --check \\",
+    "stable-main-acd6198877.json stable-pr-5335-1071b2c21f.json || \\",
+    "(echo \"Please verify you didn't change the stable code style unintentionally!\" \\",
+    "&& exit 1)",
+    "shell: /usr/bin/bash -e {0}",
+    "##[endgroup]",
+    "│ 5 projects & 12 files changed / 178 changes [+109/-69] │",
+    "Differences found.",
+    "Please verify you didn't change the stable code style unintentionally!",
+    "##[error]Process completed with exit code 1.",
+]
+
+
+@pytest.mark.parametrize("lines", [CHANGELOG_LOG, DIFF_SHADES_LOG])
+def test_a_message_the_workflow_prints_is_the_failure(ci, monkeypatch, lines):
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log("check", lines))
+    record = diagnosis.triage(ci)
+    assert (record["kind"], record["detail"]["what"]) == ("code", "check")
+    assert [(f["framework"], f["message"]) for f in record["failures"]] == [("step", lines[-2])]
+    from tabib import cli
+    text = cli.report(record, "en")
+    assert lines[-2] in text and "comes from the workflow" in text and "/itqan:ship" not in text
+
+
+def test_a_check_message_that_passes_after_a_label_is_not_flaky(ci, monkeypatch):
+    """black run 30501014259: the maintainer added 'ci: skip news' and the same commit passed."""
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log("check", CHANGELOG_LOG))
+    monkeypatch.setattr(forge, "history", lambda info, run: {"same_commit_passed": 9001, "last_green": None})
+    record = diagnosis.triage(ci)
+    assert record["kind"] == "code"
+    assert any("9001" in e for e in record["evidence"])
+
+
+def test_an_echo_that_is_not_printed_is_not_a_failure():
+    lines = ["##[group]Run make", 'echo "Building the docs"', "make docs", "##[endgroup]",
+             "make: *** [docs] Error 2", "##[error]Process completed with exit code 2."]
+    assert parse.read_log(gh_log("docs", lines))["docs"]["failures"] == []
+
+
 # pallets/flask run 37632508911 (#132): the conftest could not be imported, so pytest ran nothing (exit 4).
 CONFTEST_LOG = [
     "tests-dev: commands[1]> pytest -v --tb=short --basetemp=/home/runner/work/flask/flask/.tox/tmp/tests-dev",

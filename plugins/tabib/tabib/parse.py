@@ -205,6 +205,45 @@ def formatter(lines: list[str]) -> list[dict]:
     return [f for f in found if SAFE_PATH.match(f["file"])]
 
 
+STEP_START = re.compile(r"^##\[group\]Run ")
+STEP_EXIT = re.compile(r"^##\[error\]Process completed with exit code [1-9]")
+ECHO = re.compile(r"""\becho\s+(?:-e\s+)?(["'])(.+?)\1""")
+
+
+def steps(lines: list[str]):
+    """Each step that failed: (its script and env, its output), from GitHub's '##[group]Run ...' header to
+    its '##[error]Process completed with exit code N'."""
+    header: list[str] = []
+    output: list[str] = []
+    in_header = False
+    for line in lines:
+        if STEP_START.match(line):
+            header, output, in_header = [line], [], True
+        elif in_header:
+            header.append(line)
+            in_header = line.strip() != "##[endgroup]"
+        elif STEP_EXIT.match(line):
+            if header:
+                yield header, output
+            header, output = [], []
+        elif header:
+            output.append(line)
+
+
+def step_message(lines: list[str]) -> list[dict]:
+    """A failed step's own message (#172): an output line the step's script prints with echo, such as
+    black's "Please add '(#5235)' change line to CHANGES.md"."""
+    found = []
+    for header, output in steps(lines):
+        echoed = [m.group(2).split("$")[0].strip() for line in header for m in ECHO.finditer(line)]
+        echoed = [e for e in echoed if len(e) >= 10]
+        said = [line.strip() for line in output
+                if not line.startswith("##[") and any(line.strip().startswith(e) for e in echoed)]
+        if said:
+            found.append(_failure("step", "check", message=said[-1]))
+    return found
+
+
 def playwright(lines: list[str]) -> list[dict]:
     """Playwright's failed tests: the summary's "failed" group when there is one (a test in its "flaky"
     group passed on a retry), else the numbered error blocks, else the list reporter's ✘ lines."""
@@ -425,6 +464,8 @@ def failures(lines: list[str]) -> list[dict]:
     found += playwright(lines)
     for block in junit_blocks(lines):
         found += junit_xml(block)
+    if not found:   # nothing a tool reports: the step's own words, when its script printed them
+        found += step_message(lines)
     if not found and (crashed := crash(lines)):
         found.append(crashed)  # the tests stopped with the process; nothing else names the failure
     seen, unique = set(), []
