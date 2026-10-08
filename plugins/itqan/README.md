@@ -87,7 +87,8 @@ A plugin with hundreds of skills of which you used one is a context cost worth q
   `git branch -D`, `--no-verify`, `git add` of a secret file
 - `curl … | sh`, `chmod 777`, `sudo`, SQL `DROP`/`TRUNCATE`, database resets, `terraform destroy`,
   `kubectl delete`, publishing a package
-- editing `.env` / key files or lock files; writing content that contains a secret token
+- editing `.env`, `.pypirc`, `.netrc` or key files, or lock files; writing content that contains a
+  secret token (the same token shapes Nexika redacts everywhere, PyPI tokens included)
 
 Everything else passes silently. When [haris](../haris/README.md) is installed and on, haris
 covers the safety rules in the sessions it guards, and this guard keeps only its quality rules:
