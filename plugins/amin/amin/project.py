@@ -233,6 +233,21 @@ def _manifest_name(root: Path, rel: str) -> str:
     return m.group(1) if m else root.name
 
 
+BARE_TAG = re.compile(r"^\d+\.\d+\.\d+$")
+
+
+def _tag_format(root: Path) -> str:
+    """A single project's tag style, from its tags: "v1.2.3" (the default) or bare "1.2.3"."""
+    from . import gitops
+    try:
+        tags = gitops.Runner(root).git("tag", "--list", check=False).split()
+    except gitops.CommandError:
+        return "v{version}"
+    if any(t.startswith("v") and BARE_TAG.match(t[1:]) for t in tags):
+        return "v{version}"
+    return "{version}" if any(BARE_TAG.match(t) for t in tags) else "v{version}"
+
+
 def detect(root: Path) -> list[Project]:
     config = load_config(root)
     if config.get("projects"):
@@ -264,7 +279,8 @@ def detect(root: Path) -> list[Project]:
             files = []   # the version lives in git tags only
         else:
             continue
-        return [Project(_manifest_name(root, rel), ".", files, "CHANGELOG.md", "v{version}", "changelog.d")]
+        return [Project(_manifest_name(root, rel), ".", files, "CHANGELOG.md", _tag_format(root),
+                        "changelog.d")]
     return []
 
 

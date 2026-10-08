@@ -324,11 +324,15 @@ def _when(stamp: str) -> datetime.datetime | None:
         return None
 
 
+UNTAGGED_LIMIT = 200
+
+
 def history(root: Path, runner: gitops.Runner, project: proj.Project, tag: str | None) -> list[str]:
     """Merged PRs that touched the project since tag (to write first-release notes)."""
     since = _when(runner.git("log", "-1", "--format=%cI", tag, check=False)) if tag else None
     search = ["--search", f"merged:>={since.astimezone(datetime.timezone.utc).date()}"] if since else []
-    prs = runner.gh_json("pr", "list", "--state", "merged", "--limit", "5000", *search,
+    limit = "5000" if since else str(UNTAGGED_LIMIT)   # no tag: only the latest PRs, or gh times out
+    prs = runner.gh_json("pr", "list", "--state", "merged", "--limit", limit, *search,
                          "--json", "number,title,mergedAt,files") or []
     out = []
     for pr in sorted(prs, key=lambda x: _when(x.get("mergedAt", "")) or datetime.datetime.min.replace(

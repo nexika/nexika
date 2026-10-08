@@ -189,8 +189,12 @@ def run(argv: list[str]) -> int:
                 print(f"{p.name:<12} PROBLEM    {problem}")
     elif cmd == "history" and len(argv) > 1:
         p = proj.find(projects, argv[1])
-        lines = release.history(root, runner, p, gitops.last_tag(runner, p.tag_prefix()))
+        tag = gitops.last_tag(runner, p.tag_prefix())
+        lines = release.history(root, runner, p, tag)
         print("\n".join(lines) or "no merged PRs found for this project")
+        if not tag:
+            print(f"(no {p.tag('X.Y.Z')} tag found: only the latest {release.UNTAGGED_LIMIT} merged PRs "
+                  "were read)")
     elif cmd == "triage":
         issues = runner.gh_json("issue", "list", "--state", "open", "--limit", "300",
                                 "--json", "number,title,labels,updatedAt") or []

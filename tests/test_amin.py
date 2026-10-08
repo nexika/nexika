@@ -696,6 +696,30 @@ def test_a_version_from_git_tags_is_never_written_into_pyproject(tmp_path):
     assert changelog.latest(black / p.changelog) == "26.11.0"   # what publish tags
 
 
+def test_bare_version_tags_are_found(tmp_path, monkeypatch, capsys):
+    # issue #153: black tags 26.10.0 (no "v"), so amin saw no tag and treated 74 releases as a first one
+    black = black_repo(tmp_path)
+    for tag in ("26.5.1", "26.10.0"):
+        _git(black, "tag", "-a", tag, "-m", "x")
+    [p] = proj.detect(black)
+    assert (p.tag("26.11.0"), p.tag_prefix()) == ("26.11.0", "")
+    assert gitops.last_tag(gitops.Runner(black), p.tag_prefix()) == "26.10.0"
+    assert plan_by_name(black)["black"].current == "26.10.0"
+    monkeypatch.chdir(black)
+    assert cli.main(["projects"]) == 0
+    assert "last tag=26.10.0" in capsys.readouterr().out
+    _git(black, "tag", "-a", "v26.11.0", "-m", "x")      # a v tag wins when both styles exist
+    assert proj.detect(black)[0].tag("1.0.0") == "v1.0.0"
+
+
+def test_history_without_a_tag_is_bounded(market):
+    # issue #153: with no tag, history asked GitHub for 5000 PRs with their files and timed out
+    runner = FakeRunner(market, prs=[])
+    release.history(market, runner, projects_of(market)["alpha"], None)
+    call = next(c for c in runner.gh_calls if c[:2] == ("pr", "list"))
+    assert int(call[call.index("--limit") + 1]) == release.UNTAGGED_LIMIT <= 300
+
+
 @pytest.mark.parametrize("content", [
     '[project]\nname = "app"\nversion = "2.0.0"\n',
     '[tool.poetry]\nname = "app"\nversion = "2.0.0"\n',
