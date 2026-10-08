@@ -165,7 +165,7 @@ def test_glab_merge_requests():
 def test_checks_and_runs():
     assert forge.parse_gh_checks(json.dumps([{"name": "lint", "bucket": "pass"},
                                              {"name": "test (py3.10)", "bucket": "fail"}])) == \
-        {"state": "failed", "failed": ["test (py3.10)"], "run": None}
+        {"state": "failed", "failed": ["test (py3.10)"], "run": None, "cancelled": []}
     linked = json.dumps([{"name": "t", "bucket": "fail", "link": "https://github.com/a/b/actions/runs/42/job/7"}])
     assert forge.parse_gh_checks(linked)["run"] == 42
     assert forge.parse_gh_checks(json.dumps([{"name": "a", "bucket": "pass"}, {"name": "b", "bucket": "pending"}]))[
@@ -182,7 +182,67 @@ def test_checks_and_runs():
     assert forge.parse_gh_runs(running, "h")["state"] == "running"
     jobs = json.dumps({"jobs": [{"name": "lint", "conclusion": "success"},
                                 {"name": "test (py3.12)", "conclusion": "failure"}]})
-    assert forge.parse_gh_jobs(jobs) == ["test (py3.12)"]
+    assert forge.parse_gh_jobs(jobs) == {"failed": ["test (py3.12)"], "cancelled": []}
+
+
+# Real gh JSON from psf/black (MIT), trimmed: tests/fixtures/mizan_black.json.
+BLACK = json.loads((Path(__file__).parent / "fixtures" / "mizan_black.json").read_text(encoding="utf-8"))
+
+
+def fake_gh(runs: list, jobs: dict, checks: list | None = None):
+    """A run_tool that answers `gh run list`, `gh run view <id>` and `gh pr checks` from fixed JSON."""
+    calls = []
+
+    def tool(argv, cwd, accept_codes=(0,)):
+        calls.append(argv)
+        if argv[1:3] == ["run", "list"]:
+            return json.dumps(runs)
+        if argv[1:3] == ["run", "view"]:
+            return json.dumps(jobs.get(argv[3], {"jobs": []}))
+        if argv[1:3] == ["pr", "checks"]:
+            return json.dumps(checks or [])
+        raise AssertionError(argv)
+
+    tool.calls = calls
+    return tool
+
+
+def _black_info(env, sha):
+    runs = BLACK["runs"][sha]
+    return {"repo": str(env), "branch": runs[0]["headBranch"], "head": runs[0]["headSha"], "host": "github",
+            "remote": "x"}
+
+
+def test_cancelled_jobs_are_not_failures(env, monkeypatch):
+    # black 86e2832d: lint failed; test and diff-shades were cancelled by concurrency (#160).
+    runs = BLACK["runs"]["86e2832d"]
+    jobs = {"37824955697": BLACK["jobs"]["37824955697"],
+            "37824955673": {"jobs": [{"name": "lint", "conclusion": "failure"}]}}
+    monkeypatch.setattr(forge, "run_tool", fake_gh(runs, jobs))
+    found = forge.fetch_ci(_black_info(env, "86e2832d"), None)
+    assert found["state"] == "failed" and found["run"] == 37824955673
+    assert found["failed"] == ["lint"]
+    assert render._ci(found, "en")["text"] == "CI failed: lint (2 cancelled)"
+
+
+def test_a_fail_fast_matrix_counts_its_cancelled_jobs_apart():
+    found = forge.parse_gh_jobs(json.dumps(BLACK["jobs"]["37746207537"]))  # black ee819f1d: test
+    assert (len(found["failed"]), len(found["cancelled"])) == (23, 8)
+
+
+def test_everything_cancelled_is_superseded(env, monkeypatch):
+    runs = [r for r in BLACK["runs"]["86e2832d"] if r["conclusion"] == "cancelled"]
+    found = forge.parse_gh_runs(json.dumps(runs), runs[0]["headSha"])
+    assert found["state"] == "cancelled" and found["all_cancelled"]
+    assert render._ci(found, "en")["text"] == "CI superseded"
+    partly = [r for r in BLACK["runs"]["86e2832d"] if r["conclusion"] != "failure"]
+    found = forge.parse_gh_runs(json.dumps(partly), runs[0]["headSha"])
+    assert found["state"] == "cancelled" and not found["all_cancelled"]
+    assert render._ci(found, "en")["text"].startswith("CI cancelled: ")
+    checks = json.dumps([{"name": "a", "bucket": "pass"}, {"name": "b", "bucket": "cancel"}])
+    assert forge.parse_gh_checks(checks)["state"] == "cancelled"
+    checks = json.dumps([{"name": "a", "bucket": "fail"}, {"name": "b", "bucket": "cancel"}])
+    assert forge.parse_gh_checks(checks)["failed"] == ["a"]
 
 
 def _forge_world(env, monkeypatch, ci_state="passed"):

@@ -99,17 +99,22 @@ def parse_glab_mrs(text: str, branch: str) -> dict:
 
 
 RUN_LINK = re.compile(r"/actions/runs/(\d+)")
+FAILED = ("failure", "timed_out", "startup_failure")  # cancelled is counted apart
 
 
 def parse_gh_checks(text: str) -> dict:
     checks = json.loads(text or "[]")
-    bad = [c for c in checks if c.get("bucket") in ("fail", "cancel")]
+    bad = [c for c in checks if c.get("bucket") == "fail"]
+    cancelled = [c.get("name", "?") for c in checks if c.get("bucket") == "cancel"]
     if bad:
         link = next((m.group(1) for c in bad if (m := RUN_LINK.search(c.get("link") or ""))), None)
         return {"state": "failed", "failed": [c.get("name", "?") for c in bad],
-                "run": int(link) if link else None}
+                "run": int(link) if link else None, "cancelled": cancelled}
     if any(c.get("bucket") == "pending" for c in checks):
         return {"state": "running", "failed": []}
+    if cancelled:
+        return {"state": "cancelled", "failed": [], "cancelled": cancelled,
+                "all_cancelled": not any(c.get("bucket") == "pass" for c in checks)}
     if any(c.get("bucket") == "pass" for c in checks):
         return {"state": "passed", "failed": []}
     return {"state": "none", "failed": []}
@@ -155,21 +160,27 @@ def parse_gh_runs(text: str, head: str, now: float | None = None) -> dict:
     runs = pick_runs(every, head)
     if not runs:
         return {"state": "none", "failed": [], "failed_run": None}
-    bad = [r for r in runs if r.get("status") == "completed"
-           and r.get("conclusion") in ("failure", "cancelled", "timed_out", "startup_failure")]
+    done = [r for r in runs if r.get("status") == "completed"]
+    bad = [r for r in done if r.get("conclusion") in FAILED]
+    cancelled = [r.get("name", "?") for r in done if r.get("conclusion") == "cancelled"]
     if bad:
-        return {"state": "failed", "failed": [r.get("name", "?") for r in bad],
+        return {"state": "failed", "failed": [r.get("name", "?") for r in bad], "cancelled": cancelled,
                 "failed_run": bad[0].get("databaseId"), "url": bad[0].get("url", "")}
     going = [r for r in runs if r.get("status") != "completed"]
     if going:
         return {"state": "running", "failed": [], "failed_run": None, **timing(every, going, now)}
+    if cancelled:  # cancelled is not failed: a newer push or a fail-fast matrix stopped it
+        ran = [r for r in done if r.get("conclusion") not in ("skipped", "neutral")]
+        return {"state": "cancelled", "failed": [], "failed_run": None, "cancelled": cancelled,
+                "all_cancelled": len(cancelled) == len(ran)}
     return {"state": "passed", "failed": [], "failed_run": None}
 
 
-def parse_gh_jobs(text: str) -> list[str]:
+def parse_gh_jobs(text: str) -> dict:
+    """The failed jobs of a run, and apart from them the cancelled ones."""
     jobs = json.loads(text or "{}").get("jobs") or []
-    return [j.get("name", "?") for j in jobs
-            if j.get("conclusion") in ("failure", "cancelled", "timed_out", "startup_failure")]
+    return {"failed": [j.get("name", "?") for j in jobs if j.get("conclusion") in FAILED],
+            "cancelled": [j.get("name", "?") for j in jobs if j.get("conclusion") == "cancelled"]}
 
 
 def parse_glab_pipeline(text: str) -> dict:
@@ -285,7 +296,8 @@ def fetch_ci(info: dict, pr: dict | None) -> dict:
         found["run"] = run_id
         if run_id:
             jobs = parse_gh_jobs(run_tool(["gh", "run", "view", str(int(run_id)), "--json", "jobs"], cwd))
-            found["failed"] = jobs or found["failed"]
+            found["failed"] = jobs["failed"] or found["failed"]
+            found["cancelled"] = found.get("cancelled", []) + jobs["cancelled"]
         return found
     except Off as off:
         return {"state": "off", "why": off.reason, "tool": off.tool}
