@@ -148,6 +148,27 @@ def pre_commit(lines: list[str]) -> list[dict]:
     return found
 
 
+CONFTEST = re.compile(r"^ImportError while loading conftest '([^']+)'\.?$")
+CONFTEST_LOC = re.compile(r"^(\S+\.py):(\d+): in ")
+
+
+def conftest(lines: list[str]) -> list[dict]:
+    """A conftest pytest could not import: nothing ran (exit code 4). The file is the relative one of the
+    traceback's first frame (the header has the CI machine's path), the message its 'E   ' line."""
+    found = []
+    for i, line in enumerate(lines):
+        if not (m := CONFTEST.match(line.strip())):
+            continue
+        file, number = m.group(1), 0
+        if i + 1 < len(lines) and (loc := CONFTEST_LOC.match(lines[i + 1].strip())) \
+                and file.endswith("/" + loc.group(1)):
+            file, number = loc.group(1), int(loc.group(2))
+        message = next((n.strip()[1:].strip() for n in lines[i + 1:i + 60] if n.startswith("E ")),
+                       "ImportError")
+        found.append(_failure("pytest", "tests", file, file, number, message))
+    return found
+
+
 def playwright(lines: list[str]) -> list[dict]:
     """Playwright's failed tests: the summary's "failed" group when there is one (a test in its "flaky"
     group passed on a retry), else the numbered error blocks, else the list reporter's ✘ lines."""
@@ -363,6 +384,7 @@ def failures(lines: list[str]) -> list[dict]:
             f["line"] = js_lines.get(f["file"].split("/")[-1], 0) if f["file"] else 0
         found += pending_jest
     found += pre_commit(lines)
+    found += conftest(lines)
     found += playwright(lines)
     for block in junit_blocks(lines):
         found += junit_xml(block)

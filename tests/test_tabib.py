@@ -576,6 +576,35 @@ def test_a_hook_id_from_the_log_cannot_inject_a_command():
     assert parse.read_log(gh_log("main", lines))["main"]["failures"] == []
 
 
+# pallets/flask run 37632508911 (#132): the conftest could not be imported, so pytest ran nothing (exit 4).
+CONFTEST_LOG = [
+    "tests-dev: commands[1]> pytest -v --tb=short --basetemp=/home/runner/work/flask/flask/.tox/tmp/tests-dev",
+    "ImportError while loading conftest '/home/runner/work/flask/flask/tests/conftest.py'.",
+    "tests/conftest.py:6: in <module>",
+    "    from flask import Flask",
+    ".tox/tests-dev/lib/python3.11/site-packages/flask/__init__.py:2: in <module>",
+    "    from .app import Flask as Flask",
+    ".tox/tests-dev/lib/python3.11/site-packages/werkzeug/datastructures/__init__.py:74: in __getattr__",
+    "    warnings.warn(",
+    "E   DeprecationWarning: The 'ImmutableDict' class is deprecated and will be removed in Werkzeug 4.0. "
+    "Use 'collections.abc.Mapping' instead.",
+    "tests-dev: exit 4 (0.69 seconds) /home/runner/work/flask/flask> pytest -v --tb=short pid=2589",
+]
+
+
+def test_a_conftest_that_fails_to_load_is_a_failure():
+    found = parse.read_log(gh_log("Development Versions", CONFTEST_LOG))["Development Versions"]["failures"]
+    assert [(f["framework"], f["kind"], f["test"], f["file"], f["line"]) for f in found] == [
+        ("pytest", "tests", "tests/conftest.py", "tests/conftest.py", 6)]
+    assert found[0]["message"].startswith("DeprecationWarning: The 'ImmutableDict' class is deprecated")
+
+
+def test_a_conftest_error_is_no_longer_unknown(ci, monkeypatch):
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log("Development Versions", CONFTEST_LOG))
+    record = diagnosis.triage(ci)
+    assert record["kind"] == "code" and record["failures"][0]["file"] == "tests/conftest.py"
+
+
 def test_cli_show_and_errors(ci, env):
     diagnosis.triage(ci)
     done = subprocess.run([sys.executable, str(BIN), "show"], cwd=ci["repo"], capture_output=True, text=True,
