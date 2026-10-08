@@ -60,8 +60,21 @@ def _ci(ci: dict, lang: str) -> dict | None:
         jobs = ci.get("failed") or []
         if not jobs:
             return seg(t("ci_failed_plain", lang), "bad")
+        flows = ci.get("workflows") or []
+        # 'changelog/check, test, build and publish +n': the first job, then every other failed workflow
+        shown = ", ".join([clean(jobs[0], 40)] + [clean(w, 24) for w in flows[1:]])
+        rest = len(jobs) - max(1, len(flows))
+        more = f" +{rest}" if rest > 0 else ""
+        n = len(ci.get("cancelled") or [])
+        more += f" ({t('ci_n_cancelled', lang, n=n)})" if n else ""
+        return seg(t("ci_failed", lang, job=shown + more), "dim" if ci.get("stale") else "bad")
+    if state == "cancelled":
+        jobs = ci.get("cancelled") or []
+        if ci.get("all_cancelled") or not jobs:
+            return seg(t("ci_superseded", lang), "dim")
         more = f" +{len(jobs) - 1}" if len(jobs) > 1 else ""
-        return seg(t("ci_failed", lang, job=clean(jobs[0], 40) + more), "dim" if ci.get("stale") else "bad")
+        tone = "dim" if ci.get("stale") else "warn"
+        return seg(t("ci_cancelled", lang, job=clean(jobs[0], 40) + more), tone)
     if state == "running":
         if ci.get("elapsed") is None:
             return seg(t("ci_running", lang), "warn")

@@ -421,6 +421,44 @@ def test_pytest_collection_error_shows_the_real_error_not_a_pytest_frame():
     assert 'nodes.py", line 574' in details
 
 
+# #166: trimmed from `flake8 src tests; mypy src` on psf/black
+BLACK_LINT = "".join(
+    f"src/black/strings.py:{i}:1: F401 'os as _o{i}' imported but unused\n" for i in range(1, 43)
+) + """\
+src/blib2to3/pgen2/pgen.py:69:13: E265 block comment should start with '# '
+src/black/files.py:23:1: error: Cannot find library stub for module named "tomli"  [import-not-found]
+src/black/files.py:23:1: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html
+src/black/files.py:37:9: error: Returning Any from function declared to return "dict"  [no-any-return]
+Found 2 errors in 1 file (checked 42 source files)
+"""
+
+
+def test_flake8_and_mypy_lines_are_all_kept_and_counted():
+    verdict, details, _ = summarize(BLACK_LINT)
+    assert "45 problem(s)" in verdict and "Found 2 errors in 1 file" in verdict
+    assert all(f"strings.py:{i}:1: F401" in details for i in range(1, 43))
+    assert "E265 block comment" in details and "[no-any-return]" in details
+    assert "--- last lines ---" not in details  # nothing repeated in a tail
+    assert summarize("src/a.py:1:1: F401 'os' imported but unused\nFound 1 error.\n")[0].startswith(
+        "1 problem(s)")
+
+
+def test_generic_tail_does_not_repeat_lines_already_shown():
+    out = ("WARNING Both NO_COLOR and FORCE_COLOR are set\n"
+           "ERROR Failed to parse pyproject.toml: Illegal character (at line 30, column 33)\n")
+    _, details, _ = summarize(out)
+    assert details.count("Failed to parse") == 1 and "--- last lines ---" not in details
+
+
+def test_very_long_lines_are_cut():
+    long_msg = "AssertionError: '\\x1b[1m' not found in '" + "x" * 16000 + "'"
+    _, details, _ = summarize(f"""\
+        FAILED tests/test_black.py::test_diff_with_color - {long_msg}
+        1 failed, 3 passed in 0.12s
+    """)
+    assert len(details) < 1000 and "more characters" in details
+
+
 def test_ansi_codes_are_removed():
     assert compress.clean("\x1b[31mred\x1b[0m\r\n") == "red\n"
 

@@ -567,6 +567,21 @@ def test_cli_commands(world, capsys):
     assert '"schema": "nexika.haris/1"' in capsys.readouterr().out
 
 
+def test_cli_check_json(world, capsys):
+    # #137: Finding has __slots__, so the JSON output must not use __dict__
+    assert cli.main(["check", "--json", "rm -rf ~"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["decision"] == "deny" and out["class"] == "destroy"
+    assert out["findings"] and set(out["findings"][0]) == {"cls", "reason", "target"}
+
+
+def test_head_line_count_is_not_a_file(world):
+    home, project = world
+    for cmd in ("head -50 README.md", "tail -20 README.md"):
+        d = decide(project, "Bash", cmd)
+        assert d.verdict == "allow" and not any("-50" in f.reason or "-20" in f.reason for f in d.findings)
+
+
 def test_run_hook_prints_decision_json(world, monkeypatch, capsys):
     home, project = world
     monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(bash_event(project, "cat ~/.ssh/id_rsa"))))
