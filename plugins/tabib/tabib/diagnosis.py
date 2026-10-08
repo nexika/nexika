@@ -139,10 +139,10 @@ def triage(info: dict, run_id: int | None = None, refresh: bool = False) -> dict
     facts = {"failures": failures, "signals": signals, "errors": errors, "jobs": run["jobs"],
              "same_commit_passed": hist.get("same_commit_passed"), "event": run.get("event"),
              "from_fork": fork, "flaky_tests": flaky,
+             "no_jobs": not run["jobs"], "log_gone": log_gone, "url": run.get("url") or "",
              "lock_changed": suspects.get("lock_changed"),
              "missing_modules": [m for m in missing if m not in own],
-             "upstream": [u for u in raised if u["package"] not in own_packages],
-             "no_jobs": not run["jobs"], "log_gone": log_gone, "url": run.get("url") or ""}
+             "upstream": [u for u in raised if u["package"] not in own_packages]}
     verdict = classify.classify(facts)
     record = {"schema": SCHEMA, "version": __version__, "created": now(), "repo": info["repo"],
               "branch": run.get("branch") or info.get("branch", ""),
