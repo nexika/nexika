@@ -37,6 +37,21 @@ STOP_AR = {
     "له", "لها", "لي", "الان", "هنا", "هناك", "اريد", "ابغي", "عايز", "ممكن", "شكرا",
 }
 
+# Messages Claude Code or another tool sends in the user's place (#118): a background task's report,
+# the compaction prompt. They get no knowledge, and neither does pasted text (only the words around it).
+MACHINE_TAGS = ("<task-notification>", "<local-command-", "<command-name>", "<system-reminder>")
+MACHINE_STARTS = ("Below is a conversation log from a Claude Code",)
+PASTED = re.compile(r"<pasted_content\b[^>]*>.*?(?:</pasted_content\b[^>]*>|\Z)", re.S)
+
+
+def typed_words(prompt: str) -> str:
+    """The part of a prompt the user typed: '' for machine messages, pasted blocks removed."""
+    prompt = prompt.strip()
+    if prompt.startswith(MACHINE_TAGS + MACHINE_STARTS):
+        return ""
+    return PASTED.sub(" ", prompt).strip()
+
+
 EN_SUFFIXES = (
     ("ational", "ate"), ("ations", "ate"), ("ation", "ate"), ("sses", "ss"), ("ies", "y"), ("ied", "y"),
     ("ings", ""), ("ing", ""), ("edly", ""), ("ed", ""), ("ers", "er"), ("ments", "ment"),
