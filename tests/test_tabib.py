@@ -457,6 +457,33 @@ def test_diagnose_reproduces_and_record_keeps_the_cause(ci):
     assert entry["cause_found"] is True and entry["reproduced"] == "reproduced"
 
 
+def test_a_fail_fast_cancel_does_not_hide_the_failed_job(ci, project, monkeypatch):
+    # flypythoncom/python run 35428537437 (#126): the 3.11 job failed to resolve its dependencies and
+    # GitHub cancelled the 3.12 and 3.13 jobs; their annotation was read as "the run was cancelled".
+    log = gh_log("validate (3.11)", [
+        "error: No solution found when resolving dependencies",
+        "  cause: Because the current Python version (3.11.16) does not satisfy Python>=3.12 and "
+        "contourpy==1.4.0 depends on Python>=3.12, we can conclude that contourpy==1.4.0 cannot be used.",
+        "##[error]Process completed with exit code 1."])
+    log += "".join(f"\nvalidate ({v})\tannotation\tThe operation was canceled." for v in ("3.12", "3.13"))
+    run = {**fake_run(project), "jobs": [
+        {"id": 1, "name": "validate (3.13)", "conclusion": "cancelled", "failed_step": ""},
+        {"id": 2, "name": "validate (3.12)", "conclusion": "cancelled", "failed_step": ""},
+        {"id": 3, "name": "validate (3.11)", "conclusion": "failure", "failed_step": "Install"}]}
+    monkeypatch.setattr(forge, "find_run", lambda info, run_id=None: run)
+    monkeypatch.setattr(forge, "failed_log", lambda info, r: log)
+    record = diagnosis.triage(ci)
+    assert record["kind"] == "dependency"
+    assert record["rerun"] == ""
+
+
+def test_a_cancel_alone_is_still_a_cancelled_run():
+    verdict = classify.classify({"signals": [{"kind": "cancelled", "line": "The operation was canceled.",
+                                              "job": "test"}],
+                                 "jobs": jobs(("test", "cancelled"), ("lint", "success"))})
+    assert (verdict["kind"], verdict["detail"]["signal"]) == ("infra", "cancelled")
+
+
 def test_cli_show_and_errors(ci, env):
     diagnosis.triage(ci)
     done = subprocess.run([sys.executable, str(BIN), "show"], cwd=ci["repo"], capture_output=True, text=True,
