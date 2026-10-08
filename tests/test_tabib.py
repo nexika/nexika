@@ -199,6 +199,49 @@ def test_one_failed_job_is_not_blamed_on_all_its_parameters():
 FAIL = [{"framework": "pytest", "kind": "tests", "test": "tests/a.py::t", "file": "tests/a.py", "line": 1,
          "message": "AssertionError"}]
 
+# psf/black run 34987498453 (#175): one Windows job fails one test the change does not touch, and main
+# fails on single Windows jobs too (29181739141, 35784800430).
+WINDOWS_ONE = jobs(("test (3.15, windows-latest)", "failure"), ("test (3.15, ubuntu-latest)", "success"),
+                   ("test (3.14, windows-latest)", "success"), ("test (3.15, macOS-latest)", "success"))
+WINDOWS_FAIL = [{**FAIL[0], "test": "tests/test_black.py::BlackTestCase::test_multi_file_force_py36",
+                 "job": "test (3.15, windows-latest)"}]
+
+
+def test_one_job_failing_like_the_base_branch_is_flaky():
+    base = [{"id": 29181739141, "jobs": ["test (3.13, windows-latest)"]},
+            {"id": 35784800430, "jobs": ["test (pypy3.11, windows-latest)"]}]
+    verdict = classify.classify({"failures": WINDOWS_FAIL, "jobs": WINDOWS_ONE, "base_failures": base})
+    assert (verdict["kind"], verdict["confidence"]) == ("flaky", "medium")
+    assert any("29181739141" in e and "windows" in e for e in verdict["evidence"])
+    # The base branch failing on another OS says nothing about this one.
+    other = [{"id": 1, "jobs": ["test (3.13, ubuntu-latest)"]}]
+    verdict = classify.classify({"failures": WINDOWS_FAIL, "jobs": WINDOWS_ONE, "base_failures": other})
+    assert (verdict["kind"], verdict["confidence"]) == ("code", "low")
+
+
+def test_the_base_branch_failures_are_read_only_for_one_failed_job(monkeypatch):
+    listed = [{"id": 5, "conclusion": "failure", "sha": "b", "workflow": "test", "created": "1"},
+              {"id": 6, "conclusion": "success", "sha": "c", "workflow": "test", "created": "1"},
+              {"id": 7, "conclusion": "failure", "sha": "d", "workflow": "test", "created": "9"}]
+    monkeypatch.setattr(forge, "runs", lambda info, branch="", workflow="": listed)
+    monkeypatch.setattr(forge, "gh_view", lambda cwd, run_id, attempt=0: {"jobs": [
+        {"name": "test (3.13, windows-latest)", "conclusion": "failure"},
+        {"name": "lint", "conclusion": "success"}]})
+    run = {"id": 9, "provider": "github", "workflow": "test", "branch": "feat", "created": "5",
+           "jobs": WINDOWS_ONE}
+    found = forge.base_failures({"repo": ".", "default": "main"}, run)
+    assert found == [{"id": 5, "jobs": ["test (3.13, windows-latest)"]}]   # 7 came later, 6 passed
+    assert forge.base_failures({"repo": ".", "default": "main"}, {**run, "jobs": jobs(
+        ("test (3.15, windows-latest)", "failure"), ("test (3.14, windows-latest)", "failure"))}) == []
+
+
+def test_a_test_failing_in_many_jobs_counts_once():
+    """black run 33071276475: one test failing in 26 jobs said '26 failing tests'."""
+    many = [{**FAIL[0], "job": f"test (3.{n}, ubuntu-latest)", "line": n} for n in range(10, 14)]
+    verdict = classify.classify({"failures": many})
+    assert (verdict["detail"]["count"], verdict["detail"]["jobs"]) == (1, 4)
+    assert i18n.label("code", verdict["detail"], "en") == "1 failing test(s), in 4 jobs"
+
 
 @pytest.mark.parametrize("facts,kind", [
     ({"failures": FAIL, "same_commit_passed": 99}, "flaky"),
