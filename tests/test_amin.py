@@ -771,6 +771,31 @@ def test_changes_md_and_version_headings_are_recognised(tmp_path):
     assert changelog.latest(path) == "26.11.0"
 
 
+def test_calendar_versions_are_detected_and_bumped_by_date():
+    # issue #155: black's 26.10.0 (YY.M.patch) got a SemVer patch, 26.10.1, in November
+    today = datetime.date(2026, 11, 3)
+    assert proj.is_calver(["26.10.0", "26.5.1", "26.5.0", "25.12.0"], today)
+    assert proj.is_calver(["2026.10.0"], today)
+    assert not proj.is_calver(["1.2.0", "0.3.0"], today) and not proj.is_calver([], today)
+    assert not proj.is_calver(["26.13.0"], today) and not proj.is_calver(["27.1.0"], today)
+    assert proj.calver_bump("26.10.0", today)[0] == "26.11.0"
+    assert proj.calver_bump("26.10.0", datetime.date(2026, 10, 20))[0] == "26.10.1"
+    assert proj.calver_bump("2026.10.0", today)[0] == "2026.11.0"
+    assert proj.calver_bump("25.12.1", datetime.date(2026, 1, 5))[0] == "26.1.0"
+
+
+def test_plan_and_prepare_use_the_calendar_for_calver_projects(tmp_path, monkeypatch):
+    black = black_repo(tmp_path)
+    for tag in ("26.5.1", "26.10.0"):
+        _git(black, "tag", "-a", tag, "-m", "x")
+    monkeypatch.setattr(release, "today", lambda: datetime.date(2026, 11, 3))
+    fragments.add(black, proj.detect(black)[0], "breaking", "Drop Python 3.9", "1")
+    pl = plan_by_name(black)["black"]
+    assert (pl.status, pl.next) == ("release", "26.11.0") and "calendar" in pl.reason
+    release.prepare(black, [(pl, pl.next)], date="2026-11-03")   # a breaking note is not "too low"
+    assert changelog.latest(black / "CHANGELOG.md") == "26.11.0"
+
+
 @pytest.mark.parametrize("content", [
     '[project]\nname = "app"\nversion = "2.0.0"\n',
     '[tool.poetry]\nname = "app"\nversion = "2.0.0"\n',

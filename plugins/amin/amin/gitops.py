@@ -62,6 +62,12 @@ def last_tag(runner: Runner, prefix: str) -> str | None:
     return None
 
 
+def released_versions(runner: Runner, prefix: str) -> list[str]:
+    """The versions of the tags <prefix><MAJOR.MINOR.PATCH...>, newest first."""
+    out = runner.git("tag", "--list", f"{prefix}*", "--sort=-v:refname", check=False)
+    return [tag[len(prefix):] for tag in out.split() if tag[len(prefix):][:1].isdigit()]
+
+
 def commits_since(runner: Runner, tag: str | None, path: str) -> list[str]:
     rng = [f"{tag}..HEAD"] if tag else ["HEAD"]
     out = runner.git("log", "--format=%h %s", *rng, "--", path, check=False)

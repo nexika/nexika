@@ -10,6 +10,7 @@ Detection order:
 """
 from __future__ import annotations
 
+import datetime
 import json
 import re
 from dataclasses import dataclass
@@ -117,6 +118,27 @@ def bump(version: str, types: set[str]) -> tuple[str, str]:
     if types:
         return f"{major}.{minor}.{patch + 1}", "fixes only: patch bump"
     return version, "no notes: no release"
+
+
+def is_calver(versions: list[str], today: datetime.date) -> bool:
+    """Calendar versions (YY.M.patch or YYYY.M.patch, like black's 26.10.0): the newest released
+    versions all have a year up to this one, then a month."""
+    finals = [v for v in versions if SEMVER.match(v) and not is_prerelease(v)][:10]
+    for version in finals:
+        major, minor = parse(version)[:2]
+        year = major if major >= 1000 else 2000 + major
+        if not (2010 <= year <= today.year and 1 <= minor <= 12):
+            return False
+    return bool(finals)
+
+
+def calver_bump(version: str, today: datetime.date) -> tuple[str, str]:
+    """(next version, reason) by the calendar: YY.M.0 in a new month, else a patch."""
+    major, minor, patch = parse(version)[:3]
+    year = today.year if major >= 1000 else today.year % 100
+    if (major, minor) == (year, today.month):
+        return f"{major}.{minor}.{patch + 1}", "calendar version: another release this month"
+    return f"{year}.{today.month}.0", "calendar version: first release this month"
 
 
 # ---------------------------------------------------------------- version files

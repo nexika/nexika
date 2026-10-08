@@ -31,6 +31,11 @@ class Plan:
     next: str | None = None
     reason: str = ""
     status: str = "nothing"   # release | first-release | needs-notes | nothing | error
+    calver: bool = False      # calendar versions (YY.M.patch): the date decides the next version
+
+
+def today() -> datetime.date:
+    return datetime.date.today()
 
 
 def _current_version(root: Path, p: proj.Project) -> tuple[str | None, list[str]]:
@@ -68,7 +73,9 @@ def plan(root: Path, runner: gitops.Runner, projects: list[proj.Project]) -> lis
                 item.reason = "first release: add notes describing this version (amin history helps)"
         elif notes:
             last = tag[len(p.tag_prefix()):]
-            item.next, item.reason = proj.bump(last, types)
+            item.calver = proj.is_calver(gitops.released_versions(runner, p.tag_prefix()), today())
+            item.next, item.reason = (proj.calver_bump(last, today()) if item.calver
+                                      else proj.bump(last, types))
             item.status = "release"
             if current != last:
                 item.problems.append(f"version file says {current}, last tag says {last}; using the tag")
@@ -187,7 +194,7 @@ def prepare(root: Path, chosen: list[tuple[Plan, str]], date: str | None = None,
             if proj.parse(version) <= proj.parse(last):
                 raise ReleaseError(f"{pl.project.name}: {version} is not newer than {last}")
             required, reason = proj.bump(last, {n.type for n in pl.notes})
-            if not allow_lower and proj.parse(version)[:3] < proj.parse(required)[:3]:
+            if not allow_lower and not pl.calver and proj.parse(version)[:3] < proj.parse(required)[:3]:
                 raise ReleaseError(f"{pl.project.name}: {version} is too low: {reason}, so it needs at "
                                    f"least {required} (pass --allow-lower to release {version} anyway)")
         if not pl.notes:
