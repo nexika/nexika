@@ -807,3 +807,15 @@ def test_proof_view_shows_the_ui_check():
 def test_lawha_strings_exist_in_arabic():
     for key in ("fix", "lawha_ok", "lawha_bad", "lawha_old", "t_lawha", "d_lawha_ok", "d_lawha_bad", "d_lawha_fix"):
         assert i18n.t(key, "ar") != i18n.t(key, "en")
+
+
+@pytest.mark.parametrize("what, en, ar", [
+    ("check", "2 failed check(s)", "2 فحص فاشل"),
+    ("merge", "merge conflict", "تعارض في الدمج"),
+    ("generated", "2 generated file(s) out of date", "2 ملف مولَّد غير محدَّث"),
+    ("something-new", "2 failure(s)", "2 إخفاق"),
+])
+def test_tabib_code_kinds_have_band_labels(what, en, ar):
+    found = {"kind": "code", "detail": {"what": what, "count": 2}}
+    assert render.tabib_label(found, "en") == en
+    assert render.tabib_label(found, "ar") == ar
