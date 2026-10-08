@@ -596,6 +596,8 @@ def reader(program: str, argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stag
     with_arg = {"-" + c for c in short} | READER_LONG
     if program == "jq":
         argv = jq_args(argv)
+    if program in ("head", "tail"):  # `head -50 x`: the old form of -n 50, not a file (#137)
+        argv = [a for a in argv if not re.fullmatch(r"-\d+", a)]
     opts, pos = options(argv[1:], with_arg)
     write_paths(values(opts, *WRITING_OPTIONS.get(program, ())), ctx)
     if program in ("uniq", "xxd") and len(pos) > 1:
