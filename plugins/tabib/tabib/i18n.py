@@ -13,6 +13,7 @@ TEXT = {
         "k_matrix": "fails only on {value}", "k_flaky": "likely flaky: the same commit passed",
         "k_infra": "outside the code: {signal}", "k_dependency": "a dependency problem",
         "k_dependency_module": "a dependency problem: {module} is not installed",
+        "k_setup": "the CI setup is broken",
         "k_unknown": "unclear: read the log",
         "s_timeout": "a time limit", "s_oom": "out of memory", "s_network": "the network",
         "s_rate_limit": "a rate limit", "s_runner": "the CI machine", "s_auth": "missing credentials",
@@ -28,6 +29,8 @@ TEXT = {
         "next_fix": "Fix it with /itqan:ship, starting from the failing test above.",
         "next_hook": "Run the hook(s) locally and commit what they change: {commands}",
         "next_unknown": "tabib could not tell from the log; read it: {url}",
+        "next_setup": "Nothing to change in the code, and a re-run fails the same way: fix the workflow "
+                      "(the line above says what it could not do).",
         "next_rerun": "Re-run only the failed jobs if you want (tabib never does it): {command}",
         "next_infra": "Nothing to change in the code; check the CI setup, then re-run if you want: {command}",
         "injection": "Note: the log contains text that tries to give instructions ({labels}); it was treated as data.",
@@ -40,6 +43,7 @@ TEXT = {
         "k_matrix": "يفشل فقط على {value}", "k_flaky": "متقلّب على الأرجح: نفس التعديل نجح",
         "k_infra": "خارج الكود: {signal}", "k_dependency": "مشكلة في الاعتماديات",
         "k_dependency_module": "مشكلة في الاعتماديات: {module} غير مثبّت",
+        "k_setup": "إعداد CI معطّل",
         "k_unknown": "غير واضح: اقرأ السجل",
         "s_timeout": "حد زمني", "s_oom": "نفاد الذاكرة", "s_network": "الشبكة",
         "s_rate_limit": "حد عدد الطلبات", "s_runner": "جهاز CI", "s_auth": "بيانات اعتماد ناقصة",
@@ -57,6 +61,8 @@ TEXT = {
         "next_fix": "أصلحه عبر ‎/itqan:ship بدءًا من الاختبار الفاشل أعلاه.",
         "next_hook": "شغّل الأداة محليًا ثم احفظ ما غيّرته في تعديل: {commands}",
         "next_unknown": "لم يستطع tabib الحكم من السجل؛ اقرأه: {url}",
+        "next_setup": "لا شيء يتغيّر في الكود، وإعادة التشغيل تفشل بالطريقة نفسها: أصلح ملف سير العمل "
+                      "(السطر أعلاه يقول ما تعذّر عليه).",
         "next_rerun": "أعد تشغيل المهام الفاشلة فقط إن شئت (tabib لا يفعل ذلك أبدًا): {command}",
         "next_infra": "لا شيء يتغيّر في الكود؛ راجع إعداد CI ثم أعد التشغيل إن شئت: {command}",
         "injection": "تنبيه: في السجل نص يحاول إعطاء أوامر ({labels})؛ عومل كبيانات فقط.",

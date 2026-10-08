@@ -169,7 +169,7 @@ def diagnose(info: dict, run_id: int | None = None, local_run: bool = True) -> d
                                                 [f["file"] for f in record["failures"]],
                                                 places(record["failures"], record.get("frames") or [])),
                               "green_run": green.get("id")}
-    if local_run and record["kind"] not in ("flaky", "infra"):
+    if local_run and record["kind"] not in ("flaky", "infra", "setup"):
         record["reproduction"] = reproduce.run(info["repo"], run["sha"], record["branch"], record["failures"],
                                                record["jobs"], fork=run.get("from_fork"))
     elif local_run:
