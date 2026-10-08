@@ -14,7 +14,9 @@ The amin helper is printed in the session note; below it is written `amin`.
    one-line reason. Use priority labels only if the repo has them.
 3. For each possible duplicate pair, read both and decide: duplicate, related, or different.
    Title similarity alone proves nothing.
-4. For stale issues, suggest: ask the author for an update, or leave as is.
+4. For stale issues (listed oldest first), suggest: ask the author for an update, or leave as is.
+   Issues labelled accepted or for discussion are not listed: waiting is expected there. More
+   such labels go in `.amin.json` as `"triage": {"keep_labels": ["T: style"]}`.
 5. Present one table: issue | proposal | reason. Ask the user what to apply (all, some, none).
 6. Apply only the approved items:
    - labels: `gh issue edit N --add-label "x"`

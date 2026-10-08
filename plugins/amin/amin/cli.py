@@ -192,7 +192,10 @@ def run(argv: list[str]) -> int:
                                 "--json", "number,title,labels,updatedAt") or []
         label_data = runner.gh_json("label", "list", "--limit", "200", "--json", "name") or []
         labels = [lb["name"] for lb in label_data]
-        print(triage.scan(issues, labels))
+        settings = proj.load_config(root).get("triage")
+        keep = settings.get("keep_labels") if isinstance(settings, dict) else None
+        keep = [str(x) for x in keep] if isinstance(keep, list) else None
+        print(triage.scan(issues, labels, keep_labels=keep))
     elif cmd == "work" and argv[1:2] == ["start"] and len(argv) > 2:
         print(cmd_work_start(root, runner, argv[2].lstrip("#")))
     elif cmd == "check-fragment":

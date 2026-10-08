@@ -11,6 +11,9 @@ STOP = {
 }
 SIMILARITY = 0.5
 STALE_DAYS = 90
+# issues kept open on purpose: an old update date is expected there
+KEEP_OPEN = re.compile(r"accepted|discussion|design|roadmap|long[- ]?term|help wanted|up for grabs|"
+                       r"good (?:first|second) issue|blocked|confirmed|planned", re.I)
 
 
 def title_words(title: str) -> set[str]:
@@ -24,7 +27,10 @@ def similarity(a: str, b: str) -> float:
     return len(wa & wb) / len(wa | wb)
 
 
-def scan(issues: list[dict], labels: list[str], today: datetime.date | None = None) -> str:
+def scan(issues: list[dict], labels: list[str], today: datetime.date | None = None,
+         keep_labels: list[str] | None = None) -> str:
+    """The triage report. keep_labels (.amin.json "triage": {"keep_labels": [...]}) are more labels,
+    besides accepted or discussion ones, whose stale issues need no "any update?"."""
     today = today or datetime.date.today()
     lines = [f"open issues: {len(issues)}", f"labels available: {', '.join(labels) or 'none'}"]
     unlabeled = [i for i in issues if not i.get("labels")]
@@ -42,12 +48,20 @@ def scan(issues: list[dict], labels: list[str], today: datetime.date | None = No
     lines += [f"  #{a['number']} ~ #{b['number']} ({score:.0%}): {a['title']} | {b['title']}"
               for score, a, b in pairs[:20]] or ["  none"]
 
-    stale = []
-    for i in issues:
+    stale, kept = [], 0
+    keep = {name.lower() for name in keep_labels or []}
+    for i in sorted(issues, key=lambda x: x.get("updatedAt") or ""):   # oldest first
         updated = (i.get("updatedAt") or "")[:10]
-        if updated and (today - datetime.date.fromisoformat(updated)).days >= STALE_DAYS:
+        if not updated or (today - datetime.date.fromisoformat(updated)).days < STALE_DAYS:
+            continue
+        names = [str(lb.get("name", "")) for lb in i.get("labels") or []]
+        if any(KEEP_OPEN.search(n) or n.lower() in keep for n in names):
+            kept += 1    # accepted or under discussion: waiting is expected, not a reason to ask
+        else:
             stale.append(i)
-    lines.append(f"\nno activity for {STALE_DAYS}+ days ({len(stale)}):")
+    lines.append(f"\nno activity for {STALE_DAYS}+ days ({len(stale)}), oldest first:")
     lines += [f"  #{i['number']} {i['title']} (last update {i['updatedAt'][:10]})"
               for i in stale[:20]] or ["  none"]
+    if kept:
+        lines.append(f"  ({kept} more labelled accepted or for discussion: not listed)")
     return "\n".join(lines)

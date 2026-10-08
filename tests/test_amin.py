@@ -568,6 +568,23 @@ def test_triage_scan():
     assert "no activity for 90+ days (2)" in report
 
 
+def test_stale_issues_are_listed_oldest_first_without_accepted_or_discussion_ones():
+    # issue #157: on black the 20 stale issues shown were the least stale, and most were design discussions
+    def issue(number, updated, *labels):
+        return {"number": number, "title": f"Issue {number}", "updatedAt": f"{updated}T10:00:00Z",
+                "labels": [{"name": name} for name in labels]}
+    issues = [issue(1, "2026-07-03", "T: bug"), issue(2, "2019-05-05", "T: bug"),
+              issue(3, "2021-02-01", "S: accepted"), issue(4, "2020-01-01", "S: needs discussion"),
+              issue(5, "2022-03-03", "T: style"), issue(6, "2026-10-01", "T: bug")]
+    report = triage.scan(issues, [], today=datetime.date(2026, 10, 8))
+    stale = report.split("no activity for 90+ days")[1]
+    assert stale.index("#2 ") < stale.index("#5 ") < stale.index("#1 ")       # oldest first
+    assert "#3 " not in stale and "#4 " not in stale and "#6 " not in stale
+    assert "2 more labelled accepted or for discussion" in stale
+    report = triage.scan(issues, [], today=datetime.date(2026, 10, 8), keep_labels=["T: style"])
+    assert "#5 " not in report.split("no activity for 90+ days")[1]
+
+
 def test_title_similarity_ignores_noise_words():
     assert triage.similarity("Add support for dark mode", "Fix the bug in dark mode") == 1.0
     assert triage.similarity("error", "bug") == 0.0
