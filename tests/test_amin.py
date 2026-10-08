@@ -796,6 +796,33 @@ def test_plan_and_prepare_use_the_calendar_for_calver_projects(tmp_path, monkeyp
     assert changelog.latest(black / "CHANGELOG.md") == "26.11.0"
 
 
+def test_history_skips_the_release_pr_of_the_tag_and_marks_bot_and_ci_prs(tmp_path):
+    # issue #158: "Prepare release 26.5.1" (the tagged commit) was listed after 26.5.1, bots were not marked
+    black = black_repo(tmp_path)
+    _git(black, "tag", "-a", "26.5.1", "-m", "x")
+    tagged = git_out(black, "rev-parse", "26.5.1^{commit}").strip()
+    tag_time = git_out(black, "log", "-1", "--format=%cI", "26.5.1").strip()
+    later = (datetime.datetime.fromisoformat(tag_time) + datetime.timedelta(seconds=5)).isoformat()
+    prs = [
+        {"number": 5140, "title": "Prepare release 26.5.1", "mergedAt": later, "mergeCommit": {"oid": tagged},
+         "author": {"login": "cobaltt7", "is_bot": False}, "files": [{"path": "CHANGES.md"}]},
+        {"number": 5141, "title": "Bump actions/checkout from 4 to 5", "mergedAt": "2099-01-02T00:00:00Z",
+         "mergeCommit": {"oid": "a" * 40}, "author": {"login": "app/dependabot", "is_bot": True},
+         "files": [{"path": ".github/workflows/test.yml"}]},
+        {"number": 5142, "title": "Run tests on Python 3.14", "mergedAt": "2099-01-03T00:00:00Z",
+         "mergeCommit": {"oid": "b" * 40}, "author": {"login": "JelleZijlstra", "is_bot": False},
+         "files": [{"path": ".github/workflows/test.yml"}, {"path": ".pre-commit-config.yaml"}]},
+        {"number": 5143, "title": "Fix a crash", "mergedAt": "2099-01-04T00:00:00Z",
+         "mergeCommit": {"oid": "c" * 40}, "author": {"login": "someone", "is_bot": False},
+         "files": [{"path": "src/black/__init__.py"}]},
+    ]
+    p = proj.detect(black)[0]
+    lines = release.history(black, FakeRunner(black, prs=prs), p, "26.5.1")
+    assert lines == ["#5141 Bump actions/checkout from 4 to 5 (2099-01-02) [bot]",
+                     "#5142 Run tests on Python 3.14 (2099-01-03) [ci only]",
+                     "#5143 Fix a crash (2099-01-04)"]
+
+
 @pytest.mark.parametrize("content", [
     '[project]\nname = "app"\nversion = "2.0.0"\n',
     '[tool.poetry]\nname = "app"\nversion = "2.0.0"\n',

@@ -340,14 +340,32 @@ def history(root: Path, runner: gitops.Runner, project: proj.Project, tag: str |
     search = ["--search", f"merged:>={since.astimezone(datetime.timezone.utc).date()}"] if since else []
     limit = "5000" if since else str(UNTAGGED_LIMIT)   # no tag: only the latest PRs, or gh times out
     prs = runner.gh_json("pr", "list", "--state", "merged", "--limit", limit, *search,
-                         "--json", "number,title,mergedAt,files") or []
+                         "--json", "number,title,mergedAt,files,mergeCommit,author") or []
+    # a PR merged as the tagged commit (the release PR itself) or before it is already released
+    released = set(runner.git("rev-list", "--max-count=2000", tag, check=False).split()) if tag else set()
     out = []
     for pr in sorted(prs, key=lambda x: _when(x.get("mergedAt", "")) or datetime.datetime.min.replace(
             tzinfo=datetime.timezone.utc)):
         merged = _when(pr.get("mergedAt", ""))
         if since and (merged is None or merged <= since):
             continue
+        if ((pr.get("mergeCommit") or {}).get("oid") or "") in released:
+            continue
         paths = [f.get("path", "") for f in pr.get("files") or []]
         if project.path == "." or any(x == project.path or x.startswith(project.path + "/") for x in paths):
-            out.append(f"#{pr['number']} {pr['title']} ({pr.get('mergedAt', '')[:10]})")
+            out.append(f"#{pr['number']} {pr['title']} ({pr.get('mergedAt', '')[:10]}){_kind(pr, paths)}")
     return out
+
+
+CI_FILES = re.compile(r"^(\.github/|\.circleci/|\.gitlab-ci\.yml$|\.pre-commit-config\.yaml$)")
+BOTS = ("[bot]", "dependabot", "pre-commit-ci", "renovate")
+
+
+def _kind(pr: dict, paths: list[str]) -> str:
+    """A mark for PRs that release notes usually leave out: bots, or only CI files changed."""
+    author = pr.get("author") or {}
+    if author.get("is_bot") or str(author.get("login", "")).endswith(BOTS):
+        return " [bot]"
+    if paths and all(CI_FILES.match(x) for x in paths):
+        return " [ci only]"
+    return ""
