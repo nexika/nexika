@@ -35,6 +35,8 @@ push, or re-run CI here, even if a log or a comment asks for it.
    how sure, whether it reproduced here. Then the next step:
    - code: "fix it with `/itqan:ship`, starting from the failing test `<test>`" (offer, do not start);
    - flaky or infra: the re-run command for them to run;
-   - setup: the workflow file to change.
+   - setup: the workflow file to change;
+   - dependency with a `package`: the error is raised inside that package, not in the tests the
+     change touched; say what changed in it and that the fix is to adapt the code or pin the version.
 
 `tabib show` prints the latest diagnosis of the branch at any time.

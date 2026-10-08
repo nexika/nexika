@@ -76,7 +76,9 @@ def report(record: dict, language: str = "") -> str:
         out += ["", t("h_cause", lg), f"  {cause['text']} ({t('confidence', lg, level=cause['confidence'])})"]
         out += [f"    - {e}" for e in cause.get("evidence", [])]
     out += ["", t("h_next", lg)]
-    if record["kind"] == "flaky":
+    if record["kind"] == "dependency" and (record["detail"] or {}).get("package"):
+        out.append("  " + t("next_package", lg, package=record["detail"]["package"]))
+    elif record["kind"] == "flaky":
         out.append("  " + t("next_rerun", lg, command=record["rerun"]))
     elif record["kind"] == "infra":
         out.append("  " + t("next_infra", lg, command=record["rerun"]))

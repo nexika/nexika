@@ -61,6 +61,21 @@ def one_matrix_job(jobs: list[dict]) -> bool:
     return len(groups) == 1 and len(groups[0]["failed"]) == 1 and bool(groups[0]["passed"])
 
 
+def raised_upstream(failures: list[dict], upstream: list[dict]) -> dict:
+    """The dependency every failure comes from, when each one is a warning raised inside a dependency's
+    code in its own job (pytest turns warnings into errors): {} otherwise."""
+    if not failures or not upstream:
+        return {}
+    first = {}
+    for f in failures:
+        here = [u for u in upstream if u.get("job") == f.get("job")
+                and (f.get("message") or "").startswith(u["warning"] + ":")]
+        if not here:
+            return {}
+        first = first or here[0]
+    return first
+
+
 def classify(facts: dict) -> dict:
     """{kind, detail, confidence, evidence} from what triage found."""
     failures = facts.get("failures") or []
@@ -102,6 +117,19 @@ def classify(facts: dict) -> dict:
         if facts.get("event") == "pull_request" and facts.get("from_fork"):
             evidence.append("The pull request comes from a fork, which gets no repository secrets.")
         return {"kind": "infra", "detail": {"signal": "auth"}, "confidence": "medium", "evidence": evidence}
+    upstream = raised_upstream(failures, facts.get("upstream") or [])
+    if upstream:
+        evidence.append(f"{upstream['warning']} raised inside {upstream['package']} ({upstream['place']}), "
+                        f"not in the project's code: {upstream['message']}")
+        evidence.append("Warnings are errors in this job: the dependency changed under the project "
+                        "(a new release, or the version this job installs).")
+        failed = sorted({f.get("job") or "" for f in failures} - {""})
+        passed = [j for j in facts.get("jobs") or [] if j.get("conclusion") in ("success", "passed")]
+        if failed and passed:
+            evidence.append(f"Only the job{'s' if len(failed) > 1 else ''} "
+                            f"{', '.join(repr(name) for name in failed[:3])} failed; the other jobs passed.")
+        return {"kind": "dependency", "detail": {"package": upstream["package"]}, "confidence": "medium",
+                "evidence": evidence}
     missing = facts.get("missing_modules") or []   # modules the project itself does not have
     if "dependency" in signals or missing or (facts.get("lock_changed") and any(
             "No module named" in f["message"] or "Cannot find module" in f["message"] for f in failures)):
