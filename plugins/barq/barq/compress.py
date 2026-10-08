@@ -10,6 +10,7 @@ import re
 ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]")
 MAX_DETAIL = 120
 GENERIC_TAIL = 15
+MAX_LINE = 500  # a 16 KB assertion message is cut, not printed in full (#166)
 
 
 def clean(output: str) -> str:
@@ -205,15 +206,33 @@ def generic(lines: list[str], rc: int | None):
     for i, ln in enumerate(lines):
         if _ERRORISH.search(ln):
             picked.extend(lines[max(0, i - 1):i + 2])
-    tail = non_empty[-GENERIC_TAIL:]
     details = _dedupe(picked)[:60]
+    shown = {ln.strip() for ln in details}
+    tail = [ln for ln in non_empty[-GENERIC_TAIL:] if ln.strip() not in shown]
     if tail:
         details += ["--- last lines ---", *tail]
     return "failed", details
 
 
+# ---------------------------------------------------------------- linters (#166)
+
+
+# flake8/ruff "path:12:5: F401 msg" and mypy/gcc "path:12:5: error: msg" (column optional)
+_LINT_LINE = re.compile(r"^\S.*?:\d+:(?:\d+:)? (?:[A-Z]{1,4}\d{1,4}\b|(error|warning|note):)")
+_LINT_SUMMARY = re.compile(r"^(Found \d+ errors?\b.*|Success: no issues found.*)$")
+
+
+def lint(lines: list[str]):
+    diags = [ln.rstrip() for ln in lines if _LINT_LINE.match(ln)]
+    if not diags:
+        return None
+    count = sum(1 for d in diags if _LINT_LINE.match(d).group(1) != "note")
+    summaries = [ln.strip() for ln in lines if _LINT_SUMMARY.match(ln.strip())]
+    return " | ".join([f"{count} problem(s)", *summaries]), _dedupe(diags)
+
+
 # Order matters: tsc diagnostics look like MSBuild ones, so tsc is tried first.
-PARSERS = [pytest, dotnet_test, tsc, dotnet_build, jest_vitest, go_test, cargo]
+PARSERS = [pytest, dotnet_test, tsc, dotnet_build, jest_vitest, go_test, cargo, lint]
 
 
 def summarize(output: str, rc: int | None) -> tuple[str, list[str], int]:
@@ -227,6 +246,8 @@ def summarize(output: str, rc: int | None) -> tuple[str, list[str], int]:
             break
     else:
         verdict, details = generic(lines, rc)
+    details = [ln if len(ln) <= MAX_LINE else
+               f"{ln[:MAX_LINE]} ... ({len(ln) - MAX_LINE} more characters)" for ln in details]
     if len(details) > MAX_DETAIL:
         details = details[:MAX_DETAIL] + [f"... {len(details) - MAX_DETAIL} more lines"]
     return verdict, details, raw_count
