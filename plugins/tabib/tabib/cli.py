@@ -88,6 +88,13 @@ def report(record: dict, language: str = "") -> str:
         hooks = dict.fromkeys(f["test"] for f in record["failures"])
         commands = "; ".join(f"pre-commit run {hook} --all-files" for hook in hooks)
         out.append("  " + t("next_hook", lg, commands=commands))
+    elif record["failures"] and all(f["framework"] in parse.FORMAT_COMMANDS for f in record["failures"]):
+        tools = {}
+        for f in record["failures"]:
+            tools.setdefault(f["framework"], {})[f["file"]] = None
+        commands = "; ".join(f"{parse.FORMAT_COMMANDS[tool]} {' '.join(list(files)[:10])}"
+                             for tool, files in tools.items())
+        out.append("  " + t("next_format", lg, commands=commands))
     elif record["failures"]:
         out.append("  " + t("next_fix", lg))
     else:

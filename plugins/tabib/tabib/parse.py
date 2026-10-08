@@ -174,6 +174,37 @@ def conftest(lines: list[str]) -> list[dict]:
     return found
 
 
+REFORMAT = re.compile(r"^(would reformat|Would reformat:) (\S+)$")
+PRETTIER_FILE = re.compile(r"^\[warn\] (\S+)$")
+PRETTIER_END = re.compile(r"^\[warn\] Code style issues found")
+CHECKOUT = re.compile(r"^(?:.*?/work/[^/]+/[^/]+/|[A-Za-z]:/a/[^/]+/[^/]+/)")
+SAFE_PATH = re.compile(r"^[\w.@+-][\w./@+-]*$")   # it ends up in a command: nothing else gets through
+FORMAT_COMMANDS = {"black": "black", "ruff-format": "ruff format", "prettier": "prettier --write"}
+
+
+def formatter(lines: list[str]) -> list[dict]:
+    """Files a formatter's check would change: black ('would reformat <path>'), ruff format ('Would
+    reformat: <path>'), prettier ('[warn] <path>' before 'Code style issues found'); paths made relative
+    to the checkout."""
+    found = []
+    warned: list[str] = []
+    for line in lines:
+        line = line.strip()
+        tool, path = "", ""
+        if m := REFORMAT.match(line):
+            tool, path = ("black" if m.group(1) == "would reformat" else "ruff-format"), m.group(2)
+        elif PRETTIER_END.match(line):
+            found += [_failure("prettier", "lint", file=p, message="prettier --check") for p in warned]
+            warned = []
+        elif m := PRETTIER_FILE.match(line):
+            warned.append(CHECKOUT.sub("", m.group(1).replace("\\", "/")))
+        if path:
+            path = CHECKOUT.sub("", path.replace("\\", "/"))
+            if SAFE_PATH.match(path):
+                found.append(_failure(tool, "lint", file=path, message=f"{tool}: would reformat"))
+    return [f for f in found if SAFE_PATH.match(f["file"])]
+
+
 def playwright(lines: list[str]) -> list[dict]:
     """Playwright's failed tests: the summary's "failed" group when there is one (a test in its "flaky"
     group passed on a retry), else the numbered error blocks, else the list reporter's ✘ lines."""
@@ -390,6 +421,7 @@ def failures(lines: list[str]) -> list[dict]:
         found += pending_jest
     found += pre_commit(lines)
     found += conftest(lines)
+    found += formatter(lines)
     found += playwright(lines)
     for block in junit_blocks(lines):
         found += junit_xml(block)

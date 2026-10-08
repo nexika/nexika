@@ -32,6 +32,7 @@ TEXT = {
         "r_skipped": "not run: {why}", "r_error": "could not run: {why}", "r_none": "not tried yet (/tabib:diagnose)",
         "next_fix": "Fix it with /itqan:ship, starting from the failing test above.",
         "next_hook": "Run the hook(s) locally and commit what they change: {commands}",
+        "next_format": "Run the formatter and commit what it changes: {commands}",
         "next_unknown": "tabib could not tell from the log; read it: {url}",
         "next_setup": "Nothing to change in the code, and a re-run fails the same way: fix the workflow "
                       "(the line above says what it could not do).",
@@ -67,6 +68,7 @@ TEXT = {
         "r_none": "لم تُجرَّب بعد (‎/tabib:diagnose)",
         "next_fix": "أصلحه عبر ‎/itqan:ship بدءًا من الاختبار الفاشل أعلاه.",
         "next_hook": "شغّل الأداة محليًا ثم احفظ ما غيّرته في تعديل: {commands}",
+        "next_format": "شغّل أداة التنسيق ثم احفظ ما غيّرته في تعديل: {commands}",
         "next_unknown": "لم يستطع tabib الحكم من السجل؛ اقرأه: {url}",
         "next_setup": "لا شيء يتغيّر في الكود، وإعادة التشغيل تفشل بالطريقة نفسها: أصلح ملف سير العمل "
                       "(السطر أعلاه يقول ما تعذّر عليه).",
