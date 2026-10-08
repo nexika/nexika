@@ -46,8 +46,13 @@ def _current_version(root: Path, p: proj.Project) -> tuple[str | None, list[str]
 def plan(root: Path, runner: gitops.Runner, projects: list[proj.Project]) -> list[Plan]:
     plans = []
     for p in projects:
-        current, problems = _current_version(root, p)
         tag = gitops.last_tag(runner, p.tag_prefix())
+        if p.version_files:
+            current, problems = _current_version(root, p)
+        else:   # the version lives in tags only (hatch-vcs, setuptools-scm)
+            current = tag[len(p.tag_prefix()):] if tag else None
+            problems = [] if tag else [f"the version comes from tags and no {p.tag('X.Y.Z')} tag "
+                                       "was found: pass NAME=VERSION to prepare"]
         notes, note_problems = fragments.pending(root, p)
         item = Plan(p, current, tag, notes, problems + note_problems,
                     gitops.commits_since(runner, tag, p.path))
@@ -265,7 +270,11 @@ def publish(root: Path, runner: gitops.Runner, project: proj.Project, dry_run: b
     remote = runner.git("rev-parse", f"origin/{default}", check=False).strip()
     if head != remote:
         failures.append(f"local {default} is not the same commit as origin/{default}: pull or push first")
-    version, problems = _current_version(root, project)
+    if project.version_files:
+        version, problems = _current_version(root, project)
+    else:   # the version lives in tags only: release the newest CHANGELOG section
+        version = changelog.latest(root / project.changelog)
+        problems = [] if version else [f"{project.changelog} has no version section: run prepare first"]
     failures += problems
     tag = project.tag(version or "?")
     notes = changelog.extract(root / project.changelog, version or "?")

@@ -64,9 +64,13 @@ def cmd_projects(root: Path, runner: gitops.Runner) -> str:
         return "no projects detected: add .amin.json (see /amin:setup)"
     rows = []
     for p in projects:
-        version = proj.read_version(root, p.version_files[0])
         tag = gitops.last_tag(runner, p.tag_prefix())
-        rows.append(f"{p.name:<12} {version or '?':<8} path={p.path} version={','.join(p.version_files)} "
+        if p.version_files:
+            version = proj.read_version(root, p.version_files[0])
+        else:
+            version = tag[len(p.tag_prefix()):] if tag else None
+        rows.append(f"{p.name:<12} {version or '?':<8} path={p.path} "
+                    f"version={','.join(p.version_files) or 'from tags'} "
                     f"changelog={p.changelog} notes={p.fragments}/ last tag={tag or 'none'}")
     return "\n".join(rows)
 

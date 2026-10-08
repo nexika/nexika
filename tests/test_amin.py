@@ -646,3 +646,63 @@ def test_session_note_and_help(capsys):
     assert cli.main(["hook", "session-start"]) == 0
     assert "amin helper: python3" in capsys.readouterr().out
     assert cli.main([]) == 2
+
+
+# ---------------------------------------------------------------- a repo like psf/black (#52)
+
+BLACK_PYPROJECT = '''[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+[build-system]
+requires = ["hatch-fancy-pypi-readme", "hatch-vcs>=0.3.0", "hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "black"
+description = "The uncompromising code formatter."
+requires-python = ">=3.10"
+dynamic = ["readme", "version"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/_black_version.py"
+template = """
+version = "{version}"
+"""
+'''
+
+
+def black_repo(tmp_path, files=None):
+    return init_repo(tmp_path / "black", {"pyproject.toml": BLACK_PYPROJECT, "src/black/__init__.py": "",
+                                          **(files or {})})
+
+
+def test_a_version_from_git_tags_is_never_written_into_pyproject(tmp_path):
+    # issue #152: the hatch-vcs template `version = "{version}"` was read as the version and overwritten
+    black = black_repo(tmp_path)
+    assert proj.read_version(black, "pyproject.toml") is None
+    [p] = proj.detect(black)
+    assert (p.name, p.version_files) == ("black", [])
+    _git(black, "tag", "-a", p.tag("26.10.0"), "-m", "x")
+    fragments.add(black, p, "fixed", "Test note", "1")
+    pl = plan_by_name(black)["black"]
+    assert (pl.status, pl.current) == ("release", "26.10.0") and not pl.problems
+    changed = release.prepare(black, [(pl, "26.11.0")], date="2026-10-08")
+    assert "pyproject.toml" not in changed
+    assert (black / "pyproject.toml").read_text() == BLACK_PYPROJECT
+    assert changelog.latest(black / p.changelog) == "26.11.0"   # what publish tags
+
+
+@pytest.mark.parametrize("content", [
+    '[project]\nname = "app"\nversion = "2.0.0"\n',
+    '[tool.poetry]\nname = "app"\nversion = "2.0.0"\n',
+    '[tool.x]\nversion = "9.9.9"\n\n[project]\nname = "app"\nversion = "2.0.0"\n',
+])
+def test_pyproject_version_is_read_only_from_project_or_poetry(tmp_path, content):
+    write(tmp_path, "pyproject.toml", content)
+    assert proj.read_version(tmp_path, "pyproject.toml") == "2.0.0"
+    proj.write_version(tmp_path, "pyproject.toml", "2.1.0")
+    assert (tmp_path / "pyproject.toml").read_text() == content.replace("2.0.0", "2.1.0")

@@ -47,6 +47,15 @@ def insert(path: Path, name: str, version: str, date: str, sections: dict[str, l
     path.write_text(content, encoding="utf-8")
 
 
+def latest(path: Path) -> str | None:
+    """The newest version with a section (the first below any Unreleased section), or None."""
+    try:
+        m = re.search(r"^## \[(?!unreleased\])([^\]]+)\]", path.read_text(encoding="utf-8"), re.M | re.I)
+    except OSError:
+        return None
+    return m.group(1).strip() if m else None
+
+
 def extract(path: Path, version: str) -> str | None:
     """The body of one version's section (the release notes), or None."""
     try:

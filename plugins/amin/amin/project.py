@@ -5,7 +5,8 @@ Detection order:
 2. a plugin marketplace: every plugins/*/.claude-plugin/plugin.json is a project
    (tag "<name>-v<version>", changelog <path>/CHANGELOG.md, notes in changelog.d/<name>/)
 3. one project at the root: package.json, pyproject.toml, .claude-plugin/plugin.json,
-   Directory.Build.props or a .csproj with <Version> (tag "v<version>", notes in changelog.d/)
+   Directory.Build.props or a .csproj with <Version> (tag "v<version>", notes in changelog.d/);
+   a pyproject.toml with `dynamic = ["version"]` takes its version from tags (no version files)
 """
 from __future__ import annotations
 
@@ -20,7 +21,51 @@ MAJOR_TYPES = {"breaking", "removed"}
 MINOR_TYPES = {"added", "changed", "deprecated"}
 
 JSON_VERSION = re.compile(r'("version"\s*:\s*")([^"]+)(")')
-TOML_VERSION = re.compile(r'(?m)^(version\s*=\s*")([^"]+)(")')
+TOML_LINE = re.compile(r'(?m)^(version\s*=\s*")([^"]+)(")')
+TOML_HEADER = re.compile(r"(?m)^\[([^\[\]]+)\]\s*$")
+TOML_SECTIONS = {"", "project", "tool.poetry", "package", "workspace.package"}   # "" = before any table
+
+
+class _TomlVersion:
+    """`version = "..."` directly under [project], [tool.poetry], [package] or [workspace.package]:
+    never a template such as hatch-vcs's `template = \"\"\"version = "{version}"\"\"\"`."""
+
+    def _matches(self, text: str):
+        headers = [(m.start(), m.group(1).strip()) for m in TOML_HEADER.finditer(text)]
+        for m in TOML_LINE.finditer(text):
+            section = next((name for start, name in reversed(headers) if start < m.start()), "")
+            if section in TOML_SECTIONS:
+                yield m
+
+    def search(self, text: str):
+        return next(self._matches(text), None)
+
+    def subn(self, repl, text: str, count: int = 0) -> tuple[str, int]:
+        found = list(self._matches(text))
+        found = found[:count] if count else found
+        for m in reversed(found):
+            text = text[: m.start()] + repl(m) + text[m.end():]
+        return text, len(found)
+
+
+TOML_VERSION = _TomlVersion()
+DYNAMIC_VERSION = re.compile(r'(?m)^dynamic\s*=\s*\[[^\]]*["\']version["\']')
+
+
+def version_from_tags(root: Path, rel: str) -> bool:
+    """A pyproject.toml whose [project] declares `dynamic = ["version"]`: the version comes from git tags
+    (hatch-vcs, setuptools-scm), so no file holds it and amin never writes one."""
+    if Path(rel).name != "pyproject.toml":
+        return False
+    try:
+        text = (root / rel).read_text(encoding="utf-8")
+    except OSError:
+        return False
+    start = re.search(r"(?m)^\[project\]\s*$", text)
+    if not start:
+        return False
+    end = TOML_HEADER.search(text, start.end())
+    return bool(DYNAMIC_VERSION.search(text[start.end(): end.start() if end else len(text)]))
 XML_VERSION = re.compile(r"(<Version>)([^<]+)(</Version>)")
 
 
@@ -210,11 +255,16 @@ def detect(root: Path) -> list[Project]:
     candidates += sorted(p.relative_to(root).as_posix() for p in root.glob("*.csproj"))
     candidates += sorted(p.relative_to(root).as_posix() for p in root.glob("src/*/*.csproj"))
     for rel in candidates:
-        if (root / rel).is_file() and read_version(root, rel):
-            name = _manifest_name(root, rel)
+        if not (root / rel).is_file():
+            continue
+        if read_version(root, rel):
             locks = {"package.json": "package-lock.json", "Cargo.toml": "Cargo.lock"}
             files = [rel] + [lock for lock in [locks.get(rel)] if lock and read_version(root, lock)]
-            return [Project(name, ".", files, "CHANGELOG.md", "v{version}", "changelog.d")]
+        elif version_from_tags(root, rel):
+            files = []   # the version lives in git tags only
+        else:
+            continue
+        return [Project(_manifest_name(root, rel), ".", files, "CHANGELOG.md", "v{version}", "changelog.d")]
     return []
 
 
