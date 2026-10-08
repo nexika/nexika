@@ -19,6 +19,7 @@ from .targets import (  # noqa: F401  (the light helpers, kept here by name)
     ALLOW,
     ALWAYS_NO,
     ASK,
+    CI_RUNNER_FILES,
     DENY,
     LEVEL,
     LOCAL_HOSTS,
@@ -188,7 +189,10 @@ def expand(word: shell.Word, ctx: Ctx) -> list[Arg]:
         elif part.kind == "tilde":
             text.append(ctx.where.home if not part.text else os.path.expanduser("~" + part.text))
         elif part.kind == "var":
-            text.append(var_value(part.text, ctx))
+            value = var_value(part.text, ctx)
+            if value == UNKNOWN and part.text in CI_RUNNER_FILES and len(word.parts) == 1:
+                marks.add("ci-file:" + part.text)  # the whole word is the runner's file (#142)
+            text.append(value)
         elif part.kind == "arith":
             text.append("1")
         elif part.kind == "sub":
