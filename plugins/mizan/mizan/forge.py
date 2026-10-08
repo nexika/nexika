@@ -9,6 +9,7 @@ these read commands run, with arguments as a list (no shell):
     gh pr checks <number> --json name,bucket,link,workflow
     gh run list --branch=<branch> --limit 20
         --json databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt
+    gh run list --commit=<head> --limit 20 --json ...   (detached, or the head is not in the list above)
     gh run view <id> --json jobs
     glab mr list --output json
     glab mr list --reviewer=@me --output json
@@ -36,6 +37,7 @@ PR_TTL, CI_TTL, CI_RUNNING_TTL, LOCK_TTL = 300, 90, 45, 360  # a refresh may wai
 IDLE_AFTER, IDLE_FACTOR = 600, 4
 BIN = Path(__file__).resolve().parent.parent / "bin" / "mizan"
 TOOL = {"github": "gh", "gitlab": "glab"}
+RUN_FIELDS = "databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt"
 
 
 def cache_path(repo: str) -> Path:
@@ -272,6 +274,12 @@ def on_remote_branch(repo: str, sha: str, branch: str) -> bool:
     return done.returncode == 0
 
 
+def detached(info: dict) -> bool:
+    """A detached HEAD: gitinfo names the branch after the commit's first 8 characters."""
+    head = info.get("head") or ""
+    return bool(head) and info.get("branch") == head[:8]
+
+
 def ours(info: dict, runs: list[dict]) -> list[dict]:
     """Runs of this branch's own commits: a fork's pull request may share the branch's name."""
     head, repo, branch = info.get("head", ""), info["repo"], info.get("branch", "")
@@ -297,9 +305,14 @@ def fetch_ci(info: dict, pr: dict | None) -> dict:
             if checks["state"] not in ("none", "running"):
                 return checks
             # Running: the run list below says for how long, and about how long is left.
-        argv = ["gh", "run", "list", f"--branch={branch}", "--json",
-                "databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt", "--limit", "20"]
-        mine = ours(info, json.loads(run_tool(argv, cwd) or "[]"))
+        fields = ["--json", RUN_FIELDS, "--limit", "20"]
+        head = info.get("head", "")
+        mine = [] if detached(info) else ours(info, json.loads(
+            run_tool(["gh", "run", "list", f"--branch={branch}", *fields], cwd) or "[]"))
+        if re.match(r"^[0-9a-f]{7,64}$", head) and not any(r.get("headSha") == head for r in mine):
+            # A detached HEAD, or a commit older than the branch's newest 20 runs: ask by commit.
+            by_commit = json.loads(run_tool(["gh", "run", "list", f"--commit={head}", *fields], cwd) or "[]")
+            mine = [r for r in by_commit if r.get("headSha") == head] or mine
         found = parse_gh_runs(json.dumps(mine), info.get("head", ""))
         if checks and checks["state"] == "running" and found["state"] != "running":
             return checks

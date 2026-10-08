@@ -140,6 +140,8 @@ def build(raw: dict, publish: bool = False) -> dict:
     before = status.read("mizan", session) if session else {}
     start = day_start(before)
     info = gitinfo.read(cwd)
+    if info and forge.detached(info):
+        info = {**info, "creator": "", "creator_source": ""}  # no one started a detached HEAD
     prs, ci = _network(info)
     pr = prs.get("branch_pr") if prs.get("state") == "ok" else None
     if pr and pr.get("author"):

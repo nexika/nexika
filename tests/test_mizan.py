@@ -9,6 +9,7 @@ import sys
 import time
 from pathlib import Path
 
+import mizan_black
 import pytest
 from conftest import PLUGINS
 
@@ -34,6 +35,7 @@ from mizan import (  # noqa: E402
 from siyaq import hooks as siyaq_hooks  # noqa: E402
 from siyaq import rank  # noqa: E402
 
+BLACK = mizan_black.BLACK
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
 REAL_HOME = os.environ.get("HOME", "")  # the itqan check below runs pytest, which may live in the user site
 
@@ -121,6 +123,48 @@ def test_creator_is_you_until_the_branch_has_commits(repo):
 def test_default_branch_has_no_creator(repo):
     info = gitinfo.read(str(repo))
     assert info["branch"] == "main" and info["creator"] == ""
+
+
+def test_a_detached_head_has_no_creator(repo, env):
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True).stdout.strip()
+    git(repo, "switch", "-q", "--detach", "HEAD")
+    snap = snapshot.build({"session_id": "s1", "workspace": {"current_dir": str(repo)}})
+    assert snap["git"]["branch"] == head[:8] and snap["git"]["creator"] == ""  # no one started it (#161)
+
+
+def _runs_by_commit(by_branch, by_commit):
+    def answer(argv):
+        if argv[1:3] == ["run", "list"]:
+            return by_commit if any(a.startswith("--commit=") for a in argv) else by_branch
+        return {"jobs": []}
+    return answer
+
+
+def test_a_detached_head_reads_ci_by_commit(env, monkeypatch):
+    # black origin/main~1 eb883582: 8 green runs, found by commit, not by a branch named eb883582 (#161).
+    info = mizan_black.info_at(env, "eb883582")
+    info["branch"] = info["head"][:8]
+    tool = mizan_black.fake_gh(_runs_by_commit([], BLACK["runs"]["eb883582"]))
+    monkeypatch.setattr(forge, "run_tool", tool)
+    assert forge.fetch_ci(info, None)["state"] == "passed"
+    assert not any(a.startswith("--branch=") for argv in tool.calls for a in argv)
+    assert f"--commit={info['head']}" in tool.calls[0]
+
+
+def test_an_older_commit_beyond_the_run_list_reads_ci_by_commit(env, monkeypatch):
+    # fix-redundant-parens at ee819f1d: the branch's newest 20 runs are of later commits (#161).
+    info = mizan_black.info_at(env, "ee819f1d")
+    tool = mizan_black.fake_gh(_runs_by_commit(BLACK["runs"]["9e461ccf"], BLACK["runs"]["ee819f1d"]))
+    monkeypatch.setattr(forge, "run_tool", tool)
+    found = forge.fetch_ci(info, None)
+    assert found["state"] == "failed"
+    calls = [argv for argv in tool.calls if argv[1:3] == ["run", "list"]]
+    assert len(calls) == 2
+    # When the head is in the branch's list, one call is enough.
+    tool = mizan_black.fake_gh(_runs_by_commit(BLACK["runs"]["ee819f1d"], []))
+    monkeypatch.setattr(forge, "run_tool", tool)
+    forge.fetch_ci(info, None)
+    assert len([argv for argv in tool.calls if argv[1:3] == ["run", "list"]]) == 1
 
 
 def test_not_a_repo(env):
