@@ -100,6 +100,12 @@ allow	python3 {PLUGIN}/bin/haris status
 allow	git -C src log -1
 pass	git co main
 allow	X=1; echo $X
+pass	echo "version=$(git describe)" >> "$GITHUB_OUTPUT"
+pass	echo "platform=linux" >> $GITHUB_OUTPUT
+pass	echo "include=x" | tee -a $GITHUB_OUTPUT
+pass	echo "PATH_X=1" >> "${GITHUB_ENV}"
+pass	echo "## Report" >> $GITHUB_STEP_SUMMARY
+pass	echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 allow	cd src && cat app.py
 allow	if [ -f package.json ]; then cat package.json; fi
 
@@ -327,6 +333,9 @@ ask	rm -rf ~/projects
 ask	rm -rf .git
 ask	rm $FILE
 ask	rm -rf "$DIR"/*
+ask	echo x >> "$OUT"
+ask	echo x >> "$GITHUB_OUTPUT/../../.bashrc"
+deny	GITHUB_OUTPUT=~/.bashrc; echo x >> "$GITHUB_OUTPUT"
 ask	cat list.txt | xargs rm -rf
 ask	xargs rm -rf < list.txt
 
@@ -494,6 +503,9 @@ ask	git branch -D feat/old
 ask	git stash clear
 ask	git filter-branch --tree-filter x HEAD
 ask	git commit --no-verify -m x
+ask	pre-commit install
+ask	pre-commit install --hook-type pre-push
+allow	pre-commit run --all-files
 ask	git gc --prune=now
 ask	git reflog expire --expire=now --all
 ask	git worktree remove --force ../wt

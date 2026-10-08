@@ -646,3 +646,191 @@ def test_session_note_and_help(capsys):
     assert cli.main(["hook", "session-start"]) == 0
     assert "amin helper: python3" in capsys.readouterr().out
     assert cli.main([]) == 2
+
+
+# ---------------------------------------------------------------- a repo like psf/black (#52)
+
+BLACK_PYPROJECT = '''[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+[build-system]
+requires = ["hatch-fancy-pypi-readme", "hatch-vcs>=0.3.0", "hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "black"
+description = "The uncompromising code formatter."
+requires-python = ">=3.10"
+dynamic = ["readme", "version"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/_black_version.py"
+template = """
+version = "{version}"
+"""
+'''
+
+
+def black_repo(tmp_path, files=None):
+    return init_repo(tmp_path / "black", {"pyproject.toml": BLACK_PYPROJECT, "src/black/__init__.py": "",
+                                          **(files or {})})
+
+
+def test_a_version_from_git_tags_is_never_written_into_pyproject(tmp_path):
+    # issue #152: the hatch-vcs template `version = "{version}"` was read as the version and overwritten
+    black = black_repo(tmp_path)
+    assert proj.read_version(black, "pyproject.toml") is None
+    [p] = proj.detect(black)
+    assert (p.name, p.version_files) == ("black", [])
+    _git(black, "tag", "-a", p.tag("26.10.0"), "-m", "x")
+    fragments.add(black, p, "fixed", "Test note", "1")
+    pl = plan_by_name(black)["black"]
+    assert (pl.status, pl.current) == ("release", "26.10.0") and not pl.problems
+    changed = release.prepare(black, [(pl, "26.11.0")], date="2026-10-08")
+    assert "pyproject.toml" not in changed
+    assert (black / "pyproject.toml").read_text() == BLACK_PYPROJECT
+    assert changelog.latest(black / p.changelog) == "26.11.0"   # what publish tags
+
+
+def test_bare_version_tags_are_found(tmp_path, monkeypatch, capsys):
+    # issue #153: black tags 26.10.0 (no "v"), so amin saw no tag and treated 74 releases as a first one
+    black = black_repo(tmp_path)
+    for tag in ("26.5.1", "26.10.0"):
+        _git(black, "tag", "-a", tag, "-m", "x")
+    [p] = proj.detect(black)
+    assert (p.tag("26.11.0"), p.tag_prefix()) == ("26.11.0", "")
+    assert gitops.last_tag(gitops.Runner(black), p.tag_prefix()) == "26.10.0"
+    assert plan_by_name(black)["black"].current == "26.10.0"
+    monkeypatch.chdir(black)
+    assert cli.main(["projects"]) == 0
+    assert "last tag=26.10.0" in capsys.readouterr().out
+    _git(black, "tag", "-a", "v26.11.0", "-m", "x")      # a v tag wins when both styles exist
+    assert proj.detect(black)[0].tag("1.0.0") == "v1.0.0"
+
+
+def test_history_without_a_tag_is_bounded(market):
+    # issue #153: with no tag, history asked GitHub for 5000 PRs with their files and timed out
+    runner = FakeRunner(market, prs=[])
+    release.history(market, runner, projects_of(market)["alpha"], None)
+    call = next(c for c in runner.gh_calls if c[:2] == ("pr", "list"))
+    assert int(call[call.index("--limit") + 1]) == release.UNTAGGED_LIMIT <= 300
+
+
+BLACK_CHANGES = """# Change Log
+
+## Unreleased
+
+<!-- PR authors:
+     Please include the PR number in the changelog entry, not the issue number -->
+
+### Highlights
+
+<!-- Include any especially major or disruptive changes here -->
+
+### Stable style
+
+- Keep repeated lines outside the selected `--line-ranges` unchanged (#5436)
+
+## Version 26.10.0
+
+### Stable style
+
+- Fix a crash on empty `--line-ranges` (#5400)
+
+### Packaging
+
+- Drop support for Python 3.9 (#5401)
+
+## Version 26.5.1
+
+### Stable style
+
+- Fix the 26.5.0 regression (#5300)
+"""
+
+
+def test_changes_md_and_version_headings_are_recognised(tmp_path):
+    # issue #154: amin made a new CHANGELOG.md, appended after the oldest release, and found no notes
+    black = black_repo(tmp_path, {"CHANGES.md": BLACK_CHANGES})
+    [p] = proj.detect(black)
+    assert p.changelog == "CHANGES.md"
+    path = black / p.changelog
+    assert changelog.extract(path, "26.10.0") == (
+        "### Stable style\n\n- Fix a crash on empty `--line-ranges` (#5400)\n\n"
+        "### Packaging\n\n- Drop support for Python 3.9 (#5401)")
+    assert changelog.has_version(path, "26.5.1") and changelog.latest(path) == "26.10.0"
+    changelog.insert(path, "black", "26.11.0", "2026-10-08", {"Fixed": ["- Test note (#1)"]})
+    text = path.read_text()
+    assert text.index("## Unreleased") < text.index("## Version 26.11.0\n") < text.index("## Version 26.10.0")
+    assert "2026-10-08" not in text                       # black's headings carry no date
+    assert changelog.extract(path, "26.11.0") == "### Fixed\n- Test note (#1)"
+    assert changelog.latest(path) == "26.11.0"
+
+
+def test_calendar_versions_are_detected_and_bumped_by_date():
+    # issue #155: black's 26.10.0 (YY.M.patch) got a SemVer patch, 26.10.1, in November
+    today = datetime.date(2026, 11, 3)
+    assert proj.is_calver(["26.10.0", "26.5.1", "26.5.0", "25.12.0"], today)
+    assert proj.is_calver(["2026.10.0"], today)
+    assert not proj.is_calver(["1.2.0", "0.3.0"], today) and not proj.is_calver([], today)
+    assert not proj.is_calver(["26.13.0"], today) and not proj.is_calver(["27.1.0"], today)
+    assert proj.calver_bump("26.10.0", today)[0] == "26.11.0"
+    assert proj.calver_bump("26.10.0", datetime.date(2026, 10, 20))[0] == "26.10.1"
+    assert proj.calver_bump("2026.10.0", today)[0] == "2026.11.0"
+    assert proj.calver_bump("25.12.1", datetime.date(2026, 1, 5))[0] == "26.1.0"
+
+
+def test_plan_and_prepare_use_the_calendar_for_calver_projects(tmp_path, monkeypatch):
+    black = black_repo(tmp_path)
+    for tag in ("26.5.1", "26.10.0"):
+        _git(black, "tag", "-a", tag, "-m", "x")
+    monkeypatch.setattr(release, "today", lambda: datetime.date(2026, 11, 3))
+    fragments.add(black, proj.detect(black)[0], "breaking", "Drop Python 3.9", "1")
+    pl = plan_by_name(black)["black"]
+    assert (pl.status, pl.next) == ("release", "26.11.0") and "calendar" in pl.reason
+    release.prepare(black, [(pl, pl.next)], date="2026-11-03")   # a breaking note is not "too low"
+    assert changelog.latest(black / "CHANGELOG.md") == "26.11.0"
+
+
+def test_history_skips_the_release_pr_of_the_tag_and_marks_bot_and_ci_prs(tmp_path):
+    # issue #158: "Prepare release 26.5.1" (the tagged commit) was listed after 26.5.1, bots were not marked
+    black = black_repo(tmp_path)
+    _git(black, "tag", "-a", "26.5.1", "-m", "x")
+    tagged = git_out(black, "rev-parse", "26.5.1^{commit}").strip()
+    tag_time = git_out(black, "log", "-1", "--format=%cI", "26.5.1").strip()
+    tagged_at = datetime.datetime.fromisoformat(tag_time.replace("Z", "+00:00"))   # Python 3.10: no "Z"
+    later = (tagged_at + datetime.timedelta(seconds=5)).isoformat()
+    prs = [
+        {"number": 5140, "title": "Prepare release 26.5.1", "mergedAt": later, "mergeCommit": {"oid": tagged},
+         "author": {"login": "cobaltt7", "is_bot": False}, "files": [{"path": "CHANGES.md"}]},
+        {"number": 5141, "title": "Bump actions/checkout from 4 to 5", "mergedAt": "2099-01-02T00:00:00Z",
+         "mergeCommit": {"oid": "a" * 40}, "author": {"login": "app/dependabot", "is_bot": True},
+         "files": [{"path": ".github/workflows/test.yml"}]},
+        {"number": 5142, "title": "Run tests on Python 3.14", "mergedAt": "2099-01-03T00:00:00Z",
+         "mergeCommit": {"oid": "b" * 40}, "author": {"login": "JelleZijlstra", "is_bot": False},
+         "files": [{"path": ".github/workflows/test.yml"}, {"path": ".pre-commit-config.yaml"}]},
+        {"number": 5143, "title": "Fix a crash", "mergedAt": "2099-01-04T00:00:00Z",
+         "mergeCommit": {"oid": "c" * 40}, "author": {"login": "someone", "is_bot": False},
+         "files": [{"path": "src/black/__init__.py"}]},
+    ]
+    p = proj.detect(black)[0]
+    lines = release.history(black, FakeRunner(black, prs=prs), p, "26.5.1")
+    assert lines == ["#5141 Bump actions/checkout from 4 to 5 (2099-01-02) [bot]",
+                     "#5142 Run tests on Python 3.14 (2099-01-03) [ci only]",
+                     "#5143 Fix a crash (2099-01-04)"]
+
+
+@pytest.mark.parametrize("content", [
+    '[project]\nname = "app"\nversion = "2.0.0"\n',
+    '[tool.poetry]\nname = "app"\nversion = "2.0.0"\n',
+    '[tool.x]\nversion = "9.9.9"\n\n[project]\nname = "app"\nversion = "2.0.0"\n',
+])
+def test_pyproject_version_is_read_only_from_project_or_poetry(tmp_path, content):
+    write(tmp_path, "pyproject.toml", content)
+    assert proj.read_version(tmp_path, "pyproject.toml") == "2.0.0"
+    proj.write_version(tmp_path, "pyproject.toml", "2.1.0")
+    assert (tmp_path / "pyproject.toml").read_text() == content.replace("2.0.0", "2.1.0")

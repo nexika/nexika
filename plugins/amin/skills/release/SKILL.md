@@ -16,7 +16,7 @@ has notes), `needs-notes` (changes but no notes, or a first release without note
 ## 2. Notes (only if needed)
 For `needs-notes` projects the user wants to release: run `amin history <project>` to list the
 merged PRs that touched it. Draft one user-facing note per meaningful PR (type + one sentence,
-not the commit title), show them, and after approval add each:
+not the commit title; PRs marked `[bot]` or `[ci only]` usually need none), show them, and after approval add each:
 `amin fragment add <project> <type> "<text>" --id <PR number>`. Re-run `amin plan`.
 
 ## 3. Versions

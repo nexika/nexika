@@ -31,6 +31,11 @@ class Plan:
     next: str | None = None
     reason: str = ""
     status: str = "nothing"   # release | first-release | needs-notes | nothing | error
+    calver: bool = False      # calendar versions (YY.M.patch): the date decides the next version
+
+
+def today() -> datetime.date:
+    return datetime.date.today()
 
 
 def _current_version(root: Path, p: proj.Project) -> tuple[str | None, list[str]]:
@@ -46,8 +51,13 @@ def _current_version(root: Path, p: proj.Project) -> tuple[str | None, list[str]
 def plan(root: Path, runner: gitops.Runner, projects: list[proj.Project]) -> list[Plan]:
     plans = []
     for p in projects:
-        current, problems = _current_version(root, p)
         tag = gitops.last_tag(runner, p.tag_prefix())
+        if p.version_files:
+            current, problems = _current_version(root, p)
+        else:   # the version lives in tags only (hatch-vcs, setuptools-scm)
+            current = tag[len(p.tag_prefix()):] if tag else None
+            problems = [] if tag else [f"the version comes from tags and no {p.tag('X.Y.Z')} tag "
+                                       "was found: pass NAME=VERSION to prepare"]
         notes, note_problems = fragments.pending(root, p)
         item = Plan(p, current, tag, notes, problems + note_problems,
                     gitops.commits_since(runner, tag, p.path))
@@ -63,7 +73,9 @@ def plan(root: Path, runner: gitops.Runner, projects: list[proj.Project]) -> lis
                 item.reason = "first release: add notes describing this version (amin history helps)"
         elif notes:
             last = tag[len(p.tag_prefix()):]
-            item.next, item.reason = proj.bump(last, types)
+            item.calver = proj.is_calver(gitops.released_versions(runner, p.tag_prefix()), today())
+            item.next, item.reason = (proj.calver_bump(last, today()) if item.calver
+                                      else proj.bump(last, types))
             item.status = "release"
             if current != last:
                 item.problems.append(f"version file says {current}, last tag says {last}; using the tag")
@@ -182,7 +194,7 @@ def prepare(root: Path, chosen: list[tuple[Plan, str]], date: str | None = None,
             if proj.parse(version) <= proj.parse(last):
                 raise ReleaseError(f"{pl.project.name}: {version} is not newer than {last}")
             required, reason = proj.bump(last, {n.type for n in pl.notes})
-            if not allow_lower and proj.parse(version)[:3] < proj.parse(required)[:3]:
+            if not allow_lower and not pl.calver and proj.parse(version)[:3] < proj.parse(required)[:3]:
                 raise ReleaseError(f"{pl.project.name}: {version} is too low: {reason}, so it needs at "
                                    f"least {required} (pass --allow-lower to release {version} anyway)")
         if not pl.notes:
@@ -265,7 +277,11 @@ def publish(root: Path, runner: gitops.Runner, project: proj.Project, dry_run: b
     remote = runner.git("rev-parse", f"origin/{default}", check=False).strip()
     if head != remote:
         failures.append(f"local {default} is not the same commit as origin/{default}: pull or push first")
-    version, problems = _current_version(root, project)
+    if project.version_files:
+        version, problems = _current_version(root, project)
+    else:   # the version lives in tags only: release the newest CHANGELOG section
+        version = changelog.latest(root / project.changelog)
+        problems = [] if version else [f"{project.changelog} has no version section: run prepare first"]
     failures += problems
     tag = project.tag(version or "?")
     notes = changelog.extract(root / project.changelog, version or "?")
@@ -315,19 +331,41 @@ def _when(stamp: str) -> datetime.datetime | None:
         return None
 
 
+UNTAGGED_LIMIT = 200
+
+
 def history(root: Path, runner: gitops.Runner, project: proj.Project, tag: str | None) -> list[str]:
     """Merged PRs that touched the project since tag (to write first-release notes)."""
     since = _when(runner.git("log", "-1", "--format=%cI", tag, check=False)) if tag else None
     search = ["--search", f"merged:>={since.astimezone(datetime.timezone.utc).date()}"] if since else []
-    prs = runner.gh_json("pr", "list", "--state", "merged", "--limit", "5000", *search,
-                         "--json", "number,title,mergedAt,files") or []
+    limit = "5000" if since else str(UNTAGGED_LIMIT)   # no tag: only the latest PRs, or gh times out
+    prs = runner.gh_json("pr", "list", "--state", "merged", "--limit", limit, *search,
+                         "--json", "number,title,mergedAt,files,mergeCommit,author") or []
+    # a PR merged as the tagged commit (the release PR itself) or before it is already released
+    released = set(runner.git("rev-list", "--max-count=2000", tag, check=False).split()) if tag else set()
     out = []
     for pr in sorted(prs, key=lambda x: _when(x.get("mergedAt", "")) or datetime.datetime.min.replace(
             tzinfo=datetime.timezone.utc)):
         merged = _when(pr.get("mergedAt", ""))
         if since and (merged is None or merged <= since):
             continue
+        if ((pr.get("mergeCommit") or {}).get("oid") or "") in released:
+            continue
         paths = [f.get("path", "") for f in pr.get("files") or []]
         if project.path == "." or any(x == project.path or x.startswith(project.path + "/") for x in paths):
-            out.append(f"#{pr['number']} {pr['title']} ({pr.get('mergedAt', '')[:10]})")
+            out.append(f"#{pr['number']} {pr['title']} ({pr.get('mergedAt', '')[:10]}){_kind(pr, paths)}")
     return out
+
+
+CI_FILES = re.compile(r"^(\.github/|\.circleci/|\.gitlab-ci\.yml$|\.pre-commit-config\.yaml$)")
+BOTS = ("[bot]", "dependabot", "pre-commit-ci", "renovate")
+
+
+def _kind(pr: dict, paths: list[str]) -> str:
+    """A mark for PRs that release notes usually leave out: bots, or only CI files changed."""
+    author = pr.get("author") or {}
+    if author.get("is_bot") or str(author.get("login", "")).endswith(BOTS):
+        return " [bot]"
+    if paths and all(CI_FILES.match(x) for x in paths):
+        return " [ci only]"
+    return ""

@@ -5,10 +5,12 @@ Detection order:
 2. a plugin marketplace: every plugins/*/.claude-plugin/plugin.json is a project
    (tag "<name>-v<version>", changelog <path>/CHANGELOG.md, notes in changelog.d/<name>/)
 3. one project at the root: package.json, pyproject.toml, .claude-plugin/plugin.json,
-   Directory.Build.props or a .csproj with <Version> (tag "v<version>", notes in changelog.d/)
+   Directory.Build.props or a .csproj with <Version> (tag "v<version>", notes in changelog.d/);
+   a pyproject.toml with `dynamic = ["version"]` takes its version from tags (no version files)
 """
 from __future__ import annotations
 
+import datetime
 import json
 import re
 from dataclasses import dataclass
@@ -20,7 +22,51 @@ MAJOR_TYPES = {"breaking", "removed"}
 MINOR_TYPES = {"added", "changed", "deprecated"}
 
 JSON_VERSION = re.compile(r'("version"\s*:\s*")([^"]+)(")')
-TOML_VERSION = re.compile(r'(?m)^(version\s*=\s*")([^"]+)(")')
+TOML_LINE = re.compile(r'(?m)^(version\s*=\s*")([^"]+)(")')
+TOML_HEADER = re.compile(r"(?m)^\[([^\[\]]+)\]\s*$")
+TOML_SECTIONS = {"", "project", "tool.poetry", "package", "workspace.package"}   # "" = before any table
+
+
+class _TomlVersion:
+    """`version = "..."` directly under [project], [tool.poetry], [package] or [workspace.package]:
+    never a template such as hatch-vcs's `template = \"\"\"version = "{version}"\"\"\"`."""
+
+    def _matches(self, text: str):
+        headers = [(m.start(), m.group(1).strip()) for m in TOML_HEADER.finditer(text)]
+        for m in TOML_LINE.finditer(text):
+            section = next((name for start, name in reversed(headers) if start < m.start()), "")
+            if section in TOML_SECTIONS:
+                yield m
+
+    def search(self, text: str):
+        return next(self._matches(text), None)
+
+    def subn(self, repl, text: str, count: int = 0) -> tuple[str, int]:
+        found = list(self._matches(text))
+        found = found[:count] if count else found
+        for m in reversed(found):
+            text = text[: m.start()] + repl(m) + text[m.end():]
+        return text, len(found)
+
+
+TOML_VERSION = _TomlVersion()
+DYNAMIC_VERSION = re.compile(r'(?m)^dynamic\s*=\s*\[[^\]]*["\']version["\']')
+
+
+def version_from_tags(root: Path, rel: str) -> bool:
+    """A pyproject.toml whose [project] declares `dynamic = ["version"]`: the version comes from git tags
+    (hatch-vcs, setuptools-scm), so no file holds it and amin never writes one."""
+    if Path(rel).name != "pyproject.toml":
+        return False
+    try:
+        text = (root / rel).read_text(encoding="utf-8")
+    except OSError:
+        return False
+    start = re.search(r"(?m)^\[project\]\s*$", text)
+    if not start:
+        return False
+    end = TOML_HEADER.search(text, start.end())
+    return bool(DYNAMIC_VERSION.search(text[start.end(): end.start() if end else len(text)]))
 XML_VERSION = re.compile(r"(<Version>)([^<]+)(</Version>)")
 
 
@@ -72,6 +118,27 @@ def bump(version: str, types: set[str]) -> tuple[str, str]:
     if types:
         return f"{major}.{minor}.{patch + 1}", "fixes only: patch bump"
     return version, "no notes: no release"
+
+
+def is_calver(versions: list[str], today: datetime.date) -> bool:
+    """Calendar versions (YY.M.patch or YYYY.M.patch, like black's 26.10.0): the newest released
+    versions all have a year up to this one, then a month."""
+    finals = [v for v in versions if SEMVER.match(v) and not is_prerelease(v)][:10]
+    for version in finals:
+        major, minor = parse(version)[:2]
+        year = major if major >= 1000 else 2000 + major
+        if not (2010 <= year <= today.year and 1 <= minor <= 12):
+            return False
+    return bool(finals)
+
+
+def calver_bump(version: str, today: datetime.date) -> tuple[str, str]:
+    """(next version, reason) by the calendar: YY.M.0 in a new month, else a patch."""
+    major, minor, patch = parse(version)[:3]
+    year = today.year if major >= 1000 else today.year % 100
+    if (major, minor) == (year, today.month):
+        return f"{major}.{minor}.{patch + 1}", "calendar version: another release this month"
+    return f"{year}.{today.month}.0", "calendar version: first release this month"
 
 
 # ---------------------------------------------------------------- version files
@@ -188,6 +255,22 @@ def _manifest_name(root: Path, rel: str) -> str:
     return m.group(1) if m else root.name
 
 
+BARE_TAG = re.compile(r"^\d+\.\d+\.\d+$")
+CHANGELOG_NAMES = ("CHANGELOG.md", "CHANGES.md", "HISTORY.md")   # a single project keeps the one it has
+
+
+def _tag_format(root: Path) -> str:
+    """A single project's tag style, from its tags: "v1.2.3" (the default) or bare "1.2.3"."""
+    from . import gitops
+    try:
+        tags = gitops.Runner(root).git("tag", "--list", check=False).split()
+    except gitops.CommandError:
+        return "v{version}"
+    if any(t.startswith("v") and BARE_TAG.match(t[1:]) for t in tags):
+        return "v{version}"
+    return "{version}" if any(BARE_TAG.match(t) for t in tags) else "v{version}"
+
+
 def detect(root: Path) -> list[Project]:
     config = load_config(root)
     if config.get("projects"):
@@ -210,11 +293,17 @@ def detect(root: Path) -> list[Project]:
     candidates += sorted(p.relative_to(root).as_posix() for p in root.glob("*.csproj"))
     candidates += sorted(p.relative_to(root).as_posix() for p in root.glob("src/*/*.csproj"))
     for rel in candidates:
-        if (root / rel).is_file() and read_version(root, rel):
-            name = _manifest_name(root, rel)
+        if not (root / rel).is_file():
+            continue
+        if read_version(root, rel):
             locks = {"package.json": "package-lock.json", "Cargo.toml": "Cargo.lock"}
             files = [rel] + [lock for lock in [locks.get(rel)] if lock and read_version(root, lock)]
-            return [Project(name, ".", files, "CHANGELOG.md", "v{version}", "changelog.d")]
+        elif version_from_tags(root, rel):
+            files = []   # the version lives in git tags only
+        else:
+            continue
+        changelog = next((n for n in CHANGELOG_NAMES if (root / n).is_file()), CHANGELOG_NAMES[0])
+        return [Project(_manifest_name(root, rel), ".", files, changelog, _tag_format(root), "changelog.d")]
     return []
 
 

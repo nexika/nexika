@@ -164,10 +164,8 @@ def _py_symbols(text: str) -> list[Symbol]:
         return _indent_symbols(text)
     out: list[Symbol] = []
 
-    def visit(body, prefix: str, depth: int) -> None:
-        for node in body:
-            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-                continue
+    def visit(body, prefix: str, depth: int, in_class: bool) -> None:
+        for node in _py_defs(body):
             start = min([d.lineno for d in node.decorator_list] + [node.lineno])
             qual = prefix + node.name
             if isinstance(node, ast.ClassDef):
@@ -177,14 +175,64 @@ def _py_symbols(text: str) -> list[Symbol]:
             else:
                 is_async = "async " if isinstance(node, ast.AsyncFunctionDef) else ""
                 ret = f" -> {ast.unparse(node.returns)}" if node.returns else ""
-                sig = f"{is_async}def {node.name}({ast.unparse(node.args)}){ret}"
-                kind = "method" if depth else "def"
+                sig = f"{is_async}def {node.name}({_py_args(node.args)}){ret}"
+                kind = "method" if in_class else "def"
+            sig = _py_decorators(node.decorator_list) + sig
             out.append(Symbol(qual, kind, start, node.end_lineno or node.lineno, sig, depth))
-            if isinstance(node, ast.ClassDef):
-                visit(node.body, qual + ".", depth + 1)
+            # nested functions and classes too: delimiter_split.append_to_line (#168)
+            visit(node.body, qual + ".", depth + 1, isinstance(node, ast.ClassDef))
 
-    visit(tree.body, "", 0)
+    visit(tree.body, "", 0, False)
     return out
+
+
+def _py_defs(body):
+    """def/class nodes in a body, also inside if/for/while/with/try blocks, in source order."""
+    for node in body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            yield node
+            continue
+        for field in ("body", "orelse", "finalbody", "handlers", "cases"):
+            inner = getattr(node, field, None)
+            if isinstance(inner, list):
+                yield from _py_defs(inner)
+
+
+def _py_decorators(decorators) -> str:
+    """A short tag: '@property ', '@click.command @click.option x27 +2 ' (#168)."""
+    if not decorators:
+        return ""
+    counts: dict[str, int] = {}
+    for d in decorators:
+        name = ast.unparse(d.func if isinstance(d, ast.Call) else d)
+        counts[name] = counts.get(name, 0) + 1
+    shown = list(counts.items())[:3]
+    tags = [f"@{name}" + (f" x{n}" if n > 1 else "") for name, n in shown]
+    rest = len(decorators) - sum(n for _, n in shown)
+    return " ".join(tags) + (f" +{rest}" if rest else "") + " "
+
+
+def _py_args(args: ast.arguments) -> str:
+    """Arguments as written in PEP 8 style: 'x=1', but 'color: bool = False'."""
+    def one(arg: ast.arg, default) -> str:
+        text = arg.arg + (f": {ast.unparse(arg.annotation)}" if arg.annotation else "")
+        if default is not None:
+            text += (" = " if arg.annotation else "=") + ast.unparse(default)
+        return text
+
+    positional = args.posonlyargs + args.args
+    defaults = [None] * (len(positional) - len(args.defaults)) + list(args.defaults)
+    parts = [one(a, d) for a, d in zip(positional, defaults, strict=True)]
+    if args.posonlyargs:
+        parts.insert(len(args.posonlyargs), "/")
+    if args.vararg:
+        parts.append("*" + one(args.vararg, None))
+    elif args.kwonlyargs:
+        parts.append("*")
+    parts += [one(a, d) for a, d in zip(args.kwonlyargs, args.kw_defaults, strict=True)]
+    if args.kwarg:
+        parts.append("**" + one(args.kwarg, None))
+    return ", ".join(parts)
 
 
 _PY_DECL = re.compile(r"^(?P<indent>\s*)(?:async\s+)?(?P<kind>def|class)\s+(?P<name>\w+)")

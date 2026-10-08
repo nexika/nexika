@@ -35,6 +35,7 @@ from mizan import (  # noqa: E402
 from siyaq import hooks as siyaq_hooks  # noqa: E402
 from siyaq import rank  # noqa: E402
 
+BLACK = mizan_black.BLACK
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
 REAL_HOME = os.environ.get("HOME", "")  # the itqan check below runs pytest, which may live in the user site
 
@@ -122,6 +123,48 @@ def test_creator_is_you_until_the_branch_has_commits(repo):
 def test_default_branch_has_no_creator(repo):
     info = gitinfo.read(str(repo))
     assert info["branch"] == "main" and info["creator"] == ""
+
+
+def test_a_detached_head_has_no_creator(repo, env):
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True).stdout.strip()
+    git(repo, "switch", "-q", "--detach", "HEAD")
+    snap = snapshot.build({"session_id": "s1", "workspace": {"current_dir": str(repo)}})
+    assert snap["git"]["branch"] == head[:8] and snap["git"]["creator"] == ""  # no one started it (#161)
+
+
+def _runs_by_commit(by_branch, by_commit):
+    def answer(argv):
+        if argv[1:3] == ["run", "list"]:
+            return by_commit if any(a.startswith("--commit=") for a in argv) else by_branch
+        return {"jobs": []}
+    return answer
+
+
+def test_a_detached_head_reads_ci_by_commit(env, monkeypatch):
+    # black origin/main~1 eb883582: 8 green runs, found by commit, not by a branch named eb883582 (#161).
+    info = mizan_black.info_at(env, "eb883582")
+    info["branch"] = info["head"][:8]
+    tool = mizan_black.fake_gh(_runs_by_commit([], BLACK["runs"]["eb883582"]))
+    monkeypatch.setattr(forge, "run_tool", tool)
+    assert forge.fetch_ci(info, None)["state"] == "passed"
+    assert not any(a.startswith("--branch=") for argv in tool.calls for a in argv)
+    assert f"--commit={info['head']}" in tool.calls[0]
+
+
+def test_an_older_commit_beyond_the_run_list_reads_ci_by_commit(env, monkeypatch):
+    # fix-redundant-parens at ee819f1d: the branch's newest 20 runs are of later commits (#161).
+    info = mizan_black.info_at(env, "ee819f1d")
+    tool = mizan_black.fake_gh(_runs_by_commit(BLACK["runs"]["9e461ccf"], BLACK["runs"]["ee819f1d"]))
+    monkeypatch.setattr(forge, "run_tool", tool)
+    found = forge.fetch_ci(info, None)
+    assert found["state"] == "failed"
+    calls = [argv for argv in tool.calls if argv[1:3] == ["run", "list"]]
+    assert len(calls) == 2
+    # When the head is in the branch's list, one call is enough.
+    tool = mizan_black.fake_gh(_runs_by_commit(BLACK["runs"]["ee819f1d"], []))
+    monkeypatch.setattr(forge, "run_tool", tool)
+    forge.fetch_ci(info, None)
+    assert len([argv for argv in tool.calls if argv[1:3] == ["run", "list"]]) == 1
 
 
 def test_not_a_repo(env):
@@ -416,6 +459,58 @@ def test_missing_tool_is_reported_not_raised(repo, monkeypatch):
     info = {**gitinfo.read(str(repo)), "host": "github", "remote": "git@github.com:a/b.git"}
     monkeypatch.setenv("PATH", "/nonexistent")
     assert forge.fetch_prs(info) == {"state": "off", "why": "off_tool", "tool": "gh"}
+
+
+def _fake_gh_on_path(env, monkeypatch, script):
+    bin_dir = env / "bin"
+    bin_dir.mkdir()
+    (bin_dir / "gh").write_text("#!/bin/sh\n" + script)
+    (bin_dir / "gh").chmod(0o755)
+    monkeypatch.setenv("PATH", f"{bin_dir}:/usr/bin:/bin")
+
+
+def test_a_rate_limit_and_a_timeout_are_named(repo, env, monkeypatch):
+    # gh's own words when GitHub's API limit is reached (#162).
+    _fake_gh_on_path(env, monkeypatch,
+                     'echo "GraphQL: API rate limit exceeded for user ID 123. (RATE_LIMITED)" >&2; exit 1\n')
+    with pytest.raises(forge.Off) as off:
+        forge.run_tool(["gh", "pr", "list"], str(repo))
+    assert off.value.reason == "off_ratelimit"
+
+    def slow(*args, **kwargs):
+        raise subprocess.TimeoutExpired(args[0], 20)
+
+    monkeypatch.setattr(forge.subprocess, "run", slow)
+    with pytest.raises(forge.Off) as off:
+        forge.run_tool(["gh", "pr", "list"], str(repo))
+    assert off.value.reason == "off_timeout"
+
+
+def test_one_gh_error_keeps_the_last_good_result(env, monkeypatch):
+    info = {"repo": str(env / "r"), "branch": "feat/x", "head": "h1", "host": "github", "remote": "x"}
+    answers = {"prs": {"state": "ok", "tool": "gh", "per_user": [["Loai", 1]], "branch_pr": None},
+               "ci": {"state": "failed", "run": 7, "failed": ["lint"]}}
+    monkeypatch.setattr(forge, "fetch_prs", lambda _info: dict(answers["prs"]))
+    asked = []
+    monkeypatch.setattr(forge, "fetch_ci", lambda _info, _pr: asked.append(1) or dict(answers["ci"]))
+    monkeypatch.setattr(forge, "with_triage", lambda _info, ci, _before: ci)
+    now = [1_000_000.0]
+    monkeypatch.setattr(forge.time, "time", lambda: now[0])
+    forge.refresh(info)
+    answers["prs"] = answers["ci"] = {"state": "off", "why": "off_ratelimit", "tool": "gh"}
+    now[0] += forge.PR_TTL + 1
+    forge.refresh(info)
+    found = forge.cached(info)
+    assert found["ci"]["state"] == "failed" and found["ci"]["error"] == "off_ratelimit"
+    assert found["prs"]["state"] == "ok" and found["prs"]["error"] == "off_ratelimit"
+    assert not found["due"], "a rate limit is not asked again at once"
+    assert len(asked) == 1, "after the PR list was refused, CI is not asked too"
+    text = render.plain(render.band({**snap(), "prs": found["prs"], "ci": found["ci"]}, "en"))
+    assert "CI failed: lint" in text and "gh: rate limited" in text
+    assert render._ci(found["ci"], "en")["tone"] == "dim"
+    # With nothing known yet, the band still says why PRs and CI are missing.
+    off = {"state": "off", "why": "off_timeout", "tool": "gh"}
+    assert "gh: timed out" in render.plain(render.band({**snap(), "prs": off, "ci": off}, "en"))
 
 
 def test_cache_marks_a_new_commit_stale(repo):

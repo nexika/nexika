@@ -179,6 +179,29 @@ def test_info_keeps_a_root_node_project_first(project, barq_run):
     assert "test   npm test   [node (npm)]" in out
 
 
+def test_info_finds_pre_commit_tox_and_the_build_backend(project, barq_run):
+    # #167: on psf/black, info said lint - and build -, and listed docs and fixture pyprojects
+    (project / "pyproject.toml").write_text(
+        '[build-system]\nrequires = ["hatchling"]\nbuild-backend = "hatchling.build"\n\n'
+        '[project]\nname = "demo"\n')
+    (project / "tox.ini").write_text(
+        "[tox]\nenvlist = py312,run_self\n\n[testenv]\ncommands = pytest tests\n\n"
+        "[testenv:run_self]\ncommands = black --check {toxinidir}\n")
+    (project / ".pre-commit-config.yaml").write_text(
+        "repos:\n  - repo: https://github.com/pycqa/flake8\n    hooks:\n      - id: flake8\n"
+        "  - repo: https://github.com/pre-commit/mirrors-mypy\n    hooks:\n      - id: mypy\n")
+    for fixture in ("docs/compatible_configs/isort", "tests/data/include_exclude_tests"):
+        (project / fixture).mkdir(parents=True)
+        (project / fixture / "pyproject.toml").write_text("[tool.black]\n")
+    (project / "tests" / "test_app.py").write_text("def test_x():\n    pass\n")
+    _, out = barq_run("info")
+    assert "build  python -m build   [python]" in out
+    assert "lint   pre-commit run -a   [pre-commit]" in out
+    assert "test   python -m pytest   [python]" in out
+    assert "flake8, mypy" in out and "run_self" in out
+    assert "docs/compatible_configs" not in out and "tests/data" not in out
+
+
 def test_run_build_does_not_pick_a_nested_build_when_the_root_has_none(project, barq_run):
     # #109: with no root build, run:build ran `cd benchmarks/starter && npm run build`
     (project / "pyproject.toml").write_text("[project]\nname = 'x'\n")

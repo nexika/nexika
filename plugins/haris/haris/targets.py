@@ -327,8 +327,16 @@ WRITE_REASONS = {
 }
 
 
+# Files a CI runner (GitHub Actions) owns and names in these variables; unset in a developer's shell (#142).
+CI_RUNNER_FILES = {"GITHUB_OUTPUT", "GITHUB_ENV", "GITHUB_STEP_SUMMARY", "GITHUB_PATH"}
+
+
 def write_paths(values_: list[Arg], ctx: Ctx, verb: str = "writes to") -> None:
     for value in values_:
+        ci = [m[8:] for m in getattr(value, "marks", ()) if m.startswith("ci-file:")]
+        if ci and value == UNKNOWN:
+            ctx.add("write-temp", f"{verb.capitalize()} ${ci[0]}, a file the CI runner owns for this step.")
+            continue
         for path, contents in targets(value, ctx):
             path = path or (contents + "/_" if contents else None)
             place = ctx.where.place(path)
