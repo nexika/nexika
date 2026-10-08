@@ -301,7 +301,8 @@ def skip_hooks(command: str):
 
 
 _ASK_PATTERNS = [
-    (re.compile(r"\b(curl|wget)\b[^|]*\|\s*(sudo\s+)?(ba|z|da)?sh\b"), "pipe-to-shell",
+    (re.compile(r"\b(curl|wget)\b[^|]*\|\s*(sudo\s+)?((ba|z|da)?sh\b|"
+                r"(python[\d.]*|perl|ruby|node)(\s+-)?\s*($|[;&|)]))"), "pipe-to-shell",
      "Downloads a script and runs it without review."),
     (re.compile(r"\bchmod\s+(-R\s+)?0?777\b"), "chmod-777", "Makes files writable by everyone."),
     (re.compile(r"(?i)\b(drop\s+(database|schema|table)|truncate\s+table)\b"), "sql-drop",
@@ -312,12 +313,32 @@ _ASK_PATTERNS = [
     (re.compile(r"\bterraform\s+destroy\b|\bterraform\s+apply\b.*-auto-approve|\bkubectl\s+delete\b|"
                 r"\bhelm\s+uninstall\b"), "infra-destroy", "Destroys infrastructure or cluster resources."),
     (re.compile(r"\b(npm|pnpm|yarn)\s+publish\b|\bdotnet\s+nuget\s+push\b|\btwine\s+upload\b|"
-                r"\bcargo\s+publish\b"), "publish-package", "Publishes a package to a public registry."),
+                r"\bcargo\s+publish\b|\b(hatch|uv|poetry|flit)\s+publish\b"), "publish-package",
+     "Publishes a package to a public registry."),
     (re.compile(r"(^|[\s;&|(])sudo\s"), "sudo", "Runs a command with administrator rights."),
 ]
 
 
-def check_bash(command: str, cwd: Path, config: dict):
+SHELLS = {"sh", "bash", "zsh", "dash", "ksh"}
+SEARCH_TOOLS = {"grep", "egrep", "fgrep", "rg", "ag", "ack"}
+
+
+def _shell_script(words: list[str]) -> str | None:
+    """The script of `bash -c "..."` (also `-lc`, `-ec`), checked like a command of its own."""
+    if Path(words[0]).name not in SHELLS:
+        return None
+    for i, word in enumerate(words[1:-1], start=1):
+        if word.startswith("-") and not word.startswith("--") and "c" in word:
+            return words[i + 1]
+    return None
+
+
+def _is_search(segment: str) -> bool:
+    words = _words(segment.strip())
+    return bool(words) and (Path(words[0]).name in SEARCH_TOOLS or words[:2] == ["git", "grep"])
+
+
+def check_bash(command: str, cwd: Path, config: dict, depth: int = 0):
     root = project_root(cwd)
     for segment in SEGMENT_SPLIT.split(command):
         for piece in segment.split("|"):
@@ -325,10 +346,17 @@ def check_bash(command: str, cwd: Path, config: dict):
             if not words:
                 continue
             decision = _check_rm(words, cwd, root) or _check_git(words, cwd, config)
+            script = _shell_script(words) if depth < 3 else None
+            if not decision and script:
+                decision = check_bash(script, cwd, config, depth + 1)
             if decision:
                 return decision
     for pattern, rule, reason in _ASK_PATTERNS:
-        if pattern.search(command):
+        if rule == "sql-drop":  # SQL words inside a search pattern drop nothing
+            hit = any(pattern.search(s) and not _is_search(s) for s in SEGMENT_SPLIT.split(command))
+        else:
+            hit = pattern.search(command)
+        if hit:
             return "ask", rule, reason
     return None
 
