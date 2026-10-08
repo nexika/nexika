@@ -41,10 +41,22 @@ GUARD_ENV = "ITQAN_LEARNING"  # set on the background extractor so its own hooks
 
 CORRECTION = re.compile(
     r"(?i)(?:^|[\s,.!?:;\"'(])(?:"
-    r"no|nope|wrong|incorrect|don'?t|do not|stop|never|always|instead|i said|i told you|"
-    r"not like that|that'?s not|should (?:be|have)|we (?:use|don'?t|never|always|prefer)|"
+    r"nope|wrong|incorrect|don'?t|do not|stop|instead|i said|i told you|"
+    r"not like that|that'?s not|should have|we (?:use|don'?t|never|always|prefer)|"
+    r"you (?:always|never)|shouldn'?t|should not|rather than|back (?:it|that|this) out|"
+    r"please (?:also )?(?:remove|put|use|fix|move|rename|drop|delete|revert|keep|change)|lose the|"
     r"please don'?t|you forgot|you missed|why did you|undo|revert"
     r")(?=$|[\s,.!?:;\"')])"
+    # a bare "no" only as an answer ("no, ..."), not inside a sentence ("no rush", "there is no test")
+    r"|(?i:(?:^|[.!?]\s+)no(?=$|[,.!;:]))"
+    # "always" / "never" as an order that opens a sentence or a clause, not inside a description
+    r"|(?i:(?:^|[.!?,;:]\s*)(?:always|never)(?=\s))"
+    # "should be" as a rule, not a question ("check whether X should be compiled")
+    r"|(?i:(?:^|[.!?]\s+)(?:(?!\b(?:whether|if)\b)[^.!?\n])*?\sshould be(?=\s))"
+    # "use X, not Y" / "target main, not stable"
+    r"|(?i:\w['\"`]?,\s*not\s+(?!sure\b|only\b|that\b)['\"`]?\w)"
+    # a review suggestion block (GitHub)
+    r"|```suggestion\b"
     r"|(?:^|\s)(?:لا|غلط|خطأ|خطا|أبدا|ابدا|دائما|دايما|بدل|بدلا|قلت لك|قلتلك|مش كده|مو هيك|ليش|ليه)"
     r"(?=$|\s|[،.!؟?])"
 )
