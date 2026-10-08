@@ -64,9 +64,13 @@ def cmd_projects(root: Path, runner: gitops.Runner) -> str:
         return "no projects detected: add .amin.json (see /amin:setup)"
     rows = []
     for p in projects:
-        version = proj.read_version(root, p.version_files[0])
         tag = gitops.last_tag(runner, p.tag_prefix())
-        rows.append(f"{p.name:<12} {version or '?':<8} path={p.path} version={','.join(p.version_files)} "
+        if p.version_files:
+            version = proj.read_version(root, p.version_files[0])
+        else:
+            version = tag[len(p.tag_prefix()):] if tag else None
+        rows.append(f"{p.name:<12} {version or '?':<8} path={p.path} "
+                    f"version={','.join(p.version_files) or 'from tags'} "
                     f"changelog={p.changelog} notes={p.fragments}/ last tag={tag or 'none'}")
     return "\n".join(rows)
 
@@ -185,8 +189,12 @@ def run(argv: list[str]) -> int:
                 print(f"{p.name:<12} PROBLEM    {problem}")
     elif cmd == "history" and len(argv) > 1:
         p = proj.find(projects, argv[1])
-        lines = release.history(root, runner, p, gitops.last_tag(runner, p.tag_prefix()))
+        tag = gitops.last_tag(runner, p.tag_prefix())
+        lines = release.history(root, runner, p, tag)
         print("\n".join(lines) or "no merged PRs found for this project")
+        if not tag:
+            print(f"(no {p.tag('X.Y.Z')} tag found: only the latest {release.UNTAGGED_LIMIT} merged PRs "
+                  "were read)")
     elif cmd == "triage":
         issues = runner.gh_json("issue", "list", "--state", "open", "--limit", "300",
                                 "--json", "number,title,labels,updatedAt") or []
