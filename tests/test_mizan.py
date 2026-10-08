@@ -165,7 +165,7 @@ def test_glab_merge_requests():
 def test_checks_and_runs():
     assert forge.parse_gh_checks(json.dumps([{"name": "lint", "bucket": "pass"},
                                              {"name": "test (py3.10)", "bucket": "fail"}])) == \
-        {"state": "failed", "failed": ["test (py3.10)"], "run": None, "cancelled": []}
+        {"state": "failed", "failed": ["test (py3.10)"], "run": None, "cancelled": [], "workflows": []}
     linked = json.dumps([{"name": "t", "bucket": "fail", "link": "https://github.com/a/b/actions/runs/42/job/7"}])
     assert forge.parse_gh_checks(linked)["run"] == 42
     assert forge.parse_gh_checks(json.dumps([{"name": "a", "bucket": "pass"}, {"name": "b", "bucket": "pending"}]))[
@@ -221,8 +221,8 @@ def test_cancelled_jobs_are_not_failures(env, monkeypatch):
     monkeypatch.setattr(forge, "run_tool", fake_gh(runs, jobs))
     found = forge.fetch_ci(_black_info(env, "86e2832d"), None)
     assert found["state"] == "failed" and found["run"] == 37824955673
-    assert found["failed"] == ["lint"]
-    assert render._ci(found, "en")["text"] == "CI failed: lint (2 cancelled)"
+    assert found["failed"] == ["lint and format/lint"]
+    assert render._ci(found, "en")["text"] == "CI failed: lint and format/lint (2 cancelled)"
 
 
 def test_a_fail_fast_matrix_counts_its_cancelled_jobs_apart():
@@ -243,6 +243,23 @@ def test_everything_cancelled_is_superseded(env, monkeypatch):
     assert forge.parse_gh_checks(checks)["state"] == "cancelled"
     checks = json.dumps([{"name": "a", "bucket": "fail"}, {"name": "b", "bucket": "cancel"}])
     assert forge.parse_gh_checks(checks)["failed"] == ["a"]
+
+
+def test_every_failed_workflow_is_named(env, monkeypatch):
+    # black PR 5496 at 9e461ccf: lint and format failed, and test failed on four jobs (#159).
+    pr = BLACK["pr"]["5496"]
+    info = _black_info(env, "9e461ccf")
+    monkeypatch.setattr(forge, "run_tool", fake_gh(BLACK["runs"]["9e461ccf"], pr["jobs_by_run"]))
+    found = forge.fetch_ci(info, None)  # a fork's PR: read from the run list
+    assert found["failed"] == ["lint and format/lint"] + [
+        f"test/uvloop ({os})" for os in ("ubuntu-latest", "macOS-latest", "windows-latest", "windows-11-arm")]
+    assert render._ci(found, "en")["text"] == "CI failed: lint and format/lint, test +3"
+    monkeypatch.setattr(forge, "run_tool", fake_gh([], {}, pr["checks"]))
+    found = forge.fetch_ci(info, {"number": 5496})  # the same, from `gh pr checks`
+    assert render._ci(found, "en")["text"] == "CI failed: lint and format/lint, test +3"
+    monkeypatch.setattr(forge, "run_tool", fake_gh([], {}, BLACK["pr"]["4881"]["checks"]))
+    assert render._ci(forge.fetch_ci(info, {"number": 4881}), "en")["text"] == \
+        "CI failed: lint and format/lint, test +1"
 
 
 def _forge_world(env, monkeypatch, ci_state="passed"):
