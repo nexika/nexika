@@ -970,6 +970,32 @@ def test_a_broken_setup_is_not_run_locally_and_mizan_names_it(ci, monkeypatch):
     assert render.tabib_label({"kind": "setup", "detail": {}}, "en") == "CI setup"
 
 
+def test_a_run_with_no_jobs_gets_a_kind_and_advice(ci, monkeypatch, project):
+    """psf/black run 36884289217 (#177): 536 of black's last 1000 failed runs have no jobs and no log."""
+    from tabib import cli
+
+    def no_log(info, run):
+        raise forge.Off("gh failed: failed to get run log: log not found")
+    monkeypatch.setattr(forge, "find_run", lambda info, run_id=None: {**fake_run(project), "jobs": []})
+    monkeypatch.setattr(forge, "failed_log", no_log)
+    record = diagnosis.triage(ci)
+    assert record["kind"] == "setup" and record["rerun"] == ""
+    text = cli.report(record, "en")
+    assert "no jobs" in text and "workflow file" in text and record["run"]["url"] in text
+
+
+def test_an_expired_log_says_so(ci, monkeypatch):
+    from tabib import cli
+
+    def gone(info, run):
+        raise forge.Off("gh failed: HTTP 410: Gone (https://api.github.com/repos/o/r/actions/runs/7001/logs)")
+    monkeypatch.setattr(forge, "failed_log", gone)
+    record = diagnosis.triage(ci)
+    assert record["kind"] == "unknown"
+    assert cli.summary(record, "en")["label"] == "the log has expired"
+    assert "90 days" in cli.report(record, "en")
+
+
 def test_cli_show_and_errors(ci, env):
     diagnosis.triage(ci)
     done = subprocess.run([sys.executable, str(BIN), "show"], cwd=ci["repo"], capture_output=True, text=True,

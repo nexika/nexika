@@ -104,6 +104,13 @@ def classify(facts: dict) -> dict:
     signals = {s["kind"]: s["line"] for s in facts.get("signals") or []
                if not (s["kind"] == "cancelled" and a_job_failed)}
     evidence: list[str] = []
+    if facts.get("no_jobs"):
+        evidence.append("The run has no jobs, so no log: the workflow file did not parse, or no job could "
+                        f"start. GitHub's message is on the run page: {facts.get('url') or '-'}")
+        return {"kind": "setup", "detail": {"jobs": 0}, "confidence": "medium", "evidence": evidence}
+    if facts.get("log_gone"):
+        evidence.append("The run's log has expired: GitHub keeps logs for about 90 days.")
+        return {"kind": "unknown", "detail": {"log": "expired"}, "confidence": "low", "evidence": evidence}
     passed_same = facts.get("same_commit_passed")
     if passed_same and failures and all(f.get("framework") == "step" for f in failures):
         # A check the workflow wrote (a changelog line) does not flake: a label or setting changed (#172).

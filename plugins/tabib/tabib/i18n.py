@@ -17,6 +17,7 @@ TEXT = {
         "k_infra": "outside the code: {signal}", "k_dependency": "a dependency problem",
         "k_dependency_module": "a dependency problem: {module} is not installed",
         "k_setup": "the CI setup is broken",
+        "k_unknown_expired": "the log has expired",
         "k_dependency_package": "a dependency problem: raised inside {package}",
         "next_package": "The error is raised inside {package}, not in the code this change touched: check "
                         "what changed in {package} (a new release, or the version this job installs), "
@@ -60,6 +61,7 @@ TEXT = {
         "k_infra": "خارج الكود: {signal}", "k_dependency": "مشكلة في الاعتماديات",
         "k_dependency_module": "مشكلة في الاعتماديات: {module} غير مثبّت",
         "k_setup": "إعداد CI معطّل",
+        "k_unknown_expired": "انتهت صلاحية السجل",
         "k_dependency_package": "مشكلة في الاعتماديات: الخطأ من داخل {package}",
         "next_package": "الخطأ يُرفع من داخل {package} لا من الكود الذي غيّره هذا التعديل: راجع ما تغيّر في "
                         "{package} (إصدار جديد أو النسخة التي تثبّتها هذه المهمة)، ثم كيّف الكود معه أو ثبّت النسخة.",
@@ -136,6 +138,8 @@ def label(kind: str, detail: dict, language: str = "") -> str:
         return t("k_dependency_package", language, package=detail["package"])
     if kind == "dependency" and detail.get("module"):
         return t("k_dependency_module", language, module=detail["module"])
+    if kind == "unknown" and detail.get("log") == "expired":
+        return t("k_unknown_expired", language)
     if kind == "matrix":
         return t("k_matrix", language, value=detail.get("value", "?"))
     return t(f"k_{kind}", language)
