@@ -115,8 +115,13 @@ def detect(root: Path, not_run: list | None = None) -> list[dict]:
     pyproject = root / "pyproject.toml"
     py_text = pyproject.read_text(encoding="utf-8", errors="replace") if pyproject.is_file() else ""
     has_tests = (root / "tests").is_dir() or (root / "test").is_dir() or any(root.glob("test_*.py"))
-    if has_tests and (py_text or (root / "setup.cfg").is_file() or (root / "pytest.ini").is_file()
-                      or (root / "tox.ini").is_file()):
+    envs = tox_envs(root)
+    tox = _python_tool(root, "tox")
+    if "" in envs and shutil.which(tox[0]):
+        # the project's own way to test: tox installs the package and sets up its environment
+        add("tox -e py", "tests", [*tox, "-e", "py"], envs[""].strip()[:300])
+    elif has_tests and (py_text or (root / "setup.cfg").is_file() or (root / "pytest.ini").is_file()
+                        or (root / "tox.ini").is_file()):
         add("pytest", "tests", [*_python_tool(root, "pytest"), "-q"])
     if "[tool.ruff" in py_text or (root / "ruff.toml").is_file() or (root / ".ruff.toml").is_file():
         add("ruff", "lint", [*_python_tool(root, "ruff"), "check", "."])
@@ -130,11 +135,11 @@ def detect(root: Path, not_run: list | None = None) -> list[dict]:
                    or (root / "mypy.ini").is_file() or (root / ".mypy.ini").is_file())
     if mypy_config and not re.search(r"id:\s*mypy\b", hooks):
         add("mypy", "lint", [*_python_tool(root, "mypy"), "."])
-    for env, commands in tox_envs(root).items():
+    for env, commands in envs.items():
         if not env:
             continue
         if LINT_ENV.search(env) or LINT_ENV.search(commands):
-            add(f"tox -e {env}", "lint", [*_python_tool(root, "tox"), "-e", env])
+            add(f"tox -e {env}", "lint", [*tox, "-e", env])
         else:
             skipped.append({"name": f"tox -e {env}", "kind": "other", "command": f"tox -e {env}",
                             "reason": "a tox environment the proof does not run (not tests or lint)"})
@@ -185,9 +190,38 @@ def run_check(check: dict, root: Path, timeout: int) -> dict:
     lines = [redact(line)[:300] for line in output.splitlines() if line.strip()]
     shown = [Path(check["argv"][0]).name if check["argv"][0] == sys.executable else check["argv"][0],
              *check["argv"][1:]]
-    return {"name": check["name"], "kind": check["kind"], "command": " ".join(shown),
-            "defined": redact(check.get("defined", "")), "exit_code": code,
-            "passed": code == 0, "seconds": round(time.monotonic() - start, 1), "tail": lines[-TAIL:]}
+    result = {"name": check["name"], "kind": check["kind"], "command": " ".join(shown),
+              "defined": redact(check.get("defined", "")), "exit_code": code,
+              "passed": code == 0, "seconds": round(time.monotonic() - start, 1), "tail": lines[-TAIL:]}
+    missing = _own_package_missing(root, output) if code != 0 and check["kind"] == "tests" else ""
+    if missing:
+        result["not_installed"] = f"No module named '{missing}'"
+    return result
+
+
+def own_packages(root: Path) -> set[str]:
+    """The project's own importable names: its [project] name and the packages at the root or in src/."""
+    names = set()
+    try:
+        text = (root / "pyproject.toml").read_text(encoding="utf-8", errors="replace")
+        m = re.search(r'(?m)^\s*name\s*=\s*["\']([^"\']+)["\']', text)
+        if m:
+            names.add(re.sub(r"[-.]", "_", m.group(1)).lower())
+    except OSError:
+        pass
+    for folder in (root, root / "src"):
+        names.update(p.parent.name for p in folder.glob("*/__init__.py"))
+    return names
+
+
+def _own_package_missing(root: Path, output: str) -> str:
+    """The project's own package that the tests could not import: its dependencies are not installed
+    (no virtualenv, a src layout without PYTHONPATH), not a failure of the change."""
+    own = own_packages(root)
+    for name in re.findall(r"No module named '([\w.]+)'", output):
+        if name.split(".")[0] in own:
+            return name
+    return ""
 
 
 def _git(root: Path, *args: str) -> str:
@@ -345,6 +379,11 @@ def describe(proof: dict) -> str:
     if not proof["checks"]:
         out.append("  No checks found for this project (tests, lint or build).")
     for check in proof["checks"]:
+        if check.get("not_installed"):
+            out.append(f"  {check['name']}: NOT RUN - the project's dependencies are not installed "
+                       f"({check['not_installed']}). Install the project in a virtualenv (pip install -e .) "
+                       f"or run its tests through tox, then make the proof again.  ({check['command']})")
+            continue
         mark = "passed" if check["passed"] else f"FAILED (exit {check['exit_code']})"
         out.append(f"  {check['name']}: {mark} in {check['seconds']} s  ({check['command']})")
         if not check["passed"]:

@@ -414,6 +414,33 @@ def test_a_proof_with_lint_skipped_does_not_pass(proof, tmp_path, monkeypatch, c
     assert "not run: pre-commit run --all-files" in capsys.readouterr().out
 
 
+def test_proof_runs_the_tests_through_tox_when_tox_ini_defines_them(proof, tmp_path, monkeypatch):
+    # black case P2 (#145): tox sets PYTHONPATH=src and installs the package; bare pytest cannot
+    root = black_like(tmp_path)
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+    tests = [c for c in proof.detect(root) if c["kind"] == "tests"]
+    assert [c["name"] for c in tests] == ["tox -e py"] and tests[0]["argv"][-2:] == ["-e", "py"]
+    monkeypatch.setattr(proof.shutil, "which", lambda name: None if name == "tox" else f"/usr/bin/{name}")
+    assert [c["name"] for c in proof.detect(root) if c["kind"] == "tests"] == ["pytest"]
+
+
+def test_a_missing_own_package_is_dependencies_not_installed(proof, tmp_path):
+    # black case P2: `python3 -m pytest -q` on a green main, no venv: 11 errors, No module named 'black'
+    root = black_like(tmp_path)
+    (root / "src" / "blackd").mkdir()
+    (root / "src" / "blackd" / "__init__.py").write_text("")
+    printed = ("ERROR tests/test_black.py\\nE   ModuleNotFoundError: No module named 'black'\\n"
+               "!!! Interrupted: 11 errors during collection !!!")
+    check = {"name": "pytest", "kind": "tests", "defined": "",
+             "argv": [sys.executable, "-c", f"print('{printed}'); raise SystemExit(2)"]}
+    result = proof.run_check(check, root, 30)
+    assert result["passed"] is False and "No module named 'black'" in result["not_installed"]
+    text = proof.describe({"project": str(root), "created": "now", "checks": [result]})
+    assert "NOT RUN" in text and "dependencies are not installed" in text and "FAILED" not in text
+    other = dict(check, argv=[sys.executable, "-c", "print(\"No module named 'yaml'\"); raise SystemExit(2)"])
+    assert not proof.run_check(other, root, 30).get("not_installed")  # not the project's own package
+
+
 def test_stacks_are_detected_from_the_repo_root(tmp_path, repo):
     (repo / "pyproject.toml").write_text("[project]\nname='x'\n")
     (repo / "web").mkdir()
