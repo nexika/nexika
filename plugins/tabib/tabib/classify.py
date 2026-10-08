@@ -98,13 +98,18 @@ def classify(facts: dict) -> dict:
         if facts.get("event") == "pull_request" and facts.get("from_fork"):
             evidence.append("The pull request comes from a fork, which gets no repository secrets.")
         return {"kind": "infra", "detail": {"signal": "auth"}, "confidence": "medium", "evidence": evidence}
-    if "dependency" in signals or (facts.get("lock_changed") and any(
+    missing = facts.get("missing_modules") or []   # modules the project itself does not have
+    if "dependency" in signals or missing or (facts.get("lock_changed") and any(
             "No module named" in f["message"] or "Cannot find module" in f["message"] for f in failures)):
         if "dependency" in signals:
             evidence.append(f"dependencies: {signals['dependency']}")
+        if missing:
+            evidence.append(f"No module named {missing[0]!r}, and the project has no module of that name: "
+                            "is it in the requirements?")
         if facts.get("lock_changed"):
             evidence.append("Dependency files changed since the last green run.")
-        return {"kind": "dependency", "detail": {}, "confidence": "medium", "evidence": evidence}
+        return {"kind": "dependency", "detail": {"module": missing[0]} if missing else {},
+                "confidence": "medium", "evidence": evidence}
     only = matrix_only(facts.get("jobs") or [])
     what = failures[0]["kind"] if failures else ""
     if only:

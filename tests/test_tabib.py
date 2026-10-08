@@ -484,6 +484,39 @@ def test_a_cancel_alone_is_still_a_cancelled_run():
     assert (verdict["kind"], verdict["detail"]["signal"]) == ("infra", "cancelled")
 
 
+def test_missing_modules_are_read_from_python_and_node_errors():
+    lines = ["E   ModuleNotFoundError: No module named 'jsonschema'",
+             "ImportError: No module named google.protobuf",
+             "Error: Cannot find module 'left-pad'",
+             "Error: Cannot find module './local'",
+             "E   ModuleNotFoundError: No module named 'jsonschema'"]
+    assert parse.missing_modules(lines) == ["jsonschema", "google.protobuf", "left-pad"]
+
+
+def collection_error(project, monkeypatch, module):
+    # flypythoncom/python run 33639256023 (#128): jsonschema was imported by a test but never declared.
+    log = gh_log("validate", [
+        "    from jsonschema import Draft202012Validator, FormatChecker",
+        f"E   ModuleNotFoundError: No module named '{module}'",
+        "=========================== short test summary info ============================",
+        "ERROR tests/test_a.py",
+        "!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!"])
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: log)
+
+
+def test_a_module_the_project_never_declared_is_a_dependency_problem(ci, project, monkeypatch):
+    collection_error(project, monkeypatch, "jsonschema")
+    record = diagnosis.triage(ci)
+    assert (record["kind"], record["detail"]) == ("dependency", {"module": "jsonschema"})
+    assert "jsonschema" in i18n.label(record["kind"], record["detail"], "en")
+    assert "jsonschema" in i18n.label(record["kind"], record["detail"], "ar")
+
+
+def test_a_missing_module_of_the_project_itself_is_code(ci, project, monkeypatch):
+    collection_error(project, monkeypatch, "tests")
+    assert diagnosis.triage(ci)["kind"] == "code"
+
+
 def test_cli_show_and_errors(ci, env):
     diagnosis.triage(ci)
     done = subprocess.run([sys.executable, str(BIN), "show"], cwd=ci["repo"], capture_output=True, text=True,

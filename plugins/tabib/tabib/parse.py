@@ -392,12 +392,26 @@ def errors(lines: list[str], limit: int = 12) -> list[str]:
     return out
 
 
+MISSING_MODULE = re.compile(r"No module named '?([\w.]+)'?|Cannot find module '([^'./][^']*)'")
+
+
+def missing_modules(lines: list[str]) -> list[str]:
+    """Modules an import could not find: 'jsonschema' (Python), 'left-pad' (Node); relative paths are not."""
+    found: list[str] = []
+    for line in lines:
+        for m in MISSING_MODULE.finditer(line):
+            name = m.group(1) or m.group(2)
+            if name not in found:
+                found.append(name)
+    return found
+
+
 def read_log(text: str) -> dict:
-    """{job: {failures, signals, errors, frames, lines}} for each job in a failed log."""
+    """{job: {failures, signals, errors, frames, missing, lines}} for each job in a failed log."""
     out = {}
     for job, lines in split_jobs(text).items():
         out[job] = {"failures": failures(lines), "signals": signals(lines), "errors": errors(lines),
-                    "frames": frames(lines), "lines": lines}
+                    "frames": frames(lines), "missing": missing_modules(lines), "lines": lines}
     return out
 
 

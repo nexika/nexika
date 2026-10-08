@@ -37,6 +37,20 @@ def git(cwd: str, *args: str, timeout: float = 30) -> tuple[int, str]:
     return done.returncode, done.stdout.strip()
 
 
+def own_modules(repo: str, sha: str, names: list[str]) -> set[str]:
+    """The names the project has itself at that commit (HEAD when it is not here): 'app' for app/, app.py."""
+    code, listing = git(repo, "ls-tree", "-r", "--name-only", sha if have(repo, sha) else "HEAD")
+    if code != 0:
+        return set(names)   # cannot tell: assume ours, so nothing is blamed on a dependency
+    parts = {part for path in listing.splitlines() for part in path.split("/")}
+    own = set()
+    for name in names:
+        top = name.split(".")[0].split("/")[0]
+        if top in parts or f"{top}.py" in parts:
+            own.add(name)
+    return own
+
+
 def have(repo: str, sha: str) -> bool:
     return bool(SHA.match(sha or "")) and git(repo, "cat-file", "-e", f"{sha}^{{commit}}")[0] == 0
 

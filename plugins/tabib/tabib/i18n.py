@@ -12,6 +12,7 @@ TEXT = {
         "k_code_build": "{count} build error(s)", "k_code_": "{count} failure(s)", "one_job": "{label}, in one job",
         "k_matrix": "fails only on {value}", "k_flaky": "likely flaky: the same commit passed",
         "k_infra": "outside the code: {signal}", "k_dependency": "a dependency problem",
+        "k_dependency_module": "a dependency problem: {module} is not installed",
         "k_unknown": "unclear: read the log",
         "s_timeout": "a time limit", "s_oom": "out of memory", "s_network": "the network",
         "s_rate_limit": "a rate limit", "s_runner": "the CI machine", "s_auth": "missing credentials",
@@ -37,6 +38,7 @@ TEXT = {
         "k_code_build": "{count} خطأ بناء", "k_code_": "{count} إخفاق", "one_job": "{label}، في مهمة واحدة",
         "k_matrix": "يفشل فقط على {value}", "k_flaky": "متقلّب على الأرجح: نفس التعديل نجح",
         "k_infra": "خارج الكود: {signal}", "k_dependency": "مشكلة في الاعتماديات",
+        "k_dependency_module": "مشكلة في الاعتماديات: {module} غير مثبّت",
         "k_unknown": "غير واضح: اقرأ السجل",
         "s_timeout": "حد زمني", "s_oom": "نفاد الذاكرة", "s_network": "الشبكة",
         "s_rate_limit": "حد عدد الطلبات", "s_runner": "جهاز CI", "s_auth": "بيانات اعتماد ناقصة",
@@ -95,6 +97,8 @@ def label(kind: str, detail: dict, language: str = "") -> str:
         return t("one_job", language, label=text) if detail.get("jobs") == 1 else text
     if kind == "infra":
         return t("k_infra", language, signal=t(f"s_{detail.get('signal', 'runner')}", language))
+    if kind == "dependency" and detail.get("module"):
+        return t("k_dependency_module", language, module=detail["module"])
     if kind == "matrix":
         return t("k_matrix", language, value=detail.get("value", "?"))
     return t(f"k_{kind}", language)
