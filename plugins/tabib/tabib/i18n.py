@@ -14,12 +14,12 @@ TEXT = {
         "k_infra": "outside the code: {signal}", "k_dependency": "a dependency problem",
         "k_dependency_module": "a dependency problem: {module} is not installed",
         "k_setup": "the CI setup is broken",
+        "k_unknown_expired": "the log has expired",
         "k_dependency_package": "a dependency problem: raised inside {package}",
         "next_package": "The error is raised inside {package}, not in the code this change touched: check "
                         "what changed in {package} (a new release, or the version this job installs), "
                         "then adapt the code to it or pin the version.",
         "k_unknown": "unclear: read the log",
-        "k_unknown_expired": "the log has expired",
         "s_timeout": "a time limit", "s_oom": "out of memory", "s_network": "the network",
         "s_rate_limit": "a rate limit", "s_runner": "the CI machine", "s_auth": "missing credentials",
         "s_cancelled": "the run was cancelled (a newer run or a person stopped it)",
@@ -49,11 +49,11 @@ TEXT = {
         "k_infra": "خارج الكود: {signal}", "k_dependency": "مشكلة في الاعتماديات",
         "k_dependency_module": "مشكلة في الاعتماديات: {module} غير مثبّت",
         "k_setup": "إعداد CI معطّل",
+        "k_unknown_expired": "انتهت صلاحية السجل",
         "k_dependency_package": "مشكلة في الاعتماديات: الخطأ من داخل {package}",
         "next_package": "الخطأ يُرفع من داخل {package} لا من الكود الذي غيّره هذا التعديل: راجع ما تغيّر في "
                         "{package} (إصدار جديد أو النسخة التي تثبّتها هذه المهمة)، ثم كيّف الكود معه أو ثبّت النسخة.",
         "k_unknown": "غير واضح: اقرأ السجل",
-        "k_unknown_expired": "انتهت صلاحية السجل",
         "s_timeout": "حد زمني", "s_oom": "نفاد الذاكرة", "s_network": "الشبكة",
         "s_rate_limit": "حد عدد الطلبات", "s_runner": "جهاز CI", "s_auth": "بيانات اعتماد ناقصة",
         "s_cancelled": "أُلغي التشغيل (أوقفه تشغيل أحدث أو شخص)",
