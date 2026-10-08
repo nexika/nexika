@@ -20,6 +20,7 @@ import os
 import posixpath
 import re
 import subprocess
+import sys
 import time
 from collections import Counter
 from pathlib import Path
@@ -42,6 +43,12 @@ MAX_TRIGGER_DIR_FILES = 15
 # A hook may reuse the project's list of doc files this long (#50): listing a big repo and matching
 # every file against the globs took most of each tool call's wait.
 FILES_MAX_AGE = 30
+# A prompt or file hook waits this long for the index, then answers from the last saved one while a
+# background process builds it (#118): building a large repo's index froze prompts for 30 s or more.
+INDEX_WAIT = 0.3
+SESSION_START_WAIT = 3.0
+BUILD_TIMEOUT = 300  # seconds; a background build is stopped after this, and its lock counts as stale
+LAUNCHER = Path(__file__).resolve().parent.parent / "bin" / "siyaq"
 
 HEADING = re.compile(r"^(#{1,3})\s+(.+?)\s*#*\s*$")
 FENCE = re.compile(r"^\s*(```|~~~)")
@@ -395,3 +402,81 @@ def load(root: Path, config: dict | None = None, max_age: float = 0) -> dict:
     write_atomic(cache, json.dumps(index, ensure_ascii=False))
     _save_files(root, _files_key(root, config), index["sources"])
     return index
+
+
+def saved(root: Path) -> dict:
+    """The last index written for this project, current or not; an empty one when there is none."""
+    try:
+        data = json.loads((project_dir(root) / "index.json").read_text(encoding="utf-8"))
+        if isinstance(data, dict) and data.get("version") == INDEX_VERSION and isinstance(data.get("n"), int):
+            return data
+    except (OSError, ValueError):
+        pass
+    return {"version": INDEX_VERSION, "root": str(root), "sources": [], "entries": [], "df": {}, "n": 0,
+            "avglen": 0.0}
+
+
+def load_ready(root: Path, config: dict, wait: float | None = None) -> dict:
+    """For hooks: the current index if it is ready within `wait` seconds (INDEX_WAIT by default).
+    Otherwise the last saved index marked "building", and a background process builds the new one."""
+    import threading
+
+    done: dict = {}
+
+    def work() -> None:
+        try:
+            done["index"] = load(root, config, max_age=FILES_MAX_AGE)
+        except Exception:  # noqa: BLE001 - the saved index is used instead
+            done["error"] = True
+
+    worker = threading.Thread(target=work, daemon=True)  # left behind when the hook exits
+    worker.start()
+    worker.join(INDEX_WAIT if wait is None else wait)
+    if "index" in done:
+        return done["index"]
+    if worker.is_alive():
+        build_in_background(root)
+    return {**saved(root), "building": True}
+
+
+def _lock_is_fresh(lock: Path) -> bool:
+    try:
+        return time.time() - lock.stat().st_mtime < BUILD_TIMEOUT + 60
+    except OSError:
+        return False
+
+
+def build_in_background(root: Path) -> None:
+    """Start `siyaq refresh` in its own process, unless a build of this project is already running."""
+    if _lock_is_fresh(project_dir(root) / "build.lock"):
+        return
+    try:
+        subprocess.Popen([sys.executable, str(LAUNCHER), "refresh"], cwd=root, stdin=subprocess.DEVNULL,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    except OSError:
+        pass
+
+
+def refresh(root: Path) -> bool:
+    """Bring the saved index up to date (what build_in_background runs); False when another build of
+    this project holds the lock."""
+    lock = project_dir(root) / "build.lock"
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        lock.mkdir()
+    except FileExistsError:
+        if _lock_is_fresh(lock):
+            return False
+        try:
+            lock.rmdir()
+            lock.mkdir()
+        except OSError:
+            return False
+    try:
+        load(root)
+    finally:
+        try:
+            lock.rmdir()
+        except OSError:
+            pass
+    return True

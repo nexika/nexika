@@ -473,3 +473,92 @@ def test_files_claude_code_loads_itself_are_never_indexed(repo):
     (repo / ".siyaq.json").write_text(json.dumps({"sources": ["**/*.md"], "exclude": ["docs/archive/**"]}))
     sources = {e.get("source") for e in idx.load(repo, idx.load_config(repo))["entries"]}
     assert not [s for s in sources if s and (".claude/" in s or "CLAUDE" in s)], sources
+
+
+# ---------------------------------------------------------------- machine messages and slow indexes (#118)
+
+
+@pytest.mark.parametrize("prompt", [
+    "<task-notification> <task-id>b78sir6qh</task-id> <summary>Monitor event: rollback the release"
+    "</summary></task-notification>",
+    '<pasted_content id="57ff">\nYou are lane B. Rollback the release, then roll back again.\n'
+    '</pasted_content id="57ff">',
+    "Below is a conversation log from a Claude Code coding session. Create a summary to help the next "
+    "session quickly understand the context. ## Prioritize including - how we rollback the release",
+])
+def test_machine_messages_get_no_context(repo, prompt):
+    assert hooks.on_prompt(prompt_event(repo, prompt)) is None
+
+
+def test_words_around_a_pasted_block_still_match(repo):
+    out = hooks.on_prompt(prompt_event(repo, 'rollback the release, as in: <pasted_content id="3ba1">\n'
+                                             'coupon voucher promo code\n</pasted_content id="3ba1"> ok?'))
+    assert "Rollback" in context_of(out) and "Coupon" not in context_of(out)
+
+
+@pytest.fixture
+def slow_build(repo, monkeypatch):
+    """slow_build.on(): building the index then takes far longer than a hook may wait. Background builds
+    are recorded in slow_build.started instead of run."""
+    import threading
+    import types
+
+    release = threading.Event()
+
+    def build(*args, **kwargs):
+        release.wait(5)
+        raise RuntimeError("the test is over")
+
+    started = []
+    monkeypatch.setattr(idx, "INDEX_WAIT", 0.2)
+    monkeypatch.setattr(idx, "SESSION_START_WAIT", 0.2)
+    monkeypatch.setattr(idx, "build_in_background", started.append)
+    yield types.SimpleNamespace(started=started, on=lambda: monkeypatch.setattr(idx, "build", build))
+    release.set()
+
+
+def test_prompt_hook_answers_from_the_saved_index_while_it_rebuilds(repo, slow_build):
+    idx.load(repo)
+    slow_build.on()
+    (repo / "docs" / "deploy.md").write_text((repo / "docs" / "deploy.md").read_text() + "\nchanged\n")
+    start = time.monotonic()
+    out = hooks.on_prompt(prompt_event(repo, "how do we roll back a release?"))
+    assert time.monotonic() - start < 1.5
+    assert "Deployment > Rollback" in context_of(out)
+    assert slow_build.started == [repo]
+
+
+def test_first_prompt_on_a_slow_repo_never_waits_for_the_index(repo, slow_build):
+    slow_build.on()
+    start = time.monotonic()
+    assert hooks.on_prompt(prompt_event(repo, "how do we roll back a release?")) is None
+    assert time.monotonic() - start < 1.5
+    assert slow_build.started == [repo]
+    assert hooks.on_tool(tool_event(repo, "src/Orders/DiscountService.cs", tool="Edit")) is None
+    note = hooks.on_session_start({"session_id": "s1", "source": "startup", "cwd": str(repo)}, "helper")
+    assert "being built in the background" in note
+
+
+def test_background_build_writes_the_index(repo):
+    idx.build_in_background(repo)
+    deadline = time.monotonic() + 20
+    while time.monotonic() < deadline and not (idx.project_dir(repo) / "index.json").exists():
+        time.sleep(0.1)
+    assert idx.saved(repo)["n"] == 5
+    while time.monotonic() < deadline and (idx.project_dir(repo) / "build.lock").exists():
+        time.sleep(0.1)
+    assert not (idx.project_dir(repo) / "build.lock").exists()
+
+
+def test_one_background_build_per_project(repo, monkeypatch):
+    lock = idx.project_dir(repo) / "build.lock"
+    lock.mkdir(parents=True)
+    spawned = []
+    with monkeypatch.context() as m:
+        m.setattr(idx.subprocess, "Popen", lambda *a, **k: spawned.append(a))
+        idx.build_in_background(repo)
+    assert spawned == []
+    assert idx.refresh(repo) is False  # another build holds the lock
+    assert not (idx.project_dir(repo) / "index.json").exists()
+    lock.rmdir()
+    assert idx.refresh(repo) is True and idx.saved(repo)["n"] == 5 and not lock.exists()
