@@ -43,6 +43,37 @@ def _package_manager(folder: Path) -> str:
     return "npm"
 
 
+FIXTURE_DIRS = {"docs", "doc", "fixtures", "__fixtures__", "testdata", "test_data"}
+
+
+def _is_fixture(rel: str) -> bool:
+    """A manifest in docs or test data (docs/compatible_configs/x/pyproject.toml,
+    tests/data/x/pyproject.toml) is an example, not a project to build (#167)."""
+    parts = rel.split("/")[:-1]
+    if FIXTURE_DIRS.intersection(parts):
+        return True
+    return any(a.startswith("test") and b == "data" for a, b in zip(parts, parts[1:], strict=False))
+
+
+def _pre_commit_hooks(root: Path) -> list[str]:
+    try:
+        text = (root / ".pre-commit-config.yaml").read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return []
+    return list(dict.fromkeys(re.findall(r"^\s*-\s*id:\s*['\"]?([\w.-]+)", text, re.M)))
+
+
+def _tox_envs(root: Path) -> list[str]:
+    try:
+        text = (root / "tox.ini").read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return []
+    match = re.search(r"^envlist\s*=\s*(.+)$", text, re.M)
+    envlist = match.group(1).strip() if match else ""
+    named = [n for n in re.findall(r"^\[testenv:([^\]]+)\]", text, re.M) if n not in envlist]
+    return ([envlist] if envlist else []) + named
+
+
 def _stacks(root: Path, all_files: list[Path]) -> list[dict]:
     """Every build stack found, root project first: {name, where, commands}.
 
@@ -51,7 +82,7 @@ def _stacks(root: Path, all_files: list[Path]) -> list[dict]:
     suite and the nested one stays listed under "also detected".
     """
     rels = [files.rel(f, root) for f in all_files]
-    shallow = [r for r in rels if r.count("/") <= 3]
+    shallow = [r for r in rels if r.count("/") <= 3 and not _is_fixture(r)]
     stacks: list[dict] = []
 
     slns = sorted(r for r in shallow if r.endswith((".sln", ".slnx")))
@@ -91,6 +122,8 @@ def _stacks(root: Path, all_files: list[Path]) -> list[dict]:
             cmds["test"] = "python -m pytest"
         if "[tool.ruff" in text or (root / "ruff.toml").exists():
             cmds["lint"] = "ruff check ."
+        if re.search(r"^\[build-system\]", text, re.M):
+            cmds["build"] = "python -m build"
         stacks.append({"name": "python", "where": ", ".join(py_markers[:3]), "commands": cmds,
                        "nested": all("/" in r for r in py_markers)})
 
@@ -114,6 +147,15 @@ def _stacks(root: Path, all_files: list[Path]) -> list[dict]:
         cmds = {t: f"make {t}" for t in ("build", "test", "lint") if t in targets}
         if cmds:
             stacks.append({"name": "make", "where": "Makefile", "commands": cmds})
+    # Tool runners that sit beside a stack: they fill a missing kind, never replace one (#167).
+    hooks = _pre_commit_hooks(root)
+    if (root / ".pre-commit-config.yaml").exists():
+        stacks.append({"name": "pre-commit", "commands": {"lint": "pre-commit run -a"},
+                       "where": ".pre-commit-config.yaml" + (f": {', '.join(hooks[:8])}" if hooks else "")})
+    envs = _tox_envs(root)
+    if (root / "tox.ini").exists():
+        stacks.append({"name": "tox", "commands": {"test": "tox"},
+                       "where": "tox.ini" + (f": {', '.join(envs)}" if envs else "")})
     for stack in stacks:
         stack.setdefault("nested", False)
     stacks.sort(key=lambda s: s["nested"])  # stable: order within each group is kept
@@ -149,7 +191,8 @@ def op_info(ctx: Context) -> Result:
     cmds = commands_for(ctx, stacks)
     branch = files._git(["rev-parse", "--abbrev-ref", "HEAD"], ctx.root)
     manifests = sorted(files.rel(f, ctx.root) for f in all_files
-                       if f.name in MANIFEST_NAMES or f.suffix in (".sln", ".slnx", ".csproj"))
+                       if (f.name in MANIFEST_NAMES or f.suffix in (".sln", ".slnx", ".csproj"))
+                       and not _is_fixture(files.rel(f, ctx.root)))
     lines = [
         f"root: {ctx.root}" + (f"  (git branch: {branch.strip()})" if branch else "  (not a git repo)"),
         f"files: {len(all_files)}",
