@@ -441,6 +441,25 @@ def test_a_missing_own_package_is_dependencies_not_installed(proof, tmp_path):
     assert not proof.run_check(other, root, 30).get("not_installed")  # not the project's own package
 
 
+def test_session_note_names_the_project_s_own_checks(tmp_path):
+    # black case S-pack (#151): the python pack suggested ruff on a project linted by flake8 and black
+    root = black_like(tmp_path)
+    out = run_hooks("session-start", {"cwd": str(root), "session_id": "s1"}, tmp_path / "h")
+    [line] = [ln for ln in out.splitlines() if ln.startswith("Project checks")]
+    assert "pre-commit run --all-files" in line and "tox -e run_self" in line
+    assert "ruff" not in line and "generate_schema" not in line
+
+
+def test_session_note_has_no_check_line_without_checks(tmp_path, repo):
+    out = run_hooks("session-start", {"cwd": str(repo), "session_id": "s1"}, tmp_path / "h")
+    assert "Project checks" not in out
+
+
+def test_python_pack_points_to_the_project_s_commands():
+    commands = (ITQAN / "packs" / "python.md").read_text().split("## Commands", 1)[1]
+    assert "Project checks" in commands and commands.index("Project checks") < commands.index("ruff")
+
+
 def test_stacks_are_detected_from_the_repo_root(tmp_path, repo):
     (repo / "pyproject.toml").write_text("[project]\nname='x'\n")
     (repo / "web").mkdir()

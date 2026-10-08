@@ -41,5 +41,8 @@ dependencies are managed (uv, poetry, pip-tools). Follow what the project alread
 - [ ] new behaviour without a test
 
 ## Commands
+Use the project's own commands: the "Project checks" line of itqan's session note (also
+`itqan_proof.py checks`) lists what the project defines - tox environments, pre-commit hooks,
+pytest, ruff, mypy - and is what /itqan:proof runs. Only when nothing is configured:
 `python -m pytest -q` · `ruff check .` · `ruff format --check .` · `mypy .` (if configured) ·
 with barq: `barq run:test run:lint`

@@ -64,6 +64,27 @@ def last_session_note(current: str) -> str:
             f"{last.get('ask', 0)} risky action(s): {rules}.")
 
 
+def project_checks(root: Path) -> str:
+    """The project's own test and lint commands, the ones /itqan:proof runs (tox envs, pre-commit,
+    pytest, ruff, package scripts), so a pack's default commands are not used in their place."""
+    try:
+        import itqan_proof
+        not_run: list[dict] = []
+        found = itqan_proof.detect(root, not_run)
+    except Exception:  # the note is a nicety: never break the session
+        return ""
+
+    def short(command: list[str]) -> str:
+        return " ".join([Path(command[0]).name, *command[1:]])
+
+    commands = [short(c["argv"]) for c in found]
+    commands += [short(n["command"].split(" ")) for n in not_run if n["kind"] != "other"]
+    if not commands:
+        return ""
+    return ("Project checks (what /itqan:proof runs; use these, not a pack's default commands): "
+            + " · ".join(dict.fromkeys(commands)) + ".")
+
+
 def session_start(hook: dict) -> None:
     cwd = Path(hook.get("cwd") or os.getcwd())
     try:
@@ -79,6 +100,9 @@ def session_start(hook: dict) -> None:
     if packs:
         lines.append("Before implementing or reviewing code in these stacks, read the checklist:")
         lines += [f"  {s}: {p}" for s, p in packs]
+    checks = project_checks(root)
+    if checks:
+        lines.append(checks)
     lines.append("Workflows: /itqan:plan (plan only), /itqan:review (review changes), "
                  "/itqan:ship (plan -> tests first -> implement -> verify -> review), "
                  "/itqan:learn (approve rules learned from corrections), /itqan:insights.")
