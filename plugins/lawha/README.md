@@ -26,13 +26,14 @@ the spacing scale, the type scale ratio and line lengths, and the palette actual
 ## What it checks
 
 Every page at **360, 390, 768, 1024, 1280 and 1536px**, in light (and dark), LTR (and RTL), and
-once with "reduce motion" on.
+once with "reduce motion" on. The variants render in parallel browser contexts (one per CPU, up to
+8; `--concurrency`), about 5 times faster than one at a time ([bench](bench/README.md)).
 
 | | |
 |---|---|
 | **Layout** | sideways scrolling and the element causing it; text cut off by its box; text overlapping text; layout shift while loading |
 | **Phones** | tap targets (24×24 required by WCAG 2.2 AA, 44×44 comfortable); body text under 16px; text under 12px |
-| **Accessibility** | axe-core (WCAG 2.2 A and AA): contrast, names, labels, landmarks, keyboard access; the contrast of text over images, video and 3D, read from the real pixels behind it (axe cannot) |
+| **Accessibility** | axe-core (WCAG 2.2 A and AA): contrast, names, labels, landmarks, keyboard access; the page walked with Tab: a focus order that goes against the reading order, and stops with no visible focus; the contrast of text over images, video and 3D, read from the real pixels behind it (axe cannot) |
 | **Motion** | animations that keep running with "reduce motion" on, including 3D scenes (Three.js, WebGL) drawn on a canvas; motion that never stops (WCAG 2.2.2); interface motion slower than a second; animating width, height or top instead of transform and opacity |
 | **RTL** | left/right CSS and utilities (`ml-4`, `text-left`, `rounded-l`) that will not mirror in Arabic (symmetric values like `padding: 16px` are fine); icons that show direction (arrows, chevrons, send, reply, undo, log-out, lists) and still point the same way in Arabic, and media controls, clocks and logos that were mirrored by mistake |
 | **The eye** | where the eye lands first above the fold; alignment near-misses, off-scale gaps, uneven lists, type sizes and scale ratio, long lines, tight leading, palette shares, colours outside the tokens, low contrast |

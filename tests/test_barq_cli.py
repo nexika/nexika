@@ -179,6 +179,23 @@ def test_info_keeps_a_root_node_project_first(project, barq_run):
     assert "test   npm test   [node (npm)]" in out
 
 
+def test_run_build_does_not_pick_a_nested_build_when_the_root_has_none(project, barq_run):
+    # #109: with no root build, run:build ran `cd benchmarks/starter && npm run build`
+    (project / "pyproject.toml").write_text("[project]\nname = 'x'\n")
+    for sub in ("benchmarks/starter", "plugins/x/engine"):
+        (project / sub).mkdir(parents=True)
+        (project / sub / "package.json").write_text(
+            '{"scripts": {"build": "node -e \\"require(\'fs\').writeFileSync(\'built\', \'\')\\""}}')
+    code, out = barq_run("run:build")
+    assert code == 1
+    assert "no 'build' command at the project root" in out
+    assert "cd benchmarks/starter && npm run build" in out
+    assert "cd plugins/x/engine && npm run build" in out
+    assert not (project / "benchmarks" / "starter" / "built").exists()
+    _, out = barq_run("info")
+    assert "build  -" in out and "cd benchmarks/starter && npm run build" in out
+
+
 def test_barq_json_commands_override_and_run_compresses(project, barq_run):
     script = (
         "import sys; print('noise\\n' * 50); "

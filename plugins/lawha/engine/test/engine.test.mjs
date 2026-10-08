@@ -264,3 +264,32 @@ test("a check is recorded in lawha's folder and announced in the shared status f
   const quiet = run(["check", page("good.html"), "--widths", "390", "--no-see", "--no-record", "--out", tmp()], { env: homes, cwd: project });
   assert.equal(quiet.recorded, null);
 });
+
+test("variants run in parallel browser contexts and give the same result as one at a time", () => {
+  // #106: the full matrix ran one variant after another (80 s inside a 3-round fix loop).
+  const args = ["check", page("bad.html"), "--widths", "390,768,1280", "--themes", "light,dark", "--no-see", "--no-record"];
+  const one = tmp(), many = tmp();
+  run([...args, "--concurrency", "1", "--out", one]);
+  run([...args, "--concurrency", "4", "--out", many]);
+  const read = (dir) => JSON.parse(readFileSync(join(dir, "run.json"), "utf8"));
+  const [a, b] = [read(one), read(many)];
+  assert.equal(a.summary.concurrency, 1);
+  assert.equal(b.summary.concurrency, 4);
+  assert.deepEqual(b.shots.map((s) => s.variant), a.shots.map((s) => s.variant), "shots keep the matrix order");
+  const key = (f) => `${f.check}|${f.severity}|${f.width}|${f.theme}|${f.dir}|${f.motion}`;
+  assert.deepEqual(b.findings.map(key), a.findings.map(key), "same findings, same order");
+});
+
+test("Tab order is checked against the visual order, and every stop needs a visible focus", () => {
+  // #107: DESIGN.md promises focus order and visible focus checks.
+  const out = tmp();
+  lawha("check", page("focus.html"), "--widths", "390,1280", "--no-see", "--no-record", "--out", out);
+  const findings = JSON.parse(readFileSync(join(out, "run.json"), "utf8")).findings;
+  const order = findings.filter((f) => f.check === "a11y.focus-order");
+  assert.ok(order.some((f) => f.message.includes("Back to top")), "the positive tabindex jump: " + JSON.stringify(order));
+  assert.ok(order.some((f) => f.selector === "#second"), "the row-reverse toolbar: " + JSON.stringify(order));
+  assert.equal(new Set(order.map((f) => f.selector)).size, 2, "only those two: the nav and the buttons read in order");
+  const hidden = findings.filter((f) => f.check === "a11y.focus-visible");
+  assert.deepEqual([...new Set(hidden.map((f) => f.selector))], ["#ghost"], JSON.stringify(hidden));
+  assert.ok(hidden.every((f) => f.severity === "fail"));
+});

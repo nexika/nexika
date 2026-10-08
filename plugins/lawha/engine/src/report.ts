@@ -21,7 +21,7 @@ export interface Run {
   findings: Finding[];
   seen: Seen[];
   diffs: (DiffResult & { variant: string; expected: string; actual: string })[];
-  summary: { fail: number; warn: number; info: number; widths: number[]; verdict: "pass" | "fail" };
+  summary: { fail: number; warn: number; info: number; widths: number[]; verdict: "pass" | "fail"; concurrency?: number };
 }
 
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
