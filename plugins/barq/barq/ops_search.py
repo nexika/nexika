@@ -177,20 +177,25 @@ def op_map(ctx: Context, path: str = ".", max_files=80, per_file=40) -> Result:
     code = [f for f in found if f.suffix.lower() in SUPPORTED]
     lines: list[str] = []
     baseline = 0
+    empty: list[str] = []  # counted in the header, so named too (#170)
     for f in code[:limit]:
         try:
             text = files.read_text(f)
         except files.FileError:
+            empty.append(files.rel(f, ctx.cwd))
             continue
         baseline += len(text.encode("utf-8"))
         symbols = outline(text, f.suffix) or []
         if not symbols:
+            empty.append(files.rel(f, ctx.cwd))
             continue
         lines.append(files.rel(f, ctx.cwd))
         for s in symbols[:per]:
             lines.append(f"  L{s.line} {'  ' * s.depth}{s.signature}")
         if len(symbols) > per:
             lines.append(f"  ... {len(symbols) - per} more symbols (read:{files.rel(f, ctx.cwd)}:outline)")
+    if empty:
+        lines.append("no symbols: " + ", ".join(empty))
     body = "\n".join(lines) or "(no supported source files)"
     if len(code) > limit:
         body += f"\n... {len(code) - limit} more files (map a subfolder)"

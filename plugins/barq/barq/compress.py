@@ -39,11 +39,40 @@ def pytest(lines: list[str]):
         r"|no tests ran\b).* in [\d.]+s", ln.strip())]
     if not summary:
         return None
-    details = [ln for ln in lines if ln.startswith(("FAILED ", "ERROR "))]
+    collect_errors = _collection_errors(lines)
+    details = []
     for ln in lines:
+        if ln.startswith(("FAILED ", "ERROR ")):
+            # "ERROR tests/x.py - ../_pytest/python.py:508: in importtestmodule" names a pytest
+            # frame: show the module's own error instead (#170)
+            m = re.match(r"^ERROR (\S+) - .*/_pytest/", ln)
+            if m:
+                ln = f"ERROR {m.group(1)}" + (f" - {collect_errors[m.group(1)]}"
+                                              if m.group(1) in collect_errors else "")
+            details.append(ln)
+    for ln in lines:
+        if "/_pytest/" in ln:
+            continue  # pytest's own frames say nothing about the failure
         if ln.startswith("E ") or re.match(r"^[\w/.\\-]+\.py:\d+: \w", ln):
             details.append(ln)
     return summary[-1].strip("= ").strip(), _dedupe(details)
+
+
+def _collection_errors(lines: list[str]) -> dict[str, str]:
+    """path -> the last 'E   SomeError: msg' line of its '___ ERROR collecting path ___' block."""
+    found: dict[str, str] = {}
+    current = None
+    for ln in lines:
+        header = re.match(r"^_+ ERROR collecting (\S+) _+$", ln.strip())
+        if header:
+            current = header.group(1)
+        elif ln.startswith("_") or ln.startswith("="):
+            current = None
+        elif current:
+            m = re.match(r"^E\s+([A-Za-z_][\w.]*(?:Error|Exception|Exit|Interrupt)\b.*)$", ln)
+            if m:
+                found[current] = m.group(1).strip()
+    return found
 
 
 # ---------------------------------------------------------------- .NET
