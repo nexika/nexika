@@ -701,3 +701,34 @@ def test_raw_api_calls_with_a_body_are_labelled_post(world):
     assert "POST" in decide(project, "Bash", mutation).reason
     assert "GET" not in decide(project, "Bash", "gh api repos/o/r/issues -f title=x").reason
     assert "(DELETE)" in decide(project, "Bash", "gh api -X DELETE repos/o/r").reason
+
+
+# ---------------------------------------------------------------- what a script deletes (#116)
+
+
+def test_a_delete_haris_cannot_resolve_is_never_deletes_root(world):
+    home, project = world
+    script = ("cat > b.mjs <<'EOF'\nrmSync(out, { recursive: true, force: true });\n"
+              "const name = page.split(\"/\").pop();\nEOF\nnode b.mjs")
+    d = decide(project, "Bash", script)
+    assert d.verdict == "ask" and d.cls == "unknown-target", (d.verdict, d.cls, d.reason)
+    assert "Deletes /" not in d.reason
+
+
+@pytest.mark.parametrize("lang, code", [
+    ("node", 'rmSync("/", { recursive: true });'),
+    ("node", "const dir = '/';\nrmSync(dir, { recursive: true });"),
+    ("node", "require('fs').promises.rm('/', { recursive: true });"),
+    ("python3", "import shutil, os\nshutil.rmtree(os.path.expanduser('~'))"),
+    ("python3", "from pathlib import Path\nPath('/').rmdir()"),
+])
+def test_a_script_that_really_deletes_root_or_home_is_still_denied(world, lang, code):
+    home, project = world
+    d = decide(project, "Bash", f"cat > x.src <<'EOF'\n{code}\nEOF\n{lang} x.src")
+    assert d.verdict == "deny" and d.cls == "destroy", (d.verdict, d.cls, d.reason)
+
+
+def test_inline_code_deletes_only_what_its_delete_call_names(world):
+    home, project = world
+    d = decide(project, "Bash", "python3 -c \"import shutil; shutil.rmtree('build'); print('/')\"")
+    assert d.cls == "delete" and d.verdict != "deny", (d.verdict, d.cls, d.reason)

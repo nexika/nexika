@@ -1415,7 +1415,7 @@ CODE_HIDDEN = re.compile(r"(?i)\b(?:exec|eval|Function|compile)\s*\(\s*(?:[\w.]*
 CODE_DELETE = re.compile(r"\b(?:shutil\.rmtree|os\.remove|os\.unlink|os\.rmdir|os\.removedirs|rmSync|"
                          r"unlinkSync|"
                          r"rmdirSync|fs\.rm\b|fs\.unlink|rimraf|FileUtils\.rm|File\.delete|rmtree)|"
-                         r"\.(?:unlink|rmdir)\s*\(|\bunlink\s*\(")
+                         r"\.(?:unlink|rmdir|rm)\s*\(|\bunlink\s*\(")
 CODE_WRITE = re.compile(r"\bopen\s*\([^)]*['\"][wax]b?\+?['\"]|write_text|write_bytes|writeFileSync|"
                         r"writeFile\b|"
                         r"appendFile|createWriteStream|File\.write|file_put_contents|fopen\s*\([^)]*['\"][wax]|"
@@ -1438,6 +1438,91 @@ CODE_SELF = re.compile(r"\b(?:from|import)\s+(?:haris|mizan|tabib)\b"
                        r"|haris/(?:bin|haris)"
                        r"|require\(['\"][^'\"]*haris")
 PATH_LIKE = re.compile(r"^(?:~|/|\.{1,2}/|[\w.-]+/)|^\.?[\w-]+\.\w{1,8}$|^\.\w+$")
+# Calls that only turn one path into another: Path("~"), os.path.expanduser("~"), File.expand_path("/x").
+PATH_WRAPPER = re.compile(r"^(?:(?:pathlib\.)?Path|PurePath"
+                          r"|os\.path\.(?:expanduser|abspath|realpath|normpath)|path\.resolve|Pathname\.new|File\.expand_path|expanduser|abspath|realpath)\s*\(")
+BACKTICKS = re.compile(r"`[^`]*`")
+
+
+def call_end(text: str, start: int) -> int:
+    """Where the bracket opened just before `start` closes (strings are skipped); -1 when it never does."""
+    depth, i = 1, start
+    while i < len(text):
+        ch = text[i]
+        if ch in "'\"`":
+            m = (BACKTICKS if ch == "`" else STRING_LITERAL).match(text, i)
+            i = m.end() if m else i + 1
+            continue
+        if ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+            if depth == 0:
+                return i
+        i += 1
+    return -1
+
+
+def first_argument(text: str, start: int) -> str:
+    """The first argument of the call whose bracket opened just before `start`."""
+    end = call_end(text, start)
+    inner = text[start:end if end >= 0 else len(text)]
+    depth, i = 0, 0
+    while i < len(inner):
+        ch = inner[i]
+        if ch in "'\"":
+            m = STRING_LITERAL.match(inner, i)
+            i = m.end() if m else i + 1
+            continue
+        if ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            return inner[:i].strip()
+        i += 1
+    return inner.strip()
+
+
+def literal_path(expr: str, text: str, depth: int = 0) -> str | None:
+    """The path an expression in the code names outright: "/x", Path("/x"), os.path.expanduser("~"), or a
+    variable only ever given one of those. None when the path is only known when the code runs."""
+    expr = expr.strip()
+    while tail := re.search(r"\.(?:expanduser|resolve|absolute)\(\)$", expr):
+        expr = expr[:tail.start()].strip()
+    m = PATH_WRAPPER.match(expr)
+    if m and expr.endswith(")") and call_end(expr, m.end()) == len(expr) - 1:
+        return literal_path(expr[m.end():-1], text, depth)
+    m = STRING_LITERAL.fullmatch(expr)
+    if m:
+        lit = next(g for g in m.groups() if g is not None)
+        return lit if lit and "\n" not in lit and not re.search(r"\$\{|%s|\{\w*\}", lit) else None
+    if depth < 2 and re.fullmatch(r"\$?[A-Za-z_]\w*", expr):
+        name = re.escape(expr.lstrip("$"))
+        found = [literal_path(a.group(1), text, depth + 1) for a in
+                 re.finditer(rf"(?m)(?:^|[\s;(,])(?:const\s+|let\s+|var\s+|my\s+)?\$?{name}\s*=(?!=)\s*"
+                             r"([^\n;]+)", text)]
+        if found and all(found) and len(set(found)) == 1:
+            return found[0]
+    return None
+
+
+def code_targets(text: str, pattern: re.Pattern) -> list[Arg]:
+    """What the calls `pattern` finds act on: the path each one names, or UNKNOWN for a call whose path is
+    only known when it runs (a variable set elsewhere, a computed string). Never a stray string from
+    elsewhere in the code."""
+    out: list[Arg] = []
+    for m in pattern.finditer(text):
+        opened = m.group().endswith("(")
+        call = None if opened else re.compile(r"[\w.]*\s*\(").match(text, m.end())
+        if not opened and not call:
+            continue  # the name without a call: an import or a mention
+        found = literal_path(first_argument(text, call.end() if call else m.end()), text)
+        if found is None and m.group().startswith("."):  # Path("/x").unlink(): the path is the receiver
+            receiver = re.search(r"((?:[\w.]+\s*)?(?:\((?:[^()]|\([^()]*\))*\))?)$", text[:m.start()])
+            found = literal_path(receiver.group(1), text) if receiver else None
+        out.append(arg(os.path.expanduser(found) if found and found.startswith("~") else found or UNKNOWN))
+    return out or [arg(UNKNOWN)]
 
 
 def code_check(code: Arg, ctx: Ctx, via: str) -> Stage:
@@ -1476,7 +1561,7 @@ def code_check(code: Arg, ctx: Ctx, via: str) -> Stage:
         ctx.add("dynamic", f"`{via}` runs shell commands from inside the code.")
     deletes, writes = bool(CODE_DELETE.search(text)), bool(CODE_WRITE.search(text))
     if deletes:
-        delete_paths(paths or [arg(UNKNOWN)], ctx)
+        delete_paths(code_targets(text, CODE_DELETE), ctx)
     if writes:
         write_paths(paths or [arg(UNKNOWN)], ctx)
     secret_hit = False
