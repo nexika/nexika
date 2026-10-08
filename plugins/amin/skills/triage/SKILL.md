@@ -12,8 +12,10 @@ The amin helper is printed in the session note; below it is written `amin`.
 2. For each unlabeled issue, read it (`gh issue view N`) and propose labels **only from the
    existing vocabulary** (suggest a new label separately, never invent one silently), with a
    one-line reason. Use priority labels only if the repo has them.
-3. For each possible duplicate pair, read both and decide: duplicate, related, or different.
-   Title similarity alone proves nothing.
+3. Possible duplicates are ranked candidates (most similar titles first, recently closed issues
+   included). For each pair, read both and decide: duplicate, related, or different. Title
+   similarity alone proves nothing, and it misses duplicates worded differently: for a new issue,
+   also search the tracker for its key terms (`gh issue list --state all --search "<terms>"`).
 4. For stale issues (listed oldest first), suggest: ask the author for an update, or leave as is.
    Issues labelled accepted or for discussion are not listed: waiting is expected there. More
    such labels go in `.amin.json` as `"triage": {"keep_labels": ["T: style"]}`.

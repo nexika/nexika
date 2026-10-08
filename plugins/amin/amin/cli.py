@@ -195,7 +195,13 @@ def run(argv: list[str]) -> int:
         settings = proj.load_config(root).get("triage")
         keep = settings.get("keep_labels") if isinstance(settings, dict) else None
         keep = [str(x) for x in keep] if isinstance(keep, list) else None
-        print(triage.scan(issues, labels, keep_labels=keep))
+        closed = runner.gh_json("issue", "list", "--state", "closed", "--limit", "200",
+                                "--json", "number,title,labels,updatedAt") or []
+        try:
+            repo = runner.gh_json("repo", "view", "--json", "name")["name"]
+        except (gitops.CommandError, ValueError, KeyError, TypeError):
+            repo = root.name
+        print(triage.scan(issues, labels, keep_labels=keep, closed=closed, repo=repo))
     elif cmd == "work" and argv[1:2] == ["start"] and len(argv) > 2:
         print(cmd_work_start(root, runner, argv[2].lstrip("#")))
     elif cmd == "check-fragment":

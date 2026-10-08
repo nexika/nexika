@@ -585,6 +585,31 @@ def test_stale_issues_are_listed_oldest_first_without_accepted_or_discussion_one
     assert "#5 " not in report.split("no activity for 90+ days")[1]
 
 
+def test_duplicates_ignore_title_templates_and_compare_with_closed_issues():
+    # issue #156: on black, template titles and the repo name made every flagged pair a false one,
+    # real duplicates worded differently were missed, and closed issues were never compared
+    second_pass = "INTERNAL ERROR: Black produced different code on the second pass of the formatter"
+    issues = [{"number": n, "title": t, "labels": [], "updatedAt": "2026-10-01T00:00:00Z"} for n, t in [
+        (1, f"{second_pass} with walrus in comprehension"),
+        (2, f"{second_pass} for match statement"),
+        (3, f"{second_pass} in nested brackets"),
+        (4, "Black fails to format nested f-string quotes"),
+        (5, "Nested f-string quotes are not formatted by Black"),
+        (6, "Crash on backslash continuation in return"),
+        (7, "Line too long: dict value in call"),
+        (8, "Line too long: lambda in default argument"),
+        (9, "Line too long: chained comparison in if"),
+    ]]
+    closed = [{"number": 60, "title": "Crash with a backslash continuation in a return statement",
+               "labels": [], "updatedAt": "2026-09-01T00:00:00Z"}]
+    report = triage.scan(issues, [], today=datetime.date(2026, 10, 8), closed=closed, repo="black")
+    dupes = report.split("possible duplicates")[1].split("\n\n")[0].splitlines()[1:]
+    pairs = [line.split(" (")[0].strip() for line in dupes]
+    assert pairs[:2] in (["#4 ~ #5", "#6 ~ #60"], ["#6 ~ #60", "#4 ~ #5"])   # the real ones rank first
+    assert "closed" in next(line for line in dupes if "#60" in line)
+    assert not any(p in pairs for p in ("#1 ~ #2", "#1 ~ #3", "#2 ~ #3", "#7 ~ #8", "#8 ~ #9"))
+
+
 def test_title_similarity_ignores_noise_words():
     assert triage.similarity("Add support for dark mode", "Fix the bug in dark mode") == 1.0
     assert triage.similarity("error", "bug") == 0.0
