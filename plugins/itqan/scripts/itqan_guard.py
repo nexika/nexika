@@ -79,7 +79,7 @@ def needs_quality_check(event: dict) -> bool:
         return True
     command = str((event.get("tool_input") or {}).get("command") or "")
     return tool in ("Bash", "PowerShell") and "git" in command and (
-        "--no-verify" in command or " -n" in command)
+        "--no-verify" in command or " -n" in command or "SKIP=" in command)
 
 
 if __name__ == "__main__":
@@ -102,7 +102,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import itqan_files  # noqa: E402
 import itqan_secrets  # noqa: E402
 
-DEFAULT_PROTECTED = ["main", "master", "develop", "production", "release/*"]
+DEFAULT_PROTECTED = ["main", "master", "develop", "production", "stable", "release/*"]
 
 # The family's shared secret shapes (common/secrets.py), so the guard and the redactor agree on what
 # a secret is.
@@ -161,6 +161,23 @@ def _words(segment: str) -> list[str]:
         return shlex.split(segment)
     except ValueError:
         return segment.split()
+
+
+ENV_ASSIGN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+
+
+def _strip_env(words: list[str]) -> tuple[str, list[str]]:
+    """Leading `env` and `NAME=value` words removed; returns pre-commit's SKIP value and the rest."""
+    skip, i = "", 0
+    while i < len(words) and (words[i] == "env" or ENV_ASSIGN.match(words[i])):
+        if words[i].startswith("SKIP="):
+            skip = words[i][5:]
+        i += 1
+    return skip, words[i:]
+
+
+def _skip_env_reason(skip: str) -> str:
+    return f"`SKIP={skip} git commit` skips pre-commit hooks ({skip}), like `--no-verify`."
 
 
 def _is_secret_file(path: str) -> bool:
@@ -243,6 +260,7 @@ def _check_commit(rest: list[str], cwd: Path):
 
 
 def _check_git(words: list[str], cwd: Path, config: dict):
+    skip, words = _strip_env(words)
     if len(words) < 2 or Path(words[0]).name != "git":
         return None
     args = words[1:]
@@ -256,7 +274,10 @@ def _check_git(words: list[str], cwd: Path, config: dict):
     if sub == "push":
         return _check_push(rest, cwd, protected)
     if sub == "commit":
-        return _check_commit(rest, cwd)
+        decision = _check_commit(rest, cwd)
+        if skip and not (decision and decision[0] == "deny"):
+            return "ask", "skip-hooks", _skip_env_reason(skip)
+        return decision
     if sub == "add":
         secret = [a for a in rest if not a.startswith("-") and _is_secret_file(a)]
         if secret:
@@ -278,14 +299,16 @@ def _check_git(words: list[str], cwd: Path, config: dict):
 
 
 def skip_hooks(command: str):
-    """Only the quality rule about skipping the repository's hooks (`--no-verify`)."""
+    """Only the quality rule about skipping the repository's hooks (`--no-verify`, `SKIP=`)."""
     for segment in SEGMENT_SPLIT.split(command):
-        words = _words(segment.strip())
+        skip, words = _strip_env(_words(segment.strip()))
         if len(words) < 2 or Path(words[0]).name != "git":
             continue
         args = words[1:]
         while len(args) > 1 and args[0] in ("-C", "-c"):
             args = args[2:]
+        if args and args[0] == "commit" and skip:
+            return "ask", "skip-hooks", _skip_env_reason(skip)
         if args and args[0] == "commit" and ("--no-verify" in args or "-n" in args):
             return "ask", "skip-hooks", "`git commit --no-verify` skips pre-commit checks."
         if args and args[0] == "push" and "--no-verify" in args:
