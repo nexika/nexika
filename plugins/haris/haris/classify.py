@@ -1712,6 +1712,8 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
 PYTHON_MODULES_RUN = {"pytest", "unittest", "doctest", "mypy", "ruff", "black", "isort", "flake8", "pylint",
                       "coverage", "tox", "nox", "pyright", "compileall", "py_compile", "build", "bandit",
                       "pyflakes", "pycodestyle"}
+# Modules that are tools haris already judges by name: `python -m X ...` gets X's own rule.
+PYTHON_MODULE_TOOLS = {"twine", "hatch", "flit", "poetry", "pdm", "pipenv", "pipx", "uv"}
 
 
 def h_python(argv, ctx, stdin):
@@ -1733,6 +1735,8 @@ def h_python(argv, ctx, stdin):
             return project_run(ctx, f"Runs python -m {name} in the project.")
         if name == "pip":
             return h_pip([arg("pip"), *pos], ctx, stdin)
+        if name in PYTHON_MODULE_TOOLS:  # `python -m twine upload` is `twine upload` (#138)
+            return HANDLERS[name]([arg(name), *pos], ctx, stdin)
         if name in ("json.tool", "tabnanny", "this", "site", "platform", "sysconfig", "pydoc", "timeit"):
             ctx.add("read", f"Only shows information (python -m {name}).")
             return Stage()

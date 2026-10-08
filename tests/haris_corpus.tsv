@@ -108,6 +108,7 @@ allow	pytest
 allow	pytest -q tests/test_app.py
 allow	python -m pytest -x
 allow	python3 -m unittest discover
+allow	python -m twine check dist/*
 allow	npm test
 allow	npm run build
 allow	npm run lint
@@ -449,6 +450,8 @@ ask	pnpm publish --access public
 ask	yarn npm publish
 ask	cargo publish
 ask	twine upload dist/*
+ask	python -m twine upload --repository pypi dist/*
+ask	python3 -m hatch publish
 ask	uv publish
 ask	poetry publish --build
 ask	gem push x.gem
