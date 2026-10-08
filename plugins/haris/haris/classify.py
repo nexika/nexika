@@ -380,9 +380,22 @@ def run(argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
         return handler([arg(family, first.marks), *argv[1:]], ctx, stdin)
     if program in READERS:
         return reader(program, argv, ctx, stdin)
+    if program == "pre-commit" and len(argv) > 1 and argv[1] in ("install", "init-templatedir"):
+        return pre_commit_install(argv, ctx)
     if program in RUNNERS:
         return project_run(ctx, f"Runs {program} in the project.")
     return generic(argv, ctx, stdin)
+
+
+def pre_commit_install(argv: list[Arg], ctx: Ctx) -> Stage:
+    """`pre-commit install` writes git hooks that later run whatever .pre-commit-config.yaml says (#140)."""
+    opts, _ = options(argv[2:], {"-t", "--hook-type", "-c", "--config"})
+    hooks = [str(h) for h in values(opts, "-t", "--hook-type")] or ["pre-commit"]
+    where = "the git template folder" if argv[1] == "init-templatedir" else \
+        ", ".join(f".git/hooks/{h}" for h in hooks)
+    ctx.add("git-internal", f"Installs a git hook ({where}) that runs whatever .pre-commit-config.yaml says "
+                            "on later git commands, without asking.")
+    return Stage()
 
 
 ASSIGNERS = {"read", "printf", "mapfile", "readarray", "getopts", "let"}

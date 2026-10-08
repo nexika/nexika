@@ -484,6 +484,9 @@ ask	git branch -D feat/old
 ask	git stash clear
 ask	git filter-branch --tree-filter x HEAD
 ask	git commit --no-verify -m x
+ask	pre-commit install
+ask	pre-commit install --hook-type pre-push
+allow	pre-commit run --all-files
 ask	git gc --prune=now
 ask	git reflog expire --expire=now --all
 ask	git worktree remove --force ../wt
