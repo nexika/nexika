@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 from urllib.parse import quote
 
@@ -26,6 +27,7 @@ FAILED = ("failure", "timed_out", "cancelled", "startup_failure")
 LOG_LIMIT = 8 * 1024 * 1024
 PAST_RUNS = 10   # earlier runs (and attempts) of the same commit looked at for flaky tests
 PAST_LOGS = 5    # of which at most this many failed logs are read
+EXPIRED = re.compile(r"(?i)\bHTTP 410\b|\b410 Gone\b|log (?:has )?expired")   # logs last ~90 days
 GITLAB = {"failed": "failure", "success": "success", "canceled": "cancelled", "skipped": "skipped"}
 
 

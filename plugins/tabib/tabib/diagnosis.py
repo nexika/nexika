@@ -116,7 +116,14 @@ def triage(info: dict, run_id: int | None = None, refresh: bool = False) -> dict
         return existing
     if not same:
         existing = {}
-    log = secrets.redact(forge.failed_log(info, run))  # whole blocks (keys) before anything is cut
+    log, log_gone = "", False
+    if run["jobs"]:   # a run with no jobs has no log (#177)
+        try:
+            log = secrets.redact(forge.failed_log(info, run))  # whole blocks (keys) before anything is cut
+        except forge.Off as off:
+            if not forge.EXPIRED.search(str(off)):
+                raise
+            log_gone = True
     failures, signals, errors, excerpts, frames, missing, raised = _gather(log)
     fork = forge.from_fork(info, run)
     hist = forge.history(info, run)
@@ -134,7 +141,8 @@ def triage(info: dict, run_id: int | None = None, refresh: bool = False) -> dict
              "from_fork": fork, "flaky_tests": flaky,
              "lock_changed": suspects.get("lock_changed"),
              "missing_modules": [m for m in missing if m not in own],
-             "upstream": [u for u in raised if u["package"] not in own_packages]}
+             "upstream": [u for u in raised if u["package"] not in own_packages],
+             "no_jobs": not run["jobs"], "log_gone": log_gone, "url": run.get("url") or ""}
     verdict = classify.classify(facts)
     record = {"schema": SCHEMA, "version": __version__, "created": now(), "repo": info["repo"],
               "branch": run.get("branch") or info.get("branch", ""),
