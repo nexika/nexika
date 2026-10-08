@@ -16,6 +16,22 @@ if str(BARQ_ROOT) not in sys.path:
     sys.path.insert(0, str(BARQ_ROOT))
 
 
+@pytest.fixture(scope="session")
+def _test_gitconfig(tmp_path_factory):
+    path = tmp_path_factory.mktemp("git") / "gitconfig"
+    path.write_text("[user]\n\tname = Test\n\temail = t@example.com\n[init]\n\tdefaultBranch = main\n")
+    return path
+
+
+@pytest.fixture(autouse=True)
+def _git_identity(_test_gitconfig, monkeypatch):
+    """CI runners have no global git user: every test (and every git it starts) gets the same
+    global config with one, so a commit in a test repo never fails there while passing on a
+    developer machine. A repo's own user.name still wins; the developer's config is not read."""
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(_test_gitconfig))
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+
+
 @pytest.fixture(autouse=True)
 def _status_home(tmp_path, monkeypatch):
     """Plugins publish status files as they run: keep them out of the real ~/.claude."""
