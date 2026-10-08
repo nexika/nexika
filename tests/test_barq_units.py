@@ -132,13 +132,76 @@ PY = textwrap.dedent('''\
 
 def test_python_outline_and_symbols():
     syms = {s.name: s for s in outline(PY, ".py")}
-    assert list(syms) == ["Cart", "Cart.total", "Cart.load", "helper"]
+    assert list(syms) == ["Cart", "Cart.total", "Cart.load", "helper", "helper.inner"]
     assert (syms["Cart"].line, syms["Cart"].end) == (3, 12)          # includes @dataclass
     assert syms["Cart.load"].line == 10                               # includes @staticmethod
-    assert syms["Cart.load"].signature == "async def load(path: str)"
+    assert syms["Cart.load"].signature == "@staticmethod async def load(path: str)"
+    assert syms["helper"].signature == "def helper(x, *, y=1)"
     assert syms["Cart.total"].signature == "def total(self) -> int"
     assert [s.name for s in find_symbol(PY, ".py", "load")] == ["Cart.load"]
     assert [s.name for s in find_symbol(PY, ".py", "cart.TOTAL")] == ["Cart.total"]
+
+
+# #168: shapes from psf/black's lines.py, linegen.py and __init__.py, trimmed
+BLACK_PY = textwrap.dedent('''\
+    @dataclass
+    class Line:
+        @property
+        def magic_trailing_comma(self) -> Leaf | None:
+            return None
+
+        @magic_trailing_comma.setter
+        def magic_trailing_comma(self, value) -> None:
+            pass
+
+        @staticmethod
+        def is_split(leaf: Leaf) -> bool:
+            return False
+
+    @overload
+    def f(x: int) -> int: ...
+    @overload
+    def f(x: str) -> str: ...
+    def f(x):
+        return x
+
+    @click.command(context_settings={"help_option_names": ["-h", "--help"]})
+    @click.option("-c", "--code", type=str)
+    @click.option("-l", "--line-length", type=int)
+    @click.option("--color/--no-color", is_flag=True)
+    @click.version_option(version="1")
+    @click.pass_context
+    def main(ctx, code: str | None, color: bool = False, *, quiet: bool = False) -> None:
+        pass
+
+    def delimiter_split(line: Line, mode: Mode):
+        def append_to_line(leaf: Leaf) -> Iterator[Line]:
+            yield line
+        if line.is_def:
+            def append_comments(leaf: Leaf) -> None:
+                pass
+        return append_to_line
+''')
+
+
+def test_python_outline_shows_decorators_and_nested_defs():
+    syms = outline(BLACK_PY, ".py")
+    sigs = {(s.name, s.line): s.signature for s in syms}
+    assert sigs[("Line", 1)] == "@dataclass class Line"
+    assert sigs[("Line.magic_trailing_comma", 3)].startswith("@property def magic_trailing_comma(")
+    assert sigs[("Line.magic_trailing_comma", 7)].startswith("@magic_trailing_comma.setter def ")
+    assert sigs[("Line.is_split", 11)] == "@staticmethod def is_split(leaf: Leaf) -> bool"
+    assert sigs[("f", 15)] == "@overload def f(x: int) -> int"
+    assert sigs[("f", 19)] == "def f(x)"
+    main = sigs[("main", 22)]
+    assert main.startswith("@click.command @click.option x3 @click.version_option +1 def main(")
+    assert "color: bool = False, *, quiet: bool = False" in main
+    names = [s.name for s in syms]
+    assert "delimiter_split.append_to_line" in names and "delimiter_split.append_comments" in names
+    nested = next(s for s in syms if s.name == "delimiter_split.append_to_line")
+    assert nested.depth == 1 and nested.kind == "def"
+    found = find_symbol(BLACK_PY, ".py", "delimiter_split.append_to_line")
+    assert [(s.line, s.end) for s in found] == [(32, 33)]
 
 
 def test_python_syntax_error_falls_back_to_indentation():
