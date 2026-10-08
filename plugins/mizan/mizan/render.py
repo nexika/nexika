@@ -52,8 +52,19 @@ def _reviews(prs: dict, lang: str) -> dict | None:
     return seg(t("reviews", lang, n=n), "info") if isinstance(n, int) and n > 0 else None
 
 
+def _gh_trouble(prs: dict, ci: dict, lang: str) -> dict | None:
+    """'gh: rate limited' or 'gh: timed out': why PRs or CI are old or missing."""
+    for entry in (ci, prs):
+        why = entry.get("error") or (entry.get("why") if entry.get("state") == "off" else "")
+        if why in ("off_ratelimit", "off_timeout"):
+            return seg(t(f"b_{why}", lang, tool=entry.get("tool") or "gh"), "warn")
+    return None
+
+
 def _ci(ci: dict, lang: str) -> dict | None:
     state = ci.get("state")
+    if ci.get("error"):
+        ci = {**ci, "stale": True}  # the last known result: gh did not answer this time
     if state == "passed":
         return seg(t("ci_passed", lang), "dim" if ci.get("stale") else "ok")
     if state == "failed":
@@ -94,8 +105,9 @@ def band(snap: dict, lang: str) -> list[list[dict]]:
     if git.get("branch"):
         who = f" ({clean(git['creator'], 20)})" if git.get("creator") else ""
         first.append(seg(f"⎇ {clean(git['branch'], 50)}{who}", "info"))
-        first += [s for s in (_prs(snap.get("prs") or {}, lang), _reviews(snap.get("prs") or {}, lang),
-                              _ci(snap.get("ci") or {}, lang)) if s]
+        prs, ci = snap.get("prs") or {}, snap.get("ci") or {}
+        first += [s for s in (_prs(prs, lang), _reviews(prs, lang), _ci(ci, lang),
+                              _gh_trouble(prs, ci, lang)) if s]
         found = snap.get("tabib") or {}
         if found.get("cause_found"):
             first.append(seg(t("tabib_cause", lang), "info"))
@@ -227,6 +239,9 @@ def detail(snap: dict, lang: str) -> list[dict]:
         lines += [seg(t("d_ci_job", lang, job=clean(job, 80)), "bad") for job in more_jobs]
         if ci.get("url"):
             lines.append(seg(t("d_ci_url", lang, url=clean(ci["url"], 200)), "dim"))
+        if ci.get("error"):
+            why = t(ci["error"], lang, tool=ci.get("tool") or "gh")
+            lines.append(seg(t("d_ci_kept", lang, why=why), "warn"))
         found = snap.get("tabib") or {}
         if found.get("kind"):
             lines.append(seg(t("d_tabib", lang, label=tabib_label(found, lang),
