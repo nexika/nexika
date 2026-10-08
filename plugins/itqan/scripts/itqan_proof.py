@@ -74,13 +74,43 @@ def _python_tool(root: Path, tool: str) -> list[str]:
     return [tool]
 
 
-def detect(root: Path) -> list[dict]:
-    """The project's checks, from its own files: {name, kind, argv}."""
+LINT_ENV = re.compile(r"(?i)\b(lint|flake8|mypy|pylint|ruff|isort|pre-commit|type-?check|typing|style)\b"
+                      r"|--check\b")
+
+
+def tox_envs(root: Path) -> dict[str, str]:
+    """tox.ini's environments: name -> its commands ("" names the default [testenv]). Generative names
+    like `{,ci-}py{310,311}` are left out: they are variants of the default."""
+    import configparser
+    path = root / "tox.ini"
+    if not path.is_file():
+        return {}
+    parser = configparser.ConfigParser(interpolation=None, strict=False)
+    try:
+        parser.read_string(path.read_text(encoding="utf-8", errors="replace"))
+    except (configparser.Error, OSError):
+        return {}
+    envs = {}
+    for section in parser.sections():
+        if section == "testenv":
+            envs[""] = parser.get(section, "commands", fallback="")
+        elif section.startswith("testenv:") and not set(section[8:]) & set("{},"):
+            envs[section[8:].strip()] = parser.get(section, "commands", fallback="")
+    return envs
+
+
+def detect(root: Path, not_run: list | None = None) -> list[dict]:
+    """The project's checks, from its own files: {name, kind, argv}. Checks found but not run (a tool
+    not installed, a tox env that is neither tests nor lint) are added to `not_run` when given."""
     found: list[dict] = []
+    skipped = not_run if not_run is not None else []
 
     def add(name: str, kind: str, argv: list[str], defined: str = "") -> None:
         if shutil.which(argv[0]):
             found.append({"name": name, "kind": kind, "argv": argv, "defined": defined})
+        else:
+            skipped.append({"name": name, "kind": kind, "command": " ".join(argv),
+                            "reason": f"{Path(argv[0]).name} is not installed"})
 
     pyproject = root / "pyproject.toml"
     py_text = pyproject.read_text(encoding="utf-8", errors="replace") if pyproject.is_file() else ""
@@ -90,6 +120,24 @@ def detect(root: Path) -> list[dict]:
         add("pytest", "tests", [*_python_tool(root, "pytest"), "-q"])
     if "[tool.ruff" in py_text or (root / "ruff.toml").is_file() or (root / ".ruff.toml").is_file():
         add("ruff", "lint", [*_python_tool(root, "ruff"), "check", "."])
+    pre_commit = root / ".pre-commit-config.yaml"
+    hooks = pre_commit.read_text(encoding="utf-8", errors="replace") if pre_commit.is_file() else ""
+    if hooks:
+        add("pre-commit", "lint", [*_python_tool(root, "pre-commit"), "run", "--all-files"])
+    setup_cfg = root / "setup.cfg"
+    cfg_text = setup_cfg.read_text(encoding="utf-8", errors="replace") if setup_cfg.is_file() else ""
+    mypy_config = ("[tool.mypy]" in py_text or "[mypy]" in cfg_text
+                   or (root / "mypy.ini").is_file() or (root / ".mypy.ini").is_file())
+    if mypy_config and not re.search(r"id:\s*mypy\b", hooks):
+        add("mypy", "lint", [*_python_tool(root, "mypy"), "."])
+    for env, commands in tox_envs(root).items():
+        if not env:
+            continue
+        if LINT_ENV.search(env) or LINT_ENV.search(commands):
+            add(f"tox -e {env}", "lint", [*_python_tool(root, "tox"), "-e", env])
+        else:
+            skipped.append({"name": f"tox -e {env}", "kind": "other", "command": f"tox -e {env}",
+                            "reason": "a tox environment the proof does not run (not tests or lint)"})
 
     package = root / "package.json"
     if package.is_file():
@@ -270,7 +318,11 @@ def ui_check(root: Path) -> dict:
 
 def make(root: Path, args) -> dict:
     kinds = set(args.only.split(",")) if args.only else set(KINDS)
-    checks = [run_check(c, root, args.timeout) for c in detect(root) if c["kind"] in kinds]
+    not_run: list[dict] = []
+    checks = [run_check(c, root, args.timeout) for c in detect(root, not_run) if c["kind"] in kinds]
+    not_run = [n for n in not_run if n["kind"] in kinds or n["kind"] == "other"]
+    # a test or lint check the project defines but that did not run leaves the change unproven
+    skipped = any(n["kind"] in KINDS for n in not_run)
     review = {"verdict": args.review, "notes": [clean(n) for n in args.note], "by": "reported by Claude"} \
         if args.review else {}
     requirements = [{"text": clean(t), "done": True} for t in args.done] + \
@@ -281,9 +333,9 @@ def make(root: Path, args) -> dict:
             "project": str(root), "branch": branch, "ci_failure": ci_failure(root, branch),
             "commit": _git(root, "rev-parse", "--short", "HEAD"),
             "dirty": bool(_git(root, "status", "--porcelain")), "checks": checks, "review": review,
-            "requirements": requirements, "ui": ui,
+            "requirements": requirements, "ui": ui, "not_run": not_run,
             "summary": {"checks_passed": bool(checks) and all(c["passed"] for c in checks)
-                        and ui.get("verdict", "pass") == "pass",
+                        and not skipped and ui.get("verdict", "pass") == "pass",
                         "requirements_done": f"{len(args.done)}/{len(args.done) + len(args.open)}"}}
 
 
@@ -297,6 +349,8 @@ def describe(proof: dict) -> str:
         out.append(f"  {check['name']}: {mark} in {check['seconds']} s  ({check['command']})")
         if not check["passed"]:
             out += [f"      {line}" for line in check["tail"][-8:]]
+    for item in proof.get("not_run") or []:
+        out.append(f"  not run: {item['command']} ({item['kind']}) - {item['reason']}")
     ui = proof.get("ui") or {}
     if ui:
         themes = "/".join(ui.get("themes") or [])
@@ -334,9 +388,11 @@ def main(argv: list[str] | None = None) -> int:
 
     root = project_root(Path.cwd())
     if args.command == "checks":
-        found = detect(root)
-        print("\n".join(f"{c['kind']}: {c['name']}  ({shlex.join(c['argv'])})" for c in found)
-              or "No checks found for this project.")
+        not_run: list[dict] = []
+        found = detect(root, not_run)
+        lines = [f"{c['kind']}: {c['name']}  ({shlex.join(c['argv'])})" for c in found]
+        lines += [f"not run: {n['command']} ({n['kind']}) - {n['reason']}" for n in not_run]
+        print("\n".join(lines) or "No checks found for this project.")
         return 0
     if args.command == "show":
         try:

@@ -10,8 +10,11 @@ The helper is named in the session note ("itqan proof (for /itqan:proof): python
 .../itqan_proof.py"); below it is written `itqan_proof.py`. Run it from the project directory.
 
 1. **See what will run.** `itqan_proof.py checks` lists the checks itqan found in the project's
-   files (tests, lint, build). It never runs a command you pass in; if a check is missing, say
-   so instead of running it yourself and claiming it.
+   files (tests, lint, build: pytest, ruff, mypy, pre-commit, tox environments, package scripts).
+   It never runs a command you pass in; if a check is missing, say so instead of running it
+   yourself and claiming it. Lines starting `not run:` are checks the project defines that the
+   proof cannot run (a tool not installed): a test or lint check not run keeps the proof from
+   passing, so tell the user what to install.
 
 2. **Gather what only you know.**
    - The review verdict: the result of the latest `itqan:review` on this change (`approve` when no

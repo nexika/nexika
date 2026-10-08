@@ -317,6 +317,103 @@ def test_proof_checks_lists_the_root_suite_and_its_command(proof, tmp_path, monk
     assert "npm" not in out and "node --test" not in out
 
 
+# ---------------------------------------------------------------- a project's own Python checks (psf/black)
+
+BLACK_TOX = """[tox]
+envlist = {,ci-}py{310,311,312},fuzz,run_self,generate_schema
+
+[testenv]
+setenv =
+    PYTHONPATH = {toxinidir}/src
+skip_install = True
+commands =
+    pip install -e .[d]
+    pytest tests --run-optional no_jupyter \\
+        --numprocesses auto \\
+        --cov {posargs}
+
+[testenv:{,ci-}pypy3]
+commands =
+    pytest tests
+
+[testenv:fuzz]
+commands =
+    coverage run {toxinidir}/scripts/fuzz.py
+
+[testenv:run_self]
+setenv =
+    PYTHONPATH = {toxinidir}/src
+commands =
+    pip install -e .
+    black --check {toxinidir}
+
+[testenv:generate_schema]
+commands =
+    python {toxinidir}/scripts/generate_schema.py --outfile {toxinidir}/src/black/resources/black.schema.json
+"""
+BLACK_PRE_COMMIT = """repos:
+  - repo: https://github.com/pycqa/flake8
+    hooks:
+      - id: flake8
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    hooks:
+      - id: mypy
+"""
+
+
+def black_like(tmp_path):
+    """psf/black's check setup: tox envs, pre-commit (flake8, mypy), [tool.mypy], src layout."""
+    root = tmp_path / "black"
+    (root / "tests").mkdir(parents=True)
+    (root / "src" / "black").mkdir(parents=True)
+    (root / "src" / "black" / "__init__.py").write_text("")
+    (root / "pyproject.toml").write_text('[project]\nname = "black"\n[tool.mypy]\nstrict = true\n')
+    (root / "tox.ini").write_text(BLACK_TOX)
+    (root / ".pre-commit-config.yaml").write_text(BLACK_PRE_COMMIT)
+    return root
+
+
+def test_proof_runs_black_s_own_checks(proof, tmp_path, monkeypatch):
+    # black case P1: only `pytest -q` was found; tox, pre-commit and mypy config were ignored
+    root = black_like(tmp_path)
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+    commands = {" ".join(c["argv"][-3:]): c["kind"] for c in proof.detect(root)}
+    assert commands.get("pre-commit run --all-files") == "lint"
+    assert commands.get("tox -e run_self") == "lint"
+    assert not any("mypy" in c for c in commands)  # pre-commit already runs mypy
+    assert not any("generate_schema" in c or "fuzz" in c for c in commands)
+
+
+def test_proof_lists_checks_found_but_not_run(proof, tmp_path, monkeypatch):
+    root = black_like(tmp_path)
+    monkeypatch.setattr(proof.shutil, "which", lambda name: None if name == "pre-commit" else f"/x/{name}")
+    not_run: list = []
+    proof.detect(root, not_run)
+    reasons = {n["command"]: n["reason"] for n in not_run}
+    assert "pre-commit is not installed" in reasons["pre-commit run --all-files"]
+    assert "tox -e generate_schema" in reasons and "tox -e fuzz" in reasons
+
+
+def test_a_proof_with_lint_skipped_does_not_pass(proof, tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("ITQAN_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("NEXIKA_STATUS_HOME", str(tmp_path / "status"))
+    root = tmp_path / "py"
+    (root / "tests").mkdir(parents=True)
+    (root / "pyproject.toml").write_text("[project]\nname='x'\n")
+    (root / ".pre-commit-config.yaml").write_text(BLACK_PRE_COMMIT)
+    real_which = proof.shutil.which
+    monkeypatch.setattr(proof.shutil, "which",
+                        lambda name: None if name == "pre-commit" else real_which(name))
+    monkeypatch.setattr(proof, "_python_tool", lambda root, tool: ["true"] if tool == "pytest" else [tool])
+    monkeypatch.chdir(root)
+    assert proof.main(["run"]) == 1
+    saved = json.loads(next((tmp_path / "home").glob("proofs/*/latest.json")).read_text())
+    assert [(c["kind"], c["passed"]) for c in saved["checks"]] == [("tests", True)]
+    assert saved["summary"]["checks_passed"] is False
+    assert saved["not_run"][0]["command"] == "pre-commit run --all-files"
+    assert "not run: pre-commit run --all-files" in capsys.readouterr().out
+
+
 def test_stacks_are_detected_from_the_repo_root(tmp_path, repo):
     (repo / "pyproject.toml").write_text("[project]\nname='x'\n")
     (repo / "web").mkdir()
