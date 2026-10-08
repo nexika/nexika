@@ -802,7 +802,8 @@ def test_history_skips_the_release_pr_of_the_tag_and_marks_bot_and_ci_prs(tmp_pa
     _git(black, "tag", "-a", "26.5.1", "-m", "x")
     tagged = git_out(black, "rev-parse", "26.5.1^{commit}").strip()
     tag_time = git_out(black, "log", "-1", "--format=%cI", "26.5.1").strip()
-    later = (datetime.datetime.fromisoformat(tag_time) + datetime.timedelta(seconds=5)).isoformat()
+    tagged_at = datetime.datetime.fromisoformat(tag_time.replace("Z", "+00:00"))   # Python 3.10: no "Z"
+    later = (tagged_at + datetime.timedelta(seconds=5)).isoformat()
     prs = [
         {"number": 5140, "title": "Prepare release 26.5.1", "mergedAt": later, "mergeCommit": {"oid": tagged},
          "author": {"login": "cobaltt7", "is_bot": False}, "files": [{"path": "CHANGES.md"}]},
