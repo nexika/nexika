@@ -399,6 +399,28 @@ def test_generic_success_and_plain_error_lines_are_not_cargo():
     assert compress.summarize("all good\n", 0)[0] == "ok"
 
 
+def test_pytest_collection_error_shows_the_real_error_not_a_pytest_frame():
+    # #170: trimmed from psf/black with a syntax error planted in src/black/nodes.py
+    _, details, _ = summarize("""\
+        _____________________ ERROR collecting tests/test_black.py _____________________
+        ../venv/site-packages/_pytest/python.py:508: in importtestmodule
+            mod = import_path(
+        tests/test_black.py:36: in <module>
+            import black
+        E     File "/work/src/black/nodes.py", line 574
+        E       def is_docstring(:node: NL) -> bool:
+        E                        ^
+        E   SyntaxError: invalid syntax
+        =========================== short test summary info ============================
+        ERROR tests/test_black.py - ../venv/site-packages/_pytest/python.py:508: in importtestmodule
+            mod = import_path(
+        ==================== 9 passed, 1 error in 4.79s ====================
+    """)
+    assert "ERROR tests/test_black.py - SyntaxError: invalid syntax" in details
+    assert "_pytest/python.py" not in details
+    assert 'nodes.py", line 574' in details
+
+
 def test_ansi_codes_are_removed():
     assert compress.clean("\x1b[31mred\x1b[0m\r\n") == "red\n"
 

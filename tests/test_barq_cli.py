@@ -141,6 +141,14 @@ def test_glob_tree_map(project, barq_run):
     assert "src/app.py\n  L4 class Cart\n  L5   def total(self)" in out
 
 
+def test_map_names_the_files_without_symbols(project, barq_run):
+    # #170: "25 of 25 source files" listed 21; const.py and __main__.py were left out silently
+    (project / "src" / "const.py").write_text("DEFAULT_LINE_LENGTH = 88\n")
+    _, out = barq_run("map:src")
+    assert "map src: 3 of 3 source files" in out
+    assert "no symbols: src/const.py" in out
+
+
 # ---------------------------------------------------------------- info / run / custom ops
 
 
