@@ -1,1 +1,0 @@
-When a change touches the UI and lawha is installed, /itqan:ship checks the affected pages on every screen with /lawha:check --fix, and the proof shows lawha's check of that commit as "pages on every screen"; a failing one fails the proof.

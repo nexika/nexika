@@ -1,7 +1,7 @@
 {
   "name": "haris",
   "description": "Nexika haris: guards your machine and your accounts from harmful agent actions. Every tool call is read by a real shell parser (wrappers, pipes, substitutions and heredocs included) and judged by its action and target: safe reads and project runs are approved, risky actions are asked about, dangerous ones are refused with a plain reason. Secrets, persistence spots and haris itself are protected, data leaving the machine is checked for secrets, prompt injection in tool output is flagged, and approvals count only when you type them.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Loai Elattar"
   },

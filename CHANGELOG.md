@@ -3,6 +3,24 @@
 Nexika is released as a whole (tag `nexika-vX.Y.Z`) and each plugin also has its own version, tag
 (`<plugin>-vX.Y.Z`) and CHANGELOG in `plugins/<plugin>/CHANGELOG.md`.
 
+## [0.2.0] - 2026-10-08
+
+### Released
+| Project | Version |
+|---|---|
+| [amin](plugins/amin/CHANGELOG.md) | 0.2.0 |
+| [barq](plugins/barq/CHANGELOG.md) | 0.2.0 |
+| [bayan](plugins/bayan/CHANGELOG.md) | 0.2.0 |
+| [hafiz](plugins/hafiz/CHANGELOG.md) | 0.2.0 |
+| [haris](plugins/haris/CHANGELOG.md) | 0.2.0 |
+| [itqan](plugins/itqan/CHANGELOG.md) | 0.3.0 |
+| [lawha](plugins/lawha/CHANGELOG.md) | 0.1.0 |
+| [manar](plugins/manar/CHANGELOG.md) | 0.2.0 |
+| [mizan](plugins/mizan/CHANGELOG.md) | 0.2.0 |
+| [prof](plugins/prof/CHANGELOG.md) | 0.2.0 |
+| [siyaq](plugins/siyaq/CHANGELOG.md) | 0.2.0 |
+| [tabib](plugins/tabib/CHANGELOG.md) | 0.2.0 |
+
 ## [0.1.0] - 2026-10-06
 
 The first release of Nexika: 11 plugins for Claude Code that work alone and better together.
