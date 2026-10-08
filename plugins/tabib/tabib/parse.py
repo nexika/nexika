@@ -4,7 +4,7 @@ The log is untrusted text (anyone can open a pull request): it is only matched a
 patterns here, never run or followed. Parsers cover pytest, jest and vitest, Playwright, go test,
 dotnet test, cargo test, JUnit XML printed in the log, tsc, mypy, ruff and eslint, plus generic error
 lines and crashes (a segmentation fault); signals cover timeouts, running out of memory, crashes, the
-network, rate limits, the runner, credentials and dependency resolution.
+network, rate limits, the runner, credentials, a CI setup that cannot work and dependency resolution.
 """
 from __future__ import annotations
 
@@ -35,6 +35,11 @@ SIGNALS = [
                           r"no space left on device|hosted runner encountered an error")),
     ("auth", re.compile(r"(?i)bad credentials|401 Unauthorized|403 Forbidden|input required and not supplied|"
                         r"permission denied \(publickey\)|resource not accessible by integration")),
+    # A workflow that cannot work as written: a re-run fails the same way (#127).
+    ("setup", re.compile(r"(?i)\bis externally managed\b|\berror: externally-managed-environment|"
+                         r"\bFailed to spawn: `|\bline \d+: [\w.-]+: command not found|"
+                         r"^##\[error\]\"[\w-]+\" (?:is required|is not allowed|must be|length must be)\b|"
+                         r"Unable to resolve action `|Can't find 'action\.ya?ml'|Invalid workflow file")),
     ("segfault", re.compile(r"(?i)segmentation (?:fault|violation)|\bSIGSEGV\b|exit code 139\b|"
                             r"Windows fatal exception: access violation")),
     # GitHub prints this after a timeout, a shutdown and a cancel alike: the weakest sign.

@@ -605,6 +605,48 @@ def test_a_conftest_error_is_no_longer_unknown(ci, monkeypatch):
     assert record["kind"] == "code" and record["failures"][0]["file"] == "tests/conftest.py"
 
 
+# A workflow that cannot work as written (#127): a re-run fails the same way.
+SETUP_LOGS = {
+    # flypythoncom/python run 34004132950: `uv pip install --system` on the runner's own Python.
+    "externally managed": ("validate (3.11)", [
+        "Using Python 3.12.3 environment at: /usr",
+        "error: The interpreter at /usr is externally managed, and indicates the following:",
+        "hint: Virtual environments were not considered due to the `--system` flag",
+        "##[error]Process completed with exit code 2."]),
+    # flypythoncom/python run 34665683363: `uv run ruff` with ruff not installed.
+    "not installed": ("validate (3.11)", [
+        "Installed 6 packages in 5ms",
+        "error: Failed to spawn: `ruff`",
+        "  Caused by: No such file or directory (os error 2)",
+        "##[error]Process completed with exit code 2."]),
+    # pallets/flask run 30502496738: an action rejecting its input.
+    "action input": ("lock", [
+        "##[group]Run dessant/lock-threads@7266a7ce5c1df01b1c6db85bf8cd86c737dadbe7",
+        '##[error]"github-token" length must be less than or equal to 100 characters long']),
+}
+
+
+@pytest.mark.parametrize("case", sorted(SETUP_LOGS))
+def test_a_broken_ci_setup_is_its_own_kind(ci, monkeypatch, case):
+    job, lines = SETUP_LOGS[case]
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log(job, lines))
+    record = diagnosis.triage(ci)
+    assert record["kind"] == "setup" and record["rerun"] == ""
+    assert any(lines[1].strip()[:30] in e for e in record["evidence"])
+    from tabib import cli
+    text = cli.report(record, "en")
+    assert "the CI setup is broken" in text and "fix the workflow" in text and "gh run rerun" not in text
+
+
+def test_a_broken_setup_is_not_run_locally_and_mizan_names_it(ci, monkeypatch):
+    job, lines = SETUP_LOGS["not installed"]
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log(job, lines))
+    record = diagnosis.diagnose(ci)
+    assert record["kind"] == "setup" and record["reproduction"]["status"] == "skipped"
+    from mizan import render
+    assert render.tabib_label({"kind": "setup", "detail": {}}, "en") == "CI setup"
+
+
 def test_cli_show_and_errors(ci, env):
     diagnosis.triage(ci)
     done = subprocess.run([sys.executable, str(BIN), "show"], cwd=ci["repo"], capture_output=True, text=True,

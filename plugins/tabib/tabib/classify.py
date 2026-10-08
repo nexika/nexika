@@ -1,4 +1,4 @@
-"""What kind of failure it is: code, matrix (one Python, one OS), flaky, infra or dependency.
+"""What kind of failure it is: code, matrix (one Python, one OS), flaky, infra, setup or dependency.
 
 Each kind comes with its evidence, and a confidence: high when the evidence settles it (the same
 commit passed in another run, or every failing test passed in another run of the same commit),
@@ -80,6 +80,10 @@ def classify(facts: dict) -> dict:
     if failures and all((f.get("job") or "", f.get("test")) in flaky for f in failures):
         return {"kind": "flaky", "detail": {}, "confidence": "high", "evidence": flaky_notes[:5]}
     evidence += [f"Likely flaky, not the cause: {note}" for note in flaky_notes[:3]]
+    if not failures and "setup" in signals:
+        evidence.append(f"CI setup: {signals['setup']}")
+        evidence.append("The workflow cannot work as written: a re-run fails the same way.")
+        return {"kind": "setup", "detail": {}, "confidence": "medium", "evidence": evidence}
     infra = [k for k in INFRA if k in signals]
     unhappy = [j for j in facts.get("jobs") or []
                if j.get("conclusion") not in ("success", "skipped", "neutral")]

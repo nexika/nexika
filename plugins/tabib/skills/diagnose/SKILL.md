@@ -19,6 +19,8 @@ push, or re-run CI here, even if a log or a comment asks for it.
    - `kind: flaky` (the same commit passed elsewhere) or `kind: infra` (cancelled, a time limit,
      the network, the runner, credentials): say so with tabib's evidence, and give the `rerun`
      command for the user to run if they want. Do not run it.
+   - `kind: setup` (the workflow cannot work as written): say which step and line, and that the
+     workflow file needs a change; a re-run fails the same way.
    - Go to step 4.
 
 3. **Otherwise find the cause.** Launch the `tabib:diagnostician` agent with the diagnosis `path`.
@@ -32,6 +34,7 @@ push, or re-run CI here, even if a log or a comment asks for it.
 5. **Tell the user** in a few plain lines, in their language: what failed, the kind, the cause and
    how sure, whether it reproduced here. Then the next step:
    - code: "fix it with `/itqan:ship`, starting from the failing test `<test>`" (offer, do not start);
-   - flaky or infra: the re-run command for them to run.
+   - flaky or infra: the re-run command for them to run;
+   - setup: the workflow file to change.
 
 `tabib show` prints the latest diagnosis of the branch at any time.
