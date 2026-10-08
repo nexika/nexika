@@ -689,7 +689,61 @@ SETUP_LOGS = {
     "action input": ("lock", [
         "##[group]Run dessant/lock-threads@7266a7ce5c1df01b1c6db85bf8cd86c737dadbe7",
         '##[error]"github-token" length must be less than or equal to 100 characters long']),
+    # psf/black run 29876093025: setup-python asked for a Python the runner does not have (#176).
+    "python version": ("lint", [
+        "Version 3.15 was not found in the local cache",
+        "##[error]The version '3.15' with architecture 'x64' was not found for Ubuntu 24.04."]),
+    # psf/black run 30864144278: PIP_UPLOADED_PRIOR_TO=P2D from the workflow's env, rejected by pip.
+    "invalid option": ("build (linux/amd64)", [
+        '#12 8.143 /opt/venv/lib/python3.14/site-packages/vcs_versioning/_backends/_git.py:431: UserWarning',
+        "#12 9.158 --uploaded-prior-to error: invalid value: 'P2D': Invalid isoformat",
+        "##[error]buildx failed with: ERROR: failed to build: failed to solve: process \"/bin/sh -c cd /src\""]),
+    # psf/black run 29876105013: a workflow_run job finds no artifact from the run it follows.
+    "no artifact": ("comment", [
+        "  digest-mismatch: error",
+        "##[error]Artifact directory does not exist: /home/runner/work/_temp/diff-shades-artifacts",
+        "##[error]Process completed with exit code 1."]),
 }
+
+# A CI helper script that crashes (#176): the workflow is broken, not the project's code.
+HELPER_LOGS = {
+    # psf/black run 30875204579: a workflow_run event with no pull request.
+    "crash": ("comment", [
+        "Traceback (most recent call last):",
+        '  File "/home/runner/work/black/black/scripts/diff_shades_gha_helper.py", line 231, in <module>',
+        "    main()",
+        '  File "/opt/hostedtoolcache/Python/3.15.0-beta.4/x64/lib/python3.15/site-packages/click/core.py", '
+        "line 1569, in __call__",
+        "    return self.main(*args, **kwargs)",
+        '  File "/home/runner/work/black/black/scripts/diff_shades_gha_helper.py", line 98, in get_pr_branches',
+        "    pr = int(pr_ref[10:-6])",
+        "ValueError: invalid literal for int() with base 10: ''",
+        "##[error]Process completed with exit code 1."], "scripts/diff_shades_gha_helper.py:98: ValueError"),
+    # psf/black run 30243111728: click is declared, but the install step was skipped.
+    "import": ("configure", [
+        "Traceback (most recent call last):",
+        '  File "/home/runner/work/black/black/scripts/diff_shades_gha_helper.py", line 28, in <module>',
+        "    import click",
+        "ModuleNotFoundError: No module named 'click'",
+        "##[error]Process completed with exit code 1."], "scripts/diff_shades_gha_helper.py:28: ModuleNotFound"),
+}
+
+
+@pytest.mark.parametrize("case", sorted(HELPER_LOGS))
+def test_a_crashing_ci_helper_script_is_setup(ci, monkeypatch, case):
+    job, lines, where = HELPER_LOGS[case]
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log(job, lines))
+    record = diagnosis.triage(ci)
+    assert record["kind"] == "setup", record["evidence"]
+    assert any(where in e for e in record["evidence"])
+
+
+def test_a_traceback_in_the_project_code_is_not_setup():
+    lines = ["Traceback (most recent call last):",
+             '  File "/home/runner/work/app/app/src/app/main.py", line 5, in <module>',
+             "ValueError: bad", "##[error]Process completed with exit code 1."]
+    found = parse.read_log(gh_log("build", lines))["build"]
+    assert not [s for s in found["signals"] if s["kind"] == "setup"]
 
 
 @pytest.mark.parametrize("case", sorted(SETUP_LOGS))

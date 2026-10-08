@@ -39,7 +39,10 @@ SIGNALS = [
     ("setup", re.compile(r"(?i)\bis externally managed\b|\berror: externally-managed-environment|"
                          r"\bFailed to spawn: `|\bline \d+: [\w.-]+: command not found|"
                          r"^##\[error\]\"[\w-]+\" (?:is required|is not allowed|must be|length must be)\b|"
-                         r"Unable to resolve action `|Can't find 'action\.ya?ml'|Invalid workflow file")),
+                         r"Unable to resolve action `|Can't find 'action\.ya?ml'|Invalid workflow file|"
+                         r"The version '[^']+' with architecture '[^']+' was not found|"   # setup-python
+                         r"(?:^|\s)--[a-z][\w-]+ error: invalid value: '|"   # a tool option from the env
+                         r"Artifact directory does not exist|Artifact not found for name")),
     ("segfault", re.compile(r"(?i)segmentation (?:fault|violation)|\bSIGSEGV\b|exit code 139\b|"
                             r"Windows fatal exception: access violation")),
     # GitHub prints this after a timeout, a shutdown and a cancel alike: the weakest sign.
@@ -420,10 +423,31 @@ def frames(lines: list[str], limit: int = 30) -> list[tuple[str, int]]:
     return found
 
 
+PY_FRAME = re.compile(r'^\s*File "([^"<>]+)", line (\d+)')
+PY_RAISED = re.compile(r"^([A-Za-z_][\w.]*(?:Error|Exception)): (.*)$")
+CI_HELPER = re.compile(r"(?:^|/)(?:\.github|scripts)/(\S+)$")
+RUNNER_CHECKOUT = re.compile(r"^(?:.*?/work/[^/]+/[^/]+/|[A-Za-z]:/a/[^/]+/[^/]+/)")
+
+
+def helper_crash(lines: list[str]) -> str:
+    """A CI helper script (scripts/, .github/) that crashed: 'scripts/x.py:98: ValueError: ...' when the
+    traceback's innermost frame of the checkout is in one (#176), else ''."""
+    last = ""
+    for line in lines:
+        if (m := PY_FRAME.match(line)) and not FOREIGN.search(m.group(1)):
+            path = RUNNER_CHECKOUT.sub("", m.group(1).replace("\\", "/"))
+            last = f"{path}:{m.group(2)}" if CI_HELPER.search(path) else ""
+        elif (m := PY_RAISED.match(line.strip())) and last:
+            return _short(f"{last}: {m.group(1)}: {m.group(2)}", 200)
+    return ""
+
+
 def signals(lines: list[str]) -> list[dict]:
     found = []
     for kind, pattern in SIGNALS:
         hit = next((line for line in lines if pattern.search(line)), None)
+        if hit is None and kind == "setup":
+            hit = helper_crash(lines) or None
         if hit is not None:
             found.append({"kind": kind, "line": _short(hit, 200)})
     return found
