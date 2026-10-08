@@ -86,8 +86,10 @@ A plugin with hundreds of skills of which you used one is a context cost worth q
 **Asks you first:**
 - `git reset --hard` with uncommitted changes, `git clean -f`, `git checkout .` with changes,
   `git branch -D`, `--no-verify` or `SKIP=<hook> git commit`, `git add` of a secret file
-- `curl … | sh`, `chmod 777`, `sudo`, SQL `DROP`/`TRUNCATE`, database resets, `terraform destroy`,
-  `kubectl delete`, publishing a package
+- `curl … | sh` (or `| python -`), `chmod 777`, `sudo`, SQL `DROP`/`TRUNCATE` (not inside a
+  `grep` pattern), database resets, `terraform destroy`, `kubectl delete`, publishing a package
+  (npm, pnpm, yarn, NuGet, twine, cargo, hatch, uv, poetry, flit)
+- commands inside `bash -c "..."` are checked like any other
 - editing `.env`, `.pypirc`, `.netrc` or key files, or lock files; writing content that contains a
   secret token (the same token shapes Nexika redacts everywhere, PyPI tokens included)
 
