@@ -163,6 +163,7 @@ pass	git commit -am "wip"
 pass	git commit --amend --no-edit
 pass	git checkout -b feat/new
 pass	git switch main
+pass	cd src && git switch main
 pass	git push origin feat/x
 pass	git push -u origin HEAD
 pass	git pull
@@ -480,6 +481,10 @@ ask	git reset --hard
 ask	git clean -fdx
 ask	git checkout -- .
 ask	git restore .
+ask	cd ~/.vim/bundle/black && git fetch origin stable && git checkout stable
+ask	cd ~/work/other && git switch main
+ask	git -C ~/work/other reset HEAD~1
+allow	cd ~/work/other && git clean -n
 ask	git branch -D feat/old
 ask	git stash clear
 ask	git filter-branch --tree-filter x HEAD

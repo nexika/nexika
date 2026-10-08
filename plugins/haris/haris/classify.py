@@ -2171,7 +2171,13 @@ def h_git(argv, ctx, stdin, depth: int = 0):
             return h_git([arg("git"), *[arg(w) for w in alias.split()], *rest], gctx, stdin, depth + 1)
     handler = GIT_SUBS.get(sub)
     if handler:
-        return handler(sub, rest, gctx, stdin) or Stage()
+        before = len(gctx.findings)
+        out = handler(sub, rest, gctx, stdin) or Stage()
+        # checkout, reset ... after `cd`/`git -C` elsewhere rewrite files outside the project (#141)
+        if sub in GIT_WORKTREE and not gctx.in_project() and \
+                any(f.cls != "read" for f in gctx.findings[before:]):
+            git_elsewhere(sub, ctx, gctx)
+        return out
     if sub in GIT_READ:
         outputs = [arg(r.split("=", 1)[1]) for r in rest if r.startswith("--output=")]
         write_paths(outputs, gctx)
@@ -2192,13 +2198,21 @@ def h_git(argv, ctx, stdin, depth: int = 0):
             gctx.add("egress", f"Talks to a remote repository (git {sub}).")
         if gctx.in_project() or sub == "fetch":  # fetch only adds what the remote has: wherever it runs
             gctx.add("write", f"Changes the repository (git {sub}).")
-        elif ctx.where.place(gctx.cwd) == "temp":
-            gctx.add("write-temp", f"Changes a repository in a temporary folder (git {sub}).")
         else:
-            gctx.add("write-outside", f"Changes a repository outside the project (git {sub}).")
+            git_elsewhere(sub, ctx, gctx)
         return Stage()
     gctx.add("exec", f"Runs git {sub}.")
     return Stage()
+
+
+GIT_WORKTREE = {"checkout", "switch", "restore", "reset", "clean"}
+
+
+def git_elsewhere(sub: str, ctx: Ctx, gctx: Ctx) -> None:
+    if ctx.where.place(gctx.cwd) == "temp":
+        gctx.add("write-temp", f"Changes a repository in a temporary folder (git {sub}).")
+    else:
+        gctx.add("write-outside", f"Changes a repository outside the project (git {sub}).")
 
 
 def protected_branches(ctx: Ctx) -> list[str]:
