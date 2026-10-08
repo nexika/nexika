@@ -108,6 +108,7 @@ allow	pytest
 allow	pytest -q tests/test_app.py
 allow	python -m pytest -x
 allow	python3 -m unittest discover
+allow	python -m twine check dist/*
 allow	npm test
 allow	npm run build
 allow	npm run lint
@@ -163,6 +164,7 @@ pass	git commit -am "wip"
 pass	git commit --amend --no-edit
 pass	git checkout -b feat/new
 pass	git switch main
+pass	cd src && git switch main
 pass	git push origin feat/x
 pass	git push -u origin HEAD
 pass	git pull
@@ -236,6 +238,8 @@ pass	git reset --soft HEAD~1
 pass	git tag v-local-test-only
 pass	firebase emulators:start
 pass	env
+pass	env | grep PATH
+pass	printenv | sort
 
 # ---------------------------------------------------------------- dangerous: deleting far too much
 deny	rm -rf ~
@@ -449,6 +453,8 @@ ask	pnpm publish --access public
 ask	yarn npm publish
 ask	cargo publish
 ask	twine upload dist/*
+ask	python -m twine upload --repository pypi dist/*
+ask	python3 -m hatch publish
 ask	uv publish
 ask	poetry publish --build
 ask	gem push x.gem
@@ -480,6 +486,10 @@ ask	git reset --hard
 ask	git clean -fdx
 ask	git checkout -- .
 ask	git restore .
+ask	cd ~/.vim/bundle/black && git fetch origin stable && git checkout stable
+ask	cd ~/work/other && git switch main
+ask	git -C ~/work/other reset HEAD~1
+allow	cd ~/work/other && git clean -n
 ask	git branch -D feat/old
 ask	git stash clear
 ask	git filter-branch --tree-filter x HEAD
@@ -518,6 +528,9 @@ ask	cp ~/.ssh/id_rsa ./key
 ask	tar czf keys.tgz ~/.ssh
 ask	echo $GITHUB_TOKEN
 ask	printenv AWS_SECRET_ACCESS_KEY
+ask	env | grep -i token
+ask	printenv | grep -E 'SECRET|KEY'
+ask	set | grep -i password
 ask	gh auth token
 ask	git credential fill
 ask	security find-generic-password -s x -w

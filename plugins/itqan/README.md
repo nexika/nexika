@@ -78,22 +78,24 @@ A plugin with hundreds of skills of which you used one is a context cost worth q
 
 **Refused** (with the reason and the safe alternative):
 - `rm -r` of `/`, `~`, the project root, or anything outside the project
-- force-push to a protected branch (`main`, `master`, `develop`, `production`, `release/*`)
+- force-push to a protected branch (`main`, `master`, `develop`, `production`, `stable`,
+  `release/*`)
 - committing a `.env` / key file, or staged changes that contain a secret token
 - editing files inside `.git/`
 
 **Asks you first:**
 - `git reset --hard` with uncommitted changes, `git clean -f`, `git checkout .` with changes,
-  `git branch -D`, `--no-verify`, `git add` of a secret file
+  `git branch -D`, `--no-verify` or `SKIP=<hook> git commit`, `git add` of a secret file
 - `curl … | sh` (or `| python -`), `chmod 777`, `sudo`, SQL `DROP`/`TRUNCATE` (not inside a
   `grep` pattern), database resets, `terraform destroy`, `kubectl delete`, publishing a package
   (npm, pnpm, yarn, NuGet, twine, cargo, hatch, uv, poetry, flit)
 - commands inside `bash -c "..."` are checked like any other
-- editing `.env` / key files or lock files; writing content that contains a secret token
+- editing `.env`, `.pypirc`, `.netrc` or key files, or lock files; writing content that contains a
+  secret token (the same token shapes Nexika redacts everywhere, PyPI tokens included)
 
 Everything else passes silently. When [haris](../haris/README.md) is installed and on, haris
 covers the safety rules in the sessions it guards, and this guard keeps only its quality rules:
-editing secret files and lock files, writing a secret, and skipping hooks with `--no-verify`.
+editing secret files and lock files, writing a secret, and skipping hooks with `--no-verify` or `SKIP=`.
 If haris is switched off, set to watch, or disabled with `/plugin`, the full guard is back.
 
 Configure per project in `.itqan.json`:

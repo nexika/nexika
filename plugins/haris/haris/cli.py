@@ -160,8 +160,9 @@ def cmd_check(args) -> int:
         cfg["profile"] = args.profile
     decision = policy.decide(event, cfg)
     if args.json:
+        findings = [{"cls": f.cls, "reason": f.reason, "target": f.target} for f in decision.findings]
         print(json.dumps({"decision": decision.verdict, "class": decision.cls, "reason": decision.reason,
-                          "findings": [f.__dict__ for f in decision.findings]}, ensure_ascii=False, indent=1))
+                          "findings": findings}, ensure_ascii=False, indent=1))
         return 0
     if decision.cls:
         print(f"{decision.verdict} ({decision.cls}): {decision.reason}")

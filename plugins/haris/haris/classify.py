@@ -73,6 +73,7 @@ class Stage:
     secret: bool = False            # its output holds a secret that was read
     paths_root: str | None = None   # it lists paths under this folder (find, ls, git ls-files)
     filtered: bool = True           # those paths are a selection, not everything
+    environ: bool = False           # it prints the environment (env, printenv, set, export)
 
 
 # ---------------------------------------------------------------- walking the parsed command
@@ -596,6 +597,8 @@ def reader(program: str, argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stag
     with_arg = {"-" + c for c in short} | READER_LONG
     if program == "jq":
         argv = jq_args(argv)
+    if program in ("head", "tail"):  # `head -50 x`: the old form of -n 50, not a file (#137)
+        argv = [a for a in argv if not re.fullmatch(r"-\d+", a)]
     opts, pos = options(argv[1:], with_arg)
     write_paths(values(opts, *WRITING_OPTIONS.get(program, ())), ctx)
     if program in ("uniq", "xxd") and len(pos) > 1:
@@ -608,6 +611,11 @@ def reader(program: str, argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stag
         if not any(f.cls == "egress-secret" for f in ctx.findings):
             ctx.add("egress", f"Looks up a network address ({program}).")
         return Stage()
+    if pattern_first and stdin is not None and stdin.environ:  # `env | grep -i token` (#139)
+        patterns = values(opts, "-e", "--regexp") or pos[:1]
+        if any(SECRET_VAR.search(p) for p in patterns):
+            ctx.add("secret-read", f"Picks the variables that look like secrets out of the environment "
+                                   f"({program}) and prints them into the conversation.")
     if pattern_first and pos and not has(opts, "-e", "--regexp", "-f", "--file"):
         pos = pos[1:]
     if program not in ("fd", "fdfind", "file"):
@@ -620,7 +628,7 @@ def reader(program: str, argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stag
                                            f"conversation.")
             if not pos:
                 ctx.add("exec", "Prints the environment (it can hold secrets).")
-                return Stage()
+                return Stage(environ=True)
         ctx.add("read", f"Only shows information ({program}).")
         if program in PRINTERS and not any(UNKNOWN in a for a in argv[1:]):
             text = " ".join(a for a in argv[1:] if not (program == "echo" and a in ("-n", "-e", "-E")))
@@ -876,7 +884,7 @@ def h_export(argv, ctx, stdin):
         return Stage()
     if not names and "f" not in flags and "F" not in flags:
         ctx.add("exec", "Prints the environment (it can hold secrets).")
-        return Stage()
+        return Stage(environ=True)
     for a in names:
         name, eq, value = a.partition("=")
         name = name.rstrip("+")
@@ -899,7 +907,7 @@ def h_set(argv, ctx, stdin):
         return Stage()
     if len(argv) == 1:
         ctx.add("exec", "Prints the environment (it can hold secrets).")
-        return Stage()
+        return Stage(environ=True)
     _, pos = options(argv[1:], {"-o", "+o"})
     if "--" in argv[1:] or pos:
         ctx.args = [ctx.args[0] if ctx.args else "", *(str(a) for a in pos)]
@@ -1042,7 +1050,7 @@ def h_env(argv, ctx, stdin):
                             "env -S")
     if not pos:
         ctx.add("exec", "Prints the environment (it can hold secrets).")
-        return Stage()
+        return Stage(environ=True)
     return run(pos, ctx, stdin)
 
 
@@ -1712,6 +1720,8 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
 PYTHON_MODULES_RUN = {"pytest", "unittest", "doctest", "mypy", "ruff", "black", "isort", "flake8", "pylint",
                       "coverage", "tox", "nox", "pyright", "compileall", "py_compile", "build", "bandit",
                       "pyflakes", "pycodestyle"}
+# Modules that are tools haris already judges by name: `python -m X ...` gets X's own rule.
+PYTHON_MODULE_TOOLS = {"twine", "hatch", "flit", "poetry", "pdm", "pipenv", "pipx", "uv"}
 
 
 def h_python(argv, ctx, stdin):
@@ -1733,6 +1743,8 @@ def h_python(argv, ctx, stdin):
             return project_run(ctx, f"Runs python -m {name} in the project.")
         if name == "pip":
             return h_pip([arg("pip"), *pos], ctx, stdin)
+        if name in PYTHON_MODULE_TOOLS:  # `python -m twine upload` is `twine upload` (#138)
+            return HANDLERS[name]([arg(name), *pos], ctx, stdin)
         if name in ("json.tool", "tabnanny", "this", "site", "platform", "sysconfig", "pydoc", "timeit"):
             ctx.add("read", f"Only shows information (python -m {name}).")
             return Stage()
@@ -2171,7 +2183,13 @@ def h_git(argv, ctx, stdin, depth: int = 0):
             return h_git([arg("git"), *[arg(w) for w in alias.split()], *rest], gctx, stdin, depth + 1)
     handler = GIT_SUBS.get(sub)
     if handler:
-        return handler(sub, rest, gctx, stdin) or Stage()
+        before = len(gctx.findings)
+        out = handler(sub, rest, gctx, stdin) or Stage()
+        # checkout, reset ... after `cd`/`git -C` elsewhere rewrite files outside the project (#141)
+        if sub in GIT_WORKTREE and not gctx.in_project() and \
+                any(f.cls != "read" for f in gctx.findings[before:]):
+            git_elsewhere(sub, ctx, gctx)
+        return out
     if sub in GIT_READ:
         outputs = [arg(r.split("=", 1)[1]) for r in rest if r.startswith("--output=")]
         write_paths(outputs, gctx)
@@ -2192,13 +2210,21 @@ def h_git(argv, ctx, stdin, depth: int = 0):
             gctx.add("egress", f"Talks to a remote repository (git {sub}).")
         if gctx.in_project() or sub == "fetch":  # fetch only adds what the remote has: wherever it runs
             gctx.add("write", f"Changes the repository (git {sub}).")
-        elif ctx.where.place(gctx.cwd) == "temp":
-            gctx.add("write-temp", f"Changes a repository in a temporary folder (git {sub}).")
         else:
-            gctx.add("write-outside", f"Changes a repository outside the project (git {sub}).")
+            git_elsewhere(sub, ctx, gctx)
         return Stage()
     gctx.add("exec", f"Runs git {sub}.")
     return Stage()
+
+
+GIT_WORKTREE = {"checkout", "switch", "restore", "reset", "clean"}
+
+
+def git_elsewhere(sub: str, ctx: Ctx, gctx: Ctx) -> None:
+    if ctx.where.place(gctx.cwd) == "temp":
+        gctx.add("write-temp", f"Changes a repository in a temporary folder (git {sub}).")
+    else:
+        gctx.add("write-outside", f"Changes a repository outside the project (git {sub}).")
 
 
 def protected_branches(ctx: Ctx) -> list[str]:
