@@ -228,12 +228,16 @@ def run_tool(argv: list[str], cwd: str, accept_codes: tuple[int, ...] = (0,)) ->
         done = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=20, env=env, check=False)
     except FileNotFoundError as error:
         raise Off("off_tool", argv[0]) from error
+    except subprocess.TimeoutExpired as error:
+        raise Off("off_timeout", argv[0]) from error
     except (OSError, subprocess.SubprocessError) as error:
         raise Off("off_error", argv[0]) from error
     if done.returncode not in accept_codes and not done.stdout.strip().startswith(("[", "{")):
         lowered = done.stderr.lower()
         if "auth login" in lowered or "not logged" in lowered or "authenticat" in lowered:
             raise Off("off_auth", argv[0])
+        if "rate limit" in lowered:
+            raise Off("off_ratelimit", argv[0])
         raise Off("off_error", argv[0])
     return done.stdout
 
@@ -359,7 +363,7 @@ def cached(info: dict) -> dict:
         ci = {**ci, "stale": True}  # a new commit: the old result stays shown until the new one is in
     factor = IDLE_FACTOR if idle(data, ci) else 1
     due = (not fresh(prs, PR_TTL * factor) or not fresh(ci, ci_ttl(ci) * factor)
-           or bool(ci and ci.get("stale")))
+           or bool(ci and ci.get("stale") and not ci.get("error")))  # gh in trouble: wait the TTL
     return {"prs": prs, "ci": ci, "due": due}
 
 
@@ -368,6 +372,18 @@ def _gist(prs: dict | None, ci: dict | None) -> list:
     prs, ci = prs or {}, ci or {}
     return [prs.get("state"), prs.get("per_user"), prs.get("branch_pr"),
             ci.get("state"), ci.get("run"), ci.get("failed"), ci.get("head")]
+
+
+PASSING = ("off_error", "off_timeout", "off_ratelimit")  # gh may answer next time
+
+
+def keep_known(new: dict, old: dict | None) -> dict:
+    """One gh error does not erase what was known: the last good result stays, marked with the error."""
+    known = bool(old) and old.get("state") not in (None, "off")
+    if new.get("state") == "off" and new.get("why") in PASSING and known:
+        return {**old, "error": new["why"], "tool": new.get("tool") or old.get("tool"),
+                "fetched": new["fetched"]}
+    return {k: v for k, v in new.items() if k != "error"}
 
 
 def refresh(info: dict) -> dict:
@@ -381,9 +397,14 @@ def refresh(info: dict) -> dict:
     branch = info.get("branch", "")
     before = (data.get("ci") or {}).get(branch)
     prs = data.get("prs")
-    if not fresh(prs, PR_TTL) or (prs or {}).get("state") != "ok":
-        prs = {**fetch_prs(info), "fetched": time.time()}
-    ci = {**fetch_ci(info, prs.get("branch_pr")), "fetched": time.time(), "head": info.get("head")}
+    if not fresh(prs, PR_TTL) or (prs or {}).get("state") != "ok" or (prs or {}).get("error"):
+        prs = keep_known({**fetch_prs(info), "fetched": time.time()}, prs)
+    trouble = prs.get("error") or (prs.get("why") if prs.get("state") == "off" else "")
+    if trouble in ("off_timeout", "off_ratelimit"):  # gh just timed out or was refused: don't wait twice
+        found = {"state": "off", "why": trouble, "tool": prs.get("tool") or "gh"}
+    else:
+        found = fetch_ci(info, prs.get("branch_pr"))
+    ci = keep_known({**found, "fetched": time.time(), "head": info.get("head")}, before)
     if before and before.get("tabib") and before.get("run") == ci.get("run"):
         ci["tabib"] = before["tabib"]
     if _gist(prs, ci) != _gist(data.get("prs"), before) or not data.get("changed"):

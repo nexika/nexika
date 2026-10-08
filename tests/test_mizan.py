@@ -417,6 +417,58 @@ def test_missing_tool_is_reported_not_raised(repo, monkeypatch):
     assert forge.fetch_prs(info) == {"state": "off", "why": "off_tool", "tool": "gh"}
 
 
+def _fake_gh_on_path(env, monkeypatch, script):
+    bin_dir = env / "bin"
+    bin_dir.mkdir()
+    (bin_dir / "gh").write_text("#!/bin/sh\n" + script)
+    (bin_dir / "gh").chmod(0o755)
+    monkeypatch.setenv("PATH", f"{bin_dir}:/usr/bin:/bin")
+
+
+def test_a_rate_limit_and_a_timeout_are_named(repo, env, monkeypatch):
+    # gh's own words when GitHub's API limit is reached (#162).
+    _fake_gh_on_path(env, monkeypatch,
+                     'echo "GraphQL: API rate limit exceeded for user ID 123. (RATE_LIMITED)" >&2; exit 1\n')
+    with pytest.raises(forge.Off) as off:
+        forge.run_tool(["gh", "pr", "list"], str(repo))
+    assert off.value.reason == "off_ratelimit"
+
+    def slow(*args, **kwargs):
+        raise subprocess.TimeoutExpired(args[0], 20)
+
+    monkeypatch.setattr(forge.subprocess, "run", slow)
+    with pytest.raises(forge.Off) as off:
+        forge.run_tool(["gh", "pr", "list"], str(repo))
+    assert off.value.reason == "off_timeout"
+
+
+def test_one_gh_error_keeps_the_last_good_result(env, monkeypatch):
+    info = {"repo": str(env / "r"), "branch": "feat/x", "head": "h1", "host": "github", "remote": "x"}
+    answers = {"prs": {"state": "ok", "tool": "gh", "per_user": [["Loai", 1]], "branch_pr": None},
+               "ci": {"state": "failed", "run": 7, "failed": ["lint"]}}
+    monkeypatch.setattr(forge, "fetch_prs", lambda _info: dict(answers["prs"]))
+    asked = []
+    monkeypatch.setattr(forge, "fetch_ci", lambda _info, _pr: asked.append(1) or dict(answers["ci"]))
+    monkeypatch.setattr(forge, "with_triage", lambda _info, ci, _before: ci)
+    now = [1_000_000.0]
+    monkeypatch.setattr(forge.time, "time", lambda: now[0])
+    forge.refresh(info)
+    answers["prs"] = answers["ci"] = {"state": "off", "why": "off_ratelimit", "tool": "gh"}
+    now[0] += forge.PR_TTL + 1
+    forge.refresh(info)
+    found = forge.cached(info)
+    assert found["ci"]["state"] == "failed" and found["ci"]["error"] == "off_ratelimit"
+    assert found["prs"]["state"] == "ok" and found["prs"]["error"] == "off_ratelimit"
+    assert not found["due"], "a rate limit is not asked again at once"
+    assert len(asked) == 1, "after the PR list was refused, CI is not asked too"
+    text = render.plain(render.band({**snap(), "prs": found["prs"], "ci": found["ci"]}, "en"))
+    assert "CI failed: lint" in text and "gh: rate limited" in text
+    assert render._ci(found["ci"], "en")["tone"] == "dim"
+    # With nothing known yet, the band still says why PRs and CI are missing.
+    off = {"state": "off", "why": "off_timeout", "tool": "gh"}
+    assert "gh: timed out" in render.plain(render.band({**snap(), "prs": off, "ci": off}, "en"))
+
+
 def test_cache_marks_a_new_commit_stale(repo):
     info = gitinfo.read(str(repo))
     forge.save_cache(info["repo"], {"prs": {"state": "ok", "per_user": [], "fetched": time.time()},
