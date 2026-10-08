@@ -57,6 +57,40 @@ def test_normal_messages_are_not_flagged(learn, text):
     assert not learn.CORRECTION.search(text)
 
 
+# psf/black test set (#149): corrections the filter missed (L01, L11, L13-L16, L34, L41, L54) ...
+@pytest.mark.parametrize("text", [
+    "use tox -e py, not pytest directly - tox sets PYTHONPATH=src",
+    "please put the changelog entry under 'Preview style', not 'Stable style'",
+    "Use the --preview flag in the test header rather than mode overrides.",
+    "Hmm, this breaks the AST equivalence check, back it out.",
+    "This shouldn't touch the docs at all.",
+    "lose the extra blank line between changelog entries",
+    "What is the impact of this line not being updated?\r\n\r\nAlso nit: please remove the blank line "
+    "between changelog entires.",
+    "It is worth mentioning in the preview style doc.\r\n\r\nPlease also remove the empty line between "
+    "changelog entries.\r\nThanks!",
+    "```suggestion\n- Prevent moving an encoding declaration onto\n  the first two lines (#5487)\n```",
+    "Again: the PR must target main, not stable.",
+    "No, preview features go behind Preview in mode.py, never change the stable style directly",
+    "Always run tox -e run_self before committing", "you never run the formatter",
+    "you should have run the tests first", "Feature names should be 2-4 words.",
+])
+def test_black_corrections_are_flagged(learn, text):
+    assert learn.CORRECTION.search(text)
+
+
+# ... and its false alarms (L28-L31)
+@pytest.mark.parametrize("text", [
+    "No rush, read linegen.py first and tell me how delimiter_split works",
+    "Add a note to the docs saying Black will never change the stable style within a year",
+    "Make sure formatting is always idempotent in the new test",
+    "Check whether blackd should be compiled with mypyc too",
+    "there is no test for the walrus case yet, add one", "Can you add a test for the walrus case?",
+])
+def test_black_requests_are_not_flagged(learn, text):
+    assert not learn.CORRECTION.search(text)
+
+
 # ---------------------------------------------------------------- hooks
 
 

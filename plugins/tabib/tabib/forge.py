@@ -13,10 +13,11 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 from urllib.parse import quote
 
-from . import compare, parse
+from . import classify, compare, parse
 from .parse import clean_text
 
 RUN_FIELDS = ("databaseId,status,conclusion,name,workflowName,headSha,headBranch,event,createdAt,attempt,"
@@ -26,6 +27,7 @@ FAILED = ("failure", "timed_out", "cancelled", "startup_failure")
 LOG_LIMIT = 8 * 1024 * 1024
 PAST_RUNS = 10   # earlier runs (and attempts) of the same commit looked at for flaky tests
 PAST_LOGS = 5    # of which at most this many failed logs are read
+EXPIRED = re.compile(r"(?i)\bHTTP 410\b|\b410 Gone\b|log (?:has )?expired")   # logs last ~90 days
 GITLAB = {"failed": "failure", "success": "success", "canceled": "cancelled", "skipped": "skipped"}
 
 
@@ -218,6 +220,34 @@ def history(info: dict, run: dict) -> dict:
         except Off:
             pass
     return {"same_commit_passed": same, "last_green": green}
+
+
+BASE_RUNS = 5   # failed runs of the base branch looked at when one job failed (#175)
+
+
+def base_failures(info: dict, run: dict) -> list[dict]:
+    """The jobs that failed in the base branch's recent failed runs of the same workflow, [{id, jobs}], read
+    only when exactly one job of a matrix failed: a sign of a flaky job when main fails the same way."""
+    if run.get("provider") != "github" or not classify.one_matrix_job(run.get("jobs") or []):
+        return []
+    try:
+        recent = runs(info, info.get("default") or "main", run.get("workflow", ""))
+    except Off:
+        return []
+    found = []
+    for other in recent:
+        if other["id"] == run["id"] or other.get("workflow") != run.get("workflow") \
+                or other["conclusion"] not in FAILED or other.get("created", "") > run.get("created", ""):
+            continue
+        try:
+            jobs = gh_view(info["repo"], other["id"]).get("jobs") or []
+        except Off:
+            continue
+        found.append({"id": other["id"],
+                      "jobs": [j["name"] for j in jobs if j.get("conclusion") == "failure"]})
+        if len(found) >= BASE_RUNS:
+            break
+    return found
 
 
 def _attempt_url(run: dict, attempt: int) -> str:

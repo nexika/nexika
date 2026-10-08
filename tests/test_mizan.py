@@ -198,6 +198,22 @@ def test_prs_per_user_and_branch_pr():
     assert render._prs(found, "en")["text"] == "PRs Loai(3) Jean(2) bot(1)"
 
 
+def test_names_from_the_black_pr_list():
+    # psf/black's 28 open PRs (#163): bots, a title for a first name, and a fork PR's author.
+    prs = mizan_black.BLACK["prs"]
+    found = forge.parse_gh_prs(json.dumps(prs), "main", "c9b1148b" + "0" * 32)
+    names = dict(found["per_user"])
+    assert names["dependabot"] == 4 and names["pre-commit-ci"] == 1 and names["RB"] == 1
+    assert not any(n.startswith("app/") or n == "Mr." for n in names)
+    assert found["branch_pr"] is None, "fork PR 5222's branch is also called main: not ours"
+    fork = next(p for p in prs if p["number"] == 5497)
+    found = forge.parse_gh_prs(json.dumps(prs), "fix-gitignore-bom", fork["headRefOid"])
+    assert found["branch_pr"]["number"] == 5497 and found["branch_pr"]["author"] == "Jitesh"
+    assert forge.parse_gh_prs(json.dumps(prs), "fix-gitignore-bom", "other")["branch_pr"] is None
+    assert forge.author_name({"login": "x", "name": "Dr Jane Roe"}) == "Jane"
+    assert forge.author_name({"login": "drx", "name": "Dr."}) == "drx"
+
+
 def test_glab_merge_requests():
     mrs = json.dumps([{"iid": 9, "author": {"username": "sara", "name": "Sara Nabil"}, "source_branch": "fix/y",
                        "web_url": "w"}])
@@ -377,6 +393,50 @@ def test_running_ci_shows_how_long_and_about_how_long_left():
     assert render._ci(found, "en")["text"] == "CI running 3m · ~4m left"
     assert "3" in render._ci(found, "ar")["text"]
     assert render._ci({"state": "running", "failed": []}, "en")["text"] == "CI running"
+
+
+def _iso(seconds: float) -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(seconds))
+
+
+def _black_running(now: float) -> list:
+    """black 9e461ccf (fork PR 5496) with test running for 3 minutes and the other workflows green."""
+    runs = [dict(r) for r in mizan_black.BLACK["runs"]["9e461ccf"]]
+    for r in runs:
+        r.update(conclusion="success", startedAt=_iso(now - 600), updatedAt=_iso(now - 500))
+        if r["name"] == "test":
+            r.update(status="in_progress", conclusion="", startedAt=_iso(now - 180), updatedAt=_iso(now))
+    return runs
+
+
+def _finished_tests(now: float, durations) -> list:
+    return [{"databaseId": i, "name": "test", "status": "completed", "conclusion": "success",
+             "headSha": f"old{i}", "startedAt": _iso(now - 9000 - i * 1000),
+             "updatedAt": _iso(now - 9000 - i * 1000 + took)} for i, took in enumerate(durations)]
+
+
+def test_time_left_comes_from_other_commits_and_the_workflow(env, monkeypatch):
+    # A fork branch with the test workflow running: its usual time is in older runs (#164).
+    now = 1_791_367_380.0
+    monkeypatch.setattr(forge.time, "time", lambda: now)
+    info = mizan_black.info_at(env, "9e461ccf")
+    branch = _black_running(now) + _finished_tests(now, [300, 328, 400])  # older commits of the branch
+    tool = mizan_black.fake_gh(lambda argv: branch if argv[1:3] == ["run", "list"] else {"jobs": []})
+    monkeypatch.setattr(forge, "run_tool", tool)
+    found = forge.fetch_ci(info, None)
+    assert (found["state"], found["elapsed"], found["eta"]) == ("running", 180, 148)
+    assert len(tool.calls) == 1
+
+    def answer(argv):  # the branch has no finished test run: ask for the workflow's recent runs
+        if any(a.startswith("--workflow=") for a in argv):
+            return _finished_tests(now, [300, 328, 400, 350, 310])
+        return _black_running(now)
+
+    tool = mizan_black.fake_gh(answer)
+    monkeypatch.setattr(forge, "run_tool", tool)
+    found = forge.fetch_ci(info, None)
+    assert found["eta"] == 148 and "--workflow=test" in tool.calls[-1]
+    assert render._ci(found, "en")["text"] == "CI running 3m · ~2m left"
 
 
 def test_reviews_requested_from_you(env, monkeypatch):
@@ -980,3 +1040,15 @@ def test_proof_view_shows_the_ui_check():
 def test_lawha_strings_exist_in_arabic():
     for key in ("fix", "lawha_ok", "lawha_bad", "lawha_old", "t_lawha", "d_lawha_ok", "d_lawha_bad", "d_lawha_fix"):
         assert i18n.t(key, "ar") != i18n.t(key, "en")
+
+
+@pytest.mark.parametrize("what, en, ar", [
+    ("check", "2 failed check(s)", "2 فحص فاشل"),
+    ("merge", "merge conflict", "تعارض في الدمج"),
+    ("generated", "2 generated file(s) out of date", "2 ملف مولَّد غير محدَّث"),
+    ("something-new", "2 failure(s)", "2 إخفاق"),
+])
+def test_tabib_code_kinds_have_band_labels(what, en, ar):
+    found = {"kind": "code", "detail": {"what": what, "count": 2}}
+    assert render.tabib_label(found, "en") == en
+    assert render.tabib_label(found, "ar") == ar

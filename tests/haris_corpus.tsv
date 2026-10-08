@@ -443,6 +443,9 @@ deny	git push -f origin main
 deny	git push origin +main
 deny	git push --force-with-lease origin master
 deny	git push origin +HEAD:main
+deny	git push -f origin stable
+deny	git push origin +stable
+deny	git push origin HEAD:stable --force
 ask	git push --force
 ask	git push -f origin feat/x
 ask	git push origin --delete feat/old

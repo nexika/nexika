@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 
-from .i18n import t
+from .i18n import TEXT, t
 
 CONTROL = re.compile(r"[\x00-\x1f\x7f-\x9f؜‎‏‪-‮⁦-⁩]")
 ANSI = {"ok": "32", "warn": "33", "bad": "31", "info": "36", "dim": "2"}
@@ -104,7 +104,8 @@ def tabib_label(found: dict, lang: str) -> str:
     """tabib's kind of failure in a couple of words: '3 failing test(s)', 'only py3.10', 'flaky?'."""
     kind, detail = found.get("kind", ""), found.get("detail") or {}
     if kind == "code":
-        return t(f"tk_code_{detail.get('what', '')}", lang, count=detail.get("count", 0))
+        key = f"tk_code_{detail.get('what', '')}"
+        return t(key if key in TEXT["en"] else "tk_code_", lang, count=detail.get("count", 0))
     if kind == "matrix":
         return t("tk_matrix", lang, value=clean(detail.get("value"), 30))
     if kind == "infra":

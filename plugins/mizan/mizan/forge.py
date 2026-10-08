@@ -4,12 +4,14 @@ The band and the status line never wait for the network: they read the cache, an
 mizan starts `mizan refresh` detached (one at a time per repository, behind a lock file). Only
 these read commands run, with arguments as a list (no shell):
 
-    gh pr list --state open --json number,author,headRefName,url --limit 200
+    gh pr list --state open --json number,author,headRefName,headRefOid,url,isCrossRepository --limit 200
     gh pr list --state open --search review-requested:@me --json number --limit 100
     gh pr checks <number> --json name,bucket,link,workflow
     gh run list --branch=<branch> --limit 20
         --json databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt
     gh run list --commit=<head> --limit 20 --json ...   (detached, or the head is not in the list above)
+    gh run list --workflow=<name> --status=completed --limit 20 --json ...
+        (CI running and the branch has no finished run of that workflow: for the time left)
     gh run view <id> --json jobs
     glab mr list --output json
     glab mr list --reviewer=@me --output json
@@ -65,9 +67,19 @@ def save_cache(repo: str, data: dict) -> None:
 
 # ------------------------------------------------------------------ parsing (pure, tested)
 
+TITLES = {"mr", "mrs", "ms", "miss", "mx", "dr", "prof", "sir"}
+
+
 def author_name(author: dict) -> str:
+    """A person's first name ('Mr. RB' is RB), a bot's plain name ('app/dependabot' is dependabot)."""
     author = author if isinstance(author, dict) else {}
-    return first_name(author.get("name") or "") or author.get("login") or author.get("username") or "?"
+    login = str(author.get("login") or author.get("username") or "")
+    if login.startswith("app/") or author.get("is_bot") or login.endswith("[bot]"):
+        return login.removeprefix("app/").removesuffix("[bot]") or "?"
+    words = str(author.get("name") or "").split()
+    while words and words[0].lower().rstrip(".") in TITLES:
+        words = words[1:]
+    return first_name(" ".join(words)) or login or "?"
 
 
 def per_user(names: list[str]) -> list[list]:
@@ -75,11 +87,12 @@ def per_user(names: list[str]) -> list[list]:
     return [[name, n] for name, n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0].lower()))]
 
 
-def parse_gh_prs(text: str, branch: str) -> dict:
+def parse_gh_prs(text: str, branch: str, head: str = "") -> dict:
     items = json.loads(text or "[]")
     names = [author_name(pr.get("author")) for pr in items]
-    mine = next((pr for pr in items
-                 if pr.get("headRefName") == branch and not pr.get("isCrossRepository")), None)
+    # A fork's pull request is this branch's only when its head is our commit: forks reuse names like main.
+    mine = next((pr for pr in items if pr.get("headRefName") == branch
+                 and (not pr.get("isCrossRepository") or (head and pr.get("headRefOid") == head))), None)
     found = {"state": "ok", "tool": "gh", "total": len(items), "per_user": per_user(names),
              "branch_pr": None}
     if mine:
@@ -167,7 +180,8 @@ def timing(all_runs: list[dict], running: list[dict], now: float | None = None) 
     return {"elapsed": elapsed, "eta": max(0, usual - elapsed)}
 
 
-def parse_gh_runs(text: str, head: str, now: float | None = None) -> dict:
+def parse_gh_runs(text: str, head: str, now: float | None = None, history: list[dict] | None = None) -> dict:
+    """history: more runs (other commits, other branches) to learn a workflow's usual duration from."""
     every = json.loads(text or "[]")
     runs = pick_runs(every, head)
     if not runs:
@@ -181,7 +195,8 @@ def parse_gh_runs(text: str, head: str, now: float | None = None) -> dict:
                 "failed_runs": [[r.get("databaseId"), r.get("name", "?")] for r in bad]}
     going = [r for r in runs if r.get("status") != "completed"]
     if going:
-        return {"state": "running", "failed": [], "failed_run": None, **timing(every, going, now)}
+        return {"state": "running", "failed": [], "failed_run": None,
+                **timing(every if history is None else history, going, now)}
     if cancelled:  # cancelled is not failed: a newer push or a fail-fast matrix stopped it
         ran = [r for r in done if r.get("conclusion") not in ("skipped", "neutral")]
         return {"state": "cancelled", "failed": [], "failed_run": None, "cancelled": cancelled,
@@ -251,8 +266,8 @@ def fetch_prs(info: dict) -> dict:
             mine = ["glab", "mr", "list", "--reviewer=@me", "--output", "json"]
         else:
             argv = ["gh", "pr", "list", "--state", "open", "--json",
-                    "number,author,headRefName,url,isCrossRepository", "--limit", "200"]
-            found = parse_gh_prs(run_tool(argv, cwd), branch)
+                    "number,author,headRefName,headRefOid,url,isCrossRepository", "--limit", "200"]
+            found = parse_gh_prs(run_tool(argv, cwd), branch, info.get("head", ""))
             mine = ["gh", "pr", "list", "--state", "open", "--search", "review-requested:@me", "--json",
                     "number", "--limit", "100"]
         try:  # reviews waiting for you: a bonus, never a reason to lose the PR list
@@ -311,13 +326,24 @@ def fetch_ci(info: dict, pr: dict | None) -> dict:
             # Running: the run list below says for how long, and about how long is left.
         fields = ["--json", RUN_FIELDS, "--limit", "20"]
         head = info.get("head", "")
-        mine = [] if detached(info) else ours(info, json.loads(
-            run_tool(["gh", "run", "list", f"--branch={branch}", *fields], cwd) or "[]"))
+        listed = [] if detached(info) else json.loads(
+            run_tool(["gh", "run", "list", f"--branch={branch}", *fields], cwd) or "[]")
+        mine = ours(info, listed)
         if re.match(r"^[0-9a-f]{7,64}$", head) and not any(r.get("headSha") == head for r in mine):
             # A detached HEAD, or a commit older than the branch's newest 20 runs: ask by commit.
             by_commit = json.loads(run_tool(["gh", "run", "list", f"--commit={head}", *fields], cwd) or "[]")
             mine = [r for r in by_commit if r.get("headSha") == head] or mine
-        found = parse_gh_runs(json.dumps(mine), info.get("head", ""))
+        history = listed + [r for r in mine if r not in listed]  # all of them: durations for the time left
+        found = parse_gh_runs(json.dumps(mine), head, history=history)
+        if found["state"] == "running" and found.get("elapsed") is not None and found.get("eta") is None:
+            # No finished run of this workflow on the branch (a fork's new branch): its recent runs anywhere.
+            name = next((r.get("name") for r in pick_runs(mine, head)
+                         if r.get("status") != "completed" and r.get("name")), "")
+            if name:
+                recent = json.loads(run_tool(["gh", "run", "list", f"--workflow={name}", "--status=completed",
+                                              "--json", "name,status,conclusion,startedAt,updatedAt",
+                                              "--limit", "20"], cwd) or "[]")
+                found = parse_gh_runs(json.dumps(mine), head, history=history + recent)
         if checks and checks["state"] == "running" and found["state"] != "running":
             return checks
         run_id = found.pop("failed_run", None)
