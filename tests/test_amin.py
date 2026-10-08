@@ -720,6 +720,57 @@ def test_history_without_a_tag_is_bounded(market):
     assert int(call[call.index("--limit") + 1]) == release.UNTAGGED_LIMIT <= 300
 
 
+BLACK_CHANGES = """# Change Log
+
+## Unreleased
+
+<!-- PR authors:
+     Please include the PR number in the changelog entry, not the issue number -->
+
+### Highlights
+
+<!-- Include any especially major or disruptive changes here -->
+
+### Stable style
+
+- Keep repeated lines outside the selected `--line-ranges` unchanged (#5436)
+
+## Version 26.10.0
+
+### Stable style
+
+- Fix a crash on empty `--line-ranges` (#5400)
+
+### Packaging
+
+- Drop support for Python 3.9 (#5401)
+
+## Version 26.5.1
+
+### Stable style
+
+- Fix the 26.5.0 regression (#5300)
+"""
+
+
+def test_changes_md_and_version_headings_are_recognised(tmp_path):
+    # issue #154: amin made a new CHANGELOG.md, appended after the oldest release, and found no notes
+    black = black_repo(tmp_path, {"CHANGES.md": BLACK_CHANGES})
+    [p] = proj.detect(black)
+    assert p.changelog == "CHANGES.md"
+    path = black / p.changelog
+    assert changelog.extract(path, "26.10.0") == (
+        "### Stable style\n\n- Fix a crash on empty `--line-ranges` (#5400)\n\n"
+        "### Packaging\n\n- Drop support for Python 3.9 (#5401)")
+    assert changelog.has_version(path, "26.5.1") and changelog.latest(path) == "26.10.0"
+    changelog.insert(path, "black", "26.11.0", "2026-10-08", {"Fixed": ["- Test note (#1)"]})
+    text = path.read_text()
+    assert text.index("## Unreleased") < text.index("## Version 26.11.0\n") < text.index("## Version 26.10.0")
+    assert "2026-10-08" not in text                       # black's headings carry no date
+    assert changelog.extract(path, "26.11.0") == "### Fixed\n- Test note (#1)"
+    assert changelog.latest(path) == "26.11.0"
+
+
 @pytest.mark.parametrize("content", [
     '[project]\nname = "app"\nversion = "2.0.0"\n',
     '[tool.poetry]\nname = "app"\nversion = "2.0.0"\n',

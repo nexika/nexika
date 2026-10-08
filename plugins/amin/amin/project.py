@@ -234,6 +234,7 @@ def _manifest_name(root: Path, rel: str) -> str:
 
 
 BARE_TAG = re.compile(r"^\d+\.\d+\.\d+$")
+CHANGELOG_NAMES = ("CHANGELOG.md", "CHANGES.md", "HISTORY.md")   # a single project keeps the one it has
 
 
 def _tag_format(root: Path) -> str:
@@ -279,8 +280,8 @@ def detect(root: Path) -> list[Project]:
             files = []   # the version lives in git tags only
         else:
             continue
-        return [Project(_manifest_name(root, rel), ".", files, "CHANGELOG.md", _tag_format(root),
-                        "changelog.d")]
+        changelog = next((n for n in CHANGELOG_NAMES if (root / n).is_file()), CHANGELOG_NAMES[0])
+        return [Project(_manifest_name(root, rel), ".", files, changelog, _tag_format(root), "changelog.d")]
     return []
 
 
