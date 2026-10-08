@@ -226,6 +226,20 @@ def test_run_timeout(project, barq_run):
     assert code == 1 and "TIMED OUT" in out
 
 
+def test_run_does_not_change_the_color_environment(project, barq_run, monkeypatch):
+    # #165: barq set NO_COLOR=1, and black's suite, green when run directly, went red
+    monkeypatch.delenv("NO_COLOR", raising=False)
+    monkeypatch.delenv("FORCE_COLOR", raising=False)
+    (project / "check_env.py").write_text(
+        "import os, sys\n"
+        "print('\\x1b[32mcolored\\x1b[0m')\n"
+        "sys.exit(1 if 'NO_COLOR' in os.environ or 'FORCE_COLOR' in os.environ else 0)\n"
+    )
+    code, out = barq_run(json.dumps({"op": "run", "cmd": f"{sys.executable} check_env.py"}))
+    assert code == 0 and ": ok ===" in out
+    assert "colored" in out and "\x1b[" not in out  # color codes are stripped from the output
+
+
 def test_custom_op_from_barq_json(project, barq_run):
     (project / ".barq.json").write_text(json.dumps({"ops": {
         "hello": {"cmd": f"{sys.executable} -c \"import sys; print('hi', *sys.argv[1:])\" {{args}}",
