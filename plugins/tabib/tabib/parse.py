@@ -260,6 +260,31 @@ def merge_conflict(lines: list[str]) -> list[dict]:
     return found
 
 
+GIT_DIFF_CHECK = re.compile(r"\bgit diff\b.*--(?:exit-code|quiet)\b")
+SAFE_COMMAND = re.compile(r"^[\w ./=:+-]+$")   # shown as advice to run: nothing else gets through
+
+
+def generated(lines: list[str]) -> list[dict]:
+    """Generated files out of date (#174): a step whose script ends in `git diff --exit-code` printed a diff;
+    the test is the script's other lines, the command that regenerates them, when it is plain."""
+    found = []
+    for header, output in steps(lines):
+        script = []
+        for line in header[1:]:
+            if line.startswith("shell: ") or line.strip() == "##[endgroup]":
+                break
+            script.append(line.strip())
+        if not any(GIT_DIFF_CHECK.search(line) for line in script):
+            continue
+        redo = [line for line in script if line and not GIT_DIFF_CHECK.search(line)]
+        command = " && ".join(redo) if redo and all(SAFE_COMMAND.match(line) for line in redo) else ""
+        for line in output:
+            if (m := DIFF_FILE.match(line.strip())) and SAFE_PATH.match(m.group(1)):
+                found.append(_failure("generated", "generated", command, m.group(1),
+                                      message="generated file out of date"))
+    return found
+
+
 def playwright(lines: list[str]) -> list[dict]:
     """Playwright's failed tests: the summary's "failed" group when there is one (a test in its "flaky"
     group passed on a retry), else the numbered error blocks, else the list reporter's ✘ lines."""
@@ -478,6 +503,7 @@ def failures(lines: list[str]) -> list[dict]:
     found += conftest(lines)
     found += formatter(lines)
     found += merge_conflict(lines)
+    found += generated(lines)
     found += playwright(lines)
     for block in junit_blocks(lines):
         found += junit_xml(block)

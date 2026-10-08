@@ -99,6 +99,10 @@ def report(record: dict, language: str = "") -> str:
         base = record["failures"][0]["test"].removeprefix("merge").removeprefix(" into ") or "the base branch"
         files = ", ".join(dict.fromkeys(f["file"] for f in record["failures"]))
         out.append("  " + t("next_rebase", lg, base=base, files=files))
+    elif record["failures"] and all(f["framework"] == "generated" for f in record["failures"]):
+        files = ", ".join(dict.fromkeys(f["file"] for f in record["failures"]))
+        command = record["failures"][0]["test"] or "the generator in the failed step"
+        out.append("  " + t("next_regenerate", lg, files=files, command=command))
     elif record["failures"] and all(f["framework"] == "step" for f in record["failures"]):
         out.append("  " + t("next_check", lg))
     elif record["failures"]:

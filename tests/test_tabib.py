@@ -696,6 +696,46 @@ def test_a_branch_that_does_not_merge_says_rebase(ci, monkeypatch):
     assert "/itqan:ship" not in text
 
 
+# psf/black run 35217726081 (#174): the schema is regenerated and `git diff --exit-code` finds it changed.
+GENERATED_LOG = [
+    "##[group]Run tox -e generate_schema",
+    "tox -e generate_schema",
+    "git diff --exit-code",
+    "shell: /usr/bin/bash -e {0}",
+    "env:",
+    "  PIP_UPLOADED_PRIOR_TO: P2D",
+    "##[endgroup]",
+    "  generate_schema: OK (6.24=setup[3.51]+cmd[2.55,0.18] seconds)",
+    "  congratulations :) (6.28 seconds)",
+    "diff --git a/src/black/resources/black.schema.json b/src/black/resources/black.schema.json",
+    "index acf5bb0..465ba0c 100644",
+    "--- a/src/black/resources/black.schema.json",
+    "+++ b/src/black/resources/black.schema.json",
+    "@@ -94,6 +94,7 @@",
+    '           "fmt_off_class_blank_lines",',
+    '+          "parenthesize_whole_conditional_expression",',
+    '           "remove_redundant_generator_parentheses"',
+    "##[error]Process completed with exit code 1.",
+]
+
+
+def test_an_out_of_date_generated_file_names_the_file_and_the_command(ci, monkeypatch):
+    from tabib import cli
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log("lint", GENERATED_LOG))
+    record = diagnosis.triage(ci)
+    assert (record["kind"], record["detail"]["what"]) == ("code", "generated")
+    assert [f["file"] for f in record["failures"]] == ["src/black/resources/black.schema.json"]
+    text = cli.report(record, "en")
+    assert "generated file out of date" in text and "tox -e generate_schema" in text
+    assert "/itqan:ship" not in text
+
+
+def test_a_diff_without_git_diff_exit_code_is_not_a_generated_file():
+    lines = ["##[group]Run ./check.sh", "./check.sh", "##[endgroup]",
+             "diff --git a/x.json b/x.json", "##[error]Process completed with exit code 1."]
+    assert parse.read_log(gh_log("lint", lines))["lint"]["failures"] == []
+
+
 # pallets/flask run 37632508911 (#132): the conftest could not be imported, so pytest ran nothing (exit 4).
 CONFTEST_LOG = [
     "tests-dev: commands[1]> pytest -v --tb=short --basetemp=/home/runner/work/flask/flask/.tox/tmp/tests-dev",
