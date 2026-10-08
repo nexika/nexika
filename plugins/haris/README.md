@@ -53,7 +53,7 @@ hide the target.
   git settings that run programs (`core.hooksPath`, `core.pager`, `!` aliases), Claude Code
   settings, hooks and plugins, `~/.local/bin`, PowerShell profiles: refused.
 - **History and shared things:** force-pushing `main`, `master`, `develop`, `production`,
-  `trunk`, `release/*` or the remote's default branch is refused; force-pushing your own
+  `trunk`, `stable`, `release/*` or the remote's default branch is refused; force-pushing your own
   branch, `reset --hard` with uncommitted work, `clean -f`, `branch -D` ask. Merging pull
   requests, releases, tags, publishing packages, deploying, `terraform apply/destroy`,
   `kubectl delete`, SQL `DROP`/`TRUNCATE`, deleting repos or buckets **always ask**, and no

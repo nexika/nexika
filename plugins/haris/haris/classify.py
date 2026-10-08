@@ -39,7 +39,7 @@ from .targets import (  # noqa: F401  (the light helpers, kept here by name)
     write_paths,
 )
 
-DEFAULT_PROTECTED = ["main", "master", "develop", "production", "trunk", "release/*"]
+DEFAULT_PROTECTED = ["main", "master", "develop", "production", "trunk", "stable", "release/*"]
 SECRET_VAR = re.compile(r"(?i)(?:token|secret|passw(?:or)?d|passphrase|api_?key|access_?key|private_?key"
                         r"|credential|auth|session_?key|client_?secret|_pat$|^pat_)")
 RISKY_ENV = {"LD_PRELOAD", "LD_AUDIT", "DYLD_INSERT_LIBRARIES", "GIT_SSH_COMMAND", "GIT_SSH", "GIT_EXEC_PATH",
