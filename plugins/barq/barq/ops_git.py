@@ -23,6 +23,25 @@ def _default_branch(ctx: Context) -> str:
     return "main"
 
 
+# git's marker file for an unfinished operation -> (name, the command that continues or aborts it)
+IN_PROGRESS = (
+    ("rebase-merge", ("rebase", "git rebase")),
+    ("rebase-apply", ("rebase", "git rebase")),
+    ("MERGE_HEAD", ("merge", "git merge")),
+    ("CHERRY_PICK_HEAD", ("cherry-pick", "git cherry-pick")),
+    ("REVERT_HEAD", ("revert", "git revert")),
+)
+
+
+def _in_progress(ctx: Context) -> tuple[str, str] | None:
+    """An unfinished merge, rebase, cherry-pick or revert (#169)."""
+    for marker, operation in IN_PROGRESS:
+        path = _git(ctx, "rev-parse", "--git-path", marker)
+        if path and (ctx.root / path).exists():
+            return operation
+    return None
+
+
 def op_git_status(ctx: Context, full=False) -> Result:
     if _git(ctx, "rev-parse", "--is-inside-work-tree") != "true":
         raise OpError("not a git repository")
@@ -45,15 +64,17 @@ def op_git_status(ctx: Context, full=False) -> Result:
         if len(entry) < 4:
             continue
         xy, path = entry[:2], entry[3:]
-        if xy[0] in "RC":
-            i += 1  # the rename source follows as its own entry
+        shown = path
+        if xy[0] in "RC" and i < len(entries):
+            shown = f"{entries[i]} -> {path}"  # the rename source follows as its own entry
+            i += 1
         if xy == "??":
             untracked.append(path)
         elif xy in CONFLICT_CODES:
             conflicts.append(path)
         else:
             if xy[0] not in " ?!":
-                staged.append(f"{xy[0]} {path}")
+                staged.append(f"{xy[0]} {shown}")
             if xy[1] not in " ?!":
                 unstaged.append(f"{xy[1]} {path}")
 
@@ -64,6 +85,9 @@ def op_git_status(ctx: Context, full=False) -> Result:
         head += " (no upstream)"
     head += f"   [default: {default}]"
     lines = [head]
+    operation = _in_progress(ctx)
+    if operation:
+        lines.append(f"{operation[0]} in progress")
 
     log = _git(ctx, "log", "-5", "--format=%h %ad %s", "--date=short")
     if log:
@@ -87,6 +111,13 @@ def op_git_status(ctx: Context, full=False) -> Result:
     steps = []
     if conflicts:
         steps.append(f"resolve {len(conflicts)} conflicted file(s), then git add them")
+    if operation:
+        # Finish or abort first: branch, commit and push advice is wrong mid-operation (#169).
+        name, command = operation
+        steps.append("finish with git commit" if name == "merge" else f"finish with {command} --continue")
+        steps.append(f"or give up with {command} --abort")
+        lines.append("next: " + "; ".join(steps))
+        return Result(f"git-status ({branch})", "\n".join(lines))
     if branch == default and dirty:
         steps.append(f"you are on {default}: create a branch first (git switch -c feat/<name>)")
     elif staged and not unstaged and not untracked:
