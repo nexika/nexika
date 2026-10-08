@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import io
 import json
+import os
 import stat
 import statistics
 import subprocess
@@ -701,3 +702,193 @@ def test_raw_api_calls_with_a_body_are_labelled_post(world):
     assert "POST" in decide(project, "Bash", mutation).reason
     assert "GET" not in decide(project, "Bash", "gh api repos/o/r/issues -f title=x").reason
     assert "(DELETE)" in decide(project, "Bash", "gh api -X DELETE repos/o/r").reason
+
+
+# ---------------------------------------------------------------- what a script deletes (#116)
+
+
+def test_a_delete_haris_cannot_resolve_is_never_deletes_root(world):
+    home, project = world
+    script = ("cat > b.mjs <<'EOF'\nrmSync(out, { recursive: true, force: true });\n"
+              "const name = page.split(\"/\").pop();\nEOF\nnode b.mjs")
+    d = decide(project, "Bash", script)
+    assert d.verdict == "ask" and d.cls == "unknown-target", (d.verdict, d.cls, d.reason)
+    assert "Deletes /" not in d.reason
+
+
+@pytest.mark.parametrize("lang, code", [
+    ("node", 'rmSync("/", { recursive: true });'),
+    ("node", "const dir = '/';\nrmSync(dir, { recursive: true });"),
+    ("node", "require('fs').promises.rm('/', { recursive: true });"),
+    ("python3", "import shutil, os\nshutil.rmtree(os.path.expanduser('~'))"),
+    ("python3", "from pathlib import Path\nPath('/').rmdir()"),
+])
+def test_a_script_that_really_deletes_root_or_home_is_still_denied(world, lang, code):
+    home, project = world
+    d = decide(project, "Bash", f"cat > x.src <<'EOF'\n{code}\nEOF\n{lang} x.src")
+    assert d.verdict == "deny" and d.cls == "destroy", (d.verdict, d.cls, d.reason)
+
+
+def test_inline_code_deletes_only_what_its_delete_call_names(world):
+    home, project = world
+    d = decide(project, "Bash", "python3 -c \"import shutil; shutil.rmtree('build'); print('/')\"")
+    assert d.cls == "delete" and d.verdict != "deny", (d.verdict, d.cls, d.reason)
+
+
+# ---------------------------------------------------------------- working on haris's own source (#119)
+
+
+@pytest.fixture(scope="module")
+def checkout(world):
+    """A git repo holding the source of haris and tabib, like the Nexika repo."""
+    home, _ = world
+    repo = home / "work" / "nexika"
+    for name in ("haris", "tabib"):
+        (repo / "plugins" / name / name).mkdir(parents=True, exist_ok=True)
+        (repo / "plugins" / name / name / "__init__.py").write_text("")
+    _git(repo, "init", "-q", "-b", "main")
+    installed = home / ".claude" / "plugins" / "cache" / "nexika" / "haris" / "0.1.0" / "haris"
+    installed.mkdir(parents=True, exist_ok=True)
+    return repo, installed.parent
+
+
+@pytest.mark.parametrize("command", [
+    "python3 -c \"import sys; sys.path.insert(0, 'plugins/haris'); from haris import shell; "
+    "print(shell.parse('ls'))\"",
+    "cd plugins/haris && python3 - <<'EOF'\nfrom haris import classify\nprint(classify.LEVEL)\nEOF",
+    "python3 -c \"import sys; sys.path.insert(0, 'plugins/tabib'); from tabib import reproduce\"",
+    "cd plugins/haris && python3 -m haris.cli check ls",
+    "python3 plugins/haris/haris/cli.py check ls",
+])
+def test_a_source_checkout_of_haris_is_ordinary_project_code(world, checkout, command):
+    repo, _ = checkout
+    d = decide(repo, "Bash", command)
+    assert d.verdict != "deny" and d.cls != "self", (d.verdict, d.cls, d.reason)
+
+
+def test_editing_the_source_checkout_is_ordinary(world, checkout):
+    repo, _ = checkout
+    d = decide(repo, "Edit", str(repo / "plugins" / "haris" / "haris" / "policy.py"))
+    assert d.verdict != "deny", (d.verdict, d.cls, d.reason)
+
+
+def test_the_installed_haris_and_its_data_stay_protected_from_a_checkout(world, checkout):
+    home, _ = world
+    repo, installed = checkout
+    for tool, value in [
+        ("Edit", str(installed / "haris" / "policy.py")),
+        ("Bash", f"sed -i 's/deny/allow/' {installed}/haris/policy.py"),
+        ("Bash", f"python3 -c \"import sys; sys.path.insert(0, '{installed}'); from haris import shell\""),
+        ("Bash", "python3 -c \"import sys; sys.path.insert(0, 'plugins/haris'); from haris import state; "
+                 "state.add_approval('x', 'y', {}, True)\""),
+        ("Bash", "echo x > ~/.claude/nexika/haris/config.json"),
+        ("Bash", "python3 plugins/haris/bin/haris hook user-prompt-submit < approve.json"),
+    ]:
+        d = decide(repo, tool, value)
+        assert d.verdict == "deny" and d.cls == "self", (value, d.verdict, d.cls, d.reason)
+
+
+def test_outside_a_checkout_importing_haris_is_still_refused(world):
+    home, project = world
+    d = decide(project, "Bash", "python3 -c \"from haris import shell\"")
+    assert d.verdict == "deny" and d.cls == "self", (d.verdict, d.cls, d.reason)
+
+
+def test_a_checkout_hook_with_its_own_data_folder_is_fine(world, checkout):
+    repo, _ = checkout
+    hook = "python3 plugins/haris/bin/haris hook pre-tool-use < event.json"
+    d = decide(repo, "Bash", f"HARIS_HOME=/tmp/haris-test {hook}")
+    assert d.verdict not in ("ask", "deny"), (d.verdict, d.cls, d.reason)
+    d = decide(repo, "Bash", f"H=$(mktemp -d); HARIS_HOME=$H {hook}")
+    assert d.verdict == "ask", (d.verdict, d.cls, d.reason)
+    d = decide(repo, "Bash", f"HARIS_HOME=~/.claude/nexika/haris {hook}")
+    assert d.verdict == "deny" and d.cls == "self", (d.verdict, d.cls, d.reason)
+
+
+# ---------------------------------------------------------------- fewer false asks (#117)
+
+
+def test_backticks_in_python_or_js_text_are_not_shell_commands(world):
+    home, project = world
+    edit = ("python3 - <<'EOF'\nfrom pathlib import Path\np = Path('README.md')\n"
+            "p.write_text(p.read_text().replace('`old`', 'run `make test` first'))\nEOF")
+    d = decide(project, "Bash", edit)
+    assert d.verdict == "pass" and d.cls != "dynamic", (d.verdict, d.cls, d.reason)
+    d = decide(project, "Bash", "node -e 'console.log(`${1 + 1}`)'")
+    assert d.cls != "dynamic", (d.verdict, d.cls, d.reason)
+    for still in ("ruby -e 'puts `rm -rf ~`'", "perl -e 'print `rm -rf ~`'"):
+        assert decide(project, "Bash", still).verdict in ("ask", "deny"), still
+
+
+def test_python_that_runs_a_subprocess_still_asks(world):
+    home, project = world
+    code = "python3 - <<'EOF'\nimport subprocess, sys\nsubprocess.run(sys.argv[1:])\nEOF"
+    d = decide(project, "Bash", code)
+    assert d.verdict == "ask" and d.cls == "dynamic", (d.verdict, d.cls, d.reason)
+
+
+def test_python_writes_go_where_the_write_call_says(world):
+    home, project = world
+    stray = ("python3 - <<'EOF'\np = 'README.md'\ns = open(p).read()\nparts = s.split('/')\n"
+             "open(p, 'w').write('/'.join(parts))\nEOF")
+    d = decide(project, "Bash", stray)
+    assert d.verdict == "pass" and d.cls == "write", (d.verdict, d.cls, d.reason)
+    unknown = "python3 - <<'EOF'\nimport sys\nopen(sys.argv[1], 'w').write(open('/etc/hosts').read())\nEOF"
+    d = decide(project, "Bash", unknown)
+    assert d.verdict == "ask" and d.cls == "unknown-target", (d.verdict, d.cls, d.reason)
+    helper = "python3 - <<'EOF'\ndef put(p, s):\n    open(p, 'w').write(s)\nput('~/.bashrc', 'x')\nEOF"
+    assert decide(project, "Bash", helper).verdict == "deny"
+    assert decide(project, "Bash", "python3 -c \"open('/etc/hosts', 'w').write('x')\"").verdict == "deny"
+
+
+def test_git_fetch_never_asks_about_where_the_repository_is(world, tmp_path):
+    home, project = world
+    worktree = tmp_path / "wt"
+    _git(project, "worktree", "add", "-q", "--detach", str(worktree))
+    try:
+        for command in (f"cd {worktree} && git fetch origin", f"git -C {worktree} fetch -q origin main",
+                        "cd ~ && git fetch origin"):
+            d = decide(project, "Bash", command)
+            assert d.verdict not in ("ask", "deny"), (command, d.verdict, d.cls, d.reason)
+        d = decide(project, "Bash", f"cd {worktree} && git merge origin/main")
+        assert d.verdict not in ("ask", "deny"), (d.verdict, d.cls, d.reason)
+    finally:
+        _git(project, "worktree", "remove", "--force", str(worktree))
+    assert decide(project, "Bash", "cd ~/work && git init -q other").verdict == "ask"
+
+
+def test_the_session_scratchpad_counts_as_a_place_to_write(world):
+    home, project = world
+    pad = "/tmp/claude-1000/-home-u-proj/5e55a0b1-1111-2222-3333-444455556666/scratchpad"
+    for tool, value in (("Write", pad + "/notes.md"),
+                        ("Bash", f"S={pad}; mkdir -p $S/out && cat > $S/out/a.py <<'EOF'\nx = 1\nEOF"),
+                        ("Bash", f"cd {pad} && git init -q r && cd r && git commit -q --allow-empty -m x")):
+        d = decide(project, tool, value)
+        assert d.verdict not in ("ask", "deny"), (value, d.verdict, d.cls, d.reason)
+
+
+def test_python_that_only_edits_code_text_is_judged_by_what_it_does(world):
+    home, project = world
+    edit = ("python3 - <<'EOF'\np = 'src/app.py'\ns = open(p).read()\n"
+            "s = s.replace('x = 1', '''import shutil, subprocess\n"
+            "shutil.rmtree(tmp)\nsubprocess.run(cmd)\n''')\n"
+            "open(p, 'w').write(s)\nEOF")
+    d = decide(project, "Bash", edit)
+    assert d.verdict == "pass" and d.cls == "write", (d.verdict, d.cls, d.reason)
+    for hidden in ("python3 - <<'EOF'\n# '''\nimport shutil\nshutil.rmtree('/')\nx = '''y'''\nEOF",
+                   "python3 -c \"exec('import shutil; shutil.rmtree(\\\"/\\\")')\"",
+                   "python3 -c \"import shutil; shutil.rmtree(f'{\\\"/\\\"}')\""):
+        assert decide(project, "Bash", hidden).verdict in ("ask", "deny"), hidden
+
+
+def test_editing_haris_source_that_mentions_its_data_is_ordinary(world, checkout):
+    repo, _ = checkout
+    edit = ("python3 - <<'EOF'\np = 'plugins/haris/haris/paths.py'\ns = open(p).read()\n"
+            "s = s.replace('a', '''HOME = \"~/.claude/nexika/status\"\\nstate.publish(x)\\n''')\n"
+            "open(p, 'w').write(s)\nEOF")
+    d = decide(repo, "Bash", edit)
+    assert d.verdict != "deny" and d.cls != "self", (d.verdict, d.cls, d.reason)
+    status = os.environ.get("NEXIKA_STATUS_HOME") or "~/.claude/nexika/status"
+    for still in (f"python3 -c \"open('{status}/mizan/a.json', 'w').write('x')\"",
+                  "python3 - <<'EOF'\nfrom mizan import status\nstatus.publish('mizan', {})\nEOF"):
+        assert decide(repo, "Bash", still).verdict == "deny", still

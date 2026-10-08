@@ -112,7 +112,20 @@ class Where:
         import tempfile  # loads shutil and random: only when a Where is built
         temp = norm(os.path.realpath(tempfile.gettempdir()))
         self.temps = tuple(sorted({*TEMP_DIRS, temp}))
-        self.self_paths = (PLUGIN_ROOT, data_home(), *guarded_homes(), norm(self.root + "/.haris.json"))
+        running = () if self.develops(PLUGIN_ROOT) else (PLUGIN_ROOT,)
+        self.self_paths = (*running, data_home(), *guarded_homes(), norm(self.root + "/.haris.json"))
+
+    def develops(self, path: str) -> bool:
+        """`path` is source being worked on in this project: inside a git checkout, not an installed copy
+        under ~/.claude. Only the installed haris and its data are protected (#119)."""
+        path = norm(os.path.realpath(path))
+        return (under(path, self.root) and os.path.exists(self.root + "/.git")
+                and not under(self.root, self.home + "/.claude"))
+
+    def checkout(self, name: str) -> bool:
+        """This project holds the source of plugin `name` (plugins/<name>/<name>, or <name>/ at the top)."""
+        return any(os.path.isfile(f"{base}/{name}/__init__.py") and self.develops(base)
+                   for base in (f"{self.root}/plugins/{name}", self.root))
 
     def resolve(self, value: str, cwd: str | None) -> str | None:
         """An absolute, normalized path with symlinks followed; None when it is not known."""

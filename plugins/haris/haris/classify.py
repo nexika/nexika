@@ -14,7 +14,7 @@ import re
 from dataclasses import dataclass
 
 from . import secrets, shell
-from .paths import PLUGIN_ROOT, UNKNOWN
+from .paths import PLUGIN_ROOT, UNKNOWN, data_home
 from .targets import (  # noqa: F401  (the light helpers, kept here by name)
     ALLOW,
     ALWAYS_NO,
@@ -279,7 +279,11 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
                 if SECRET_VAR.search(name):
                     ctx.add("secret-read", f"Prints ${name}, which looks like a secret, into the "
                                            f"conversation.")
-    stage = run(argv, ctx, stdin)
+    ctx.prefix = {name: str(value) for name, value in assigns}
+    try:
+        stage = run(argv, ctx, stdin)
+    finally:
+        ctx.prefix = {}
     downloads = (stage is not None and stage.downloads) or program in DOWNLOADERS
     for r in cmd.redirects:
         if r.body is None and r.target and r.op in (">", ">>", ">|", "&>", "&>>"):
@@ -363,8 +367,8 @@ def run(argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
         if path and path in ctx.written:
             shebang = ctx.written[path].lstrip().split("\n", 1)[0]
             return written_run(program, path, ctx, argv[1:], shebang if shebang.startswith("#!") else "sh")
-        if path and path.startswith(PLUGIN_ROOT + "/"):
-            return own_helper(argv, ctx)
+        if path and (path.startswith(PLUGIN_ROOT + "/") or HARIS_HELPER.search(path)):
+            return own_helper(argv, ctx, installed_helper(path, ctx))
         if path and MIZAN_HELPER.search(path):
             return mizan_helper(argv, ctx)
     family = program
@@ -807,7 +811,7 @@ def h_build_tool(argv, ctx, stdin):
                                                                   if w not in RUN_WORDS):
         ctx.add("remote-irreversible", f"`{program} {' '.join(pos)}` deploys or publishes the project.")
     elif program == "deno" and sub == "eval" and len(pos) > 1:
-        return code_check(pos[1], ctx, "deno eval")
+        return code_check(pos[1], ctx, "deno eval", "js")
     elif program == "deno" and sub == "run" and "-" in pos:
         return interpreter_stdin(program, ctx, stdin, "js")
     elif program == "go" and sub == "run" and any(p.startswith(("http",
@@ -938,7 +942,7 @@ def interpreter_stdin(program: str, ctx: Ctx, stdin: Stage | None, lang: str = "
     elif stdin.text is not None:
         if lang == "sh":
             return shell_string(arg(stdin.text), ctx, [program], program)
-        return code_check(arg(stdin.text), ctx, program)
+        return code_check(arg(stdin.text), ctx, program, lang)
     else:
         ctx.add("dynamic", f"{program} runs what is piped into it, which haris cannot see.")
     return Stage()
@@ -1408,14 +1412,16 @@ CODE_EXEC = re.compile(r"\b(?:os\.system|os\.popen|subprocess|Popen|check_output
                        r"|execFileSync"
                        r"|spawnSync|spawn|child_process|pty\.spawn|Runtime\.getRuntime|shell_exec|passthru"
                        r"|proc_open|IO\.popen|Kernel\.system|do shell script|os\.exec[lv]p?e?)\b"
-                       r"|\b(?:system|popen|exec)\s*\(|`[^`\n]+`")
+                       r"|\b(?:system|popen|exec)\s*\(")
+BACKTICK_EXEC = re.compile(r"`[^`\n]+`")  # runs a shell command in ruby, perl and php; only text elsewhere
+NO_BACKTICK_EXEC = re.compile(r"python|pypy|node|deno|bun|js")
 CODE_HIDDEN = re.compile(r"(?i)\b(?:exec|eval|Function|compile)\s*\(\s*(?:[\w.]*b64decode|atob|Buffer\.from|"
                          r"[\w.]*decompress|codecs\.decode|bytes\.fromhex|__import__\(['\"](?:base64|zlib|codecs)|"
                          r"[\w.]*unhexlify|[\w.]*\.decode\()")
 CODE_DELETE = re.compile(r"\b(?:shutil\.rmtree|os\.remove|os\.unlink|os\.rmdir|os\.removedirs|rmSync|"
                          r"unlinkSync|"
                          r"rmdirSync|fs\.rm\b|fs\.unlink|rimraf|FileUtils\.rm|File\.delete|rmtree)|"
-                         r"\.(?:unlink|rmdir)\s*\(|\bunlink\s*\(")
+                         r"\.(?:unlink|rmdir|rm)\s*\(|\bunlink\s*\(")
 CODE_WRITE = re.compile(r"\bopen\s*\([^)]*['\"][wax]b?\+?['\"]|write_text|write_bytes|writeFileSync|"
                         r"writeFile\b|"
                         r"appendFile|createWriteStream|File\.write|file_put_contents|fopen\s*\([^)]*['\"][wax]|"
@@ -1433,14 +1439,209 @@ STRING_LITERAL = re.compile(r"'''(.*?)'''|\"\"\"(.*?)\"\"\"|'((?:\\.|[^'\\\n])*)
                             re.S)
 SED_EXEC = re.compile(r"(?:^|[;\n{}])\s*(?:\d+|\$|/[^/]*/)?\s*e(?:\s|$|;)|/e\s*$"
                       r"|/[gpiI0-9]*e[gpiI0-9]*\s*$")
-CODE_SELF = re.compile(r"\b(?:from|import)\s+(?:haris|mizan|tabib)\b"
+CODE_SELF = re.compile(r"\b(?:from|import)\s+(?P<module>haris|mizan|tabib)\b"
                        r"|nexika/(?:haris|mizan|itqan|tabib|lawha|status)\b"
-                       r"|haris/(?:bin|haris)"
-                       r"|require\(['\"][^'\"]*haris")
+                       r"|(?P<source>haris)/(?:bin|haris)"
+                       r"|require\(['\"][^'\"]*(?P<required>haris)")
+# Calls that change what haris and the plugins it guards keep: never fine, even from a source checkout.
+SELF_WRITERS = re.compile(r"\b(?:add_approval|remove_approval|mark_active|save_session|publish_status|publish"
+                          r"|save|record)\s*\(")
 PATH_LIKE = re.compile(r"^(?:~|/|\.{1,2}/|[\w.-]+/)|^\.?[\w-]+\.\w{1,8}$|^\.\w+$")
+# Calls that only turn one path into another: Path("~"), os.path.expanduser("~"), File.expand_path("/x").
+PATH_WRAPPER = re.compile(r"^(?:(?:pathlib\.)?Path|PurePath"
+                          r"|os\.path\.(?:expanduser|abspath|realpath|normpath)|path\.resolve|Pathname\.new|File\.expand_path|expanduser|abspath|realpath)\s*\(")
+BACKTICKS = re.compile(r"`[^`]*`")
 
 
-def code_check(code: Arg, ctx: Ctx, via: str) -> Stage:
+def call_end(text: str, start: int) -> int:
+    """Where the bracket opened just before `start` closes (strings are skipped); -1 when it never does."""
+    depth, i = 1, start
+    while i < len(text):
+        ch = text[i]
+        if ch in "'\"`":
+            m = (BACKTICKS if ch == "`" else STRING_LITERAL).match(text, i)
+            i = m.end() if m else i + 1
+            continue
+        if ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+            if depth == 0:
+                return i
+        i += 1
+    return -1
+
+
+def arguments(text: str, start: int) -> list[str]:
+    """The arguments of the call whose bracket opened just before `start`."""
+    end = call_end(text, start)
+    inner = text[start:end if end >= 0 else len(text)]
+    out, depth, i, last = [], 0, 0, 0
+    while i < len(inner):
+        ch = inner[i]
+        if ch in "'\"":
+            m = STRING_LITERAL.match(inner, i)
+            i = m.end() if m else i + 1
+            continue
+        if ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            out.append(inner[last:i].strip())
+            last = i + 1
+        i += 1
+    return [*out, inner[last:].strip()]
+
+
+def first_argument(text: str, start: int) -> str:
+    return arguments(text, start)[0]
+
+
+def literal_path(expr: str, text: str, depth: int = 0) -> str | None:
+    """The path an expression in the code names outright: "/x", Path("/x"), os.path.expanduser("~"), or a
+    variable only ever given one of those. None when the path is only known when the code runs."""
+    expr = expr.strip()
+    while tail := re.search(r"\.(?:expanduser|resolve|absolute)\(\)$", expr):
+        expr = expr[:tail.start()].strip()
+    m = PATH_WRAPPER.match(expr)
+    if m and expr.endswith(")") and call_end(expr, m.end()) == len(expr) - 1:
+        return literal_path(expr[m.end():-1], text, depth)
+    m = STRING_LITERAL.fullmatch(expr)
+    if m:
+        lit = next(g for g in m.groups() if g is not None)
+        return lit if lit and "\n" not in lit and not re.search(r"\$\{|%s|\{\w*\}", lit) else None
+    if depth < 2 and re.fullmatch(r"\$?[A-Za-z_]\w*", expr):
+        name = re.escape(expr.lstrip("$"))
+        found = [literal_path(a.group(1), text, depth + 1) for a in
+                 re.finditer(rf"(?m)(?:^|[\s;(,])(?:const\s+|let\s+|var\s+|my\s+)?\$?{name}\s*=(?!=)\s*"
+                             r"([^\n;]+)", text)]
+        if found and all(found) and len(set(found)) == 1:
+            return found[0]
+    return None
+
+
+RUNS_TEXT = re.compile(r"\b(?:exec|eval|compile|execfile|runpy|__import__|Function)\b")
+
+
+def python_strings(text: str) -> list[tuple[int, int]]:
+    """Where Python code holds plain string data (not f-strings, not comments), as offsets. Empty when
+    the code does not tokenize, so nothing is ever skipped by mistake."""
+    import io
+    import tokenize
+    starts = [0]
+    for line in text.splitlines(keepends=True):
+        starts.append(starts[-1] + len(line))
+    try:
+        return [(starts[t.start[0] - 1] + t.start[1], starts[t.end[0] - 1] + t.end[1])
+                for t in tokenize.generate_tokens(io.StringIO(text).readline)
+                if t.type == tokenize.STRING and not re.match(r"(?i)[rbu]*f", t.string)]
+    except (tokenize.TokenError, SyntaxError, IndentationError):
+        return []
+
+
+def code_matches(pattern: re.Pattern, text: str, data: list[tuple[int, int]]) -> list[re.Match]:
+    """Matches that are code, not text the code only holds (a file's new contents, say)."""
+    return [m for m in pattern.finditer(text) if not any(a <= m.start() < b for a, b in data)]
+
+
+def code_targets(text: str, pattern: re.Pattern, data: list[tuple[int, int]] = ()) -> list[Arg]:
+    """What the calls `pattern` finds act on: the path each one names, or UNKNOWN for a call whose path is
+    only known when it runs (a variable set elsewhere, a computed string). Never a stray string from
+    elsewhere in the code."""
+    out: list[Arg] = []
+    for m in code_matches(pattern, text, list(data)):
+        opened = m.group().endswith("(")
+        call = None if opened else re.compile(r"[\w.]*\s*\(").match(text, m.end())
+        if not opened and not call:
+            continue  # the name without a call: an import or a mention
+        found = literal_path(first_argument(text, call.end() if call else m.end()), text)
+        if found is None and m.group().startswith("."):  # Path("/x").unlink(): the path is the receiver
+            receiver = re.search(r"((?:[\w.]+\s*)?(?:\((?:[^()]|\([^()]*\))*\))?)$", text[:m.start()])
+            found = literal_path(receiver.group(1), text) if receiver else None
+        out.append(arg(os.path.expanduser(found) if found and found.startswith("~") else found or UNKNOWN))
+    return out or [arg(UNKNOWN)]
+
+
+# What a write call writes to: its first argument, its second (copy, move, symlink: the destination),
+# every argument (rename: both names change), or the object it is called on (Path(...).write_text).
+WRITE_TARGET = (("receiver", re.compile(r"^(?:write_text|write_bytes)$")),
+                ("second", re.compile(r"^(?:shutil\.(?:copy\w*|move)|\w*symlink\w*)$")),
+                ("all", re.compile(r"^(?:os\.rename|os\.replace|\.rename\s*\()")))
+READ_LITERAL = re.compile(r"""\b(?:open|readFileSync|readFile|fopen|File\.read|file_get_contents)\s*\(\s*"""
+                          r"""(?:'([^'\n]*)'|"([^"\n]*)")\s*(?:\)|,\s*['"][r'"])"""
+                          r"""|(?:'([^'\n]*)'|"([^"\n]*)")\s*\)\s*\.read_(?:text|bytes)\b""")
+
+
+def receiver_of(text: str, at: int) -> str:
+    """The expression a method is called on, just before the dot at `at`."""
+    m = re.search(r"((?:[\w.]+\s*)?(?:\((?:[^()]|\([^()]*\))*\))?)\.?$", text[:at])
+    return m.group(1).rstrip(".") if m else ""
+
+
+def code_write_targets(text: str, literals: list[str], ctx: Ctx,
+                       data: list[tuple[int, int]] = ()) -> list[Arg]:
+    """Where code writes. Each write call's own target when the code names it; for one it does not name
+    (a helper's parameter, a computed name), the path strings the code holds that are not only read,
+    and an unknown target when those are none or reach beyond the project."""
+    found: list[str] = []
+    unresolved = False
+    for m in code_matches(CODE_WRITE, text, list(data)):
+        name = m.group().split("(")[0].strip()
+        how = next((h for h, rx in WRITE_TARGET if rx.match(m.group()) or rx.match(name)), "first")
+        if how == "receiver":
+            candidates = [receiver_of(text, m.start())]
+        else:
+            call = re.compile(r"[\w.]*\s*\(").match(text, m.end())
+            opened = m.start() + m.group().find("(") + 1 if "(" in m.group() else (call.end() if call else -1)
+            if opened < 0:
+                continue  # the name without a call
+            args = arguments(text, opened)
+            candidates = args[1:2] if how == "second" else args if how == "all" else args[:1]
+        for expr in candidates or [""]:
+            path = literal_path(expr, text)
+            if path is None:
+                unresolved = True
+            else:
+                found.append(path)
+    if unresolved:
+        only_read = {next(g for g in m.groups() if g is not None) for m in READ_LITERAL.finditer(text)}
+        guesses = []
+        for lit in literals:
+            if not lit or "\n" in lit or len(lit) > 400 or not PATH_LIKE.match(lit) or lit in only_read:
+                continue
+            path = ctx.where.resolve(os.path.expanduser(lit), ctx.cwd)
+            if path and not os.path.isdir(path):  # "/" or "~" in a string is no file being written
+                guesses.append(lit)
+        if guesses:
+            found += guesses
+        else:
+            return [arg(os.path.expanduser(f)) for f in found] + [arg(UNKNOWN)]
+    return [arg(os.path.expanduser(f)) for f in found] or [arg(UNKNOWN)]
+
+
+def reaches_self(text: str, literals: list[str], ctx: Ctx, data: list[tuple[int, int]] = ()) -> bool:
+    """Code that reaches into haris or a plugin it guards. In a project that holds their source (the
+    Nexika repo), importing that source is ordinary work; the installed copies, their data and calls
+    that change their data are still out of reach (#119)."""
+    excused = False
+    writes = bool(code_matches(SELF_WRITERS, text, list(data)))
+    source = any(ctx.where.checkout(n) for n in ("haris", "mizan", "tabib"))
+    for m in CODE_SELF.finditer(text):
+        name = m.group("module") or m.group("source") or m.group("required")
+        in_data = any(a <= m.start() < b for a, b in data)
+        if name and ctx.where.checkout(name) and not writes:
+            excused = True
+        elif not name and in_data and source:
+            excused = True  # their source, being edited, names their data folders
+        else:
+            return True
+    return excused and any(
+        ctx.where.place(ctx.where.resolve(os.path.expanduser(lit), ctx.cwd)) == "self"
+        for lit in literals if lit and "\n" not in lit and len(lit) < 400 and PATH_LIKE.match(lit))
+
+
+def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
     """Code given inline (python -c, node -e ...): find what it does, and never approve it."""
     if UNKNOWN in code:
         if "download" in getattr(code, "marks", ()):
@@ -1450,7 +1651,9 @@ def code_check(code: Arg, ctx: Ctx, via: str) -> Stage:
         return Stage()
     text = str(code)
     literals = [next(g for g in m.groups() if g is not None) for m in STRING_LITERAL.finditer(text)]
-    if CODE_SELF.search(text):
+    # In Python that never runs text as code, what sits in plain strings is data: a file's new contents.
+    data = python_strings(text) if re.search(r"python|pypy", lang) and not RUNS_TEXT.search(text) else []
+    if reaches_self(text, literals, ctx, data):
         ctx.add("self", f"`{via}` reaches into haris itself, which Claude may not change.")
     if CODE_HIDDEN.search(text):
         ctx.add("dynamic", f"`{via}` runs code it first decodes, so nobody can see what it does.")
@@ -1458,7 +1661,8 @@ def code_check(code: Arg, ctx: Ctx, via: str) -> Stage:
         ctx.add("remote-shell", f"`{via}` connects a shell to the network: whoever is on the other side can "
                                 "run commands here.")
     network = bool(CODE_NET.search(text))
-    executes = bool(CODE_EXEC.search(text))
+    executes = bool(code_matches(CODE_EXEC, text, data) or (not NO_BACKTICK_EXEC.search(lang or via)
+                                                            and BACKTICK_EXEC.search(text)))
     paths: list[Arg] = []
     for lit in literals:
         if not lit or len(lit) > 400:
@@ -1474,11 +1678,11 @@ def code_check(code: Arg, ctx: Ctx, via: str) -> Stage:
             paths.append(arg(os.path.expanduser(lit) if lit.startswith("~") else lit))
     if executes:
         ctx.add("dynamic", f"`{via}` runs shell commands from inside the code.")
-    deletes, writes = bool(CODE_DELETE.search(text)), bool(CODE_WRITE.search(text))
+    deletes, writes = bool(code_matches(CODE_DELETE, text, data)), bool(code_matches(CODE_WRITE, text, data))
     if deletes:
-        delete_paths(paths or [arg(UNKNOWN)], ctx)
+        delete_paths(code_targets(text, CODE_DELETE, data), ctx)
     if writes:
-        write_paths(paths or [arg(UNKNOWN)], ctx)
+        write_paths(code_write_targets(text, literals, ctx, data), ctx)
     secret_hit = False
     for p in paths:
         path = ctx.where.resolve(p, ctx.cwd)
@@ -1516,11 +1720,12 @@ def h_python(argv, ctx, stdin):
     opts, pos = options(argv[1:], {"-c", "-m", "-W", "-X", "-Q"}, first_stops=True)
     code = values(opts, "-c")
     if code:
-        return code_check(code[0], ctx, f"{argv[0]} -c")
+        return code_check(code[0], ctx, f"{argv[0]} -c", "python")
     module = values(opts, "-m")
     if module:
         name = module[0]
-        if re.match(r"(?:haris|mizan|tabib)(?:\.|$)", str(name)):
+        own = re.match(r"(haris|mizan|tabib)(?:\.|$)", str(name))
+        if own and not ctx.where.checkout(own.group(1)):
             ctx.add("self", f"Runs python -m {name}: the code of haris or of a plugin it guards, "
                             "outside their helpers.")
             return Stage()
@@ -1559,11 +1764,11 @@ def script_run(program: str, script: Arg, ctx: Ctx, how: str = "", rest: list | 
         ctx.add("download-run", f"Runs {ctx.show(path)}, which this command just downloaded.")
     elif path and path in ctx.written:
         return written_run(program, path, ctx, rest)
-    elif path == PLUGIN_ROOT + "/bin/haris":
-        return own_helper([script, *(rest or [])], ctx)
+    elif path and (path == PLUGIN_ROOT + "/bin/haris" or HARIS_HELPER.search(path)):
+        return own_helper([script, *(rest or [])], ctx, installed_helper(path, ctx))
     elif path and MIZAN_HELPER.search(path):
         return mizan_helper([script, *(rest or [])], ctx)
-    elif path and path.startswith(PLUGIN_ROOT + "/"):
+    elif path and path.startswith(PLUGIN_ROOT + "/") and not ctx.where.develops(PLUGIN_ROOT):
         ctx.add("self", "Runs haris's own code directly instead of through its helper.")
     else:
         ctx.add("exec", f"Runs {ctx.show(path)} {how or 'with ' + program}; haris does not read scripts, "
@@ -1579,7 +1784,7 @@ def written_run(program: str, path: str, ctx: Ctx, rest: list | None = None, lan
     via = f"{ctx.show(path)} (written just before)"
     ctx.add("exec", f"Runs {ctx.show(path)}, which this command writes; haris read it before it runs.")
     if re.search(r"python|pypy|node|deno|bun|ruby|perl|php", lang):
-        return code_check(arg(text), ctx, via)
+        return code_check(arg(text), ctx, via, lang)
     return shell_string(arg(text), ctx, [str(path), *(str(r) for r in rest or [])], via)
 
 
@@ -1589,7 +1794,7 @@ def h_node(argv, ctx, stdin):
                                    "-C", "--conditions", "--input-type"}, first_stops=True)
     code = values(opts, "-e", "--eval", "-p", "--print")
     if code:
-        return code_check(code[0], ctx, f"{program} -e")
+        return code_check(code[0], ctx, f"{program} -e", "js")
     if has(opts, "--test") or (program == "bun" and pos[:1] in (["test"], ["run"])):
         return project_run(ctx, f"Runs `{program} {' '.join(pos[:2])}` in the project.")
     if has(opts, "-v", "--version", "-h", "--help"):
@@ -1621,7 +1826,7 @@ def h_script_lang(argv, ctx, stdin):
         if program == "osascript":
             for m in re.finditer(r'do shell script\s+"((?:\\.|[^"\\])*)"', " ".join(code)):
                 shell_string(arg(m.group(1)), ctx, [], "osascript")
-        return code_check(arg("\n".join(code), joined_marks(code)), ctx, f"{program} {flags[0]}")
+        return code_check(arg("\n".join(code), joined_marks(code)), ctx, f"{program} {flags[0]}", program)
     if has(opts, "-v", "--version"):
         ctx.add("read", f"Shows the {program} version.")
         return Stage()
@@ -1985,8 +2190,10 @@ def h_git(argv, ctx, stdin, depth: int = 0):
     if sub in GIT_WRITE:
         if sub in ("pull", "fetch") or sub == "send-email":
             gctx.add("egress", f"Talks to a remote repository (git {sub}).")
-        if gctx.in_project():
+        if gctx.in_project() or sub == "fetch":  # fetch only adds what the remote has: wherever it runs
             gctx.add("write", f"Changes the repository (git {sub}).")
+        elif ctx.where.place(gctx.cwd) == "temp":
+            gctx.add("write-temp", f"Changes a repository in a temporary folder (git {sub}).")
         else:
             gctx.add("write-outside", f"Changes a repository outside the project (git {sub}).")
         return Stage()
@@ -2784,12 +2991,39 @@ def h_claude(argv, ctx, stdin):
     return Stage()
 
 
-def own_helper(argv: list[Arg], ctx: Ctx) -> Stage:
-    """The haris helper: reading commands are fine; playing a hook by hand is not."""
+def installed_helper(path: str, ctx: Ctx) -> bool:
+    """The haris that guards this session (or any copy under ~/.claude), not a source checkout."""
+    if path.startswith(PLUGIN_ROOT + "/"):
+        return not ctx.where.develops(PLUGIN_ROOT)
+    return not ctx.where.develops(path)
+
+
+def hook_data(ctx: Ctx) -> str | None:
+    """Where a haris hook run by this command keeps its approvals; None when only known when it runs."""
+    env = {**ctx.vars, **ctx.prefix}
+    if "HARIS_HOME" in env:
+        value = env["HARIS_HOME"]
+    elif "HOME" in env:
+        value = env["HOME"] + "/.claude/nexika/haris"
+    else:
+        return None if ctx.vars_lost else data_home()
+    return None if UNKNOWN in value or not value else ctx.where.resolve(value, ctx.cwd)
+
+
+def own_helper(argv: list[Arg], ctx: Ctx, installed: bool = True) -> Stage:
+    """The haris helper: reading commands are fine; playing a hook by hand is not. A source checkout's
+    hook is fine when it keeps its approvals away from the haris guarding this session."""
     words = [a for a in argv[1:] if not a.startswith("-")]
-    if "hook" in words:
+    data = None if installed or "hook" not in words else hook_data(ctx)
+    if "hook" in words and not installed and data is None:
+        ctx.add("unknown-target", "Runs a haris hook from a source checkout by hand; where it keeps its "
+                                  "approvals is only known when it runs, so it could be the haris guarding "
+                                  "you.")
+    elif "hook" in words and (installed or data == data_home() or data.startswith(data_home() + "/")):
         ctx.add("self", "Runs haris's hook by hand, which could fake your approval. Only Claude Code runs "
                         "hooks.")
+    elif "hook" in words:
+        ctx.add("exec", "Runs a haris hook from a source checkout, with its own data folder.")
     elif words[:1] and words[0] in ("why", "status", "audit", "check", "export", "approvals", "version",
                                     "help"):
         ctx.add("read", f"Shows haris information (haris {words[0]}).")
@@ -2802,6 +3036,8 @@ def h_haris(argv, ctx, stdin):
     return own_helper(argv, ctx)
 
 
+# Any copy's helper: a checkout's `haris hook` writes the same approvals as the installed one.
+HARIS_HELPER = re.compile(r"/haris(?:/[\w.+-]+)?/bin/haris$")
 MIZAN_HELPER = re.compile(r"/mizan(?:/[\w.+-]+)?/bin/mizan$")  # a checkout, or the cache's mizan/<version>
 
 
