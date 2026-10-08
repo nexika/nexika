@@ -244,6 +244,22 @@ def step_message(lines: list[str]) -> list[dict]:
     return found
 
 
+CONFLICT = re.compile(r"^CONFLICT \([\w/ -]+\): .*?(?:Merge conflict in|in) (\S+)$")
+MERGE_REF = re.compile(r"^\s*git (?:merge|rebase|pull)\b.*?\s(?:origin/)?([\w][\w./-]*)\s*$")
+
+
+def merge_conflict(lines: list[str]) -> list[dict]:
+    """A branch that does not merge into its base (#173): one failure per conflicting file, its test
+    'merge into <base>' when the step's 'git merge origin/<base>' is in the log."""
+    base = next((m.group(1) for line in lines if (m := MERGE_REF.match(line))), "")
+    found = []
+    for line in lines:
+        if (m := CONFLICT.match(line.strip())) and SAFE_PATH.match(m.group(1)):
+            found.append(_failure("git", "merge", f"merge into {base}" if base else "merge",
+                                  m.group(1), message=line.strip()))
+    return found
+
+
 def playwright(lines: list[str]) -> list[dict]:
     """Playwright's failed tests: the summary's "failed" group when there is one (a test in its "flaky"
     group passed on a retry), else the numbered error blocks, else the list reporter's ✘ lines."""
@@ -461,6 +477,7 @@ def failures(lines: list[str]) -> list[dict]:
     found += pre_commit(lines)
     found += conftest(lines)
     found += formatter(lines)
+    found += merge_conflict(lines)
     found += playwright(lines)
     for block in junit_blocks(lines):
         found += junit_xml(block)

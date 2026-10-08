@@ -668,6 +668,34 @@ def test_an_echo_that_is_not_printed_is_not_a_failure():
     assert parse.read_log(gh_log("docs", lines))["docs"]["failures"] == []
 
 
+# psf/black run 29181739120 (#173): diff-shades merges the pull request into main first, and it conflicts.
+MERGE_LOG = [
+    "##[group]Run gh pr checkout 5222",
+    "gh pr checkout 5222",
+    "git merge origin/main",
+    "python -m pip install .",
+    "shell: /usr/bin/bash -e {0}",
+    "##[endgroup]",
+    "Switched to branch 'rsb-23/main'",
+    "Auto-merging CHANGES.md",
+    "CONFLICT (content): Merge conflict in CHANGES.md",
+    "Auto-merging src/black/comments.py",
+    "Automatic merge failed; fix conflicts and then commit the result.",
+    "##[error]Process completed with exit code 1.",
+]
+
+
+def test_a_branch_that_does_not_merge_says_rebase(ci, monkeypatch):
+    from tabib import cli
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log("analysis / target", MERGE_LOG))
+    record = diagnosis.triage(ci)
+    assert (record["kind"], record["detail"]["what"]) == ("code", "merge")
+    assert [(f["framework"], f["file"]) for f in record["failures"]] == [("git", "CHANGES.md")]
+    text = cli.report(record, "en")
+    assert "does not merge into main" in text and "rebase" in text and "CHANGES.md" in text
+    assert "/itqan:ship" not in text
+
+
 # pallets/flask run 37632508911 (#132): the conftest could not be imported, so pytest ran nothing (exit 4).
 CONFTEST_LOG = [
     "tests-dev: commands[1]> pytest -v --tb=short --basetemp=/home/runner/work/flask/flask/.tox/tmp/tests-dev",

@@ -95,6 +95,10 @@ def report(record: dict, language: str = "") -> str:
         commands = "; ".join(f"{parse.FORMAT_COMMANDS[tool]} {' '.join(list(files)[:10])}"
                              for tool, files in tools.items())
         out.append("  " + t("next_format", lg, commands=commands))
+    elif record["failures"] and all(f["framework"] == "git" for f in record["failures"]):
+        base = record["failures"][0]["test"].removeprefix("merge").removeprefix(" into ") or "the base branch"
+        files = ", ".join(dict.fromkeys(f["file"] for f in record["failures"]))
+        out.append("  " + t("next_rebase", lg, base=base, files=files))
     elif record["failures"] and all(f["framework"] == "step" for f in record["failures"]):
         out.append("  " + t("next_check", lg))
     elif record["failures"]:
