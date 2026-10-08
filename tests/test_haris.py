@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import io
 import json
+import os
 import stat
 import statistics
 import subprocess
@@ -802,3 +803,92 @@ def test_a_checkout_hook_with_its_own_data_folder_is_fine(world, checkout):
     assert d.verdict == "ask", (d.verdict, d.cls, d.reason)
     d = decide(repo, "Bash", f"HARIS_HOME=~/.claude/nexika/haris {hook}")
     assert d.verdict == "deny" and d.cls == "self", (d.verdict, d.cls, d.reason)
+
+
+# ---------------------------------------------------------------- fewer false asks (#117)
+
+
+def test_backticks_in_python_or_js_text_are_not_shell_commands(world):
+    home, project = world
+    edit = ("python3 - <<'EOF'\nfrom pathlib import Path\np = Path('README.md')\n"
+            "p.write_text(p.read_text().replace('`old`', 'run `make test` first'))\nEOF")
+    d = decide(project, "Bash", edit)
+    assert d.verdict == "pass" and d.cls != "dynamic", (d.verdict, d.cls, d.reason)
+    d = decide(project, "Bash", "node -e 'console.log(`${1 + 1}`)'")
+    assert d.cls != "dynamic", (d.verdict, d.cls, d.reason)
+    for still in ("ruby -e 'puts `rm -rf ~`'", "perl -e 'print `rm -rf ~`'"):
+        assert decide(project, "Bash", still).verdict in ("ask", "deny"), still
+
+
+def test_python_that_runs_a_subprocess_still_asks(world):
+    home, project = world
+    code = "python3 - <<'EOF'\nimport subprocess, sys\nsubprocess.run(sys.argv[1:])\nEOF"
+    d = decide(project, "Bash", code)
+    assert d.verdict == "ask" and d.cls == "dynamic", (d.verdict, d.cls, d.reason)
+
+
+def test_python_writes_go_where_the_write_call_says(world):
+    home, project = world
+    stray = ("python3 - <<'EOF'\np = 'README.md'\ns = open(p).read()\nparts = s.split('/')\n"
+             "open(p, 'w').write('/'.join(parts))\nEOF")
+    d = decide(project, "Bash", stray)
+    assert d.verdict == "pass" and d.cls == "write", (d.verdict, d.cls, d.reason)
+    unknown = "python3 - <<'EOF'\nimport sys\nopen(sys.argv[1], 'w').write(open('/etc/hosts').read())\nEOF"
+    d = decide(project, "Bash", unknown)
+    assert d.verdict == "ask" and d.cls == "unknown-target", (d.verdict, d.cls, d.reason)
+    helper = "python3 - <<'EOF'\ndef put(p, s):\n    open(p, 'w').write(s)\nput('~/.bashrc', 'x')\nEOF"
+    assert decide(project, "Bash", helper).verdict == "deny"
+    assert decide(project, "Bash", "python3 -c \"open('/etc/hosts', 'w').write('x')\"").verdict == "deny"
+
+
+def test_git_fetch_never_asks_about_where_the_repository_is(world, tmp_path):
+    home, project = world
+    worktree = tmp_path / "wt"
+    _git(project, "worktree", "add", "-q", "--detach", str(worktree))
+    try:
+        for command in (f"cd {worktree} && git fetch origin", f"git -C {worktree} fetch -q origin main",
+                        "cd ~ && git fetch origin"):
+            d = decide(project, "Bash", command)
+            assert d.verdict not in ("ask", "deny"), (command, d.verdict, d.cls, d.reason)
+        d = decide(project, "Bash", f"cd {worktree} && git merge origin/main")
+        assert d.verdict not in ("ask", "deny"), (d.verdict, d.cls, d.reason)
+    finally:
+        _git(project, "worktree", "remove", "--force", str(worktree))
+    assert decide(project, "Bash", "cd ~/work && git init -q other").verdict == "ask"
+
+
+def test_the_session_scratchpad_counts_as_a_place_to_write(world):
+    home, project = world
+    pad = "/tmp/claude-1000/-home-u-proj/5e55a0b1-1111-2222-3333-444455556666/scratchpad"
+    for tool, value in (("Write", pad + "/notes.md"),
+                        ("Bash", f"S={pad}; mkdir -p $S/out && cat > $S/out/a.py <<'EOF'\nx = 1\nEOF"),
+                        ("Bash", f"cd {pad} && git init -q r && cd r && git commit -q --allow-empty -m x")):
+        d = decide(project, tool, value)
+        assert d.verdict not in ("ask", "deny"), (value, d.verdict, d.cls, d.reason)
+
+
+def test_python_that_only_edits_code_text_is_judged_by_what_it_does(world):
+    home, project = world
+    edit = ("python3 - <<'EOF'\np = 'src/app.py'\ns = open(p).read()\n"
+            "s = s.replace('x = 1', '''import shutil, subprocess\n"
+            "shutil.rmtree(tmp)\nsubprocess.run(cmd)\n''')\n"
+            "open(p, 'w').write(s)\nEOF")
+    d = decide(project, "Bash", edit)
+    assert d.verdict == "pass" and d.cls == "write", (d.verdict, d.cls, d.reason)
+    for hidden in ("python3 - <<'EOF'\n# '''\nimport shutil\nshutil.rmtree('/')\nx = '''y'''\nEOF",
+                   "python3 -c \"exec('import shutil; shutil.rmtree(\\\"/\\\")')\"",
+                   "python3 -c \"import shutil; shutil.rmtree(f'{\\\"/\\\"}')\""):
+        assert decide(project, "Bash", hidden).verdict in ("ask", "deny"), hidden
+
+
+def test_editing_haris_source_that_mentions_its_data_is_ordinary(world, checkout):
+    repo, _ = checkout
+    edit = ("python3 - <<'EOF'\np = 'plugins/haris/haris/paths.py'\ns = open(p).read()\n"
+            "s = s.replace('a', '''HOME = \"~/.claude/nexika/status\"\\nstate.publish(x)\\n''')\n"
+            "open(p, 'w').write(s)\nEOF")
+    d = decide(repo, "Bash", edit)
+    assert d.verdict != "deny" and d.cls != "self", (d.verdict, d.cls, d.reason)
+    status = os.environ.get("NEXIKA_STATUS_HOME") or "~/.claude/nexika/status"
+    for still in (f"python3 -c \"open('{status}/mizan/a.json', 'w').write('x')\"",
+                  "python3 - <<'EOF'\nfrom mizan import status\nstatus.publish('mizan', {})\nEOF"):
+        assert decide(repo, "Bash", still).verdict == "deny", still
