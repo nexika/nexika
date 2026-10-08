@@ -1,0 +1,2134 @@
+{
+ "_source": "psf/black (MIT), real gh JSON from 2026-10-08, trimmed; built from the mizan public test set (#52)",
+ "prs": [
+  {
+   "author": {
+    "id": "U_kgDOCKus4A",
+    "is_bot": false,
+    "login": "Prateek99-s",
+    "name": ""
+   },
+   "headRefName": "fix-type-ignore-subscript-split-3681",
+   "isCrossRepository": true,
+   "number": 5498,
+   "url": "https://github.com/psf/black/pull/5498",
+   "headRefOid": "6cdf60c5b161b29c8ecf792364fefd6523bd325a"
+  },
+  {
+   "author": {
+    "id": "U_kgDOEVx4cQ",
+    "is_bot": false,
+    "login": "jiteshgulati",
+    "name": "Jitesh Gulati"
+   },
+   "headRefName": "fix-gitignore-bom",
+   "isCrossRepository": true,
+   "number": 5497,
+   "url": "https://github.com/psf/black/pull/5497",
+   "headRefOid": "0698a80ead119934c600fef15ed72b5ca33d5ed0"
+  },
+  {
+   "author": {
+    "id": "U_kgDOCKus4A",
+    "is_bot": false,
+    "login": "Prateek99-s",
+    "name": ""
+   },
+   "headRefName": "fix-redundant-parens-getitem-3679",
+   "isCrossRepository": true,
+   "number": 5496,
+   "url": "https://github.com/psf/black/pull/5496",
+   "headRefOid": "9e461ccf143fbbc496c0ff9d93a65893f0627c13"
+  },
+  {
+   "author": {
+    "is_bot": true,
+    "login": "app/dependabot"
+   },
+   "headRefName": "dependabot/pip/wcwidth-0.9.2",
+   "isCrossRepository": false,
+   "number": 5495,
+   "url": "https://github.com/psf/black/pull/5495"
+  },
+  {
+   "author": {
+    "id": "MDQ6VXNlcjEzOTMwNjg=",
+    "is_bot": false,
+    "login": "msuozzo",
+    "name": "Matthew Suozzo"
+   },
+   "headRefName": "push-xsktyxlrzopp",
+   "isCrossRepository": true,
+   "number": 5493,
+   "url": "https://github.com/psf/black/pull/5493"
+  },
+  {
+   "author": {
+    "id": "U_kgDOB_Wh8A",
+    "is_bot": false,
+    "login": "Mohamedajab",
+    "name": "Mohamed A. Ali"
+   },
+   "headRefName": "docs/existing-project-rollout",
+   "isCrossRepository": true,
+   "number": 5472,
+   "url": "https://github.com/psf/black/pull/5472"
+  },
+  {
+   "author": {
+    "id": "U_kgDOCxGa-w",
+    "is_bot": false,
+    "login": "maple-pwn",
+    "name": "Maple"
+   },
+   "headRefName": "fix-compatible-release-targets",
+   "isCrossRepository": true,
+   "number": 5469,
+   "url": "https://github.com/psf/black/pull/5469"
+  },
+  {
+   "author": {
+    "id": "U_kgDOCJKeKw",
+    "is_bot": false,
+    "login": "santhosh220z",
+    "name": "Santhosh Sunkara"
+   },
+   "headRefName": "fix/nested-gitignore-negation",
+   "isCrossRepository": true,
+   "number": 5453,
+   "url": "https://github.com/psf/black/pull/5453"
+  },
+  {
+   "author": {
+    "is_bot": true,
+    "login": "app/pre-commit-ci"
+   },
+   "headRefName": "pre-commit-ci-update-config",
+   "isCrossRepository": false,
+   "number": 5451,
+   "url": "https://github.com/psf/black/pull/5451"
+  },
+  {
+   "author": {
+    "id": "U_kgDOBb0Fxw",
+    "is_bot": false,
+    "login": "januththedev",
+    "name": "Januth Nimnal"
+   },
+   "headRefName": "fix/with-tuple-context-parens",
+   "isCrossRepository": true,
+   "number": 5440,
+   "url": "https://github.com/psf/black/pull/5440"
+  },
+  {
+   "author": {
+    "id": "U_kgDODo2u1g",
+    "is_bot": false,
+    "login": "kokokoXUY",
+    "name": "XU"
+   },
+   "headRefName": "fix/config-root-for-nested-repo",
+   "isCrossRepository": true,
+   "number": 5437,
+   "url": "https://github.com/psf/black/pull/5437"
+  },
+  {
+   "author": {
+    "id": "U_kgDOCKus4A",
+    "is_bot": false,
+    "login": "Prateek99-s",
+    "name": ""
+   },
+   "headRefName": "remove-parens-lists-608",
+   "isCrossRepository": true,
+   "number": 5431,
+   "url": "https://github.com/psf/black/pull/5431"
+  },
+  {
+   "author": {
+    "id": "U_kgDOCUY24Q",
+    "is_bot": false,
+    "login": "RRXXZZYY",
+    "name": "ZhongYu Li"
+   },
+   "headRefName": "fix/nested-gitignore-negations",
+   "isCrossRepository": true,
+   "number": 5382,
+   "url": "https://github.com/psf/black/pull/5382"
+  },
+  {
+   "author": {
+    "id": "MDQ6VXNlcjIwMjY0ODY3",
+    "is_bot": false,
+    "login": "rootsec1",
+    "name": "Abhishek Murthy"
+   },
+   "headRefName": "fix-4026-standalone-comment-delimiter-split",
+   "isCrossRepository": true,
+   "number": 5375,
+   "url": "https://github.com/psf/black/pull/5375"
+  },
+  {
+   "author": {
+    "id": "U_kgDOCw_Rsw",
+    "is_bot": false,
+    "login": "airbate",
+    "name": "airbate"
+   },
+   "headRefName": "airbate/warn-filesystem-root",
+   "isCrossRepository": true,
+   "number": 5347,
+   "url": "https://github.com/psf/black/pull/5347"
+  },
+  {
+   "author": {
+    "id": "U_kgDOCI77PQ",
+    "is_bot": false,
+    "login": "tagadearpit",
+    "name": "Arpit Tagade"
+   },
+   "headRefName": "fix/496-fmt-off-eof-blank-lines",
+   "isCrossRepository": true,
+   "number": 5336,
+   "url": "https://github.com/psf/black/pull/5336"
+  },
+  {
+   "author": {
+    "id": "MDQ6VXNlcjQxMzUyMTIz",
+    "is_bot": false,
+    "login": "dajinzhu",
+    "name": ""
+   },
+   "headRefName": "issue-4040-long-call-kwargs",
+   "isCrossRepository": true,
+   "number": 5335,
+   "url": "https://github.com/psf/black/pull/5335"
+  },
+  {
+   "author": {
+    "id": "U_kgDOEGnh_w",
+    "is_bot": false,
+    "login": "alexchen-sys",
+    "name": "Alex Chen"
+   },
+   "headRefName": "fix-3694-gitignore-dir-negation",
+   "isCrossRepository": true,
+   "number": 5306,
+   "url": "https://github.com/psf/black/pull/5306"
+  },
+  {
+   "author": {
+    "id": "U_kgDOEREh3g",
+    "is_bot": false,
+    "login": "harisawan-bit",
+    "name": "Muhammad Haris Awan"
+   },
+   "headRefName": "fix/issue-3581-target-version-greater-than",
+   "isCrossRepository": true,
+   "number": 5269,
+   "url": "https://github.com/psf/black/pull/5269"
+  },
+  {
+   "author": {
+    "id": "U_kgDOERtMVQ",
+    "is_bot": false,
+    "login": "ColumbusLabs",
+    "name": "Columbus Labs"
+   },
+   "headRefName": "codex/black-260-symmetric-list-concat",
+   "isCrossRepository": true,
+   "number": 5259,
+   "url": "https://github.com/psf/black/pull/5259"
+  },
+  {
+   "author": {
+    "id": "U_kgDOCEQ1JA",
+    "is_bot": false,
+    "login": "zhangli091011",
+    "name": ""
+   },
+   "headRefName": "fix/parenthesize-whole-condition",
+   "isCrossRepository": true,
+   "number": 5252,
+   "url": "https://github.com/psf/black/pull/5252"
+  },
+  {
+   "author": {
+    "id": "MDQ6VXNlcjU3NjAxNjI3",
+    "is_bot": false,
+    "login": "rsb-23",
+    "name": "Mr. RB"
+   },
+   "headRefName": "main",
+   "isCrossRepository": true,
+   "number": 5222,
+   "url": "https://github.com/psf/black/pull/5222",
+   "headRefOid": "a229524288ef8fa47db13f0542c83382605a74b4"
+  },
+  {
+   "author": {
+    "id": "MDQ6VXNlcjY2MDkwNjUw",
+    "is_bot": false,
+    "login": "ParamChordiya",
+    "name": "Param "
+   },
+   "headRefName": "fix/atomic-write-in-place",
+   "isCrossRepository": true,
+   "number": 5207,
+   "url": "https://github.com/psf/black/pull/5207"
+  },
+  {
+   "author": {
+    "is_bot": true,
+    "login": "app/dependabot"
+   },
+   "headRefName": "dependabot/pip/docutils-0.23",
+   "isCrossRepository": false,
+   "number": 5166,
+   "url": "https://github.com/psf/black/pull/5166"
+  },
+  {
+   "author": {
+    "id": "U_kgDOBtMUSQ",
+    "is_bot": false,
+    "login": "Pedro-Muller29",
+    "name": "Pedro Mezacasa Muller"
+   },
+   "headRefName": "feat/4506-multi-cell-fixtures",
+   "isCrossRepository": true,
+   "number": 5149,
+   "url": "https://github.com/psf/black/pull/5149"
+  },
+  {
+   "author": {
+    "is_bot": true,
+    "login": "app/dependabot"
+   },
+   "headRefName": "dependabot/pip/hatch-1.16.5",
+   "isCrossRepository": false,
+   "number": 5037,
+   "url": "https://github.com/psf/black/pull/5037"
+  },
+  {
+   "author": {
+    "is_bot": true,
+    "login": "app/dependabot"
+   },
+   "headRefName": "dependabot/pip/virtualenv-lt-22.0.0",
+   "isCrossRepository": false,
+   "number": 5023,
+   "url": "https://github.com/psf/black/pull/5023"
+  },
+  {
+   "author": {
+    "id": "MDQ6VXNlcjYxMzI5ODEw",
+    "is_bot": false,
+    "login": "cobaltt7",
+    "name": "cobalt"
+   },
+   "headRefName": "wrap_comprehension_in",
+   "isCrossRepository": true,
+   "number": 4881,
+   "url": "https://github.com/psf/black/pull/4881"
+  }
+ ],
+ "runs": {
+  "86e2832d": [
+   {
+    "databaseId": 37824955697,
+    "name": "test",
+    "status": "completed",
+    "conclusion": "cancelled",
+    "headSha": "86e2832de769156bc92d7828de69a5902bd42cce",
+    "headBranch": "fix-type-ignore-subscript-split-3681",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T18:31:32Z"
+   },
+   {
+    "databaseId": 37824955690,
+    "name": "diff-shades",
+    "status": "completed",
+    "conclusion": "cancelled",
+    "headSha": "86e2832de769156bc92d7828de69a5902bd42cce",
+    "headBranch": "fix-type-ignore-subscript-split-3681",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T18:31:32Z"
+   },
+   {
+    "databaseId": 37824955673,
+    "name": "lint and format",
+    "status": "completed",
+    "conclusion": "failure",
+    "headSha": "86e2832de769156bc92d7828de69a5902bd42cce",
+    "headBranch": "fix-type-ignore-subscript-split-3681",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T18:31:32Z"
+   },
+   {
+    "databaseId": 37824955666,
+    "name": "build and publish",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "86e2832de769156bc92d7828de69a5902bd42cce",
+    "headBranch": "fix-type-ignore-subscript-split-3681",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T18:31:32Z"
+   },
+   {
+    "databaseId": 37824955652,
+    "name": "changelog",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "86e2832de769156bc92d7828de69a5902bd42cce",
+    "headBranch": "fix-type-ignore-subscript-split-3681",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T18:31:32Z"
+   },
+   {
+    "databaseId": 37824955647,
+    "name": "docs",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "86e2832de769156bc92d7828de69a5902bd42cce",
+    "headBranch": "fix-type-ignore-subscript-split-3681",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T18:31:32Z"
+   }
+  ],
+  "ee819f1d": [
+   {
+    "databaseId": 37746207592,
+    "name": "diff-shades",
+    "status": "completed",
+    "conclusion": "cancelled",
+    "headSha": "ee819f1de79886e54f69382f30d9902e82212d2f",
+    "headBranch": "fix-redundant-parens-getitem-3679",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T07:53:05Z"
+   },
+   {
+    "databaseId": 37746207568,
+    "name": "lint and format",
+    "status": "completed",
+    "conclusion": "failure",
+    "headSha": "ee819f1de79886e54f69382f30d9902e82212d2f",
+    "headBranch": "fix-redundant-parens-getitem-3679",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T07:53:05Z"
+   },
+   {
+    "databaseId": 37746207567,
+    "name": "build and publish",
+    "status": "completed",
+    "conclusion": "failure",
+    "headSha": "ee819f1de79886e54f69382f30d9902e82212d2f",
+    "headBranch": "fix-redundant-parens-getitem-3679",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T07:53:05Z"
+   },
+   {
+    "databaseId": 37746207537,
+    "name": "test",
+    "status": "completed",
+    "conclusion": "cancelled",
+    "headSha": "ee819f1de79886e54f69382f30d9902e82212d2f",
+    "headBranch": "fix-redundant-parens-getitem-3679",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T07:53:05Z"
+   },
+   {
+    "databaseId": 37746207536,
+    "name": "docs",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "ee819f1de79886e54f69382f30d9902e82212d2f",
+    "headBranch": "fix-redundant-parens-getitem-3679",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T07:53:05Z"
+   },
+   {
+    "databaseId": 37746207497,
+    "name": "changelog",
+    "status": "completed",
+    "conclusion": "failure",
+    "headSha": "ee819f1de79886e54f69382f30d9902e82212d2f",
+    "headBranch": "fix-redundant-parens-getitem-3679",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T07:53:05Z"
+   }
+  ],
+  "9e461ccf": [
+   {
+    "databaseId": 37761554967,
+    "name": "diff-shades",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "9e461ccf143fbbc496c0ff9d93a65893f0627c13",
+    "headBranch": "fix-redundant-parens-getitem-3679",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T10:08:59Z"
+   },
+   {
+    "databaseId": 37761554819,
+    "name": "lint and format",
+    "status": "completed",
+    "conclusion": "failure",
+    "headSha": "9e461ccf143fbbc496c0ff9d93a65893f0627c13",
+    "headBranch": "fix-redundant-parens-getitem-3679",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T10:08:59Z"
+   },
+   {
+    "databaseId": 37761554780,
+    "name": "changelog",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "9e461ccf143fbbc496c0ff9d93a65893f0627c13",
+    "headBranch": "fix-redundant-parens-getitem-3679",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T10:08:59Z"
+   },
+   {
+    "databaseId": 37761554748,
+    "name": "build and publish",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "9e461ccf143fbbc496c0ff9d93a65893f0627c13",
+    "headBranch": "fix-redundant-parens-getitem-3679",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T10:08:59Z"
+   },
+   {
+    "databaseId": 37761554721,
+    "name": "docs",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "9e461ccf143fbbc496c0ff9d93a65893f0627c13",
+    "headBranch": "fix-redundant-parens-getitem-3679",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T10:08:59Z"
+   },
+   {
+    "databaseId": 37761554720,
+    "name": "test",
+    "status": "completed",
+    "conclusion": "failure",
+    "headSha": "9e461ccf143fbbc496c0ff9d93a65893f0627c13",
+    "headBranch": "fix-redundant-parens-getitem-3679",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T10:08:59Z"
+   }
+  ],
+  "eb883582": [
+   {
+    "databaseId": 37665133488,
+    "name": "diff-shades comment",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "eb8835829969f82c2567119f528b188769f3ac6d",
+    "headBranch": "main",
+    "event": "workflow_run",
+    "createdAt": "2026-10-07T18:13:14Z"
+   },
+   {
+    "databaseId": 37660537792,
+    "name": "diff-shades comment",
+    "status": "completed",
+    "conclusion": "skipped",
+    "headSha": "eb8835829969f82c2567119f528b188769f3ac6d",
+    "headBranch": "main",
+    "event": "workflow_run",
+    "createdAt": "2026-10-07T17:37:44Z"
+   },
+   {
+    "databaseId": 37658532250,
+    "name": "docker",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "eb8835829969f82c2567119f528b188769f3ac6d",
+    "headBranch": "main",
+    "event": "push",
+    "createdAt": "2026-10-07T17:22:17Z"
+   },
+   {
+    "databaseId": 37658532235,
+    "name": "fuzz",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "eb8835829969f82c2567119f528b188769f3ac6d",
+    "headBranch": "main",
+    "event": "push",
+    "createdAt": "2026-10-07T17:22:17Z"
+   },
+   {
+    "databaseId": 37658532189,
+    "name": "lint and format",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "eb8835829969f82c2567119f528b188769f3ac6d",
+    "headBranch": "main",
+    "event": "push",
+    "createdAt": "2026-10-07T17:22:17Z"
+   },
+   {
+    "databaseId": 37658532176,
+    "name": "diff-shades",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "eb8835829969f82c2567119f528b188769f3ac6d",
+    "headBranch": "main",
+    "event": "push",
+    "createdAt": "2026-10-07T17:22:17Z"
+   },
+   {
+    "databaseId": 37658532171,
+    "name": "build and publish",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "eb8835829969f82c2567119f528b188769f3ac6d",
+    "headBranch": "main",
+    "event": "push",
+    "createdAt": "2026-10-07T17:22:17Z"
+   },
+   {
+    "databaseId": 37658532143,
+    "name": "test",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "eb8835829969f82c2567119f528b188769f3ac6d",
+    "headBranch": "main",
+    "event": "push",
+    "createdAt": "2026-10-07T17:22:17Z"
+   },
+   {
+    "databaseId": 37658532064,
+    "name": "docs",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "eb8835829969f82c2567119f528b188769f3ac6d",
+    "headBranch": "main",
+    "event": "push",
+    "createdAt": "2026-10-07T17:22:17Z"
+   }
+  ]
+ },
+ "jobs": {
+  "37824955697": {
+   "jobs": [
+    {
+     "name": "uvloop (ubuntu-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292568
+    },
+    {
+     "name": "uvloop (windows-11-arm)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292585
+    },
+    {
+     "name": "test (3.10, ubuntu-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292593
+    },
+    {
+     "name": "test (3.15, macOS-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292630
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, windows-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292638
+    },
+    {
+     "name": "test (3.10, macOS-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292700
+    },
+    {
+     "name": "test (3.14, macOS-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292701
+    },
+    {
+     "name": "test (3.11, ubuntu-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292704
+    },
+    {
+     "name": "test (3.15, ubuntu-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292733
+    },
+    {
+     "name": "test (3.13, windows-11-arm)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292739
+    },
+    {
+     "name": "test (3.12.10, windows-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292741
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, ubuntu-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292745
+    },
+    {
+     "name": "uvloop (macOS-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292751
+    },
+    {
+     "name": "test (3.12.10, windows-11-arm)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292760
+    },
+    {
+     "name": "test (3.15, windows-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292765
+    },
+    {
+     "name": "test (3.12.10, macOS-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292772
+    },
+    {
+     "name": "test (3.12.10, ubuntu-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292786
+    },
+    {
+     "name": "uvloop (windows-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292788
+    },
+    {
+     "name": "test (3.11, macOS-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292791
+    },
+    {
+     "name": "test (3.11, windows-11-arm)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292807
+    },
+    {
+     "name": "test (3.14, windows-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292813
+    },
+    {
+     "name": "test (3.11, windows-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292822
+    },
+    {
+     "name": "test (3.13, ubuntu-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292844
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, macOS-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292862
+    },
+    {
+     "name": "test (3.13, macOS-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292917
+    },
+    {
+     "name": "test (3.14, windows-11-arm)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292945
+    },
+    {
+     "name": "test (3.14, ubuntu-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292954
+    },
+    {
+     "name": "test (3.10, windows-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292959
+    },
+    {
+     "name": "test (3.15, windows-11-arm)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475292982
+    },
+    {
+     "name": "test (3.13, windows-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113475293048
+    },
+    {
+     "name": "coveralls-finish",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113476119984
+    }
+   ]
+  },
+  "37746207537": {
+   "jobs": [
+    {
+     "name": "uvloop (windows-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208187309
+    },
+    {
+     "name": "test (3.10, ubuntu-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208187620
+    },
+    {
+     "name": "test (3.12.10, ubuntu-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113208187666
+    },
+    {
+     "name": "uvloop (macOS-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208187682
+    },
+    {
+     "name": "test (3.15, windows-11-arm)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113208187690
+    },
+    {
+     "name": "test (3.12.10, macOS-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208187691
+    },
+    {
+     "name": "test (3.11, macOS-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208187712
+    },
+    {
+     "name": "test (3.10, macOS-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208187729
+    },
+    {
+     "name": "test (3.10, windows-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208187735
+    },
+    {
+     "name": "test (3.11, windows-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113208187747
+    },
+    {
+     "name": "uvloop (windows-11-arm)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113208187753
+    },
+    {
+     "name": "test (3.15, ubuntu-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208187755
+    },
+    {
+     "name": "test (3.11, ubuntu-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208187791
+    },
+    {
+     "name": "test (3.12.10, windows-11-arm)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208187840
+    },
+    {
+     "name": "uvloop (ubuntu-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208187846
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, macOS-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208187881
+    },
+    {
+     "name": "test (3.13, ubuntu-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208187905
+    },
+    {
+     "name": "test (3.11, windows-11-arm)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113208187915
+    },
+    {
+     "name": "test (3.14, windows-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208187934
+    },
+    {
+     "name": "test (3.15, macOS-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208187937
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, windows-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208187940
+    },
+    {
+     "name": "test (3.13, windows-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113208187980
+    },
+    {
+     "name": "test (3.12.10, windows-latest)",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113208188007
+    },
+    {
+     "name": "test (3.14, macOS-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208188120
+    },
+    {
+     "name": "test (3.13, windows-11-arm)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208188130
+    },
+    {
+     "name": "test (3.14, windows-11-arm)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208188175
+    },
+    {
+     "name": "test (3.13, macOS-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208188206
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, ubuntu-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208188246
+    },
+    {
+     "name": "test (3.15, windows-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208188265
+    },
+    {
+     "name": "test (3.14, ubuntu-latest)",
+     "status": "completed",
+     "conclusion": "failure",
+     "databaseId": 113208188268
+    },
+    {
+     "name": "coveralls-finish",
+     "status": "completed",
+     "conclusion": "cancelled",
+     "databaseId": 113209156882
+    }
+   ]
+  }
+ },
+ "pr": {
+  "5496": {
+   "headRefOid": "9e461ccf143fbbc496c0ff9d93a65893f0627c13",
+   "isCrossRepository": true,
+   "checks": [
+    {
+     "name": "lint",
+     "bucket": "fail",
+     "link": "https://github.com/psf/black/actions/runs/37761554819/job/113258927732",
+     "workflow": "lint and format"
+    },
+    {
+     "name": "generate wheels matrix",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554748/job/113258928279",
+     "workflow": "build and publish"
+    },
+    {
+     "name": "check",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554780/job/113258927767",
+     "workflow": "changelog"
+    },
+    {
+     "name": "configure",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554967/job/113258929355",
+     "workflow": "diff-shades"
+    },
+    {
+     "name": "docs (ubuntu-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554721/job/113258927754",
+     "workflow": "docs"
+    },
+    {
+     "name": "test (3.10, ubuntu-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929489",
+     "workflow": "test"
+    },
+    {
+     "name": "docs (windows-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554721/job/113258927573",
+     "workflow": "docs"
+    },
+    {
+     "name": "test (3.10, macOS-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929480",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.10, windows-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929548",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.11, ubuntu-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929563",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.11, macOS-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929483",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.11, windows-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929600",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.11, windows-11-arm)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929518",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.12.10, ubuntu-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929609",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.12.10, macOS-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929530",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.12.10, windows-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929478",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.12.10, windows-11-arm)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929717",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.13, ubuntu-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929658",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.13, macOS-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929674",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.13, windows-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929501",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.13, windows-11-arm)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929863",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.14, ubuntu-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929468",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.14, macOS-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929665",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.14, windows-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929515",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.14, windows-11-arm)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929864",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.15, ubuntu-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929624",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.15, macOS-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929522",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.15, windows-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929652",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.15, windows-11-arm)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929685",
+     "workflow": "test"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, ubuntu-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929642",
+     "workflow": "test"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, macOS-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929629",
+     "workflow": "test"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, windows-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929684",
+     "workflow": "test"
+    },
+    {
+     "name": "uvloop (ubuntu-latest)",
+     "bucket": "fail",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929218",
+     "workflow": "test"
+    },
+    {
+     "name": "sdist + pure wheel",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554748/job/113258928089",
+     "workflow": "build and publish"
+    },
+    {
+     "name": "analysis / base / assert-no-changes",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554967/job/113259042161",
+     "workflow": "diff-shades"
+    },
+    {
+     "name": "uvloop (macOS-latest)",
+     "bucket": "fail",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929134",
+     "workflow": "test"
+    },
+    {
+     "name": "analysis / base / preview-new-changes",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554967/job/113259042149",
+     "workflow": "diff-shades"
+    },
+    {
+     "name": "uvloop (windows-latest)",
+     "bucket": "fail",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258929268",
+     "workflow": "test"
+    },
+    {
+     "name": "uvloop (windows-11-arm)",
+     "bucket": "fail",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113258928842",
+     "workflow": "test"
+    },
+    {
+     "name": "mypyc wheels cp310-manylinux_x86_64",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554748/job/113259056353",
+     "workflow": "build and publish"
+    },
+    {
+     "name": "analysis / target / assert-no-changes",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554967/job/113259042407",
+     "workflow": "diff-shades"
+    },
+    {
+     "name": "coveralls-finish",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554720/job/113260750517",
+     "workflow": "test"
+    },
+    {
+     "name": "mypyc wheels cp312-macosx_x86_64",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554748/job/113259056491",
+     "workflow": "build and publish"
+    },
+    {
+     "name": "analysis / target / preview-new-changes",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554967/job/113259042124",
+     "workflow": "diff-shades"
+    },
+    {
+     "name": "mypyc wheels cp314-win_amd64",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554748/job/113259056391",
+     "workflow": "build and publish"
+    },
+    {
+     "name": "publish-hatch",
+     "bucket": "skipping",
+     "link": "https://github.com/psf/black/actions/runs/37761554748/job/113259523520",
+     "workflow": "build and publish"
+    },
+    {
+     "name": "compare / assert-no-changes",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554967/job/113263947301",
+     "workflow": "diff-shades"
+    },
+    {
+     "name": "compare / preview-new-changes",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/37761554967/job/113263947286",
+     "workflow": "diff-shades"
+    },
+    {
+     "name": "publish-mypyc",
+     "bucket": "skipping",
+     "link": "https://github.com/psf/black/actions/runs/37761554748/job/113260591615",
+     "workflow": "build and publish"
+    }
+   ],
+   "jobs_by_run": {
+    "37761554819": {
+     "jobs": [
+      {
+       "name": "lint",
+       "status": "completed",
+       "conclusion": "failure"
+      }
+     ]
+    },
+    "37761554748": {
+     "jobs": [
+      {
+       "name": "generate wheels matrix",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "sdist + pure wheel",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "mypyc wheels cp310-manylinux_x86_64",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "mypyc wheels cp312-macosx_x86_64",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "mypyc wheels cp314-win_amd64",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "publish-hatch",
+       "status": "completed",
+       "conclusion": "skipped"
+      },
+      {
+       "name": "publish-mypyc",
+       "status": "completed",
+       "conclusion": "skipped"
+      }
+     ]
+    },
+    "37761554780": {
+     "jobs": [
+      {
+       "name": "check",
+       "status": "completed",
+       "conclusion": "success"
+      }
+     ]
+    },
+    "37761554967": {
+     "jobs": [
+      {
+       "name": "configure",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "analysis / base / assert-no-changes",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "analysis / base / preview-new-changes",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "analysis / target / assert-no-changes",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "analysis / target / preview-new-changes",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "compare / assert-no-changes",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "compare / preview-new-changes",
+       "status": "completed",
+       "conclusion": "success"
+      }
+     ]
+    },
+    "37761554721": {
+     "jobs": [
+      {
+       "name": "docs (ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "docs (windows-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      }
+     ]
+    },
+    "37761554720": {
+     "jobs": [
+      {
+       "name": "test (3.10, ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.10, macOS-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.10, windows-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.11, ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.11, macOS-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.11, windows-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.11, windows-11-arm)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.12.10, ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.12.10, macOS-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.12.10, windows-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.12.10, windows-11-arm)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.13, ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.13, macOS-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.13, windows-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.13, windows-11-arm)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.14, ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.14, macOS-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.14, windows-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.14, windows-11-arm)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.15, ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.15, macOS-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.15, windows-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.15, windows-11-arm)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (pypy3.11-v7.3.22, ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (pypy3.11-v7.3.22, macOS-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (pypy3.11-v7.3.22, windows-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "uvloop (ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "failure"
+      },
+      {
+       "name": "uvloop (macOS-latest)",
+       "status": "completed",
+       "conclusion": "failure"
+      },
+      {
+       "name": "uvloop (windows-latest)",
+       "status": "completed",
+       "conclusion": "failure"
+      },
+      {
+       "name": "uvloop (windows-11-arm)",
+       "status": "completed",
+       "conclusion": "failure"
+      },
+      {
+       "name": "coveralls-finish",
+       "status": "completed",
+       "conclusion": "success"
+      }
+     ]
+    }
+   }
+  },
+  "4881": {
+   "headRefOid": "43ed0b4036b010e7ebc0d4404452b0d5eb9432b0",
+   "isCrossRepository": true,
+   "checks": [
+    {
+     "name": "lint",
+     "bucket": "fail",
+     "link": "https://github.com/psf/black/actions/runs/22249200256/job/64369342952",
+     "workflow": "lint and format"
+    },
+    {
+     "name": "generate wheels matrix",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200250/job/64369343053",
+     "workflow": "build and publish"
+    },
+    {
+     "name": "check",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200261/job/64369342956",
+     "workflow": "changelog"
+    },
+    {
+     "name": "configure",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200253/job/64369353475",
+     "workflow": "diff-shades"
+    },
+    {
+     "name": "docs (ubuntu-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200246/job/64369342960",
+     "workflow": "docs"
+    },
+    {
+     "name": "fuzz (3.10)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200257/job/64369345361",
+     "workflow": "fuzz"
+    },
+    {
+     "name": "test (3.10, ubuntu-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357629",
+     "workflow": "test"
+    },
+    {
+     "name": "docs (windows-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200246/job/64369342954",
+     "workflow": "docs"
+    },
+    {
+     "name": "fuzz (3.11)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200257/job/64369345358",
+     "workflow": "fuzz"
+    },
+    {
+     "name": "test (3.10, macOS-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357646",
+     "workflow": "test"
+    },
+    {
+     "name": "fuzz (3.12)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200257/job/64369345362",
+     "workflow": "fuzz"
+    },
+    {
+     "name": "test (3.10, windows-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357652",
+     "workflow": "test"
+    },
+    {
+     "name": "fuzz (3.13)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200257/job/64369345365",
+     "workflow": "fuzz"
+    },
+    {
+     "name": "test (3.11, ubuntu-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357625",
+     "workflow": "test"
+    },
+    {
+     "name": "fuzz (3.14)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200257/job/64369345359",
+     "workflow": "fuzz"
+    },
+    {
+     "name": "test (3.11, macOS-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357633",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.11, windows-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357640",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.11, windows-11-arm)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357632",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.12.10, ubuntu-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357645",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.12.10, macOS-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357637",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.12.10, windows-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357635",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.12.10, windows-11-arm)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357636",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.13, ubuntu-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357642",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.13, macOS-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357670",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.13, windows-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357667",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.13, windows-11-arm)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357666",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.14, ubuntu-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357671",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.14, macOS-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357669",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.14, windows-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357653",
+     "workflow": "test"
+    },
+    {
+     "name": "test (3.14, windows-11-arm)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357672",
+     "workflow": "test"
+    },
+    {
+     "name": "test (pypy-3.11, ubuntu-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357658",
+     "workflow": "test"
+    },
+    {
+     "name": "test (pypy-3.11, macOS-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357676",
+     "workflow": "test"
+    },
+    {
+     "name": "test (pypy-3.11, windows-latest)",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357659",
+     "workflow": "test"
+    },
+    {
+     "name": "uvloop (ubuntu-latest)",
+     "bucket": "fail",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357556",
+     "workflow": "test"
+    },
+    {
+     "name": "sdist + pure wheel",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200250/job/64369343056",
+     "workflow": "build and publish"
+    },
+    {
+     "name": "analysis / base / assert-no-changes",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200253/job/64369363549",
+     "workflow": "diff-shades"
+    },
+    {
+     "name": "uvloop (macOS-latest)",
+     "bucket": "fail",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369357554",
+     "workflow": "test"
+    },
+    {
+     "name": "analysis / base / preview-new-changes",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200253/job/64369363551",
+     "workflow": "diff-shades"
+    },
+    {
+     "name": "mypyc wheels cp310-manylinux_x86_64",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200250/job/64369353039",
+     "workflow": "build and publish"
+    },
+    {
+     "name": "analysis / target / assert-no-changes",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200253/job/64369363557",
+     "workflow": "diff-shades"
+    },
+    {
+     "name": "coveralls-finish",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200255/job/64369577064",
+     "workflow": "test"
+    },
+    {
+     "name": "mypyc wheels cp314-win_amd64",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200250/job/64369353046",
+     "workflow": "build and publish"
+    },
+    {
+     "name": "analysis / target / preview-new-changes",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200253/job/64369363546",
+     "workflow": "diff-shades"
+    },
+    {
+     "name": "publish-hatch",
+     "bucket": "skipping",
+     "link": "https://github.com/psf/black/actions/runs/22249200250/job/64369358293",
+     "workflow": "build and publish"
+    },
+    {
+     "name": "compare / assert-no-changes",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200253/job/64369917981",
+     "workflow": "diff-shades"
+    },
+    {
+     "name": "compare / preview-new-changes",
+     "bucket": "pass",
+     "link": "https://github.com/psf/black/actions/runs/22249200253/job/64369917989",
+     "workflow": "diff-shades"
+    },
+    {
+     "name": "publish-mypyc",
+     "bucket": "skipping",
+     "link": "https://github.com/psf/black/actions/runs/22249200250/job/64369530357",
+     "workflow": "build and publish"
+    },
+    {
+     "name": "update stable branch",
+     "bucket": "skipping",
+     "link": "https://github.com/psf/black/actions/runs/22249200250/job/64369530487",
+     "workflow": "build and publish"
+    }
+   ],
+   "jobs_by_run": {
+    "22249200256": {
+     "jobs": [
+      {
+       "name": "lint",
+       "status": "completed",
+       "conclusion": "failure"
+      }
+     ]
+    },
+    "22249200250": {
+     "jobs": [
+      {
+       "name": "generate wheels matrix",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "sdist + pure wheel",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "mypyc wheels cp310-manylinux_x86_64",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "mypyc wheels cp314-win_amd64",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "publish-hatch",
+       "status": "completed",
+       "conclusion": "skipped"
+      },
+      {
+       "name": "publish-mypyc",
+       "status": "completed",
+       "conclusion": "skipped"
+      },
+      {
+       "name": "update stable branch",
+       "status": "completed",
+       "conclusion": "skipped"
+      }
+     ]
+    },
+    "22249200261": {
+     "jobs": [
+      {
+       "name": "check",
+       "status": "completed",
+       "conclusion": "success"
+      }
+     ]
+    },
+    "22249200253": {
+     "jobs": [
+      {
+       "name": "configure",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "analysis / base / assert-no-changes",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "analysis / base / preview-new-changes",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "analysis / target / assert-no-changes",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "analysis / target / preview-new-changes",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "compare / assert-no-changes",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "compare / preview-new-changes",
+       "status": "completed",
+       "conclusion": "success"
+      }
+     ]
+    },
+    "22249200246": {
+     "jobs": [
+      {
+       "name": "docs (ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "docs (windows-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      }
+     ]
+    },
+    "22249200257": {
+     "jobs": [
+      {
+       "name": "fuzz (3.10)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "fuzz (3.11)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "fuzz (3.12)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "fuzz (3.13)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "fuzz (3.14)",
+       "status": "completed",
+       "conclusion": "success"
+      }
+     ]
+    },
+    "22249200255": {
+     "jobs": [
+      {
+       "name": "test (3.10, ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.10, macOS-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.10, windows-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.11, ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.11, macOS-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.11, windows-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.11, windows-11-arm)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.12.10, ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.12.10, macOS-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.12.10, windows-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.12.10, windows-11-arm)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.13, ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.13, macOS-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.13, windows-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.13, windows-11-arm)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.14, ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.14, macOS-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.14, windows-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (3.14, windows-11-arm)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (pypy-3.11, ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (pypy-3.11, macOS-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "test (pypy-3.11, windows-latest)",
+       "status": "completed",
+       "conclusion": "success"
+      },
+      {
+       "name": "uvloop (ubuntu-latest)",
+       "status": "completed",
+       "conclusion": "failure"
+      },
+      {
+       "name": "uvloop (macOS-latest)",
+       "status": "completed",
+       "conclusion": "failure"
+      },
+      {
+       "name": "coveralls-finish",
+       "status": "completed",
+       "conclusion": "success"
+      }
+     ]
+    }
+   }
+  }
+ }
+}

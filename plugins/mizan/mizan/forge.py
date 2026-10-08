@@ -9,6 +9,8 @@ these read commands run, with arguments as a list (no shell):
     gh pr checks <number> --json name,bucket,link
     gh run list --branch=<branch> --limit 20
         --json databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt
+    gh run list --workflow=<name> --status=completed --limit 20 --json ...
+        (CI running and the branch has no finished run of that workflow: for the time left)
     gh run view <id> --json jobs
     glab mr list --output json
     glab mr list --reviewer=@me --output json
@@ -150,7 +152,8 @@ def timing(all_runs: list[dict], running: list[dict], now: float | None = None) 
     return {"elapsed": elapsed, "eta": max(0, usual - elapsed)}
 
 
-def parse_gh_runs(text: str, head: str, now: float | None = None) -> dict:
+def parse_gh_runs(text: str, head: str, now: float | None = None, history: list[dict] | None = None) -> dict:
+    """history: more runs (other commits, other branches) to learn a workflow's usual duration from."""
     every = json.loads(text or "[]")
     runs = pick_runs(every, head)
     if not runs:
@@ -162,7 +165,8 @@ def parse_gh_runs(text: str, head: str, now: float | None = None) -> dict:
                 "failed_run": bad[0].get("databaseId"), "url": bad[0].get("url", "")}
     going = [r for r in runs if r.get("status") != "completed"]
     if going:
-        return {"state": "running", "failed": [], "failed_run": None, **timing(every, going, now)}
+        return {"state": "running", "failed": [], "failed_run": None,
+                **timing(every if history is None else history, going, now)}
     return {"state": "passed", "failed": [], "failed_run": None}
 
 
@@ -277,8 +281,18 @@ def fetch_ci(info: dict, pr: dict | None) -> dict:
             # Running: the run list below says for how long, and about how long is left.
         argv = ["gh", "run", "list", f"--branch={branch}", "--json",
                 "databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt", "--limit", "20"]
-        mine = ours(info, json.loads(run_tool(argv, cwd) or "[]"))
-        found = parse_gh_runs(json.dumps(mine), info.get("head", ""))
+        listed = json.loads(run_tool(argv, cwd) or "[]")
+        mine = ours(info, listed)
+        found = parse_gh_runs(json.dumps(mine), info.get("head", ""), history=listed)  # all: durations
+        if found["state"] == "running" and found.get("elapsed") is not None and found.get("eta") is None:
+            # No finished run of this workflow on the branch (a fork's new branch): its recent runs anywhere.
+            name = next((r.get("name") for r in pick_runs(mine, info.get("head", ""))
+                         if r.get("status") != "completed" and r.get("name")), "")
+            if name:
+                recent = json.loads(run_tool(["gh", "run", "list", f"--workflow={name}", "--status=completed",
+                                              "--json", "name,status,conclusion,startedAt,updatedAt",
+                                              "--limit", "20"], cwd) or "[]")
+                found = parse_gh_runs(json.dumps(mine), info.get("head", ""), history=listed + recent)
         if checks and checks["state"] == "running" and found["state"] != "running":
             return checks
         run_id = found.pop("failed_run", None)
