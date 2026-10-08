@@ -400,6 +400,149 @@ def test_proof_checks_lists_the_root_suite_and_its_command(proof, tmp_path, monk
     assert "npm" not in out and "node --test" not in out
 
 
+# ---------------------------------------------------------------- a project's own Python checks (psf/black)
+
+BLACK_TOX = """[tox]
+envlist = {,ci-}py{310,311,312},fuzz,run_self,generate_schema
+
+[testenv]
+setenv =
+    PYTHONPATH = {toxinidir}/src
+skip_install = True
+commands =
+    pip install -e .[d]
+    pytest tests --run-optional no_jupyter \\
+        --numprocesses auto \\
+        --cov {posargs}
+
+[testenv:{,ci-}pypy3]
+commands =
+    pytest tests
+
+[testenv:fuzz]
+commands =
+    coverage run {toxinidir}/scripts/fuzz.py
+
+[testenv:run_self]
+setenv =
+    PYTHONPATH = {toxinidir}/src
+commands =
+    pip install -e .
+    black --check {toxinidir}
+
+[testenv:generate_schema]
+commands =
+    python {toxinidir}/scripts/generate_schema.py --outfile {toxinidir}/src/black/resources/black.schema.json
+"""
+BLACK_PRE_COMMIT = """repos:
+  - repo: https://github.com/pycqa/flake8
+    hooks:
+      - id: flake8
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    hooks:
+      - id: mypy
+"""
+
+
+def black_like(tmp_path):
+    """psf/black's check setup: tox envs, pre-commit (flake8, mypy), [tool.mypy], src layout."""
+    root = tmp_path / "black"
+    (root / "tests").mkdir(parents=True)
+    (root / "src" / "black").mkdir(parents=True)
+    (root / "src" / "black" / "__init__.py").write_text("")
+    (root / "pyproject.toml").write_text('[project]\nname = "black"\n[tool.mypy]\nstrict = true\n')
+    (root / "tox.ini").write_text(BLACK_TOX)
+    (root / ".pre-commit-config.yaml").write_text(BLACK_PRE_COMMIT)
+    return root
+
+
+def test_proof_runs_black_s_own_checks(proof, tmp_path, monkeypatch):
+    # black case P1: only `pytest -q` was found; tox, pre-commit and mypy config were ignored
+    root = black_like(tmp_path)
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+    commands = {" ".join(c["argv"][-3:]): c["kind"] for c in proof.detect(root)}
+    assert commands.get("pre-commit run --all-files") == "lint"
+    assert commands.get("tox -e run_self") == "lint"
+    assert not any("mypy" in c for c in commands)  # pre-commit already runs mypy
+    assert not any("generate_schema" in c or "fuzz" in c for c in commands)
+
+
+def test_proof_lists_checks_found_but_not_run(proof, tmp_path, monkeypatch):
+    root = black_like(tmp_path)
+    monkeypatch.setattr(proof.shutil, "which", lambda name: None if name == "pre-commit" else f"/x/{name}")
+    not_run: list = []
+    proof.detect(root, not_run)
+    reasons = {n["command"]: n["reason"] for n in not_run}
+    assert "pre-commit is not installed" in reasons["pre-commit run --all-files"]
+    assert "tox -e generate_schema" in reasons and "tox -e fuzz" in reasons
+
+
+def test_a_proof_with_lint_skipped_does_not_pass(proof, tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("ITQAN_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("NEXIKA_STATUS_HOME", str(tmp_path / "status"))
+    root = tmp_path / "py"
+    (root / "tests").mkdir(parents=True)
+    (root / "pyproject.toml").write_text("[project]\nname='x'\n")
+    (root / ".pre-commit-config.yaml").write_text(BLACK_PRE_COMMIT)
+    real_which = proof.shutil.which
+    monkeypatch.setattr(proof.shutil, "which",
+                        lambda name: None if name == "pre-commit" else real_which(name))
+    monkeypatch.setattr(proof, "_python_tool", lambda root, tool: ["true"] if tool == "pytest" else [tool])
+    monkeypatch.chdir(root)
+    assert proof.main(["run"]) == 1
+    saved = json.loads(next((tmp_path / "home").glob("proofs/*/latest.json")).read_text())
+    assert [(c["kind"], c["passed"]) for c in saved["checks"]] == [("tests", True)]
+    assert saved["summary"]["checks_passed"] is False
+    assert saved["not_run"][0]["command"] == "pre-commit run --all-files"
+    assert "not run: pre-commit run --all-files" in capsys.readouterr().out
+
+
+def test_proof_runs_the_tests_through_tox_when_tox_ini_defines_them(proof, tmp_path, monkeypatch):
+    # black case P2 (#145): tox sets PYTHONPATH=src and installs the package; bare pytest cannot
+    root = black_like(tmp_path)
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+    tests = [c for c in proof.detect(root) if c["kind"] == "tests"]
+    assert [c["name"] for c in tests] == ["tox -e py"] and tests[0]["argv"][-2:] == ["-e", "py"]
+    monkeypatch.setattr(proof.shutil, "which", lambda name: None if name == "tox" else f"/usr/bin/{name}")
+    assert [c["name"] for c in proof.detect(root) if c["kind"] == "tests"] == ["pytest"]
+
+
+def test_a_missing_own_package_is_dependencies_not_installed(proof, tmp_path):
+    # black case P2: `python3 -m pytest -q` on a green main, no venv: 11 errors, No module named 'black'
+    root = black_like(tmp_path)
+    (root / "src" / "blackd").mkdir()
+    (root / "src" / "blackd" / "__init__.py").write_text("")
+    printed = ("ERROR tests/test_black.py\\nE   ModuleNotFoundError: No module named 'black'\\n"
+               "!!! Interrupted: 11 errors during collection !!!")
+    check = {"name": "pytest", "kind": "tests", "defined": "",
+             "argv": [sys.executable, "-c", f"print('{printed}'); raise SystemExit(2)"]}
+    result = proof.run_check(check, root, 30)
+    assert result["passed"] is False and "No module named 'black'" in result["not_installed"]
+    text = proof.describe({"project": str(root), "created": "now", "checks": [result]})
+    assert "NOT RUN" in text and "dependencies are not installed" in text and "FAILED" not in text
+    other = dict(check, argv=[sys.executable, "-c", "print(\"No module named 'yaml'\"); raise SystemExit(2)"])
+    assert not proof.run_check(other, root, 30).get("not_installed")  # not the project's own package
+
+
+def test_session_note_names_the_project_s_own_checks(tmp_path):
+    # black case S-pack (#151): the python pack suggested ruff on a project linted by flake8 and black
+    root = black_like(tmp_path)
+    out = run_hooks("session-start", {"cwd": str(root), "session_id": "s1"}, tmp_path / "h")
+    [line] = [ln for ln in out.splitlines() if ln.startswith("Project checks")]
+    assert "pre-commit run --all-files" in line and "tox -e run_self" in line
+    assert "ruff" not in line and "generate_schema" not in line
+
+
+def test_session_note_has_no_check_line_without_checks(tmp_path, repo):
+    out = run_hooks("session-start", {"cwd": str(repo), "session_id": "s1"}, tmp_path / "h")
+    assert "Project checks" not in out
+
+
+def test_python_pack_points_to_the_project_s_commands():
+    commands = (ITQAN / "packs" / "python.md").read_text().split("## Commands", 1)[1]
+    assert "Project checks" in commands and commands.index("Project checks") < commands.index("ruff")
+
+
 def test_stacks_are_detected_from_the_repo_root(tmp_path, repo):
     (repo / "pyproject.toml").write_text("[project]\nname='x'\n")
     (repo / "web").mkdir()

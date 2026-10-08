@@ -74,22 +74,75 @@ def _python_tool(root: Path, tool: str) -> list[str]:
     return [tool]
 
 
-def detect(root: Path) -> list[dict]:
-    """The project's checks, from its own files: {name, kind, argv}."""
+LINT_ENV = re.compile(r"(?i)\b(lint|flake8|mypy|pylint|ruff|isort|pre-commit|type-?check|typing|style)\b"
+                      r"|--check\b")
+
+
+def tox_envs(root: Path) -> dict[str, str]:
+    """tox.ini's environments: name -> its commands ("" names the default [testenv]). Generative names
+    like `{,ci-}py{310,311}` are left out: they are variants of the default."""
+    import configparser
+    path = root / "tox.ini"
+    if not path.is_file():
+        return {}
+    parser = configparser.ConfigParser(interpolation=None, strict=False)
+    try:
+        parser.read_string(path.read_text(encoding="utf-8", errors="replace"))
+    except (configparser.Error, OSError):
+        return {}
+    envs = {}
+    for section in parser.sections():
+        if section == "testenv":
+            envs[""] = parser.get(section, "commands", fallback="")
+        elif section.startswith("testenv:") and not set(section[8:]) & set("{},"):
+            envs[section[8:].strip()] = parser.get(section, "commands", fallback="")
+    return envs
+
+
+def detect(root: Path, not_run: list | None = None) -> list[dict]:
+    """The project's checks, from its own files: {name, kind, argv}. Checks found but not run (a tool
+    not installed, a tox env that is neither tests nor lint) are added to `not_run` when given."""
     found: list[dict] = []
+    skipped = not_run if not_run is not None else []
 
     def add(name: str, kind: str, argv: list[str], defined: str = "") -> None:
         if shutil.which(argv[0]):
             found.append({"name": name, "kind": kind, "argv": argv, "defined": defined})
+        else:
+            skipped.append({"name": name, "kind": kind, "command": " ".join(argv),
+                            "reason": f"{Path(argv[0]).name} is not installed"})
 
     pyproject = root / "pyproject.toml"
     py_text = pyproject.read_text(encoding="utf-8", errors="replace") if pyproject.is_file() else ""
     has_tests = (root / "tests").is_dir() or (root / "test").is_dir() or any(root.glob("test_*.py"))
-    if has_tests and (py_text or (root / "setup.cfg").is_file() or (root / "pytest.ini").is_file()
-                      or (root / "tox.ini").is_file()):
+    envs = tox_envs(root)
+    tox = _python_tool(root, "tox")
+    if "" in envs and shutil.which(tox[0]):
+        # the project's own way to test: tox installs the package and sets up its environment
+        add("tox -e py", "tests", [*tox, "-e", "py"], envs[""].strip()[:300])
+    elif has_tests and (py_text or (root / "setup.cfg").is_file() or (root / "pytest.ini").is_file()
+                        or (root / "tox.ini").is_file()):
         add("pytest", "tests", [*_python_tool(root, "pytest"), "-q"])
     if "[tool.ruff" in py_text or (root / "ruff.toml").is_file() or (root / ".ruff.toml").is_file():
         add("ruff", "lint", [*_python_tool(root, "ruff"), "check", "."])
+    pre_commit = root / ".pre-commit-config.yaml"
+    hooks = pre_commit.read_text(encoding="utf-8", errors="replace") if pre_commit.is_file() else ""
+    if hooks:
+        add("pre-commit", "lint", [*_python_tool(root, "pre-commit"), "run", "--all-files"])
+    setup_cfg = root / "setup.cfg"
+    cfg_text = setup_cfg.read_text(encoding="utf-8", errors="replace") if setup_cfg.is_file() else ""
+    mypy_config = ("[tool.mypy]" in py_text or "[mypy]" in cfg_text
+                   or (root / "mypy.ini").is_file() or (root / ".mypy.ini").is_file())
+    if mypy_config and not re.search(r"id:\s*mypy\b", hooks):
+        add("mypy", "lint", [*_python_tool(root, "mypy"), "."])
+    for env, commands in envs.items():
+        if not env:
+            continue
+        if LINT_ENV.search(env) or LINT_ENV.search(commands):
+            add(f"tox -e {env}", "lint", [*tox, "-e", env])
+        else:
+            skipped.append({"name": f"tox -e {env}", "kind": "other", "command": f"tox -e {env}",
+                            "reason": "a tox environment the proof does not run (not tests or lint)"})
 
     package = root / "package.json"
     if package.is_file():
@@ -137,9 +190,38 @@ def run_check(check: dict, root: Path, timeout: int) -> dict:
     lines = [redact(line)[:300] for line in output.splitlines() if line.strip()]
     shown = [Path(check["argv"][0]).name if check["argv"][0] == sys.executable else check["argv"][0],
              *check["argv"][1:]]
-    return {"name": check["name"], "kind": check["kind"], "command": " ".join(shown),
-            "defined": redact(check.get("defined", "")), "exit_code": code,
-            "passed": code == 0, "seconds": round(time.monotonic() - start, 1), "tail": lines[-TAIL:]}
+    result = {"name": check["name"], "kind": check["kind"], "command": " ".join(shown),
+              "defined": redact(check.get("defined", "")), "exit_code": code,
+              "passed": code == 0, "seconds": round(time.monotonic() - start, 1), "tail": lines[-TAIL:]}
+    missing = _own_package_missing(root, output) if code != 0 and check["kind"] == "tests" else ""
+    if missing:
+        result["not_installed"] = f"No module named '{missing}'"
+    return result
+
+
+def own_packages(root: Path) -> set[str]:
+    """The project's own importable names: its [project] name and the packages at the root or in src/."""
+    names = set()
+    try:
+        text = (root / "pyproject.toml").read_text(encoding="utf-8", errors="replace")
+        m = re.search(r'(?m)^\s*name\s*=\s*["\']([^"\']+)["\']', text)
+        if m:
+            names.add(re.sub(r"[-.]", "_", m.group(1)).lower())
+    except OSError:
+        pass
+    for folder in (root, root / "src"):
+        names.update(p.parent.name for p in folder.glob("*/__init__.py"))
+    return names
+
+
+def _own_package_missing(root: Path, output: str) -> str:
+    """The project's own package that the tests could not import: its dependencies are not installed
+    (no virtualenv, a src layout without PYTHONPATH), not a failure of the change."""
+    own = own_packages(root)
+    for name in re.findall(r"No module named '([\w.]+)'", output):
+        if name.split(".")[0] in own:
+            return name
+    return ""
 
 
 def _git(root: Path, *args: str) -> str:
@@ -270,7 +352,11 @@ def ui_check(root: Path) -> dict:
 
 def make(root: Path, args) -> dict:
     kinds = set(args.only.split(",")) if args.only else set(KINDS)
-    checks = [run_check(c, root, args.timeout) for c in detect(root) if c["kind"] in kinds]
+    not_run: list[dict] = []
+    checks = [run_check(c, root, args.timeout) for c in detect(root, not_run) if c["kind"] in kinds]
+    not_run = [n for n in not_run if n["kind"] in kinds or n["kind"] == "other"]
+    # a test or lint check the project defines but that did not run leaves the change unproven
+    skipped = any(n["kind"] in KINDS for n in not_run)
     review = {"verdict": args.review, "notes": [clean(n) for n in args.note], "by": "reported by Claude"} \
         if args.review else {}
     requirements = [{"text": clean(t), "done": True} for t in args.done] + \
@@ -281,9 +367,9 @@ def make(root: Path, args) -> dict:
             "project": str(root), "branch": branch, "ci_failure": ci_failure(root, branch),
             "commit": _git(root, "rev-parse", "--short", "HEAD"),
             "dirty": bool(_git(root, "status", "--porcelain")), "checks": checks, "review": review,
-            "requirements": requirements, "ui": ui,
+            "requirements": requirements, "ui": ui, "not_run": not_run,
             "summary": {"checks_passed": bool(checks) and all(c["passed"] for c in checks)
-                        and ui.get("verdict", "pass") == "pass",
+                        and not skipped and ui.get("verdict", "pass") == "pass",
                         "requirements_done": f"{len(args.done)}/{len(args.done) + len(args.open)}"}}
 
 
@@ -293,10 +379,17 @@ def describe(proof: dict) -> str:
     if not proof["checks"]:
         out.append("  No checks found for this project (tests, lint or build).")
     for check in proof["checks"]:
+        if check.get("not_installed"):
+            out.append(f"  {check['name']}: NOT RUN - the project's dependencies are not installed "
+                       f"({check['not_installed']}). Install the project in a virtualenv (pip install -e .) "
+                       f"or run its tests through tox, then make the proof again.  ({check['command']})")
+            continue
         mark = "passed" if check["passed"] else f"FAILED (exit {check['exit_code']})"
         out.append(f"  {check['name']}: {mark} in {check['seconds']} s  ({check['command']})")
         if not check["passed"]:
             out += [f"      {line}" for line in check["tail"][-8:]]
+    for item in proof.get("not_run") or []:
+        out.append(f"  not run: {item['command']} ({item['kind']}) - {item['reason']}")
     ui = proof.get("ui") or {}
     if ui:
         themes = "/".join(ui.get("themes") or [])
@@ -334,9 +427,11 @@ def main(argv: list[str] | None = None) -> int:
 
     root = project_root(Path.cwd())
     if args.command == "checks":
-        found = detect(root)
-        print("\n".join(f"{c['kind']}: {c['name']}  ({shlex.join(c['argv'])})" for c in found)
-              or "No checks found for this project.")
+        not_run: list[dict] = []
+        found = detect(root, not_run)
+        lines = [f"{c['kind']}: {c['name']}  ({shlex.join(c['argv'])})" for c in found]
+        lines += [f"not run: {n['command']} ({n['kind']}) - {n['reason']}" for n in not_run]
+        print("\n".join(lines) or "No checks found for this project.")
         return 0
     if args.command == "show":
         try:
