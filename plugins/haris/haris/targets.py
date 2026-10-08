@@ -26,6 +26,7 @@ TABLE = {
     "write": (ALLOW, PASS, PASS),
     "delete": (ALLOW, PASS, ASK),
     "write-temp": (ALLOW, PASS, PASS),
+    "write-memory": (PASS, PASS, PASS),  # read into later sessions: a tainted session asks first
     "write-outside": (PASS, ASK, ASK),
     "delete-outside": (ASK, ASK, DENY),
     "unknown-target": (PASS, ASK, ASK),
@@ -60,7 +61,8 @@ TABLE = {
     "rule-deny": (DENY, DENY, DENY),
 }
 # A tainted session (text that tried to give orders was read) raises these one level.
-TAINT_RAISED = {"egress", "egress-risk", "remote-irreversible", "download-run", "remote-command"}
+TAINT_RAISED = {"egress", "egress-risk", "remote-irreversible", "download-run", "remote-command",
+                "write-memory"}
 # Refused in every profile: no approval lifts these; the user can only do them outside Claude.
 ALWAYS_NO = {cls for cls, verdicts in TABLE.items() if verdicts == (DENY, DENY, DENY)}
 # The user's exact approval never lifts these.
@@ -297,7 +299,7 @@ def read_paths(values_: list[Arg], ctx: Ctx, verb: str = "reads", meta: bool = F
                 ctx.add("secret-read", f"{verb.capitalize()} {ctx.show(path)}, which holds secrets (keys, "
                                        f"tokens or "
                                        "passwords), into the conversation.", path)
-            elif place in ("project", "temp", "null", "git", "config-exec", "self") or meta:
+            elif place in ("project", "memory", "temp", "null", "git", "config-exec", "self") or meta:
                 ctx.add("read", f"{verb.capitalize()} {ctx.show(path)}.", path)
             else:
                 ctx.add("read-outside", f"{verb.capitalize()} {ctx.show(path)}, outside the project.", path)
@@ -316,6 +318,7 @@ WRITE_REASONS = {
                                    "editor tasks or Claude Code agents)."),
     "git": ("git-internal", "{verb} {path} inside .git; git commands are the safe way to change it."),
     "project": ("write", "{verb} {path} in the project."),
+    "memory": ("write-memory", "{verb} {path}, Claude Code's memory for this project."),
     "temp": ("write-temp", "{verb} {path} in a temporary folder."),
     "home": ("write-outside", "{verb} {path}, outside the project."),
     "outside": ("write-outside", "{verb} {path}, outside the project."),

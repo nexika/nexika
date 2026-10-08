@@ -27,7 +27,7 @@ from .config import (  # noqa: F401  (settings live in config, kept here by name
     normalize,
     project_root,
 )
-from .paths import UNKNOWN, Where
+from .paths import UNKNOWN, Where, guarded_inside, memory_folder, under
 
 MCP_DESTRUCTIVE = re.compile(r"(?i)(?:^|[_-])(?:delete|remove|drop|destroy|purge|merge|publish|release|"
                              r"deploy|"
@@ -185,6 +185,8 @@ def approved(finding: c.Finding, command: str, approvals: list[dict]) -> bool:
         if a.get("kind") == "command" and command and normalize(command) == value:
             return True
         if finding.cls in APPROVAL_LIFTS.get(str(a.get("kind")), ()) and finding.target:
+            if value.endswith("/") and guarded_inside(finding.target, value):
+                continue  # a folder you approved never covers its git hooks, CI or Claude settings
             if finding.target == value or (value.endswith("/") and finding.target.startswith(value)):
                 return True
     return False
@@ -199,7 +201,8 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
     tool_input = event.get("tool_input") if isinstance(event.get("tool_input"), dict) else {}
     cwd = os.path.realpath(str(event.get("cwd") or os.getcwd()))
     root = project_root(cwd)
-    ctx = c.Ctx(Where(root, cfg.get("secret_paths")), cwd, cfg)
+    memory = memory_folder(str(event.get("transcript_path") or ""))
+    ctx = c.Ctx(Where(root, cfg.get("secret_paths"), memory), cwd, cfg)
     findings = list(findings_for(tool, tool_input, ctx))
     findings += rule_findings(cfg, ctx.executed)
     if not findings:
@@ -224,6 +227,11 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
     if tainted and finding.cls in c.TAINT_RAISED and verdict in (c.ASK, c.DENY):
         reason += (" (Raised because this session read text that tried to give Claude orders: "
                    f"{session.get('taint_reason') or 'see /haris:why'}.)")
+    if verdict == c.ASK and finding.cls == "write-outside" and finding.target:
+        folder = keepable_folder(finding.target, ctx.where)
+        if folder:
+            reason += (" To stop haris asking about writes there in this project, the user can type: "
+                       f"/haris:allow --project write {folder}/")
     if verdict == c.DENY and finding.cls == "self":
         reason += (" Only you can change haris, outside Claude: edit ~/.claude/nexika/haris/config.json "
                    "or use /plugin.")
@@ -238,6 +246,21 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
             kind = "write" if tool in WRITE_TOOLS else "read"
             reason += f" If the user wants this anyway, they can type: /haris:allow {kind} {finding.target}"
     return Decision(verdict, finding.cls, readable(reason), findings, tainted)
+
+
+def keepable_folder(target: str, where: Where) -> str:
+    """The folder to offer for a lasting approval of writes outside the project: the target's git
+    checkout, or the folder it is in; "" when that would be too broad (home, a parent of the project,
+    Claude Code's own folder) or is not an ordinary place."""
+    folder = probe = os.path.dirname(target)
+    while probe not in ("/", "", where.home) and not os.path.exists(probe + "/.git"):
+        probe = os.path.dirname(probe)
+    if probe not in ("/", "", where.home):
+        folder = probe
+    if (not folder or where.critical(folder) or under(folder, where.home + "/.claude")
+            or where.place(folder + "/_") not in ("home", "outside")):
+        return ""
+    return folder
 
 
 CONTROL = re.compile(r"[\x01-\x08\x0b-\x1f\x7f\u200b-\u200f\u202a-\u202e\u2066-\u2069]")

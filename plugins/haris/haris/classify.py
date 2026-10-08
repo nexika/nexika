@@ -518,7 +518,7 @@ def delete_paths(values_: list[Arg], ctx: Ctx, verb: str = "deletes") -> None:
                 ctx.add("discard", f"{verb.capitalize()} {shown}: the project's git history.", path)
             elif place == "project":
                 ctx.add("delete", f"{verb.capitalize()} {shown} in the project.", path)
-            elif place in ("home", "outside"):
+            elif place in ("home", "outside", "memory"):
                 ctx.add("delete-outside", f"{verb.capitalize()} {shown}, outside the project.", path)
             elif place != "null":
                 cls, text = WRITE_REASONS[place]

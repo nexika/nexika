@@ -8,7 +8,8 @@
     system       the operating system (/etc, /usr, /bin, disks under /dev, C:/Windows ...)
     config-exec  project files that make tools run commands (.mcp.json, .envrc, .vscode/tasks.json)
     git          inside .git (hooks and config are persistence)
-    project      inside the project
+    project      inside the project, or inside another worktree of the same git repository
+    memory       Claude Code's memory folder for this project (~/.claude/projects/<project>/memory)
     temp         temporary folders
     home         elsewhere in your home folder
     outside      anywhere else
@@ -89,6 +90,52 @@ def data_home() -> str:
 
 
 GUARDED_PLUGINS = ("haris", "mizan")
+TRANSCRIPT = re.compile(r"^(.*?/\.claude/projects/[^/]+)/[^/]")
+# At any depth under a folder you approved outside the project, these still ask: they make git, tools,
+# CI or Claude run things.
+GUARDED_PARTS = {".git", ".claude", ".husky", ".githooks", ".vscode", ".devcontainer", ".envrc", ".mcp.json",
+                 ".pre-commit-config.yaml", "CLAUDE.md"}
+
+
+def memory_folder(transcript: str) -> str:
+    """Claude Code's memory folder for the session's project, from the session's transcript path
+    (~/.claude/projects/<project>/<session>.jsonl, set by Claude Code, not by Claude); "" if unknown."""
+    m = TRANSCRIPT.match(norm(os.path.realpath(transcript))) if transcript else None
+    return m.group(1) + "/memory" if m else ""
+
+
+def guarded_inside(path: str, folder: str) -> bool:
+    """`path`, below the approved `folder`, is a file that makes tools or Claude run things."""
+    folder = folder.rstrip("/")
+    rel = path[len(folder) + 1:] if under(path, folder) else path
+    return bool(GUARDED_PARTS & set(rel.split("/"))) or "/.github/workflows/" in "/" + rel
+
+
+def worktrees(root: str) -> tuple[str, ...]:
+    """The other checkouts of `root`'s git repository (git worktree), read from .git without running git."""
+    dot = root + "/.git"
+    try:
+        if os.path.isfile(dot):
+            with open(dot, encoding="utf-8") as fh:
+                line = fh.read(4096).strip()
+            if not line.startswith("gitdir:"):
+                return ()
+            gitdir = norm(os.path.join(root, line[len("gitdir:"):].strip()))
+            common = norm(os.path.dirname(os.path.dirname(gitdir)))  # <common>/worktrees/<name>
+        elif os.path.isdir(dot):
+            common = dot
+        else:
+            return ()
+        trees = {norm(os.path.dirname(common))} if os.path.basename(common) == ".git" else set()
+        for name in os.listdir(common + "/worktrees") if os.path.isdir(common + "/worktrees") else ():
+            try:
+                with open(f"{common}/worktrees/{name}/gitdir", encoding="utf-8") as fh:
+                    trees.add(norm(os.path.dirname(fh.read(4096).strip())))
+            except OSError:
+                continue
+    except OSError:
+        return ()
+    return tuple(sorted(t for t in trees if t != root and t.startswith("/")))
 
 
 def guarded_homes() -> tuple[str, ...]:
@@ -105,8 +152,10 @@ def guarded_homes() -> tuple[str, ...]:
 class Where:
     """Places paths for one project: its root, the home folder and any extra secret globs."""
 
-    def __init__(self, root: str, secret_globs: list[str] | None = None):
+    def __init__(self, root: str, secret_globs: list[str] | None = None, memory: str = ""):
         self.root = norm(os.path.realpath(root))
+        self.memory = memory
+        self._trees: tuple[str, ...] | None = None
         self.home = norm(os.path.realpath(os.path.expanduser("~")))
         self.secret_globs = list(secret_globs or [])
         import tempfile  # loads shutil and random: only when a Where is built
@@ -126,6 +175,21 @@ class Where:
         """This project holds the source of plugin `name` (plugins/<name>/<name>, or <name>/ at the top)."""
         return any(os.path.isfile(f"{base}/{name}/__init__.py") and self.develops(base)
                    for base in (f"{self.root}/plugins/{name}", self.root))
+
+    def trees(self) -> tuple[str, ...]:
+        """The project and the other worktrees of its repository (#122): one repository, one project."""
+        if self._trees is None:
+            self._trees = (self.root, *worktrees(self.root))
+        return self._trees
+
+    def project_of(self, path: str) -> str | None:
+        """The checkout `path` is in: the project root, or a worktree of the same repository (never the
+        worktree's own folder: deleting a whole worktree is not an ordinary edit)."""
+        if under(path, self.root):
+            return self.root
+        if under(path, self.home + "/.claude"):
+            return None
+        return next((t for t in self.trees()[1:] if path.startswith(t + "/")), None)
 
     def resolve(self, value: str, cwd: str | None) -> str | None:
         """An absolute, normalized path with symlinks followed; None when it is not known."""
@@ -161,7 +225,7 @@ class Where:
             return True
         if any(under(path, p) or path.startswith(p) for p in PERSIST_SYSTEM):
             return True
-        return any(under(path, f"{self.root}/{p}") for p in PERSIST_PROJECT)
+        return any(under(path, f"{t}/{p}") for t in self.trees() for p in PERSIST_PROJECT)
 
     def is_secret(self, path: str) -> bool:
         if SECRET_OK.search(path):
@@ -198,10 +262,13 @@ class Where:
             return "secret"
         if self.is_system(path):
             return "system"
-        if under(path, self.root):
-            if any(under(path, f"{self.root}/{p}") for p in CONFIG_EXEC_PROJECT):
+        if self.memory and under(path, self.memory) and path != self.memory:
+            return "memory"
+        tree = self.project_of(path)
+        if tree:
+            if any(under(path, f"{tree}/{p}") for p in CONFIG_EXEC_PROJECT):
                 return "config-exec"
-            if under(path, self.root + "/.git"):
+            if under(path, tree + "/.git"):
                 return "git"
             return "project"
         if under(path, self.home) and not any(under(path, t) and under(t, self.home) for t in self.temps):
