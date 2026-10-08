@@ -4,7 +4,7 @@ The band and the status line never wait for the network: they read the cache, an
 mizan starts `mizan refresh` detached (one at a time per repository, behind a lock file). Only
 these read commands run, with arguments as a list (no shell):
 
-    gh pr list --state open --json number,author,headRefName,url --limit 200
+    gh pr list --state open --json number,author,headRefName,headRefOid,url,isCrossRepository --limit 200
     gh pr list --state open --search review-requested:@me --json number --limit 100
     gh pr checks <number> --json name,bucket,link
     gh run list --branch=<branch> --limit 20
@@ -63,9 +63,19 @@ def save_cache(repo: str, data: dict) -> None:
 
 # ------------------------------------------------------------------ parsing (pure, tested)
 
+TITLES = {"mr", "mrs", "ms", "miss", "mx", "dr", "prof", "sir"}
+
+
 def author_name(author: dict) -> str:
+    """A person's first name ('Mr. RB' is RB), a bot's plain name ('app/dependabot' is dependabot)."""
     author = author if isinstance(author, dict) else {}
-    return first_name(author.get("name") or "") or author.get("login") or author.get("username") or "?"
+    login = str(author.get("login") or author.get("username") or "")
+    if login.startswith("app/") or author.get("is_bot") or login.endswith("[bot]"):
+        return login.removeprefix("app/").removesuffix("[bot]") or "?"
+    words = str(author.get("name") or "").split()
+    while words and words[0].lower().rstrip(".") in TITLES:
+        words = words[1:]
+    return first_name(" ".join(words)) or login or "?"
 
 
 def per_user(names: list[str]) -> list[list]:
@@ -73,11 +83,12 @@ def per_user(names: list[str]) -> list[list]:
     return [[name, n] for name, n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0].lower()))]
 
 
-def parse_gh_prs(text: str, branch: str) -> dict:
+def parse_gh_prs(text: str, branch: str, head: str = "") -> dict:
     items = json.loads(text or "[]")
     names = [author_name(pr.get("author")) for pr in items]
-    mine = next((pr for pr in items
-                 if pr.get("headRefName") == branch and not pr.get("isCrossRepository")), None)
+    # A fork's pull request is this branch's only when its head is our commit: forks reuse names like main.
+    mine = next((pr for pr in items if pr.get("headRefName") == branch
+                 and (not pr.get("isCrossRepository") or (head and pr.get("headRefOid") == head))), None)
     found = {"state": "ok", "tool": "gh", "total": len(items), "per_user": per_user(names),
              "branch_pr": None}
     if mine:
@@ -223,8 +234,8 @@ def fetch_prs(info: dict) -> dict:
             mine = ["glab", "mr", "list", "--reviewer=@me", "--output", "json"]
         else:
             argv = ["gh", "pr", "list", "--state", "open", "--json",
-                    "number,author,headRefName,url,isCrossRepository", "--limit", "200"]
-            found = parse_gh_prs(run_tool(argv, cwd), branch)
+                    "number,author,headRefName,headRefOid,url,isCrossRepository", "--limit", "200"]
+            found = parse_gh_prs(run_tool(argv, cwd), branch, info.get("head", ""))
             mine = ["gh", "pr", "list", "--state", "open", "--search", "review-requested:@me", "--json",
                     "number", "--limit", "100"]
         try:  # reviews waiting for you: a bonus, never a reason to lose the PR list
