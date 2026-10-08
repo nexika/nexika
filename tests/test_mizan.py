@@ -198,6 +198,22 @@ def test_prs_per_user_and_branch_pr():
     assert render._prs(found, "en")["text"] == "PRs Loai(3) Jean(2) bot(1)"
 
 
+def test_names_from_the_black_pr_list():
+    # psf/black's 28 open PRs (#163): bots, a title for a first name, and a fork PR's author.
+    prs = mizan_black.BLACK["prs"]
+    found = forge.parse_gh_prs(json.dumps(prs), "main", "c9b1148b" + "0" * 32)
+    names = dict(found["per_user"])
+    assert names["dependabot"] == 4 and names["pre-commit-ci"] == 1 and names["RB"] == 1
+    assert not any(n.startswith("app/") or n == "Mr." for n in names)
+    assert found["branch_pr"] is None, "fork PR 5222's branch is also called main: not ours"
+    fork = next(p for p in prs if p["number"] == 5497)
+    found = forge.parse_gh_prs(json.dumps(prs), "fix-gitignore-bom", fork["headRefOid"])
+    assert found["branch_pr"]["number"] == 5497 and found["branch_pr"]["author"] == "Jitesh"
+    assert forge.parse_gh_prs(json.dumps(prs), "fix-gitignore-bom", "other")["branch_pr"] is None
+    assert forge.author_name({"login": "x", "name": "Dr Jane Roe"}) == "Jane"
+    assert forge.author_name({"login": "drx", "name": "Dr."}) == "drx"
+
+
 def test_glab_merge_requests():
     mrs = json.dumps([{"iid": 9, "author": {"username": "sara", "name": "Sara Nabil"}, "source_branch": "fix/y",
                        "web_url": "w"}])
