@@ -40,6 +40,10 @@ usage ─────────────► shown / opened / no-match event
   commit, checkout or staging, a config change, or a new doc Claude writes), so a tool call does
   not list and match every file in the repo again. A changed doc is still noticed at once; a new
   doc made outside Claude shows up within 30 seconds. `siyaq index` lists them again at once.
+  A prompt or tool call never waits for indexing: after 0.3 seconds it uses the last saved index
+  (nothing on the very first build) while a background process builds the new one.
+- **Only what you typed:** task notifications, the compaction prompt and pasted blocks get no
+  knowledge; the words you type around a pasted block still do.
 
 ## Works with Claude Code's built-ins
 

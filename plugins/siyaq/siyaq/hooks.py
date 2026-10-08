@@ -58,15 +58,17 @@ def _remember(root: Path, session: str, picked: list[dict], trigger: str) -> Non
 
 
 def on_prompt(event: dict) -> str | None:
+    prompt = text.typed_words(str(event.get("prompt") or ""))
+    if not prompt:
+        return None
     ctx = _context(event)
-    prompt = str(event.get("prompt") or "").strip()
-    if not ctx or not prompt:
+    if not ctx:
         return None
     root, config = ctx
     if prompt.startswith("/"):
         prompt = prompt.split(maxsplit=1)[1] if " " in prompt else ""
     session = str(event.get("session_id") or "")
-    index = idx.load(root, config, max_age=idx.FILES_MAX_AGE)
+    index = idx.load_ready(root, config)
     if not index["n"]:
         return None
     cfg = rank.squeeze(rank.settings(config), context_level(session))
@@ -96,7 +98,7 @@ def on_tool(event: dict) -> str | None:
     except (ValueError, OSError):
         return None
     session = str(event.get("session_id") or "")
-    index = idx.load(root, config, max_age=idx.FILES_MAX_AGE)
+    index = idx.load_ready(root, config)
     if event.get("tool_name") != "Read" and rel.endswith(".md") and rel not in index["sources"]:
         idx.forget_files(root)  # a new doc: the next call lists the files again and indexes it
     with state.session_lock(session):
@@ -132,13 +134,16 @@ def on_session_start(event: dict, helper: str) -> str:
     if not ctx:
         return ""
     root, config = ctx
-    index = idx.load(root, config, max_age=idx.FILES_MAX_AGE)
+    index = idx.load_ready(root, config, wait=idx.SESSION_START_WAIT)
     manual = sum(1 for e in index["entries"] if e["kind"] == "manual")
     lines = ["## siyaq (Nexika): project knowledge on demand"]
     if index["n"]:
         lines.append(f"{index['n']} knowledge entries from {len(index['sources'])} sources "
                      f"({manual} hand-written) are added only when a prompt or a file you touch "
                      "matches them.")
+    elif index.get("building"):
+        lines.append("The knowledge index is being built in the background; prompts and files get "
+                     "matching knowledge once it is ready.")
     else:
         lines.append("No knowledge entries yet. Docs under docs/ or READMEs are picked up automatically; "
                      "/siyaq:add captures knowledge, /siyaq:slim moves situational CLAUDE.md sections.")

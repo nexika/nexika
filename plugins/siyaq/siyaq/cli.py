@@ -17,6 +17,7 @@ USAGE = f"""siyaq {__version__} - project knowledge on demand (Nexika)
   siyaq index             rebuild the index and report sources, entries, dead references
   siyaq stats [DAYS]      what was injected, opened, never used, and what is missing
   siyaq hook prompt|tool|session-start   (used by Claude Code)
+  siyaq refresh           bring the index up to date (the hooks start it in the background)
 """
 
 
@@ -115,6 +116,14 @@ def cmd_stats(root: Path, days: int = 30) -> str:
     return "\n".join(out)
 
 
+def cmd_refresh(root: Path) -> None:
+    import signal
+
+    if hasattr(signal, "SIGALRM"):
+        signal.alarm(idx.BUILD_TIMEOUT)  # a build that hangs (a huge folder, a stuck disk) is stopped
+    idx.refresh(root)
+
+
 def main(argv: list[str]) -> int:
     cmd = argv[0] if argv else ""
     if cmd == "hook":
@@ -141,6 +150,8 @@ def main(argv: list[str]) -> int:
         print(cmd_entries(root, " ".join(argv[1:])))
     elif cmd == "index":
         print(cmd_index(root))
+    elif cmd == "refresh":
+        cmd_refresh(root)
     elif cmd == "stats":
         print(cmd_stats(root, int(argv[1]) if len(argv) > 1 and argv[1].isdigit() else 30))
     else:
