@@ -97,6 +97,36 @@ def test_force_push_to_feature_branch_is_allowed(guard, repo):
     assert bash(guard, repo, "git push -f origin feat/x") is None
 
 
+# psf/black (#148): `stable` is black's release branch; SKIP= skips pre-commit hooks like --no-verify
+def test_stable_is_a_default_protected_branch(guard, repo):
+    decision = bash(guard, repo, "git push --force origin stable")
+    assert decision[:2] == ("deny", "force-push-protected")
+
+
+@pytest.mark.parametrize("command", [
+    "SKIP=mypy git commit -m wip", "SKIP=flake8,mypy git commit -am wip",
+    "env SKIP=mypy git commit -m wip", "git add -A && SKIP=mypy git commit -m wip",
+])
+def test_skipping_a_pre_commit_hook_asks(guard, repo, command):
+    decision = bash(guard, repo, command)
+    assert decision[:2] == ("ask", "skip-hooks") and "SKIP=" in decision[2]
+
+
+def test_skip_env_on_other_commands_passes(guard, repo):
+    assert bash(guard, repo, "SKIP=mypy pre-commit run -a") is None
+    assert bash(guard, repo, "SKIP= git commit -m wip") is None
+
+
+def test_skipping_a_pre_commit_hook_asks_beside_haris(guard, repo, tmp_path, monkeypatch):
+    monkeypatch.setenv("HARIS_HOME", str(tmp_path / "haris"))
+    (tmp_path / "haris" / "active").mkdir(parents=True)
+    (tmp_path / "haris" / "active" / "s1").touch()
+    event = {"tool_name": "Bash", "tool_input": {"command": "SKIP=mypy git commit -m wip"},
+             "cwd": str(repo), "session_id": "s1"}
+    assert guard.haris_active(event) and guard.needs_quality_check(event)
+    assert guard.decide(event)[:2] == ("ask", "skip-hooks")
+
+
 def test_protected_branches_are_configurable(guard, repo):
     (repo / ".itqan.json").write_text(json.dumps({"guard": {"protected_branches": ["trunk"]}}))
     assert bash(guard, repo, "git push -f origin main") is None
