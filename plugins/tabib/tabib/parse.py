@@ -441,6 +441,29 @@ def errors(lines: list[str], limit: int = 12) -> list[str]:
     return out
 
 
+WARNING_RAISED = re.compile(r"^E\s+(\w*Warning): (.*)$")
+TB_PLACE = re.compile(r'^(\S+\.py):(\d+): in |^\s*File "([^"]+)", line (\d+)')
+PACKAGE = re.compile(r"(?:site|dist)-packages/([A-Za-z_]\w*)")
+
+
+def upstream(lines: list[str]) -> list[dict]:
+    """Warnings made errors inside a dependency's code: pytest's 'E   DeprecationWarning: ...' right after
+    a frame in site-packages/<package>/ (#133). Only warnings: an assertion or a TypeError raised inside a
+    library is usually the caller's mistake."""
+    found: list[dict] = []
+    place = ""
+    for line in lines:
+        if m := TB_PLACE.match(line):
+            place = f"{m.group(1) or m.group(3)}:{m.group(2) or m.group(4)}"
+        elif (m := WARNING_RAISED.match(line)) and (pkg := PACKAGE.search(place)):
+            item = {"package": pkg.group(1), "place": place[pkg.start(1):], "warning": m.group(1),
+                    "message": _short(m.group(2))}
+            if item not in found:
+                found.append(item)
+            place = ""
+    return found[:10]
+
+
 MISSING_MODULE = re.compile(r"No module named '?([\w.]+)'?|Cannot find module '([^'./][^']*)'")
 
 
@@ -456,11 +479,12 @@ def missing_modules(lines: list[str]) -> list[str]:
 
 
 def read_log(text: str) -> dict:
-    """{job: {failures, signals, errors, frames, missing, lines}} for each job in a failed log."""
+    """{job: {failures, signals, errors, frames, missing, upstream, lines}} for each job in a failed log."""
     out = {}
     for job, lines in split_jobs(text).items():
         out[job] = {"failures": failures(lines), "signals": signals(lines), "errors": errors(lines),
-                    "frames": frames(lines), "missing": missing_modules(lines), "lines": lines}
+                    "frames": frames(lines), "missing": missing_modules(lines),
+                    "upstream": upstream(lines), "lines": lines}
     return out
 
 

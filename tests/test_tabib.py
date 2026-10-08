@@ -602,7 +602,73 @@ def test_a_conftest_that_fails_to_load_is_a_failure():
 def test_a_conftest_error_is_no_longer_unknown(ci, monkeypatch):
     monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log("Development Versions", CONFTEST_LOG))
     record = diagnosis.triage(ci)
-    assert record["kind"] == "code" and record["failures"][0]["file"] == "tests/conftest.py"
+    assert record["failures"][0]["file"] == "tests/conftest.py"
+
+
+# pallets/flask run 31403109962 (#133): only "Development Versions" fails; it installs Werkzeug's main,
+# whose new DeprecationWarning pytest turns into an error inside Werkzeug, not in Flask's code.
+UPSTREAM_LOG = [
+    "__________________ ERROR collecting tests/test_blueprints.py ___________________",
+    "tests/test_blueprints.py:3: in <module>",
+    "    from werkzeug.http import parse_cache_control_header",
+    ".tox/tests-dev/lib/python3.10/site-packages/werkzeug/http.py:1561: in __getattr__",
+    "    warnings.warn(",
+    "E   DeprecationWarning: The 'parse_cache_control_header' function is deprecated and will be removed in "
+    "Werkzeug 3.3. Use the 'CacheControl.from_header' method instead.",
+    "=========================== short test summary info ============================",
+    "ERROR tests/test_blueprints.py - DeprecationWarning: The 'parse_cache_control...",
+    "!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!",
+]
+FLASK_JOBS = [{"id": 1, "name": "Development Versions", "conclusion": "failure", "failed_step": ""},
+              {"id": 2, "name": "3.12", "conclusion": "success", "failed_step": ""},
+              {"id": 3, "name": "Minimum Versions", "conclusion": "success", "failed_step": ""}]
+
+
+def upstream_run(project, monkeypatch, log, jobs=FLASK_JOBS):
+    monkeypatch.setattr(forge, "find_run", lambda info, run_id=None: {**fake_run(project), "jobs": jobs})
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: log)
+
+
+@pytest.mark.parametrize("lines", [UPSTREAM_LOG, CONFTEST_LOG], ids=["collection", "conftest"])
+def test_a_failure_raised_inside_a_dependency_is_not_blamed_on_the_tests(ci, project, monkeypatch, lines):
+    upstream_run(project, monkeypatch, gh_log("Development Versions", lines))
+    record = diagnosis.triage(ci)
+    assert (record["kind"], record["detail"]) == ("dependency", {"package": "werkzeug"})
+    assert any("raised inside werkzeug" in e for e in record["evidence"])
+    assert any("Only the job 'Development Versions' failed" in e for e in record["evidence"])
+    from tabib import cli
+    text = cli.report(record, "en")
+    assert "werkzeug" in i18n.label(record["kind"], record["detail"], "en") and "/itqan:ship" not in text
+    assert "werkzeug" in i18n.label(record["kind"], record["detail"], "ar")
+
+
+def test_a_warning_from_the_project_s_own_installed_package_is_code(ci, project, monkeypatch):
+    (project / "werkzeug").mkdir()
+    (project / "werkzeug" / "__init__.py").write_text("")
+    git(project, "add", "-A")
+    git(project, "commit", "-q", "-m", "own package")
+    upstream_run(project, monkeypatch, gh_log("Development Versions", UPSTREAM_LOG))
+    assert diagnosis.triage(ci)["kind"] == "code"
+
+
+def test_an_assertion_raised_inside_a_library_is_still_code(ci, project, monkeypatch):
+    upstream_run(project, monkeypatch, gh_log("Development Versions", [
+        "tests/test_a.py:9: in test_a",
+        "    send.assert_called_once_with('x')",
+        "/usr/lib/python3.12/unittest/mock.py:961: in assert_called_once_with",
+        "    return self.assert_called_with(*args, **kwargs)",
+        "E   AssertionError: expected call not found.",
+        "FAILED tests/test_a.py::test_a - AssertionError: expected call not found."]))
+    assert diagnosis.triage(ci)["kind"] == "code"
+
+
+def test_the_change_s_own_errors_beside_an_upstream_warning_are_code(ci, project, monkeypatch):
+    # pallets/flask run 31306611756: mypy errors from the change in "typing", and the Werkzeug warning.
+    log = gh_log("Development Versions", UPSTREAM_LOG) + "\n" + gh_log("typing", [
+        "src/flask/app.py:751: error: Redundant cast to \"str\"  [redundant-cast]"])
+    jobs = [*FLASK_JOBS, {"id": 4, "name": "typing", "conclusion": "failure", "failed_step": ""}]
+    upstream_run(project, monkeypatch, log, jobs)
+    assert diagnosis.triage(ci)["kind"] == "code"
 
 
 # A workflow that cannot work as written (#127): a re-run fails the same way.
