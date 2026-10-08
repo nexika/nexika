@@ -11,7 +11,9 @@ from __future__ import annotations
 import re
 import xml.etree.ElementTree as ET
 
-ANSI = re.compile(r"\x1b(?:\[[0-9;?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)|[@-Z\\-_])")
+# GitHub's downloaded log keeps some colours as text: "^[[41m" for "\x1b[41m".
+ANSI = re.compile(r"\x1b(?:\[[0-9;?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)|[@-Z\\-_])"
+                  r"|\^\[\[[0-9;]*m")
 CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]")
 STAMP = re.compile(r"^﻿?\d{4}-\d\d-\d\dT[\d:.]+Z ?")
 MAX_LINES = 200_000
@@ -125,6 +127,25 @@ def _failure(framework: str, kind: str, test: str = "", file: str = "", line: in
              message: str = "") -> dict:
     return {"framework": framework, "kind": kind, "test": _short(test, 200), "file": file, "line": line,
             "message": _short(message), "package": ""}
+
+
+PRE_COMMIT_FAILED = re.compile(r"^\S.*?\.{3,}\s*Failed$")
+PRE_COMMIT_ID = re.compile(r"^- hook id: ([\w.-]+)$")   # it ends up in a command: nothing else gets through
+PRE_COMMIT_NOTE = re.compile(r"^- (files were modified by this hook|exit code: \d+)$")
+DIFF_FILE = re.compile(r"^diff --git a/(\S+) b/")
+
+
+def pre_commit(lines: list[str]) -> list[dict]:
+    """pre-commit's failed hooks: 'ruff format....Failed', then '- hook id: ruff-format' and what it did."""
+    found = []
+    for i, line in enumerate(lines[:-1]):
+        if PRE_COMMIT_FAILED.match(line.strip()) and (m := PRE_COMMIT_ID.match(lines[i + 1].strip())):
+            notes = (PRE_COMMIT_NOTE.match(n.strip()) for n in lines[i + 2:i + 4])
+            found.append(_failure("pre-commit", "lint", m.group(1),
+                                  message=next((n.group(1) for n in notes if n), "")))
+    if len(found) == 1:  # the diff after "All changes made by hooks" is shared: a file is sure for one hook
+        found[0]["file"] = next((m.group(1) for line in lines if (m := DIFF_FILE.match(line.strip()))), "")
+    return found
 
 
 def playwright(lines: list[str]) -> list[dict]:
@@ -341,6 +362,7 @@ def failures(lines: list[str]) -> list[dict]:
         for f in pending_jest:
             f["line"] = js_lines.get(f["file"].split("/")[-1], 0) if f["file"] else 0
         found += pending_jest
+    found += pre_commit(lines)
     found += playwright(lines)
     for block in junit_blocks(lines):
         found += junit_xml(block)

