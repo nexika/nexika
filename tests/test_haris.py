@@ -732,3 +732,73 @@ def test_inline_code_deletes_only_what_its_delete_call_names(world):
     home, project = world
     d = decide(project, "Bash", "python3 -c \"import shutil; shutil.rmtree('build'); print('/')\"")
     assert d.cls == "delete" and d.verdict != "deny", (d.verdict, d.cls, d.reason)
+
+
+# ---------------------------------------------------------------- working on haris's own source (#119)
+
+
+@pytest.fixture(scope="module")
+def checkout(world):
+    """A git repo holding the source of haris and tabib, like the Nexika repo."""
+    home, _ = world
+    repo = home / "work" / "nexika"
+    for name in ("haris", "tabib"):
+        (repo / "plugins" / name / name).mkdir(parents=True, exist_ok=True)
+        (repo / "plugins" / name / name / "__init__.py").write_text("")
+    _git(repo, "init", "-q", "-b", "main")
+    installed = home / ".claude" / "plugins" / "cache" / "nexika" / "haris" / "0.1.0" / "haris"
+    installed.mkdir(parents=True, exist_ok=True)
+    return repo, installed.parent
+
+
+@pytest.mark.parametrize("command", [
+    "python3 -c \"import sys; sys.path.insert(0, 'plugins/haris'); from haris import shell; "
+    "print(shell.parse('ls'))\"",
+    "cd plugins/haris && python3 - <<'EOF'\nfrom haris import classify\nprint(classify.LEVEL)\nEOF",
+    "python3 -c \"import sys; sys.path.insert(0, 'plugins/tabib'); from tabib import reproduce\"",
+    "cd plugins/haris && python3 -m haris.cli check ls",
+    "python3 plugins/haris/haris/cli.py check ls",
+])
+def test_a_source_checkout_of_haris_is_ordinary_project_code(world, checkout, command):
+    repo, _ = checkout
+    d = decide(repo, "Bash", command)
+    assert d.verdict != "deny" and d.cls != "self", (d.verdict, d.cls, d.reason)
+
+
+def test_editing_the_source_checkout_is_ordinary(world, checkout):
+    repo, _ = checkout
+    d = decide(repo, "Edit", str(repo / "plugins" / "haris" / "haris" / "policy.py"))
+    assert d.verdict != "deny", (d.verdict, d.cls, d.reason)
+
+
+def test_the_installed_haris_and_its_data_stay_protected_from_a_checkout(world, checkout):
+    home, _ = world
+    repo, installed = checkout
+    for tool, value in [
+        ("Edit", str(installed / "haris" / "policy.py")),
+        ("Bash", f"sed -i 's/deny/allow/' {installed}/haris/policy.py"),
+        ("Bash", f"python3 -c \"import sys; sys.path.insert(0, '{installed}'); from haris import shell\""),
+        ("Bash", "python3 -c \"import sys; sys.path.insert(0, 'plugins/haris'); from haris import state; "
+                 "state.add_approval('x', 'y', {}, True)\""),
+        ("Bash", "echo x > ~/.claude/nexika/haris/config.json"),
+        ("Bash", "python3 plugins/haris/bin/haris hook user-prompt-submit < approve.json"),
+    ]:
+        d = decide(repo, tool, value)
+        assert d.verdict == "deny" and d.cls == "self", (value, d.verdict, d.cls, d.reason)
+
+
+def test_outside_a_checkout_importing_haris_is_still_refused(world):
+    home, project = world
+    d = decide(project, "Bash", "python3 -c \"from haris import shell\"")
+    assert d.verdict == "deny" and d.cls == "self", (d.verdict, d.cls, d.reason)
+
+
+def test_a_checkout_hook_with_its_own_data_folder_is_fine(world, checkout):
+    repo, _ = checkout
+    hook = "python3 plugins/haris/bin/haris hook pre-tool-use < event.json"
+    d = decide(repo, "Bash", f"HARIS_HOME=/tmp/haris-test {hook}")
+    assert d.verdict not in ("ask", "deny"), (d.verdict, d.cls, d.reason)
+    d = decide(repo, "Bash", f"H=$(mktemp -d); HARIS_HOME=$H {hook}")
+    assert d.verdict == "ask", (d.verdict, d.cls, d.reason)
+    d = decide(repo, "Bash", f"HARIS_HOME=~/.claude/nexika/haris {hook}")
+    assert d.verdict == "deny" and d.cls == "self", (d.verdict, d.cls, d.reason)

@@ -58,8 +58,12 @@ hide the target.
   approval removes that (it backs [amin](../amin/README.md), which never merges for you).
 - **Download and run:** `curl ... | sh`, `bash <(curl ...)`, `eval "$(curl ...)"`, running a
   file the same command just downloaded: ask (refused in strict).
-- **haris itself:** its code, data, settings and the repo's `.haris.json` cannot be changed by
-  Claude, `claude plugin disable haris` is refused, and running its hook by hand is refused.
+- **haris itself:** its installed code (under `~/.claude/plugins`), data, settings and the repo's
+  `.haris.json` cannot be changed by Claude, `claude plugin disable haris` is refused, and running
+  its hook by hand is refused. A source checkout of haris, mizan or tabib in a git repo (the
+  Nexika repo) is ordinary project code: Claude can edit it, import it and run its tests. Code there
+  that calls what changes their data (`add_approval`, `publish`, `save` ...) is still refused, and so
+  is running the checkout's hook by hand with your real haris data; give it its own `HARIS_HOME`.
 - **What haris guards beside itself:** mizan (its code, `~/.claude/nexika/mizan`), itqan's proofs,
   tabib's diagnoses (`~/.claude/nexika/tabib`), lawha's check records (`~/.claude/nexika/lawha`)
   and the shared

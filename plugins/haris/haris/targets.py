@@ -207,6 +207,7 @@ class Ctx:
         self.where, self.cwd, self.config = where, cwd, config or {}
         self.git = git or Git(where.root)
         self.vars: dict[str, str] = {}
+        self.prefix: dict[str, str] = {}  # NAME=value given to the command being judged
         self.args: list[str] | None = []
         self.vars_lost = False
         self.depth = 0

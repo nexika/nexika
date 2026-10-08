@@ -14,7 +14,7 @@ import re
 from dataclasses import dataclass
 
 from . import secrets, shell
-from .paths import PLUGIN_ROOT, UNKNOWN
+from .paths import PLUGIN_ROOT, UNKNOWN, data_home
 from .targets import (  # noqa: F401  (the light helpers, kept here by name)
     ALLOW,
     ALWAYS_NO,
@@ -279,7 +279,11 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
                 if SECRET_VAR.search(name):
                     ctx.add("secret-read", f"Prints ${name}, which looks like a secret, into the "
                                            f"conversation.")
-    stage = run(argv, ctx, stdin)
+    ctx.prefix = {name: str(value) for name, value in assigns}
+    try:
+        stage = run(argv, ctx, stdin)
+    finally:
+        ctx.prefix = {}
     downloads = (stage is not None and stage.downloads) or program in DOWNLOADERS
     for r in cmd.redirects:
         if r.body is None and r.target and r.op in (">", ">>", ">|", "&>", "&>>"):
@@ -363,8 +367,8 @@ def run(argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
         if path and path in ctx.written:
             shebang = ctx.written[path].lstrip().split("\n", 1)[0]
             return written_run(program, path, ctx, argv[1:], shebang if shebang.startswith("#!") else "sh")
-        if path and path.startswith(PLUGIN_ROOT + "/"):
-            return own_helper(argv, ctx)
+        if path and (path.startswith(PLUGIN_ROOT + "/") or HARIS_HELPER.search(path)):
+            return own_helper(argv, ctx, installed_helper(path, ctx))
         if path and MIZAN_HELPER.search(path):
             return mizan_helper(argv, ctx)
     family = program
@@ -1433,10 +1437,13 @@ STRING_LITERAL = re.compile(r"'''(.*?)'''|\"\"\"(.*?)\"\"\"|'((?:\\.|[^'\\\n])*)
                             re.S)
 SED_EXEC = re.compile(r"(?:^|[;\n{}])\s*(?:\d+|\$|/[^/]*/)?\s*e(?:\s|$|;)|/e\s*$"
                       r"|/[gpiI0-9]*e[gpiI0-9]*\s*$")
-CODE_SELF = re.compile(r"\b(?:from|import)\s+(?:haris|mizan|tabib)\b"
+CODE_SELF = re.compile(r"\b(?:from|import)\s+(?P<module>haris|mizan|tabib)\b"
                        r"|nexika/(?:haris|mizan|itqan|tabib|lawha|status)\b"
-                       r"|haris/(?:bin|haris)"
-                       r"|require\(['\"][^'\"]*haris")
+                       r"|(?P<source>haris)/(?:bin|haris)"
+                       r"|require\(['\"][^'\"]*(?P<required>haris)")
+# Calls that change what haris and the plugins it guards keep: never fine, even from a source checkout.
+SELF_WRITERS = re.compile(r"\b(?:add_approval|remove_approval|mark_active|save_session|publish_status|publish"
+                          r"|save|record)\s*\(")
 PATH_LIKE = re.compile(r"^(?:~|/|\.{1,2}/|[\w.-]+/)|^\.?[\w-]+\.\w{1,8}$|^\.\w+$")
 # Calls that only turn one path into another: Path("~"), os.path.expanduser("~"), File.expand_path("/x").
 PATH_WRAPPER = re.compile(r"^(?:(?:pathlib\.)?Path|PurePath"
@@ -1525,6 +1532,21 @@ def code_targets(text: str, pattern: re.Pattern) -> list[Arg]:
     return out or [arg(UNKNOWN)]
 
 
+def reaches_self(text: str, literals: list[str], ctx: Ctx) -> bool:
+    """Code that reaches into haris or a plugin it guards. In a project that holds their source (the
+    Nexika repo), importing that source is ordinary work; the installed copies, their data and calls
+    that change their data are still out of reach (#119)."""
+    excused = False
+    for m in CODE_SELF.finditer(text):
+        name = m.group("module") or m.group("source") or m.group("required")
+        if not name or not ctx.where.checkout(name) or SELF_WRITERS.search(text):
+            return True
+        excused = True
+    return excused and any(
+        ctx.where.place(ctx.where.resolve(os.path.expanduser(lit), ctx.cwd)) == "self"
+        for lit in literals if lit and "\n" not in lit and len(lit) < 400 and PATH_LIKE.match(lit))
+
+
 def code_check(code: Arg, ctx: Ctx, via: str) -> Stage:
     """Code given inline (python -c, node -e ...): find what it does, and never approve it."""
     if UNKNOWN in code:
@@ -1535,7 +1557,7 @@ def code_check(code: Arg, ctx: Ctx, via: str) -> Stage:
         return Stage()
     text = str(code)
     literals = [next(g for g in m.groups() if g is not None) for m in STRING_LITERAL.finditer(text)]
-    if CODE_SELF.search(text):
+    if reaches_self(text, literals, ctx):
         ctx.add("self", f"`{via}` reaches into haris itself, which Claude may not change.")
     if CODE_HIDDEN.search(text):
         ctx.add("dynamic", f"`{via}` runs code it first decodes, so nobody can see what it does.")
@@ -1605,7 +1627,8 @@ def h_python(argv, ctx, stdin):
     module = values(opts, "-m")
     if module:
         name = module[0]
-        if re.match(r"(?:haris|mizan|tabib)(?:\.|$)", str(name)):
+        own = re.match(r"(haris|mizan|tabib)(?:\.|$)", str(name))
+        if own and not ctx.where.checkout(own.group(1)):
             ctx.add("self", f"Runs python -m {name}: the code of haris or of a plugin it guards, "
                             "outside their helpers.")
             return Stage()
@@ -1644,11 +1667,11 @@ def script_run(program: str, script: Arg, ctx: Ctx, how: str = "", rest: list | 
         ctx.add("download-run", f"Runs {ctx.show(path)}, which this command just downloaded.")
     elif path and path in ctx.written:
         return written_run(program, path, ctx, rest)
-    elif path == PLUGIN_ROOT + "/bin/haris":
-        return own_helper([script, *(rest or [])], ctx)
+    elif path and (path == PLUGIN_ROOT + "/bin/haris" or HARIS_HELPER.search(path)):
+        return own_helper([script, *(rest or [])], ctx, installed_helper(path, ctx))
     elif path and MIZAN_HELPER.search(path):
         return mizan_helper([script, *(rest or [])], ctx)
-    elif path and path.startswith(PLUGIN_ROOT + "/"):
+    elif path and path.startswith(PLUGIN_ROOT + "/") and not ctx.where.develops(PLUGIN_ROOT):
         ctx.add("self", "Runs haris's own code directly instead of through its helper.")
     else:
         ctx.add("exec", f"Runs {ctx.show(path)} {how or 'with ' + program}; haris does not read scripts, "
@@ -2869,12 +2892,39 @@ def h_claude(argv, ctx, stdin):
     return Stage()
 
 
-def own_helper(argv: list[Arg], ctx: Ctx) -> Stage:
-    """The haris helper: reading commands are fine; playing a hook by hand is not."""
+def installed_helper(path: str, ctx: Ctx) -> bool:
+    """The haris that guards this session (or any copy under ~/.claude), not a source checkout."""
+    if path.startswith(PLUGIN_ROOT + "/"):
+        return not ctx.where.develops(PLUGIN_ROOT)
+    return not ctx.where.develops(path)
+
+
+def hook_data(ctx: Ctx) -> str | None:
+    """Where a haris hook run by this command keeps its approvals; None when only known when it runs."""
+    env = {**ctx.vars, **ctx.prefix}
+    if "HARIS_HOME" in env:
+        value = env["HARIS_HOME"]
+    elif "HOME" in env:
+        value = env["HOME"] + "/.claude/nexika/haris"
+    else:
+        return None if ctx.vars_lost else data_home()
+    return None if UNKNOWN in value or not value else ctx.where.resolve(value, ctx.cwd)
+
+
+def own_helper(argv: list[Arg], ctx: Ctx, installed: bool = True) -> Stage:
+    """The haris helper: reading commands are fine; playing a hook by hand is not. A source checkout's
+    hook is fine when it keeps its approvals away from the haris guarding this session."""
     words = [a for a in argv[1:] if not a.startswith("-")]
-    if "hook" in words:
+    data = None if installed or "hook" not in words else hook_data(ctx)
+    if "hook" in words and not installed and data is None:
+        ctx.add("unknown-target", "Runs a haris hook from a source checkout by hand; where it keeps its "
+                                  "approvals is only known when it runs, so it could be the haris guarding "
+                                  "you.")
+    elif "hook" in words and (installed or data == data_home() or data.startswith(data_home() + "/")):
         ctx.add("self", "Runs haris's hook by hand, which could fake your approval. Only Claude Code runs "
                         "hooks.")
+    elif "hook" in words:
+        ctx.add("exec", "Runs a haris hook from a source checkout, with its own data folder.")
     elif words[:1] and words[0] in ("why", "status", "audit", "check", "export", "approvals", "version",
                                     "help"):
         ctx.add("read", f"Shows haris information (haris {words[0]}).")
@@ -2887,6 +2937,8 @@ def h_haris(argv, ctx, stdin):
     return own_helper(argv, ctx)
 
 
+# Any copy's helper: a checkout's `haris hook` writes the same approvals as the installed one.
+HARIS_HELPER = re.compile(r"/haris(?:/[\w.+-]+)?/bin/haris$")
 MIZAN_HELPER = re.compile(r"/mizan(?:/[\w.+-]+)?/bin/mizan$")  # a checkout, or the cache's mizan/<version>
 
 
