@@ -261,6 +261,29 @@ def test_git_status_feature_branch_staged_and_clean(project, barq_run):
     assert "publish the branch: git push -u origin feat/x" in barq_run("git-status")[1]
 
 
+def test_git_status_during_a_merge_says_so_and_how_to_finish(project, barq_run):
+    # #169: in an unfinished merge barq suggested "then git add them; push 1 commit(s)"
+    _git(project, "switch", "-q", "-c", "feat/x")
+    (project / "src" / "util.py").write_text("ours\n")
+    _git(project, "commit", "-q", "-am", "ours")
+    _git(project, "switch", "-q", "main")
+    (project / "src" / "util.py").write_text("theirs\n")
+    _git(project, "commit", "-q", "-am", "theirs")
+    _git(project, "switch", "-q", "feat/x")
+    subprocess.run(["git", "merge", "-q", "main"], cwd=project, capture_output=True)
+    _, out = barq_run("git-status")
+    assert "merge in progress" in out
+    assert "git merge --abort" in out and "git commit" in out
+    assert "push" not in out.split("next:")[1]
+
+
+def test_git_status_shows_the_old_name_of_a_rename(project, barq_run):
+    _git(project, "switch", "-q", "-c", "feat/x")
+    _git(project, "mv", "README.md", "README2.md")
+    _, out = barq_run("git-status")
+    assert "R README.md -> README2.md" in out
+
+
 def test_git_status_outside_git(barq_env, barq_run, monkeypatch):
     plain = barq_env / "plain"
     plain.mkdir()
