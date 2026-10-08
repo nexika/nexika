@@ -236,6 +236,8 @@ pass	git reset --soft HEAD~1
 pass	git tag v-local-test-only
 pass	firebase emulators:start
 pass	env
+pass	env | grep PATH
+pass	printenv | sort
 
 # ---------------------------------------------------------------- dangerous: deleting far too much
 deny	rm -rf ~
@@ -518,6 +520,9 @@ ask	cp ~/.ssh/id_rsa ./key
 ask	tar czf keys.tgz ~/.ssh
 ask	echo $GITHUB_TOKEN
 ask	printenv AWS_SECRET_ACCESS_KEY
+ask	env | grep -i token
+ask	printenv | grep -E 'SECRET|KEY'
+ask	set | grep -i password
 ask	gh auth token
 ask	git credential fill
 ask	security find-generic-password -s x -w

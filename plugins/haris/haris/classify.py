@@ -73,6 +73,7 @@ class Stage:
     secret: bool = False            # its output holds a secret that was read
     paths_root: str | None = None   # it lists paths under this folder (find, ls, git ls-files)
     filtered: bool = True           # those paths are a selection, not everything
+    environ: bool = False           # it prints the environment (env, printenv, set, export)
 
 
 # ---------------------------------------------------------------- walking the parsed command
@@ -608,6 +609,11 @@ def reader(program: str, argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stag
         if not any(f.cls == "egress-secret" for f in ctx.findings):
             ctx.add("egress", f"Looks up a network address ({program}).")
         return Stage()
+    if pattern_first and stdin is not None and stdin.environ:  # `env | grep -i token` (#139)
+        patterns = values(opts, "-e", "--regexp") or pos[:1]
+        if any(SECRET_VAR.search(p) for p in patterns):
+            ctx.add("secret-read", f"Picks the variables that look like secrets out of the environment "
+                                   f"({program}) and prints them into the conversation.")
     if pattern_first and pos and not has(opts, "-e", "--regexp", "-f", "--file"):
         pos = pos[1:]
     if program not in ("fd", "fdfind", "file"):
@@ -620,7 +626,7 @@ def reader(program: str, argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stag
                                            f"conversation.")
             if not pos:
                 ctx.add("exec", "Prints the environment (it can hold secrets).")
-                return Stage()
+                return Stage(environ=True)
         ctx.add("read", f"Only shows information ({program}).")
         if program in PRINTERS and not any(UNKNOWN in a for a in argv[1:]):
             text = " ".join(a for a in argv[1:] if not (program == "echo" and a in ("-n", "-e", "-E")))
@@ -876,7 +882,7 @@ def h_export(argv, ctx, stdin):
         return Stage()
     if not names and "f" not in flags and "F" not in flags:
         ctx.add("exec", "Prints the environment (it can hold secrets).")
-        return Stage()
+        return Stage(environ=True)
     for a in names:
         name, eq, value = a.partition("=")
         name = name.rstrip("+")
@@ -899,7 +905,7 @@ def h_set(argv, ctx, stdin):
         return Stage()
     if len(argv) == 1:
         ctx.add("exec", "Prints the environment (it can hold secrets).")
-        return Stage()
+        return Stage(environ=True)
     _, pos = options(argv[1:], {"-o", "+o"})
     if "--" in argv[1:] or pos:
         ctx.args = [ctx.args[0] if ctx.args else "", *(str(a) for a in pos)]
@@ -1042,7 +1048,7 @@ def h_env(argv, ctx, stdin):
                             "env -S")
     if not pos:
         ctx.add("exec", "Prints the environment (it can hold secrets).")
-        return Stage()
+        return Stage(environ=True)
     return run(pos, ctx, stdin)
 
 
