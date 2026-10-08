@@ -226,6 +226,20 @@ def test_run_timeout(project, barq_run):
     assert code == 1 and "TIMED OUT" in out
 
 
+def test_run_does_not_change_the_color_environment(project, barq_run, monkeypatch):
+    # #165: barq set NO_COLOR=1, and black's suite, green when run directly, went red
+    monkeypatch.delenv("NO_COLOR", raising=False)
+    monkeypatch.delenv("FORCE_COLOR", raising=False)
+    (project / "check_env.py").write_text(
+        "import os, sys\n"
+        "print('\\x1b[32mcolored\\x1b[0m')\n"
+        "sys.exit(1 if 'NO_COLOR' in os.environ or 'FORCE_COLOR' in os.environ else 0)\n"
+    )
+    code, out = barq_run(json.dumps({"op": "run", "cmd": f"{sys.executable} check_env.py"}))
+    assert code == 0 and ": ok ===" in out
+    assert "colored" in out and "\x1b[" not in out  # color codes are stripped from the output
+
+
 def test_custom_op_from_barq_json(project, barq_run):
     (project / ".barq.json").write_text(json.dumps({"ops": {
         "hello": {"cmd": f"{sys.executable} -c \"import sys; print('hi', *sys.argv[1:])\" {{args}}",
@@ -259,6 +273,29 @@ def test_git_status_feature_branch_staged_and_clean(project, barq_run):
     assert "next: commit the staged changes" in barq_run("git-status")[1]
     _git(project, "commit", "-q", "-m", "change")
     assert "publish the branch: git push -u origin feat/x" in barq_run("git-status")[1]
+
+
+def test_git_status_during_a_merge_says_so_and_how_to_finish(project, barq_run):
+    # #169: in an unfinished merge barq suggested "then git add them; push 1 commit(s)"
+    _git(project, "switch", "-q", "-c", "feat/x")
+    (project / "src" / "util.py").write_text("ours\n")
+    _git(project, "commit", "-q", "-am", "ours")
+    _git(project, "switch", "-q", "main")
+    (project / "src" / "util.py").write_text("theirs\n")
+    _git(project, "commit", "-q", "-am", "theirs")
+    _git(project, "switch", "-q", "feat/x")
+    subprocess.run(["git", "merge", "-q", "main"], cwd=project, capture_output=True)
+    _, out = barq_run("git-status")
+    assert "merge in progress" in out
+    assert "git merge --abort" in out and "git commit" in out
+    assert "push" not in out.split("next:")[1]
+
+
+def test_git_status_shows_the_old_name_of_a_rename(project, barq_run):
+    _git(project, "switch", "-q", "-c", "feat/x")
+    _git(project, "mv", "README.md", "README2.md")
+    _, out = barq_run("git-status")
+    assert "R README.md -> README2.md" in out
 
 
 def test_git_status_outside_git(barq_env, barq_run, monkeypatch):

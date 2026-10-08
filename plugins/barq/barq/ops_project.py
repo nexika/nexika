@@ -180,8 +180,9 @@ def op_info(ctx: Context) -> Result:
 
 
 def _execute(cmd: str, cwd: Path, timeout: int) -> tuple[str, int | None, float]:
-    env = dict(os.environ, CI="1", NO_COLOR="1", FORCE_COLOR="0", TERM="dumb",
-               DOTNET_NOLOGO="1", DOTNET_CLI_TELEMETRY_OPTOUT="1")
+    # Color settings stay as the caller has them: NO_COLOR=1 turned black's green suite red
+    # (#165). Color codes in the output are stripped afterwards by compress.clean.
+    env = dict(os.environ, CI="1", DOTNET_NOLOGO="1", DOTNET_CLI_TELEMETRY_OPTOUT="1")
     started = time.monotonic()
     try:
         proc = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, timeout=timeout, env=env)

@@ -5,6 +5,9 @@ on:
     types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches: [main]
+  # The merge queue tests each PR on top of the ones ahead of it before merging, so a PR no
+  # longer needs "Update branch" (and a new CI run) every time another PR merges.
+  merge_group:
 
 permissions:
   contents: read
