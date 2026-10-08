@@ -1,1 +1,0 @@
-haris guards lawha's check records (`~/.claude/nexika/lawha`) like itqan's proofs and tabib's diagnoses, so a passing lawha check in mizan's band or an itqan proof always comes from lawha, never from Claude.

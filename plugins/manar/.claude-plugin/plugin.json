@@ -1,7 +1,7 @@
 {
   "name": "manar",
   "description": "Nexika manar: be found by search engines and AI assistants. Deterministic SEO and AI-visibility audits, fixes written into your code (Next.js, Astro, ASP.NET Core, static sites) through reviewed pull requests, and real measurement of whether ChatGPT, Gemini, Perplexity and Claude mention and cite you.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Loai Elattar"
   },

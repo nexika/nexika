@@ -1,7 +1,7 @@
 {
   "name": "mizan",
   "description": "Nexika mizan: keeps your Claude Code session in balance. A band above the prompt shows the branch and who started it, open PRs or MRs per person, the branch's CI (passed, failed with the job, running), RAM and disk with warnings, the context level (fresh, mid, full), the running agent and its task, the current task step and the session cost; /mizan opens the details. At full context it saves a hafiz handoff and puts /clear in the prompt for you to send. English and Arabic.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Loai Elattar"
   },
