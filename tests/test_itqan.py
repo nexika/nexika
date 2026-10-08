@@ -119,6 +119,31 @@ def test_commit_with_secret_token_is_denied_without_revealing_it(guard, repo):
     assert token not in decision[2] and "ghp_xx..." in decision[2]
 
 
+# psf/black cases G19, G20, G96 (#146): a PyPI token, which the shared redactor already knows
+BLACK_PYPI = "pypi-AgEIcHlwaS5vcmcCJGI3ZDE2NmE0LTk5ZWEtNDJjNi1hZTM3LTExYTc2N2JmZDkyZQACKlszLCJmMDI"
+
+
+def test_a_pypi_token_is_a_secret_to_the_guard(guard, repo):
+    workflow = str(repo / ".github" / "workflows" / "pypi_upload.yml")
+    content = f"        with:\n          password: {BLACK_PYPI}\n"
+    decision = edit(guard, repo, file_path=workflow, content=content)
+    assert decision[:2] == ("ask", "write-secret") and BLACK_PYPI not in decision[2]
+    (repo / "ci_token.txt").write_text(f"password = {BLACK_PYPI}\n")
+    _git(repo, "add", "ci_token.txt")
+    assert bash(guard, repo, 'git commit -m "ci tweak"')[:2] == ("deny", "commit-secret")
+
+
+@pytest.mark.parametrize("name", [".pypirc", ".netrc", "home/me/.pypirc"])
+def test_pypirc_and_netrc_are_secret_files(guard, repo, name):
+    content = f"[pypi]\nusername = __token__\npassword = {BLACK_PYPI}\n"
+    assert edit(guard, repo, file_path=str(repo / name), content=content)[:2] == ("ask", "edit-secret-file")
+
+
+def test_the_guard_knows_every_shape_the_shared_redactor_knows(guard):
+    samples = ["npm_" + "a" * 36, "hf_" + "b" * 34, "sk_live_" + "c" * 24, "ASIA" + "D" * 16]
+    assert all(guard.find_secret(f"x = {s}") for s in samples)
+
+
 def test_commit_all_scans_unstaged_changes(guard, repo):
     (repo / "app.py").write_text("KEY = 'AKIAABCDEFGHIJKLMNOP'\n")
     assert bash(guard, repo, "git commit -am wip")[1] == "commit-secret"

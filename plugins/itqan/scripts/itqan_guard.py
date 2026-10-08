@@ -104,18 +104,11 @@ import itqan_secrets  # noqa: E402
 
 DEFAULT_PROTECTED = ["main", "master", "develop", "production", "release/*"]
 
-SECRET_PATTERNS = [re.compile(p) for p in (
-    r"\bgh[pousr]_[A-Za-z0-9]{36,}",
-    r"\bgithub_pat_[A-Za-z0-9_]{40,}",
-    r"\bglpat-[A-Za-z0-9_-]{20,}",
-    r"\bsk-ant-[A-Za-z0-9_-]{20,}",
-    r"\bsk-[A-Za-z0-9]{32,}",
-    r"\bAKIA[0-9A-Z]{16}\b",
-    r"\bxox[abprs]-[A-Za-z0-9-]{10,}",
-    r"\bAIza[0-9A-Za-z_-]{35}",
-    r"-----BEGIN [A-Z ]*PRIVATE KEY-----",
-)]
-SECRET_FILE = re.compile(r"(^|/)(\.env(\.[\w-]+)?|[^/]*\.(pem|key|p12|pfx)|id_(rsa|ed25519|ecdsa|dsa))$")
+# The family's shared secret shapes (common/secrets.py), so the guard and the redactor agree on what
+# a secret is.
+SECRET_PATTERNS = itqan_secrets.PATTERNS
+SECRET_FILE = re.compile(r"(^|/)(\.env(\.[\w-]+)?|\.pypirc|\.netrc|[^/]*\.(pem|key|p12|pfx)"
+                         r"|id_(rsa|ed25519|ecdsa|dsa))$")
 SECRET_FILE_OK = re.compile(r"\.(example|sample|template|dist)$")
 LOCK_FILES = {
     "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb", "poetry.lock", "uv.lock",
