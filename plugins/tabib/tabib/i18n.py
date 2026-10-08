@@ -9,7 +9,7 @@ TEXT = {
     "en": {
         "title": "CI run {run} ({workflow}) on {branch}, commit {sha}",
         "k_code_tests": "{count} failing test(s)", "k_code_lint": "{count} lint error(s)",
-        "k_code_build": "{count} build error(s)", "k_code_": "{count} failure(s)", "one_job": "{label}, in one job", "n_jobs": "{label}, in {jobs} jobs",
+        "k_code_build": "{count} build error(s)", "k_code_": "{count} failure(s)", "one_job": "{label}, in one job",
         "k_matrix": "fails only on {value}", "k_flaky": "likely flaky: the same commit passed",
         "k_infra": "outside the code: {signal}", "k_dependency": "a dependency problem",
         "k_dependency_module": "a dependency problem: {module} is not installed",
@@ -19,6 +19,7 @@ TEXT = {
                         "what changed in {package} (a new release, or the version this job installs), "
                         "then adapt the code to it or pin the version.",
         "k_unknown": "unclear: read the log",
+        "n_jobs": "{label}, in {jobs} jobs",
         "s_timeout": "a time limit", "s_oom": "out of memory", "s_network": "the network",
         "s_rate_limit": "a rate limit", "s_runner": "the CI machine", "s_auth": "missing credentials",
         "s_cancelled": "the run was cancelled (a newer run or a person stopped it)",
@@ -43,7 +44,7 @@ TEXT = {
     "ar": {
         "title": "تشغيل CI رقم {run} ({workflow}) على {branch}، التعديل {sha}",
         "k_code_tests": "{count} اختبار فاشل", "k_code_lint": "{count} خطأ تنسيق",
-        "k_code_build": "{count} خطأ بناء", "k_code_": "{count} إخفاق", "one_job": "{label}، في مهمة واحدة", "n_jobs": "{label}، في {jobs} مهام",
+        "k_code_build": "{count} خطأ بناء", "k_code_": "{count} إخفاق", "one_job": "{label}، في مهمة واحدة",
         "k_matrix": "يفشل فقط على {value}", "k_flaky": "متقلّب على الأرجح: نفس التعديل نجح",
         "k_infra": "خارج الكود: {signal}", "k_dependency": "مشكلة في الاعتماديات",
         "k_dependency_module": "مشكلة في الاعتماديات: {module} غير مثبّت",
@@ -52,6 +53,7 @@ TEXT = {
         "next_package": "الخطأ يُرفع من داخل {package} لا من الكود الذي غيّره هذا التعديل: راجع ما تغيّر في "
                         "{package} (إصدار جديد أو النسخة التي تثبّتها هذه المهمة)، ثم كيّف الكود معه أو ثبّت النسخة.",
         "k_unknown": "غير واضح: اقرأ السجل",
+        "n_jobs": "{label}، في {jobs} مهام",
         "s_timeout": "حد زمني", "s_oom": "نفاد الذاكرة", "s_network": "الشبكة",
         "s_rate_limit": "حد عدد الطلبات", "s_runner": "جهاز CI", "s_auth": "بيانات اعتماد ناقصة",
         "s_cancelled": "أُلغي التشغيل (أوقفه تشغيل أحدث أو شخص)",
