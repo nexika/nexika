@@ -64,7 +64,11 @@ def one_matrix_job(jobs: list[dict]) -> bool:
 def classify(facts: dict) -> dict:
     """{kind, detail, confidence, evidence} from what triage found."""
     failures = facts.get("failures") or []
-    signals = {s["kind"]: s["line"] for s in facts.get("signals") or []}
+    # When a job failed, GitHub cancels its matrix siblings (fail-fast): their "canceled" says
+    # nothing about why the run failed.
+    a_job_failed = any(j.get("conclusion") == "failure" for j in facts.get("jobs") or [])
+    signals = {s["kind"]: s["line"] for s in facts.get("signals") or []
+               if not (s["kind"] == "cancelled" and a_job_failed)}
     evidence: list[str] = []
     passed_same = facts.get("same_commit_passed")
     if passed_same:
