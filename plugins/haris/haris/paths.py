@@ -9,6 +9,7 @@
     config-exec  project files that make tools run commands (.mcp.json, .envrc, .vscode/tasks.json)
     git          inside .git (hooks and config are persistence)
     project      inside the project
+    memory       Claude Code's memory folder for this project (~/.claude/projects/<project>/memory)
     temp         temporary folders
     home         elsewhere in your home folder
     outside      anywhere else
@@ -89,6 +90,30 @@ def data_home() -> str:
 
 
 GUARDED_PLUGINS = ("haris", "mizan")
+TRANSCRIPT = re.compile(r"^(.*?/\.claude/projects/[^/]+)/[^/]")
+
+
+def memory_folder(transcript: str) -> str:
+    """Claude Code's memory folder for the session's project, from the session's transcript path
+    (~/.claude/projects/<project>/<session>.jsonl, set by Claude Code, not by Claude); "" if unknown."""
+    m = TRANSCRIPT.match(norm(os.path.realpath(transcript))) if transcript else None
+    return m.group(1) + "/memory" if m else ""
+
+
+def learnable_folder(target: str, where: Where) -> str:
+    """The folder a yes to writing `target` outside the project covers for the rest of the session (#122):
+    its git checkout, or else the folder it is in; "" when that folder is too broad (home, a parent of
+    the project, Claude Code's own folder) or is not an ordinary place outside the project."""
+    folder = os.path.dirname(target)
+    probe = folder
+    while probe not in ("/", "", where.home) and not os.path.exists(probe + "/.git"):
+        probe = os.path.dirname(probe)
+    if probe not in ("/", "", where.home):
+        folder = probe
+    if (not folder or where.critical(folder) or under(folder, where.home + "/.claude")
+            or where.place(folder + "/_") not in ("home", "outside")):
+        return ""
+    return folder
 
 
 def guarded_homes() -> tuple[str, ...]:
@@ -102,11 +127,24 @@ def guarded_homes() -> tuple[str, ...]:
             norm(os.path.expanduser(os.environ.get("NEXIKA_STATUS_HOME") or "~/.claude/nexika/status")))
 
 
+GUARDED_PARTS = {".git", ".claude", ".husky", ".githooks", ".vscode", ".devcontainer", ".envrc", ".mcp.json",
+                 ".pre-commit-config.yaml", "CLAUDE.md"}
+
+
+def guarded_inside(path: str, folder: str) -> bool:
+    """`path` is, at any depth under `folder`, a file that makes tools or Claude run things (.git, Claude
+    Code settings, .mcp.json, .envrc, git hooks, CI workflows ...): a yes to writing in a folder never
+    covers these (#122)."""
+    rel = path[len(folder.rstrip("/")) + 1:] if under(path, folder.rstrip("/")) else path
+    return bool(GUARDED_PARTS & set(rel.split("/"))) or "/.github/workflows/" in "/" + rel
+
+
 class Where:
     """Places paths for one project: its root, the home folder and any extra secret globs."""
 
-    def __init__(self, root: str, secret_globs: list[str] | None = None):
+    def __init__(self, root: str, secret_globs: list[str] | None = None, memory: str = ""):
         self.root = norm(os.path.realpath(root))
+        self.memory = memory
         self.home = norm(os.path.realpath(os.path.expanduser("~")))
         self.secret_globs = list(secret_globs or [])
         import tempfile  # loads shutil and random: only when a Where is built
@@ -198,6 +236,8 @@ class Where:
             return "secret"
         if self.is_system(path):
             return "system"
+        if self.memory and under(path, self.memory):
+            return "memory"
         if under(path, self.root):
             if any(under(path, f"{self.root}/{p}") for p in CONFIG_EXEC_PROJECT):
                 return "config-exec"

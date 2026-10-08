@@ -892,3 +892,276 @@ def test_editing_haris_source_that_mentions_its_data_is_ordinary(world, checkout
     for still in (f"python3 -c \"open('{status}/mizan/a.json', 'w').write('x')\"",
                   "python3 - <<'EOF'\nfrom mizan import status\nstatus.publish('mizan', {})\nEOF"):
         assert decide(repo, "Bash", still).verdict == "deny", still
+
+
+# ---------------------------------------------------------------- once per folder, memory, source, $_ (#122)
+
+
+@pytest.fixture
+def other_repos(world):
+    """Two git repositories in the home folder, beside the project: writes there ask (write-outside)."""
+    home, project = world
+    repos = []
+    for name in ("repo-b", "repo-c"):
+        repo = home / "work" / name
+        (repo / "sub").mkdir(parents=True, exist_ok=True)
+        if not (repo / ".git").exists():
+            _git(repo, "init", "-q")
+        repos.append(repo)
+    return repos
+
+
+def tool_event(project, tool, value, session, use_id):
+    key = "command" if tool == "Bash" else "file_path"
+    return {"tool_name": tool, "tool_input": {key: str(value)}, "cwd": str(project), "session_id": session,
+            "tool_use_id": use_id}
+
+
+def ran(event):
+    """PostToolUse for a call: Claude Code sends it only when the call ran, so the user said yes."""
+    return hooks.on_post_tool_use({**event, "tool_response": {"success": True}})
+
+
+def test_a_folder_you_said_yes_to_is_not_asked_again_in_the_session(world, other_repos):
+    home, project = world
+    b, _ = other_repos
+    session = "once-a-" + "1" * 8
+    first = tool_event(project, "Write", b / "x.txt", session, "toolu_once_a1")
+    assert pre(first) == "ask"
+    ran(first)
+    assert pre(tool_event(project, "Write", b / "sub" / "y.txt", session, "toolu_once_a2")) in ORDINARY
+    assert pre(tool_event(project, "Bash", f"echo hi > {b}/z.txt", session, "toolu_once_a3")) in ORDINARY
+
+
+def test_a_folder_you_said_no_to_is_still_asked(world, other_repos):
+    home, project = world
+    b, _ = other_repos
+    session = "once-b-" + "1" * 8
+    first = tool_event(project, "Write", b / "x.txt", session, "toolu_once_b1")
+    assert pre(first) == "ask"  # rejected: no PostToolUse follows
+    again = tool_event(project, "Write", b / "sub" / "y.txt", session, "toolu_once_b2")
+    assert pre(again) == "ask"
+    ran(again)  # the second time the user said yes
+    assert pre(tool_event(project, "Write", b / "w.txt", session, "toolu_once_b3")) in ORDINARY
+
+
+def test_a_learned_folder_keeps_its_protected_files_and_other_folders_still_ask(world, other_repos):
+    home, project = world
+    b, c = other_repos
+    session = "once-c-" + "1" * 8
+    first = tool_event(project, "Write", b / "x.txt", session, "toolu_once_c1")
+    assert pre(first) == "ask"
+    ran(first)
+    for n, path in enumerate((b / ".git" / "config", b / ".env", b / ".mcp.json")):
+        assert pre(tool_event(project, "Write", path, session, f"toolu_once_c2{n}")) in DANGEROUS, path
+    assert pre(tool_event(project, "Write", c / "x.txt", session, "toolu_once_c3")) == "ask"
+    assert pre(tool_event(project, "Write", b / "sub" / "y.txt", session, "toolu_once_c4")) in ORDINARY
+
+
+def test_a_learned_folder_counts_only_in_its_session(world, other_repos):
+    home, project = world
+    b, _ = other_repos
+    session, other = "once-d-" + "1" * 8, "once-d-" + "2" * 8
+    first = tool_event(project, "Write", b / "x.txt", session, "toolu_once_d1")
+    assert pre(first) == "ask"
+    ran(first)
+    assert pre(tool_event(project, "Write", b / "y.txt", other, "toolu_once_d2")) == "ask"
+    assert pre(tool_event(project, "Write", b / "y.txt", session, "toolu_once_d3")) in ORDINARY
+
+
+def test_a_yes_to_a_call_with_other_asks_teaches_no_folder(world, other_repos):
+    home, project = world
+    b, _ = other_repos
+    session = "once-e-" + "1" * 8
+    mixed = tool_event(project, "Bash", f'echo hi > {b}/z.txt; echo y > "$OUT/f"', session, "toolu_once_e1")
+    assert pre(mixed) == "ask"
+    ran(mixed)
+    assert pre(tool_event(project, "Write", b / "sub" / "y.txt", session, "toolu_once_e2")) == "ask"
+    plain = tool_event(project, "Write", b / "x.txt", session, "toolu_once_e3")
+    assert pre(plain) == "ask"
+    ran(plain)  # a yes to this write alone does teach the folder
+    assert pre(tool_event(project, "Write", b / "sub" / "y.txt", session, "toolu_once_e4")) in ORDINARY
+
+
+def test_the_home_folder_itself_is_never_learned(world, other_repos):
+    home, project = world
+    b, _ = other_repos
+    session = "once-f-" + "1" * 8
+    first = tool_event(project, "Write", home / "file.txt", session, "toolu_once_f1")
+    assert pre(first) == "ask"
+    ran(first)
+    assert pre(tool_event(project, "Write", home / "other.txt", session, "toolu_once_f2")) == "ask"
+    repo = tool_event(project, "Write", b / "x.txt", session, "toolu_once_f3")
+    assert pre(repo) == "ask"
+    ran(repo)
+    assert pre(tool_event(project, "Write", b / "y.txt", session, "toolu_once_f4")) in ORDINARY
+
+
+def memory_world(home, project, session):
+    slug = "".join(ch if ch.isalnum() or ch == "-" else "-" for ch in str(project))
+    folder = home / ".claude" / "projects" / slug
+    return folder, str(folder / f"{session}.jsonl")
+
+
+def test_the_projects_memory_folder_is_a_place_to_write(world):
+    home, project = world
+    session = "memory-" + "1" * 8
+    folder, transcript = memory_world(home, project, session)
+    cfg = policy.effective_config(str(project))
+    memory = folder / "memory"
+    heredoc = f"cat > {memory}/n.md <<'EOF'\nx\nEOF"
+
+    def event(tool, value, n, with_transcript=True):
+        out = tool_event(project, tool, value, session, f"toolu_mem_{n}")
+        return {**out, "transcript_path": transcript} if with_transcript else out
+
+    still = (event("Write", home / ".claude" / "projects" / "-other-slug" / "memory" / "n.md", 1),
+             event("Write", transcript, 2), event("Write", memory / "note.md", 3, with_transcript=False))
+    for e in still:
+        assert policy.decide(e, cfg).verdict == "ask", e["tool_input"]
+        assert pre(e) == "ask", e["tool_input"]
+    for e in (event("Write", memory / "note.md", 4), event("Bash", heredoc, 5)):
+        d = policy.decide(e, cfg)
+        assert d.verdict in ORDINARY, (e["tool_input"], d.verdict, d.cls, d.reason)
+        assert pre(e) in ORDINARY, e["tool_input"]
+
+
+def test_python_reads_its_arguments_as_the_paths_they_are(world):
+    home, project = world
+    session = "argv-" + "1" * 8
+    folder, transcript = memory_world(home, project, session)
+    memory = folder / "memory"
+    cfg = policy.effective_config(str(project))
+
+    def check(command):
+        e = {**tool_event(project, "Bash", command, session, "toolu_argv"), "transcript_path": transcript}
+        return policy.decide(e, cfg)
+
+    script = "import pathlib, sys\np = pathlib.Path(sys.argv[1])\np.write_text('x')"
+    joined = "import sys\np = sys.argv[1] + '/n.md'\nopen(p, 'w').write('x')"
+    for command in (f"M={memory}/n.md\npython3 - \"$M\" <<'PY'\n{script}\nPY",
+                    f"MEM={memory}; python3 - \"$MEM\" <<'PY'\n{joined}\nPY",
+                    f"python3 -c \"{script}\" {memory}/n.md"):
+        d = check(command)
+        assert d.verdict in ORDINARY, (command, d.verdict, d.cls, d.reason)
+    d = check(f"python3 - ~/.bashrc <<'PY'\n{script}\nPY")
+    assert d.verdict == "deny" and d.cls == "persistence", (d.verdict, d.cls, d.reason)
+    d = check(f"python3 - {memory}/n.md <<'PY'\nimport sys\nsys.argv[1] = '/etc/x'\n{script}\nPY")
+    assert d.verdict in DANGEROUS, (d.verdict, d.cls, d.reason)  # the code changes sys.argv: not followed
+    d = check(f"python3 - \"$UNSET\" <<'PY'\n{script}\nPY")
+    assert d.verdict == "ask", (d.verdict, d.cls, d.reason)
+
+
+def test_sourcing_a_file_keeps_variables_set_in_the_command(world):
+    home, project = world
+    unset = '. ./env.sh; echo x > "$OUT/f"'
+    d = decide(project, "Bash", unset)
+    assert d.verdict == "ask" and d.cls == "unknown-target", (d.verdict, d.cls, d.reason)
+    rewritten = "cat > e.sh <<'EOF'\nSC=$HOME/.bashrc\nEOF\nSC=/tmp/x; . ./e.sh; echo x >> \"$SC\""
+    d = decide(project, "Bash", rewritten)
+    assert d.verdict in DANGEROUS, (d.verdict, d.cls, d.reason)
+    sourced = 'SC=/tmp/haris-122-sc; set -a; . "$SC/env.sh"; set +a; echo x > "$SC/api.log"'
+    d = decide(project, "Bash", sourced)
+    assert d.cls != "unknown-target" and d.verdict in ORDINARY, (d.verdict, d.cls, d.reason)
+
+
+def test_last_argument_variable_follows_the_previous_command(world):
+    home, project = world
+    d = decide(project, "Bash", 'mkdir -p "$(date)" && cd $_ && touch f')
+    assert d.verdict == "ask", (d.verdict, d.cls, d.reason)
+    for command in (f"mkdir -p {project}/build && cd $_ && echo x > out.txt",
+                    "mkdir -p /tmp/haris-122-x && cd $_ && touch f"):
+        d = decide(project, "Bash", command)
+        assert d.cls != "unknown-target" and d.verdict in ORDINARY, (command, d.verdict, d.cls, d.reason)
+
+
+# ---------------------------------------------------------------- review of #122: what must still stop
+
+
+def test_last_argument_of_a_command_that_may_not_have_run_is_unknown(world):
+    home, project = world
+    for command in ("echo ~/.bashrc || true ok.txt; echo evil >> $_",
+                    "echo ~/.bashrc; true ok.txt & echo evil >> $_",
+                    "true ~/.bashrc && echo x; false ok.txt && true y; echo evil >> $_",
+                    "true ~/.bashrc || false x && echo evil >> $_",
+                    "echo ~/.bashrc | true ok.txt; echo evil >> $_",
+                    "(true ok.txt); echo evil >> $_"):
+        d = decide(project, "Bash", command)
+        assert d.verdict in DANGEROUS, (command, d.verdict, d.cls, d.reason)
+    for command in ("echo ~/.ssh/id_rsa || true README.md; cat $_",
+                    "echo ~/.ssh/id_rsa; true README.md & cat $_"):
+        assert decide(project, "Bash", command).verdict != "allow", command
+
+
+def test_a_learned_folder_is_never_trusted_more_than_the_project(world, other_repos):
+    home, project = world
+    b, c = other_repos
+    session = "review-a-" + "1" * 8
+    first = tool_event(project, "Write", b / "x.txt", session, "toolu_rev_a1")
+    assert pre(first) == "ask"
+    ran(first)
+    later = tool_event(project, "Bash", f"echo x > {b}/sub/y.txt", session, "toolu_rev_a2")
+    assert pre(later) == "pass"  # Claude Code's own rules still decide, as in the project
+    (b / "nested").mkdir(exist_ok=True)
+    for n, rel in enumerate(("nested/.git/config", "nested/.git/hooks/pre-commit", ".husky/pre-commit",
+                             ".github/workflows/x.yml", "CLAUDE.md", "nested/.claude/settings.json",
+                             "nested/.envrc")):
+        e = tool_event(project, "Write", b / rel, session, f"toolu_rev_a3{n}")
+        assert pre(e) in DANGEROUS, rel
+
+
+def test_a_yes_to_writes_in_two_folders_learns_neither(world, other_repos):
+    home, project = world
+    b, c = other_repos
+    session = "review-b-" + "1" * 8
+    first = tool_event(project, "Bash", f"echo a > {b}/x.txt; echo b > {c}/x.txt", session, "toolu_rev_b1")
+    assert pre(first) == "ask"
+    ran(first)
+    for n, repo in enumerate((b, c)):
+        assert pre(tool_event(project, "Write", repo / "y.txt", session, f"toolu_rev_b2{n}")) == "ask"
+
+
+def test_learning_never_rewrites_the_session_file(world, other_repos):
+    home, project = world
+    b, _ = other_repos
+    session = "review-c-" + "1" * 8
+    state.save_session(session, {"taint": 2, "taint_reason": "test"})
+    saved = state.load_session(session)
+    first = tool_event(project, "Write", b / "x.txt", session, "toolu_rev_c1")
+    assert pre(first) == "ask"
+    ran(first)
+    assert state.load_session(session) == saved
+
+
+def test_python_arguments_are_not_followed_when_the_code_can_change_them(world):
+    home, project = world
+    write = "pathlib.Path(sys.argv[1]).write_text('x')"
+    for head in ("import sys as s, pathlib\ns.argv[1] = '/etc/x'\nimport sys",
+                 "import sys, pathlib\na = sys.argv\na[1] = a[2]",
+                 "import sys, pathlib\nsetattr(sys, 'argv', ['-', '/etc/x'])",
+                 "import sys, pathlib\nsys.argv.__setitem__(1, '/etc/x')",
+                 "import sys, pathlib\nvars(sys)['argv'][1] = '/etc/x'"):
+        command = f"python3 - ok.txt ~/.bashrc <<'PY'\n{head}\n{write}\nPY"
+        d = decide(project, "Bash", command)
+        assert d.verdict in DANGEROUS, (head, d.verdict, d.cls, d.reason)
+    for tail in ("-W ~/.bashrc p0 ok.txt", "-- ~/.bashrc ok.txt"):
+        command = f"python3 -c \"import sys, pathlib\npathlib.Path(sys.argv[2]).write_text('x')\" {tail}"
+        d = decide(project, "Bash", command)
+        assert d.verdict in DANGEROUS, (tail, d.verdict, d.cls, d.reason)
+
+
+def test_memory_writes_ask_in_a_tainted_session_and_deletes_there_ask(world):
+    home, project = world
+    session = "review-d-" + "1" * 8
+    folder, transcript = memory_world(home, project, session)
+    cfg = policy.effective_config(str(project))
+    memory = folder / "memory"
+
+    def check(tool, value, data=None):
+        e = {**tool_event(project, tool, value, session, "toolu_rev_d"), "transcript_path": transcript}
+        return policy.decide(e, cfg, data or {})
+
+    assert check("Write", memory / "MEMORY.md").verdict == "pass"
+    assert check("Write", memory / "MEMORY.md", {"taint": 2}).verdict == "ask"
+    for command in (f"rm {memory}/n.md", f"rm -rf {memory}"):
+        assert check("Bash", command).verdict == "ask", command

@@ -89,8 +89,24 @@ def classify(command: str, ctx: Ctx) -> list[Finding]:
 
 
 def walk(nodes: list, ctx: Ctx) -> None:
-    for n in nodes:
+    for i, n in enumerate(nodes):
+        if not surely_ran_before(nodes, i):
+            ctx.vars["_"] = UNKNOWN
         pipeline(n, ctx)
+
+
+def surely_ran_before(nodes: list, i: int) -> bool:
+    """$_ is the last argument of the command before (#122), followed only when that command surely ran
+    in this shell: one plain command in the foreground, then `;` or `&&`. After `||`, `&`, a pipe, a
+    group, a loop or `a && b; c` (b may not have run), $_ is unknown."""
+    if not i:
+        return False
+    before, n = nodes[i - 1], nodes[i]
+    if not (isinstance(before, shell.Pipeline) and not before.background and len(before.stages) == 1
+            and isinstance(before.stages[0], shell.Simple) and not before.stages[0].data):
+        return False
+    joined = getattr(n, "joined", "")
+    return (joined == "&&" and before.joined in ("", "&&")) or (joined == "" and before.joined == "")
 
 
 def pipeline(p: shell.Pipeline, ctx: Ctx) -> None:
@@ -284,6 +300,7 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         stage = run(argv, ctx, stdin)
     finally:
         ctx.prefix = {}
+    ctx.vars["_"] = str(argv[-1])  # $_ is the last argument of the previous command (unknown stays unknown)
     downloads = (stage is not None and stage.downloads) or program in DOWNLOADERS
     for r in cmd.redirects:
         if r.body is None and r.target and r.op in (">", ">>", ">|", "&>", "&>>"):
@@ -518,7 +535,7 @@ def delete_paths(values_: list[Arg], ctx: Ctx, verb: str = "deletes") -> None:
                 ctx.add("discard", f"{verb.capitalize()} {shown}: the project's git history.", path)
             elif place == "project":
                 ctx.add("delete", f"{verb.capitalize()} {shown} in the project.", path)
-            elif place in ("home", "outside"):
+            elif place in ("home", "outside", "memory"):
                 ctx.add("delete-outside", f"{verb.capitalize()} {shown}, outside the project.", path)
             elif place != "null":
                 cls, text = WRITE_REASONS[place]
@@ -933,7 +950,8 @@ def shell_string(script: Arg, ctx: Ctx, args: list, via: str) -> Stage:
     return Stage()
 
 
-def interpreter_stdin(program: str, ctx: Ctx, stdin: Stage | None, lang: str = "sh") -> Stage:
+def interpreter_stdin(program: str, ctx: Ctx, stdin: Stage | None, lang: str = "sh",
+                      script_argv: list | None = None) -> Stage:
     if stdin is None:
         ctx.add("exec", f"Starts {program}.")
     elif stdin.downloads:
@@ -942,7 +960,7 @@ def interpreter_stdin(program: str, ctx: Ctx, stdin: Stage | None, lang: str = "
     elif stdin.text is not None:
         if lang == "sh":
             return shell_string(arg(stdin.text), ctx, [program], program)
-        return code_check(arg(stdin.text), ctx, program, lang)
+        return code_check(arg(stdin.text), ctx, program, lang, script_argv)
     else:
         ctx.add("dynamic", f"{program} runs what is piped into it, which haris cannot see.")
     return Stage()
@@ -980,8 +998,17 @@ def h_source(argv, ctx, stdin):
                                "into the shell.", path)
         ctx.forget(args=True)
         return Stage()
+    before = len(ctx.findings)
     stage = script_run(argv[0], argv[1], ctx, "in this shell")
-    ctx.forget(args=True)
+    unread = path not in ctx.written and any(f.cls == "exec" for f in ctx.findings[before:])
+    if unread:
+        # A file haris has not read is "exec", which leaves the whole command to Claude Code's own
+        # rules, so the variables this command set before stay known: the file could write anywhere
+        # itself, it gains nothing by changing them (#122). Any other variable is unknown.
+        ctx.vars_lost = True
+        ctx.args = None
+    else:
+        ctx.forget(args=True)  # a file this command wrote: haris read it but does not track its variables
     return stage
 
 
@@ -1511,6 +1538,10 @@ def literal_path(expr: str, text: str, depth: int = 0) -> str | None:
     if m:
         lit = next(g for g in m.groups() if g is not None)
         return lit if lit and "\n" not in lit and not re.search(r"\$\{|%s|\{\w*\}", lit) else None
+    m = re.fullmatch(r"(['\"][^'\"\n]*['\"])\s*\+\s*(['\"][^'\"\n]*['\"])", expr)
+    if m:  # "/a" + "/b.md": two plain strings joined
+        left, right = literal_path(m.group(1), text, depth), literal_path(m.group(2), text, depth)
+        return left + right if left and right else None
     if depth < 2 and re.fullmatch(r"\$?[A-Za-z_]\w*", expr):
         name = re.escape(expr.lstrip("$"))
         found = [literal_path(a.group(1), text, depth + 1) for a in
@@ -1519,6 +1550,28 @@ def literal_path(expr: str, text: str, depth: int = 0) -> str | None:
         if found and all(found) and len(set(found)) == 1:
             return found[0]
     return None
+
+
+# sys.argv only ever read as sys.argv[N] (not assigned, copied, passed on or aliased), sys never renamed
+ARGV_CHANGED = re.compile(r"\bsys\.argv\b(?!\s*\[\s*\d+\s*\](?!\s*(?:[-+*/%|&^]|<<|>>|//|\*\*)?=(?!=)))"
+                          r"|\bimport\s+sys\s+as\b|\bfrom\s+sys\s+import\b|__setitem__|\bargv\b(?<!sys\.argv)"
+                          r"|\bdel\s+sys\b|\b(?:setattr|getattr|vars|globals|__import__)\s*\(|__dict__|importlib")
+
+
+def with_argv(text: str, script_argv: list | None) -> str:
+    """Python code with sys.argv[N] written as the argument it is (#122): `python3 - "$M"` then
+    `Path(sys.argv[1]).write_text(...)` writes to $M. Unchanged when an argument is unknown or holds
+    quotes, or when the code changes sys.argv."""
+    if not script_argv or ARGV_CHANGED.search(text):
+        return text
+
+    def known(m: re.Match) -> str:
+        i = int(m.group(1))
+        value = str(script_argv[i]) if i < len(script_argv) else None
+        if value is None or UNKNOWN in value or re.search(r"['\"\\\n]", value):
+            return m.group()
+        return f"'{value}'"
+    return re.sub(r"\bsys\.argv\[\s*(\d+)\s*\]", known, text)
 
 
 RUNS_TEXT = re.compile(r"\b(?:exec|eval|compile|execfile|runpy|__import__|Function)\b")
@@ -1641,15 +1694,16 @@ def reaches_self(text: str, literals: list[str], ctx: Ctx, data: list[tuple[int,
         for lit in literals if lit and "\n" not in lit and len(lit) < 400 and PATH_LIKE.match(lit))
 
 
-def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
-    """Code given inline (python -c, node -e ...): find what it does, and never approve it."""
+def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "", script_argv: list | None = None) -> Stage:
+    """Code given inline (python -c, node -e ...): find what it does, and never approve it.
+    `script_argv`: Python's sys.argv for this code, when the command gives it."""
     if UNKNOWN in code:
         if "download" in getattr(code, "marks", ()):
             ctx.add("download-run", f"`{via}` runs code it downloads, without you seeing it first.")
         else:
             ctx.add("dynamic", f"`{via}` runs code that is only known when it runs.")
         return Stage()
-    text = str(code)
+    text = with_argv(str(code), script_argv)
     literals = [next(g for g in m.groups() if g is not None) for m in STRING_LITERAL.finditer(text)]
     # In Python that never runs text as code, what sits in plain strings is data: a file's new contents.
     data = python_strings(text) if re.search(r"python|pypy", lang) and not RUNS_TEXT.search(text) else []
@@ -1720,7 +1774,9 @@ def h_python(argv, ctx, stdin):
     opts, pos = options(argv[1:], {"-c", "-m", "-W", "-X", "-Q"}, first_stops=True)
     code = values(opts, "-c")
     if code:
-        return code_check(code[0], ctx, f"{argv[0]} -c", "python")
+        at = next((i for i, a in enumerate(argv) if a is code[0]), None)
+        script_argv = ["-c", *argv[at + 1:]] if at is not None else None  # Python stops reading options at -c
+        return code_check(code[0], ctx, f"{argv[0]} -c", "python", script_argv)
     module = values(opts, "-m")
     if module:
         name = module[0]
@@ -1748,7 +1804,7 @@ def h_python(argv, ctx, stdin):
         ctx.add("read", "Shows the Python version.")
         return Stage()
     if not pos or pos[0] == "-":
-        return interpreter_stdin(argv[0], ctx, stdin, "python")
+        return interpreter_stdin(argv[0], ctx, stdin, "python", pos or [""])
     return script_run(argv[0], pos[0], ctx, rest=pos[1:])
 
 

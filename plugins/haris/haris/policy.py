@@ -27,7 +27,7 @@ from .config import (  # noqa: F401  (settings live in config, kept here by name
     normalize,
     project_root,
 )
-from .paths import UNKNOWN, Where
+from .paths import UNKNOWN, Where, guarded_inside, learnable_folder, memory_folder
 
 MCP_DESTRUCTIVE = re.compile(r"(?i)(?:^|[_-])(?:delete|remove|drop|destroy|purge|merge|publish|release|"
                              r"deploy|"
@@ -36,14 +36,16 @@ MCP_DESTRUCTIVE = re.compile(r"(?i)(?:^|[_-])(?:delete|remove|drop|destroy|purge
 
 
 class Decision:
-    """allow, pass, ask or deny, with the class and reason behind it (a plain class, like Finding)."""
-    __slots__ = ("verdict", "cls", "reason", "findings", "tainted")
+    """allow, pass, ask or deny, with the class and reason behind it (a plain class, like Finding).
+    `learn`: for an ask only about writing outside the project, the folders a yes covers (#122)."""
+    __slots__ = ("verdict", "cls", "reason", "findings", "tainted", "learn")
 
     def __init__(self, verdict: str, cls: str, reason: str, findings: list | None = None,
-                 tainted: bool = False):
+                 tainted: bool = False, learn: list | None = None):
         self.verdict, self.cls, self.reason = verdict, cls, reason
         self.findings = [] if findings is None else findings
         self.tainted = tainted
+        self.learn = [] if learn is None else learn
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Decision):
@@ -172,22 +174,30 @@ APPROVAL_LIFTS = {
     "read": {"read-outside", "read-unknown", "secret-read"},
     "write": {"write", "write-temp", "write-outside", "delete", "delete-outside", "secret-write",
               "git-internal", "config-exec"},
+    "folder": {"write-outside"},  # learned from the user's yes to a write there (#122): lifts to pass only
 }
 
 
-def approved(finding: c.Finding, command: str, approvals: list[dict]) -> bool:
+def approved(finding: c.Finding, command: str, approvals: list[dict]) -> str:
+    """The verdict an approval lifts this finding to: allow for what the user typed, pass for a folder
+    learned from a yes (never more trust than the project gets); "" when none covers it."""
     if finding.cls in c.NOT_APPROVABLE:
-        return False
+        return ""
+    best = ""
     for a in approvals:
         value = str(a.get("value") or "")
         if not value:
             continue
         if a.get("kind") == "command" and command and normalize(command) == value:
-            return True
+            return c.ALLOW
         if finding.cls in APPROVAL_LIFTS.get(str(a.get("kind")), ()) and finding.target:
+            if a.get("kind") == "folder" and guarded_inside(finding.target, value):
+                continue
             if finding.target == value or (value.endswith("/") and finding.target.startswith(value)):
-                return True
-    return False
+                if a.get("kind") != "folder":
+                    return c.ALLOW
+                best = c.PASS
+    return best
 
 
 # ---------------------------------------------------------------- decision
@@ -199,7 +209,8 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
     tool_input = event.get("tool_input") if isinstance(event.get("tool_input"), dict) else {}
     cwd = os.path.realpath(str(event.get("cwd") or os.getcwd()))
     root = project_root(cwd)
-    ctx = c.Ctx(Where(root, cfg.get("secret_paths")), cwd, cfg)
+    memory = memory_folder(str(event.get("transcript_path") or ""))
+    ctx = c.Ctx(Where(root, cfg.get("secret_paths"), memory), cwd, cfg)
     findings = list(findings_for(tool, tool_input, ctx))
     findings += rule_findings(cfg, ctx.executed)
     if not findings:
@@ -211,12 +222,16 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
                                           "value": normalize(a)} for a in cfg.get("allow", [])]
     index = PROFILE_INDEX.get(cfg.get("profile", "standard"), 1)
     best: tuple[c.Finding, str] | None = None
+    asked: list[c.Finding] = []
     for f in findings:
         verdict = c.TABLE.get(f.cls, (c.ASK,) * 3)[index]
         if tainted and f.cls in c.TAINT_RAISED:
             verdict = {c.ALLOW: c.PASS, c.PASS: c.ASK, c.ASK: c.DENY}.get(verdict, verdict)
-        if verdict != c.ALLOW and approved(f, command, approvals):
-            verdict = c.ALLOW
+        lifted = approved(f, command, approvals) if verdict != c.ALLOW else ""
+        if lifted and c.LEVEL[lifted] < c.LEVEL[verdict]:
+            verdict = lifted
+        if verdict == c.ASK:
+            asked.append(f)
         if best is None or c.LEVEL[verdict] > c.LEVEL[best[1]]:
             best = (f, verdict)
     finding, verdict = best
@@ -237,7 +252,17 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
         elif finding.target:
             kind = "write" if tool in WRITE_TOOLS else "read"
             reason += f" If the user wants this anyway, they can type: /haris:allow {kind} {finding.target}"
-    return Decision(verdict, finding.cls, readable(reason), findings, tainted)
+    return Decision(verdict, finding.cls, readable(reason), findings, tainted,
+                    learnable(verdict, asked, ctx.where, tainted))
+
+
+def learnable(verdict: str, asked: list[c.Finding], where: Where, tainted: bool) -> list[str]:
+    """When the only asks are writes outside the project, the folders a yes covers for the session."""
+    if verdict != c.ASK or tainted or not asked or any(f.cls != "write-outside" or not f.target
+                                                        for f in asked):
+        return []
+    folders = {learnable_folder(f.target, where) for f in asked}
+    return sorted(folders) if len(folders) == 1 and "" not in folders else []  # the one folder the ask named
 
 
 CONTROL = re.compile(r"[\x01-\x08\x0b-\x1f\x7f\u200b-\u200f\u202a-\u202e\u2066-\u2069]")

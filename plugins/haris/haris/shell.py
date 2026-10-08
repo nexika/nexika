@@ -70,6 +70,7 @@ class Simple:
 class Pipeline:
     stages: list
     background: bool = False
+    joined: str = ""           # "&&" or "||" when it runs only after the pipeline before it
 
 
 @dataclass
@@ -467,9 +468,11 @@ class Parser:
                 raise ParseError(f"unexpected `{tok.text}`")
             items.append(self.pipeline())
             while self._is(self._peek(), "op", "&&") or self._is(self._peek(), "op", "||"):
+                op = self._peek().text
                 self.k += 1
                 self._newlines()
                 items.append(self.pipeline())
+                items[-1].joined = op
 
     def pipeline(self) -> Pipeline:
         while self._is(self._peek(), "word", "!") or self._is(self._peek(), "word", "time"):

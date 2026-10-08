@@ -134,7 +134,7 @@ def project_approvals(root: str) -> list[dict]:
 
 def approvals(session: str, root: str) -> list[dict]:
     items = [a for a in load_session(session).get("approvals", []) if isinstance(a, dict)]
-    return items + [{**a, "scope": "project"} for a in project_approvals(root)]
+    return items + learned(session) + [{**a, "scope": "project"} for a in project_approvals(root)]
 
 
 def add_approval(session: str, root: str, entry: dict, project: bool) -> None:
@@ -154,6 +154,49 @@ def add_approval(session: str, root: str, entry: dict, project: bool) -> None:
         save_session(session, state)
 
 
+def learned_path(session: str) -> Path:
+    return home() / "sessions" / f"{session}.learned.json"
+
+
+def note_ask(session: str, use_id: str, folders: list[str]) -> None:
+    """haris asked about writing in these folders; a yes is learned when the call runs (#122). Kept apart
+    from the session file, which a parallel PostToolUse may be saving (taint)."""
+    if not (safe_session(session) and use_id and folders):
+        return
+    data = load_json(learned_path(session), {})
+    pending = data.get("pending") if isinstance(data.get("pending"), dict) else {}
+    pending = dict(list(pending.items())[-19:])  # an ask the user said no to never runs: keep only a few
+    pending[use_id] = folders
+    data["pending"] = pending
+    _ensure(home() / "sessions")
+    save_json(learned_path(session), data)
+
+
+def learn_yes(session: str, use_id: str) -> list[str]:
+    """The call haris asked about ran, so the user said yes: writes in its folder outside the project pass
+    for the rest of the session. Returns the folders learned."""
+    if not (safe_session(session) and use_id):
+        return []
+    data = load_json(learned_path(session), {})
+    pending = data.get("pending")
+    folders = pending.pop(use_id, None) if isinstance(pending, dict) else None
+    if not isinstance(folders, list):
+        return []
+    learned = [f.rstrip("/") + "/" for f in folders if isinstance(f, str) and f.startswith("/")]
+    known = [a for a in data.get("folders", []) if isinstance(a, dict) and a.get("value") not in learned]
+    data["folders"] = (known + [{"kind": "folder", "value": f, "source": "your yes in Claude Code",
+                                 "ts": now()} for f in learned])[-50:]
+    save_json(learned_path(session), data)
+    return learned
+
+
+def learned(session: str) -> list[dict]:
+    if not safe_session(session):
+        return []
+    items = load_json(learned_path(session), {}).get("folders")
+    return [a for a in items if isinstance(a, dict)] if isinstance(items, list) else []
+
+
 def remove_approval(session: str, root: str, value: str) -> int:
     removed = 0
     state = load_session(session)
@@ -163,6 +206,13 @@ def remove_approval(session: str, root: str, value: str) -> int:
         removed += len(items) - len(kept)
         state["approvals"] = kept
         save_session(session, state)
+    found = load_json(learned_path(session), {}) if safe_session(session) else {}
+    folders = found.get("folders", []) if isinstance(found.get("folders"), list) else []
+    kept = [a for a in folders if not (isinstance(a, dict) and a.get("value") in (value, value + "/"))]
+    if len(kept) != len(folders):
+        removed += len(folders) - len(kept)
+        found["folders"] = kept
+        save_json(learned_path(session), found)
     data = load_json(home() / "approvals.json", {})
     items = data.get(root, [])
     kept = [a for a in items if a.get("value") != value]

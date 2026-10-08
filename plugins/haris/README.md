@@ -38,7 +38,8 @@ hide the target.
 
 - **Your files:** deleting `/`, your home folder, a parent of the project or the project itself
   is refused; deleting or writing outside the project asks; the operating system's folders and
-  disks are refused.
+  disks are refused. Claude Code's memory folder for this project
+  (`~/.claude/projects/<project>/memory`) counts as part of the project.
 - **Secrets:** `~/.ssh`, `~/.aws`, `~/.config/gcloud`, `~/.kube`, `.env` (not `.env.example`),
   key files, `.netrc`, `~/.claude.json`, shell history, a process's environment, cloud and
   password-manager CLIs, `gh auth token`, `echo $GITHUB_TOKEN` ... reading them into the
@@ -79,6 +80,13 @@ Approvals count only from what **you type**. `/haris:allow <exact command>` (or
 command or path for this session (`--project` keeps it for this project); `--remove` takes it
 back. Claude cannot call the skill, cannot write haris's files and cannot run its hook, so it
 cannot approve anything for itself. There are no broad rules like `git *`.
+
+One approval comes from your answer in Claude Code instead: when haris asks only because a call
+writes outside the project, and you say yes, later writes in that folder (its git checkout, or
+the folder itself) pass for the rest of the session. haris learns it only once the call has run,
+which Claude Code does only after your yes. It never covers your home folder, a parent of the
+project or `~/.claude`, and never the folder's `.git`, Claude Code settings, `.mcp.json`,
+`.envrc` or editor tasks; deletes and secrets there still ask.
 
 Some actions are refused in every profile: deleting your home folder or the system, writing to
 persistence spots, sending secrets off the machine, force-pushing a protected branch, a remote
