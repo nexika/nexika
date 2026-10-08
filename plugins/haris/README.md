@@ -38,7 +38,9 @@ hide the target.
 
 - **Your files:** deleting `/`, your home folder, a parent of the project or the project itself
   is refused; deleting or writing outside the project asks; the operating system's folders and
-  disks are refused.
+  disks are refused. Another worktree of the same git repository counts as the project, and so
+  does Claude Code's memory folder for it (`~/.claude/projects/<project>/memory`; deleting there
+  asks, and writing there asks after text that tried to give Claude orders).
 - **Secrets:** `~/.ssh`, `~/.aws`, `~/.config/gcloud`, `~/.kube`, `.env` (not `.env.example`),
   key files, `.netrc`, `~/.claude.json`, shell history, a process's environment, cloud and
   password-manager CLIs, `gh auth token`, `echo $GITHUB_TOKEN` ... reading them into the
@@ -79,6 +81,11 @@ Approvals count only from what **you type**. `/haris:allow <exact command>` (or
 command or path for this session (`--project` keeps it for this project); `--remove` takes it
 back. Claude cannot call the skill, cannot write haris's files and cannot run its hook, so it
 cannot approve anything for itself. There are no broad rules like `git *`.
+
+When haris asks about a write outside the project, its reason ends with the line that keeps your
+yes: `/haris:allow --project write <folder>/` (the target's git checkout, never your home folder).
+A folder you approve this way never covers its `.git`, hooks, CI workflows, `.envrc`, `.mcp.json`,
+`CLAUDE.md` or Claude Code settings, at any depth.
 
 Some actions are refused in every profile: deleting your home folder or the system, writing to
 persistence spots, sending secrets off the machine, force-pushing a protected branch, a remote

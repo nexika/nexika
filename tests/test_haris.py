@@ -892,3 +892,87 @@ def test_editing_haris_source_that_mentions_its_data_is_ordinary(world, checkout
     for still in (f"python3 -c \"open('{status}/mizan/a.json', 'w').write('x')\"",
                   "python3 - <<'EOF'\nfrom mizan import status\nstatus.publish('mizan', {})\nEOF"):
         assert decide(repo, "Bash", still).verdict == "deny", still
+
+
+# ---------------------------------------------------------------- worktrees, memory, keeping a yes (#122)
+
+
+@pytest.fixture
+def other_repo(world):
+    """A git repository in the home folder, beside the project: writes there ask (write-outside)."""
+    home, project = world
+    repo = home / "work" / "repo-b"
+    (repo / "sub").mkdir(parents=True, exist_ok=True)
+    if not (repo / ".git").exists():
+        _git(repo, "init", "-q")
+    return repo
+
+
+def tool_event(project, tool, value, session="keep-" + "1" * 8, **extra):
+    key = "command" if tool == "Bash" else "file_path"
+    return {"tool_name": tool, "tool_input": {key: str(value)}, "cwd": str(project), "session_id": session,
+            **extra}
+
+
+def test_a_worktree_of_the_same_repo_is_the_project(world):
+    home, project = world
+    if not (project / ".git").is_dir():
+        _git(project, "init", "-q")
+    if subprocess.run(["git", "-C", str(project), "rev-parse", "HEAD"], capture_output=True).returncode:
+        _git(project, "commit", "-q", "--allow-empty", "-m", "start")
+    tree = home / "work" / "proj-wt"
+    if not tree.exists():
+        _git(project, "worktree", "add", "-q", str(tree))
+    for tool, value in (("Write", tree / "src" / "x.py"), ("Bash", f"echo x > {tree}/notes.txt"),
+                        ("Bash", f"rm {tree}/notes.txt")):
+        d = decide(project, tool, str(value))
+        assert d.verdict in ORDINARY, (value, d.verdict, d.cls, d.reason)
+    d = decide(tree, "Write", str(project / "src" / "y.py"))  # and from the worktree, the main checkout
+    assert d.verdict in ORDINARY, (d.verdict, d.cls, d.reason)
+    assert decide(project, "Write", str(tree / ".mcp.json")).verdict in DANGEROUS
+    assert decide(tree, "Write", str(project / ".git" / "hooks" / "pre-commit")).verdict == "deny"
+    assert decide(project, "Bash", f"rm -rf {tree}").verdict in DANGEROUS  # the whole worktree
+
+
+def test_the_projects_memory_folder_is_a_place_to_write(world):
+    home, project = world
+    session = "memory-" + "1" * 8
+    slug = "".join(ch if ch.isalnum() or ch == "-" else "-" for ch in str(project))
+    folder = home / ".claude" / "projects" / slug
+    transcript = str(folder / f"{session}.jsonl")
+    memory = folder / "memory"
+    cfg = policy.effective_config(str(project))
+
+    def check(tool, value, data=None, with_transcript=True):
+        e = tool_event(project, tool, value, session)
+        if with_transcript:
+            e["transcript_path"] = transcript
+        return policy.decide(e, cfg, data or {})
+
+    for tool, value in (("Write", memory / "note.md"), ("Bash", f"cat > {memory}/n.md <<'EOF'\nx\nEOF")):
+        d = check(tool, value)
+        assert d.verdict in ORDINARY, (value, d.verdict, d.cls, d.reason)
+    for value in (home / ".claude" / "projects" / "-other" / "memory" / "n.md", transcript):
+        assert check("Write", value).verdict == "ask", value
+    assert check("Write", memory / "n.md", with_transcript=False).verdict == "ask"
+    assert check("Write", memory / "MEMORY.md", {"taint": 2}).verdict == "ask"  # read into later sessions
+    for command in (f"rm {memory}/n.md", f"rm -rf {memory}"):
+        assert check("Bash", command).verdict == "ask", command
+
+
+def test_an_ask_outside_the_project_says_how_to_keep_the_yes(world, other_repo):
+    home, project = world
+    d = decide(project, "Write", str(other_repo / "sub" / "x.txt"))
+    assert d.verdict == "ask"
+    assert f"/haris:allow --project write {other_repo}/" in d.reason, d.reason
+    assert "/haris:allow --project" not in decide(project, "Write", str(home / "x.txt")).reason  # never home
+
+
+def test_a_kept_folder_still_guards_what_runs_code(world, other_repo):
+    home, project = world
+    approvals = [{"kind": "write", "value": f"{other_repo}/", "scope": "project"}]
+    d = decide(project, "Write", str(other_repo / "sub" / "y.txt"), approvals=approvals)
+    assert d.verdict in ORDINARY, (d.verdict, d.cls, d.reason)
+    for rel in (".git/config", "nested/.git/hooks/pre-commit", ".husky/pre-commit", ".github/workflows/x.yml",
+                "CLAUDE.md", ".claude/settings.json", ".envrc", ".mcp.json"):
+        assert decide(project, "Write", str(other_repo / rel), approvals=approvals).verdict in DANGEROUS, rel
