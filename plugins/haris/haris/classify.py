@@ -2241,7 +2241,9 @@ def git_elsewhere(sub: str, ctx: Ctx, gctx: Ctx) -> None:
     if ctx.where.place(gctx.cwd) == "temp":
         gctx.add("write-temp", f"Changes a repository in a temporary folder (git {sub}).")
     else:
-        gctx.add("write-outside", f"Changes a repository outside the project (git {sub}).")
+        # the repository's folder as the target, so a folder the user approved covers it (#210)
+        gctx.add("write-outside", f"Changes a repository outside the project (git {sub}).",
+                 gctx.cwd.rstrip("/") + "/" if gctx.cwd else "")
 
 
 def protected_branches(ctx: Ctx) -> list[str]:
@@ -2375,13 +2377,37 @@ def git_branch(sub, rest, ctx, stdin):
     opts, pos = options(rest, {"-u", "--set-upstream-to", "--contains", "--no-contains", "--merged",
                                "--no-merged", "--sort", "--format", "--points-at"})
     if has(opts, "-D") or (has(opts, "-d", "--delete") and has(opts, "-f", "--force")):
-        ctx.add("discard", "`git branch -D` deletes a branch even if its work was never merged.")
+        if pos and not has(opts, "-r", "--remotes") and all(work_on_a_remote(b, ctx) for b in pos):
+            ctx.add("write", "Deletes branches whose work is on the remote (pushed, or merged and its remote "
+                             "branch deleted).")
+        else:
+            ctx.add("discard", "`git branch -D` deletes a branch even if its work was never merged.")
     elif pos or has(opts, "-d", "--delete", "-m", "-M", "-c", "-C", "-u", "--set-upstream-to",
                     "--unset-upstream"):
         ctx.add("write", "Changes branches.")
     else:
         ctx.add("read", "Lists branches.")
     return Stage()
+
+
+def work_on_a_remote(branch: str, ctx: Ctx) -> bool:
+    """A local branch with no work of its own (#210): its upstream is gone, as after a squash-merged PR
+    whose branch was deleted, or every commit on it is on some remote branch."""
+    if UNKNOWN in branch or not ctx.cwd:
+        return False
+    tree = ctx.where.project_of(ctx.cwd + "/_")
+    if not tree:
+        return False
+    git = ctx.git if tree == ctx.where.root else Git(tree)
+    ref = f"refs/heads/{branch}"
+    listed = git.try_run("for-each-ref", "--format=%(refname)%00%(upstream:track)", ref) or ""
+    track = next((line.split("\0", 1)[1] for line in listed.splitlines()
+                  if line.split("\0", 1)[0] == ref and "\0" in line), None)
+    if track is None:
+        return False
+    if track == "[gone]":
+        return True
+    return git.try_run("rev-list", "--max-count=1", ref, "--not", "--remotes", "--") == ""
 
 
 GIT_LIST_READS = {"tag": {"", "-l", "--list", "-n", "--contains", "--points-at", "--sort", "-v", "--verify"},

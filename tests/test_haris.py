@@ -991,3 +991,164 @@ def test_a_kept_folder_still_guards_what_runs_code(world, other_repo):
     for rel in (".git/config", "nested/.git/hooks/pre-commit", ".husky/pre-commit", ".github/workflows/x.yml",
                 "CLAUDE.md", ".claude/settings.json", ".envrc", ".mcp.json"):
         assert decide(project, "Write", str(other_repo / rel), approvals=approvals).verdict in DANGEROUS, rel
+
+
+# ---------------------------------------------------------------- fewer asks that are not risk (#210)
+# The commands below are trimmed from two days of real asks (haris audit, 8-9 Oct 2026).
+
+
+@pytest.mark.parametrize("command", [
+    "for id in $(cat list.txt); do gh run view $id --log-failed > build/$id.log 2>build/$id.err; done",
+    "for n in 126 127 128; do gh issue view $n --json body -q .body > /tmp/claude-1000/b$n.md; done",
+    "for f in lines nodes; do ./b.sh \"read:src/$f.py\" > build/outline-$f.txt; done",
+    "for x in python3 git env; do ln -sf $(command -v $x) /tmp/claude-1000/shims/$x; done",
+])
+def test_a_computed_file_name_is_judged_by_its_folder(world, command):
+    home, project = world
+    d = decide(project, "Bash", command)
+    assert d.verdict in ORDINARY, (d.verdict, d.cls, d.reason)
+
+
+def test_a_computed_file_name_in_an_approved_folder_is_approved(world):
+    home, project = world
+    command = "cd ~/trial/tabib && for id in $(cat runs.txt); do gh run view $id > logs/$id.log; done"
+    d = decide(project, "Bash", command)
+    assert d.verdict == "ask" and d.cls == "write-outside", (d.verdict, d.cls, d.reason)
+    approvals = [{"kind": "write", "value": f"{home}/trial/", "scope": "project"}]
+    assert decide(project, "Bash", command, approvals=approvals).verdict == "allow"
+
+
+@pytest.mark.parametrize("command", [
+    "echo x > $DIR/x", "echo x > ${a}/../b", "echo x > build/$a/../b", "echo x > $(pwd)/x.log",
+    "echo x > ~/$(date)", "echo x > ~/.config/$(date)", "echo x > ~/.ssh/$n.pub", "echo x > ~/.gnupg/$n.pub",
+    "echo x > .claude/$n", "echo x > .github/workflows/$n.yml", "echo x > .git/hooks/$n", "echo x > /$n.log",
+    "echo x > /etc/cron.d/$n", "echo x > $n", "echo x > ~/trial/.git/$n",
+])
+def test_a_computed_folder_or_a_guarded_one_still_asks(world, command):
+    home, project = world
+    d = decide(project, "Bash", command)
+    assert d.verdict in DANGEROUS, (d.verdict, d.cls, d.reason)
+
+
+def test_a_computed_file_name_still_asks_in_a_cautious_session(world):
+    home, project = world
+    d = decide(project, "Bash", "for id in $(cat list.txt); do curl -s x > build/$id.log; done",
+               session={"taint": 2})
+    assert d.verdict in DANGEROUS, (d.verdict, d.cls, d.reason)
+
+
+@pytest.fixture
+def branches(world):
+    """A repository with a remote: `merged` was pushed and its remote branch deleted (a squash-merged PR),
+    `pushed` is on the remote, `local` has a commit that exists only here."""
+    home, project = world
+    base = home / "work" / "branches"
+    if (base / "repo").exists():
+        return base / "repo"
+    repo, remote = base / "repo", base / "remote.git"
+    repo.mkdir(parents=True)
+    _git(base, "init", "-q", "--bare", str(remote))
+    _git(repo, "init", "-q", "-b", "main")
+    _git(repo, "commit", "-q", "--allow-empty", "-m", "start")
+    _git(repo, "remote", "add", "origin", str(remote))
+    _git(repo, "push", "-q", "-u", "origin", "main")
+    for name in ("merged", "pushed", "local"):
+        _git(repo, "switch", "-q", "-c", name, "main")
+        _git(repo, "commit", "-q", "--allow-empty", "-m", name)
+    _git(repo, "push", "-q", "-u", "origin", "merged")
+    _git(repo, "push", "-q", "origin", "--delete", "merged")
+    _git(repo, "push", "-q", "origin", "pushed")
+    _git(repo, "switch", "-q", "main")
+    return repo
+
+
+def test_deleting_a_branch_whose_work_is_on_a_remote_passes(branches):
+    for command in ("git branch -D merged", "git branch -D pushed -q", "git branch -D merged pushed",
+                    "git branch -d --force merged"):
+        d = decide(branches, "Bash", command)
+        assert d.verdict in ORDINARY, (command, d.verdict, d.cls, d.reason)
+
+
+def test_deleting_a_branch_with_local_only_work_still_asks(branches, world):
+    home, project = world
+    for command in ("git branch -D local", "git branch -D merged local", "git branch -D $b",
+                    "git branch -D missing", "git branch -D -r origin/pushed",
+                    f"cd {project} && git branch -D merged", f"git -C {project} branch -D merged"):
+        d = decide(branches, "Bash", command)
+        assert d.verdict == "ask" and d.cls == "discard", (command, d.verdict, d.cls, d.reason)
+
+
+@pytest.mark.parametrize("command,verdict,cls", [
+    ("git push --force-with-lease=up:953c8d6 origin fix-150:up", "ask", "history-rewrite"),
+    ("gh pr merge 129 --squash", "ask", "remote-irreversible"),
+    ("gh api -X PUT repos/nexika/nexika/rulesets/24510577 --input r.json", "ask", "remote-irreversible"),
+    ("twine upload dist/*", "ask", "remote-irreversible"),
+    ("cat ~/.ssh/id_rsa", "ask", "secret-read"),
+    ("echo x >> ~/.bashrc", "deny", "persistence"),
+    ("echo 'echo hi' > .git/hooks/pre-push", "deny", "persistence"),
+    ("cd /tmp/x && git worktree remove --force /tmp/x/wt", "ask", "discard"),
+    ("echo x > ~/trial/data.json", "ask", "write-outside"),
+])
+def test_real_risks_from_the_audit_keep_their_verdicts(world, command, verdict, cls):
+    home, project = world
+    d = decide(project, "Bash", command)
+    assert (d.verdict, d.cls) == (verdict, cls), d.reason
+
+
+def test_pushes_and_memory_writes_still_ask_in_a_cautious_session(world):
+    home, project = world
+    for command in ("git push -q origin feat/x", "gh issue create --title t --body-file a.md"):
+        d = decide(project, "Bash", command, session={"taint": 2})
+        assert d.verdict == "ask", (command, d.verdict, d.cls, d.reason)
+    memory = home / ".claude" / "projects" / "-proj" / "memory"
+    event = {"tool_name": "Bash", "tool_input": {"command": f"echo '- [x](x.md)' >> {memory}/MEMORY.md"},
+             "cwd": str(project), "transcript_path": str(home / ".claude" / "projects" / "-proj" / "s.jsonl")}
+    d = policy.decide(event, policy.effective_config(str(project)), {"taint": 2})
+    assert d.verdict == "ask" and d.cls == "write-memory", (d.verdict, d.cls, d.reason)
+
+
+def test_haris_check_applies_project_approvals(world, capsys):
+    home, project = world
+    command = "cat > ~/trial/x.txt"
+    assert cli.main(["check", command]) == 0
+    assert capsys.readouterr().out.startswith("ask (write-outside)")
+    state.add_approval("check-" + "1" * 8, str(project), {"kind": "write", "value": f"{home}/trial/"}, True)
+    try:
+        assert cli.main(["check", command]) == 0
+        out = capsys.readouterr().out
+        assert out.startswith("allow"), out
+        assert "project approval" in out, out
+        assert cli.main(["check", "--json", command]) == 0
+        assert json.loads(capsys.readouterr().out)["approvals_applied"] == "project"
+    finally:
+        state.remove_approval("check-" + "1" * 8, str(project), f"{home}/trial/")
+
+
+def test_the_second_ask_in_a_folder_offers_the_whole_folder(world):
+    home, project = world
+    session = "offer-" + "1" * 8
+
+    def reason(path):
+        out = json.loads(hooks.on_pre_tool_use(tool_event(project, "Write", path, session)))
+        assert out["hookSpecificOutput"]["permissionDecision"] == "ask"
+        return out["hookSpecificOutput"]["permissionDecisionReason"]
+
+    reason(home / "trial2" / "replay.py")
+    second = reason(home / "trial2" / "public" / "tabib" / "runs.json")
+    assert f"/haris:allow --project write {home}/trial2/" in second, second
+    assert "2nd" in second, second
+    elsewhere = reason(home / "other3" / "x.txt")  # the shared folder would be home: never offered
+    assert f"write {home}/ " not in elsewhere and "2nd" not in elsewhere, elsewhere
+
+
+def test_a_folder_approval_covers_git_in_a_repository_there(world):
+    home, project = world
+    approvals = [{"kind": "write", "value": f"{home}/trial/", "scope": "project"}]
+    for command in ("cd ~/trial/work && git checkout -q pyproject.toml",
+                    "git -C ~/trial/work archive -o x.tgz HEAD",
+                    "cd ~/trial/work && git switch -q main"):
+        assert decide(project, "Bash", command).verdict == "ask", command
+        d = decide(project, "Bash", command, approvals=approvals)
+        assert d.verdict in ORDINARY, (command, d.verdict, d.cls, d.reason)
+    d = decide(project, "Bash", "cd ~/other4 && git checkout -q x", approvals=approvals)
+    assert d.verdict == "ask", (d.verdict, d.cls, d.reason)

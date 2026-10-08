@@ -52,8 +52,9 @@ def on_pre_tool_use(event: dict) -> str:
         return ""  # haris never objects to this tool: no need to load the classifier
     from . import policy
     from . import targets as c
+    data = state.load_session(session)
     try:
-        decision = policy.decide(event, cfg, state.load_session(session), state.approvals(session, root))
+        decision = policy.decide(event, cfg, data, state.approvals(session, root))
     except Exception as exc:  # haris must never wave a call through because it failed
         decision = policy.Decision(c.ASK, "error", f"haris hit an internal error ({type(exc).__name__}) "
                                                    f"and could "
@@ -62,6 +63,8 @@ def on_pre_tool_use(event: dict) -> str:
         state.log({"session": session[:8], "project": os.path.basename(root), "tool": event.get("tool_name"),
                    "decision": decision.verdict, "class": decision.cls, "reason": decision.reason,
                    "detail": _detail(event), "watch": cfg["mode"] == "watch", "tainted": decision.tainted})
+        if policy.remember_ask(data, decision):
+            state.save_session(session, {**data, "project": data.get("project") or root})
     if cfg["mode"] == "watch" or decision.verdict == c.PASS:
         return ""
     return _out("PreToolUse", permissionDecision=decision.verdict,

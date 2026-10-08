@@ -11,7 +11,7 @@ import glob
 import os
 import re
 
-from .paths import UNKNOWN, Where
+from .paths import UNKNOWN, Where, guarded_inside
 
 ALLOW, PASS, ASK, DENY = "allow", "pass", "ask", "deny"
 LEVEL = {ALLOW: 0, PASS: 1, ASK: 2, DENY: 3}
@@ -169,6 +169,10 @@ class Git:
 
     def run(self, *args: str) -> str:
         """Read-only git; nothing in the repository's config may make it run a program."""
+        return self.try_run(*args) or ""
+
+    def try_run(self, *args: str) -> str | None:
+        """Like run, but None when git failed (so an empty answer can be told from an error)."""
         cmd = ["git", "-c", "core.fsmonitor=false", "-c", "core.hooksPath=/dev/null", "--no-pager", *args]
         env = {**os.environ, "GIT_OPTIONAL_LOCKS": "0"}
         env.pop("GIT_EXTERNAL_DIFF", None)
@@ -176,8 +180,8 @@ class Git:
         try:
             res = subprocess.run(cmd, cwd=self.root, capture_output=True, timeout=5, env=env)
         except (OSError, subprocess.TimeoutExpired):
-            return ""
-        return res.stdout.decode("utf-8", "replace") if res.returncode == 0 else ""
+            return None
+        return res.stdout.decode("utf-8", "replace") if res.returncode == 0 else None
 
     def dirty(self) -> bool:
         return bool(self.run("status", "--porcelain", "--untracked-files=no").strip())
@@ -220,6 +224,7 @@ class Ctx:
         self.downloaded: set[str] = set()
         self.written: dict[str, str] = {}  # files this command wrote with known text (scripts it may run)
         self.git_aliases: dict[str, str] = {}
+        self.cautious = False  # the session read text that tried to give orders: computed paths ask
 
     def child(self, marks: bool = False, findings: list | None = None) -> Ctx:
         c = copy.copy(self)
@@ -342,7 +347,34 @@ def write_paths(values_: list[Arg], ctx: Ctx, verb: str = "writes to") -> None:
             place = ctx.where.place(path)
             if place == "null":
                 continue
+            if place == "unknown":
+                path, place = named_in_folder(value, ctx) or (path, place)
             if place == "secret" and path and path.startswith(ctx.where.root + "/"):
                 place = "project"  # filling in the project's own .env is ordinary; reading secrets is not
             cls, text = WRITE_REASONS[place]
-            ctx.add(cls, text.format(verb=verb.capitalize(), path=ctx.show(path)), path or "")
+            shown = ctx.show(path).replace(UNKNOWN, "<computed>")
+            ctx.add(cls, text.format(verb=verb.capitalize(), path=shown), path or "")
+
+
+ORDINARY_PLACES = ("project", "temp", "home", "outside")
+
+
+def named_in_folder(value: str, ctx: Ctx) -> tuple[str, str] | None:
+    """(path, place) for a write whose file name alone is computed (`logs/$id.log`, `/tmp/x/b$n.md`):
+    the folder is known, so the write is judged by it (#210). None, so haris keeps asking, when the
+    folder is computed too (`$DIR/x`, `${a}/../b`), when a name there could run code or hold secrets
+    (home, ~/.config, .git, .claude, CI workflows ...), or in a cautious session."""
+    if ctx.cautious or re.search(r"[*?[]", value):
+        return None
+    head, _, name = value.rpartition("/")
+    if UNKNOWN in head or UNKNOWN not in name:
+        return None
+    where = ctx.where
+    folder = where.resolve(head or ("/" if value.startswith("/") else "."), ctx.cwd)
+    if not folder or folder == where.home or where.holds(folder):
+        return None
+    probe = folder.rstrip("/") + "/" + name.replace(UNKNOWN, "x")
+    for p in (probe, folder.rstrip("/") + "/_"):
+        if where.place(p) not in ORDINARY_PLACES or guarded_inside(p, where.root):
+            return None
+    return folder.rstrip("/") + "/" + name, where.place(probe)

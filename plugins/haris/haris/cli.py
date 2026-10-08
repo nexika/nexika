@@ -3,7 +3,7 @@
     haris why [-n N]                 the latest asks and refusals here, explained
     haris status                     profile, mode, settings, taint and approvals
     haris audit [--days N] ...       the audit log (commands already redacted)
-    haris check [--tool T] COMMAND   what haris would decide, without running anything
+    haris check [--tool T] COMMAND   what haris would decide (project approvals applied), not run
     haris approvals [--remove V]     approvals you typed (removing one only makes haris stricter)
     haris export --json              the nexika.haris/1 summary for the other Nexika plugins
 
@@ -158,11 +158,13 @@ def cmd_check(args) -> int:
     cfg = config.effective_config(_root())
     if args.profile:
         cfg["profile"] = args.profile
-    decision = policy.decide(event, cfg)
+    approvals = [dict(a, scope="project") for a in state.project_approvals(_root())]
+    decision = policy.decide(event, cfg, None, approvals)
     if args.json:
         findings = [{"cls": f.cls, "reason": f.reason, "target": f.target} for f in decision.findings]
         print(json.dumps({"decision": decision.verdict, "class": decision.cls, "reason": decision.reason,
-                          "findings": findings}, ensure_ascii=False, indent=1))
+                          "findings": findings, "approvals_applied": "project"},
+                         ensure_ascii=False, indent=1))
         return 0
     if decision.cls:
         print(f"{decision.verdict} ({decision.cls}): {decision.reason}")
@@ -170,6 +172,8 @@ def cmd_check(args) -> int:
         print(f"{decision.verdict}: no objection; Claude Code's own permission rules decide")
     for f in decision.findings:
         print(f"  - {f.cls}: {f.reason}")
+    print(f"  (with this project's {len(approvals)} project approval(s); approvals for one session and a "
+          "session's extra caution are not applied)")
     return 0
 
 
