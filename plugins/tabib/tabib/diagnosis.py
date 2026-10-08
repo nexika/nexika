@@ -134,7 +134,8 @@ def triage(info: dict, run_id: int | None = None, refresh: bool = False) -> dict
              "from_fork": fork, "flaky_tests": flaky,
              "lock_changed": suspects.get("lock_changed"),
              "missing_modules": [m for m in missing if m not in own],
-             "upstream": [u for u in raised if u["package"] not in own_packages]}
+             "upstream": [u for u in raised if u["package"] not in own_packages],
+             "base_failures": forge.base_failures(info, run) if failures else []}
     verdict = classify.classify(facts)
     record = {"schema": SCHEMA, "version": __version__, "created": now(), "repo": info["repo"],
               "branch": run.get("branch") or info.get("branch", ""),

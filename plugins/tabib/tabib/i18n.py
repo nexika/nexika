@@ -22,6 +22,7 @@ TEXT = {
                         "what changed in {package} (a new release, or the version this job installs), "
                         "then adapt the code to it or pin the version.",
         "k_unknown": "unclear: read the log",
+        "n_jobs": "{label}, in {jobs} jobs",
         "s_timeout": "a time limit", "s_oom": "out of memory", "s_network": "the network",
         "s_rate_limit": "a rate limit", "s_runner": "the CI machine", "s_auth": "missing credentials",
         "s_cancelled": "the run was cancelled (a newer run or a person stopped it)",
@@ -63,6 +64,7 @@ TEXT = {
         "next_package": "الخطأ يُرفع من داخل {package} لا من الكود الذي غيّره هذا التعديل: راجع ما تغيّر في "
                         "{package} (إصدار جديد أو النسخة التي تثبّتها هذه المهمة)، ثم كيّف الكود معه أو ثبّت النسخة.",
         "k_unknown": "غير واضح: اقرأ السجل",
+        "n_jobs": "{label}، في {jobs} مهام",
         "s_timeout": "حد زمني", "s_oom": "نفاد الذاكرة", "s_network": "الشبكة",
         "s_rate_limit": "حد عدد الطلبات", "s_runner": "جهاز CI", "s_auth": "بيانات اعتماد ناقصة",
         "s_cancelled": "أُلغي التشغيل (أوقفه تشغيل أحدث أو شخص)",
@@ -125,6 +127,8 @@ def label(kind: str, detail: dict, language: str = "") -> str:
     detail = detail or {}
     if kind == "code":
         text = t(f"k_code_{detail.get('what', '')}", language, count=detail.get("count", 0))
+        if detail.get("jobs", 0) > 1:
+            return t("n_jobs", language, label=text, jobs=detail["jobs"])
         return t("one_job", language, label=text) if detail.get("jobs") == 1 else text
     if kind == "infra":
         return t("k_infra", language, signal=t(f"s_{detail.get('signal', 'runner')}", language))

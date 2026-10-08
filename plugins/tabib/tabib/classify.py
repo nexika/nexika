@@ -61,6 +61,25 @@ def one_matrix_job(jobs: list[dict]) -> bool:
     return len(groups) == 1 and len(groups[0]["failed"]) == 1 and bool(groups[0]["passed"])
 
 
+OS_FAMILY = re.compile(r"(?i)windows|ubuntu|linux|macos")
+
+
+def _os(name: str) -> str:
+    m = OS_FAMILY.search(" ".join(matrix_parts(name)[1]))
+    return {"ubuntu": "linux"}.get(m.group(0).lower(), m.group(0).lower()) if m else ""
+
+
+def fails_on_base(jobs: list[dict], base: list[dict]) -> list[str]:
+    """Base-branch runs where the same job, on the same OS family, failed too: '29181739141 (test (3.13,
+    windows-latest))' (#175)."""
+    failed = [j["name"] for j in jobs if j.get("conclusion") in ("failure", "failed")]
+    if len(failed) != 1 or not _os(failed[0]):
+        return []
+    name, family = matrix_parts(failed[0])[0], _os(failed[0])
+    return [f"{b['id']} ({job})" for b in base for job in b.get("jobs") or []
+            if matrix_parts(job)[0] == name and _os(job) == family][:3]
+
+
 def raised_upstream(failures: list[dict], upstream: list[dict]) -> dict:
     """The dependency every failure comes from, when each one is a warning raised inside a dependency's
     code in its own job (pytest turns warnings into errors): {} otherwise."""
@@ -156,14 +175,23 @@ def classify(facts: dict) -> dict:
         evidence += [f"{f['test'] or f['file']}: {f['message']}" for f in failures[:3]]
         if "segfault" in signals:
             evidence.append(f"The process crashed (a segmentation fault): {signals['segfault']}")
+        # A test failing in N jobs is one failure, "in N jobs" (#175).
+        count = len({(f.get("framework"), f.get("test")) if f.get("test") else
+                     (f.get("framework"), f.get("file"), f.get("line")) for f in failures})
+        in_jobs = len({f.get("job") or "" for f in failures})
+        on_base = fails_on_base(facts.get("jobs") or [], facts.get("base_failures") or [])
+        if on_base:
+            evidence.append(f"Only one job failed, and the base branch fails the same job on the same "
+                            f"system: run {', '.join(on_base)}. A job that fails at random, not this change.")
+            return {"kind": "flaky", "detail": {}, "confidence": "medium", "evidence": evidence}
         if one_matrix_job(facts.get("jobs") or []):
             # One job of a matrix: a race in a test or a real platform difference; one run cannot say.
             evidence.append("Only one job of the matrix failed and nothing it alone has explains it; "
                             "a rerun tells a flaky test from a platform difference.")
-            return {"kind": "code", "detail": {"count": len(failures), "what": what, "jobs": 1},
+            return {"kind": "code", "detail": {"count": count, "what": what, "jobs": 1},
                     "confidence": "low", "evidence": evidence}
-        return {"kind": "code", "detail": {"count": len(failures), "what": what}, "confidence": "medium",
-                "evidence": evidence}
+        detail = {"count": count, "what": what, **({"jobs": in_jobs} if in_jobs > 1 else {})}
+        return {"kind": "code", "detail": detail, "confidence": "medium", "evidence": evidence}
     if infra:
         evidence += [f"{k}: {signals[k]}" for k in infra]
         return {"kind": "infra", "detail": {"signal": infra[0]}, "confidence": "low", "evidence": evidence}
