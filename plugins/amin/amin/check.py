@@ -5,6 +5,8 @@ CHANGELOG.md, and for single-project repos also .github/, docs/, tests/ and top-
 """
 from __future__ import annotations
 
+import os
+import re
 from pathlib import Path
 
 from . import fragments, gitops
@@ -31,6 +33,9 @@ def _text(root: Path, rel: str) -> str:
 
 def check(root: Path, runner: gitops.Runner, projects: list[proj.Project], base: str,
           labels: list[str]) -> tuple[bool, list[str]]:
+    from .cli import helper_command  # where this amin runs from: the plugin, or CI's copy of it
+    ref = re.fullmatch(r"refs/pull/(\d+)/merge", os.environ.get("GITHUB_REF", ""))
+    number = ref.group(1) if ref else "<PR>"
     if SKIP_LABEL in labels:
         return True, [f"skipped: the PR has the {SKIP_LABEL} label"]
     diff = f"{base}...HEAD"
@@ -75,11 +80,10 @@ def check(root: Path, runner: gitops.Runner, projects: list[proj.Project], base:
             continue
         ok = False
         lines.append(
-            f"{name}: files changed but no note in {p.fragments}/. Add one, e.g.\n"
-            f"    python3 plugins/amin/bin/amin fragment add {name} fixed \"What changed, for users\""
-            " --id <PR>\n"
-            f"  types: breaking, added, changed, deprecated, removed, fixed, security"
-            f" (or label the PR {SKIP_LABEL})"
+            f"{name}: files changed but no note in {p.fragments}/. Add the file "
+            f"{p.fragments}/{number}.fixed.md holding one line for users (what changed), or run\n"
+            f"    {helper_command()} fragment add {name} fixed \"What changed, for users\" --id {number}\n"
+            f"  types (the middle of the file name): {', '.join(proj.TYPES)} (or label the PR {SKIP_LABEL})"
         )
     if not needs and ok:
         lines.append("no project files changed: no note needed")

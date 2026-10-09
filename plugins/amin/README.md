@@ -63,7 +63,9 @@ GitHub pre-release and keeps the notes; a later `amin prepare <project>` promote
 collects every note.
 
 First release of a project with no tags: `amin history <project>` lists the merged PRs that
-touched it, so notes can be written from real history.
+touched it, so notes can be written from real history. It lists only PRs whose merge commit is on
+the current branch since the last tag, so a maintenance branch and main each get their own;
+`--from TAG --to TAG` lists what went into one release.
 
 ## Projects
 
