@@ -54,6 +54,12 @@ JS_ARROW = re.compile(
     r"(?:\([^)]*\)|\w+)\s*(?::[^=]+)?=>"
 )
 JS_EXT = {".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"}
+# a function assigned to a property at the top level: Reply.prototype.send = function (payload) {,
+# module.exports = function noopSet () {, X.prototype['y'] = async (a) => { (#272)
+JS_ASSIGN_FUNC = re.compile(
+    r"^(?P<target>[A-Za-z_$][\w$]*(?:\.[\w$]+|\[\s*['\"][^'\"\]]+['\"]\s*\])+)\s*=\s*(?:async\s+)?"
+    r"(?:function\b\s*\*?\s*(?P<fname>[\w$]+)?|\([^)]*\)\s*=>|[\w$]+\s*=>)"
+)
 # class fields holding an arrow function: handleClick = (e) => {, private load = async () => {
 JS_FIELD_ARROW = re.compile(
     r"^\s*" + _MODS + r"(?P<name>[A-Za-z_$][\w$]*)\s*(?::[^=]+)?=\s*(?:async\s+)?"
@@ -62,6 +68,19 @@ JS_FIELD_ARROW = re.compile(
 TS_TYPE_ALIAS = re.compile(
     r"^\s*(?:export\s+)?(?:declare\s+)?type\s+(?P<name>[A-Za-z_$][\w$]*)\s*(?:<.*>)?\s*="
 )
+# a generic alias whose parameters continue on the next lines: export type X<\n  A\n> = ... (#276)
+TS_TYPE_ALIAS_OPEN = re.compile(
+    r"^\s*(?:export\s+)?(?:declare\s+)?type\s+(?P<name>[A-Za-z_$][\w$]*)\s*<[^=]*$"
+)
+TS_EXT = {".ts", ".tsx", ".mts", ".cts"}
+TS_BODYLESS_FUNC = re.compile(r"^\s*(?:export\s+)?declare\s+function\b")
+# an interface member: a method signature (name(, name<T>(, [Symbol.x]() or a property (name?: T) (#277)
+TS_MEMBER = re.compile(
+    r"^\s*(?:readonly\s+)?(?P<name>[A-Za-z_$][\w$]*|\[[\w$.]+\])\s*\??\s*(?P<kind>[(<:])"
+)
+# a type goes on when a line ends with an operator, or the next line starts with one
+_ENDS_OPEN = ("|", "&", "?", ":", "=", "=>", ",", "(", "[", "{", "<", "extends", "keyof")
+_STARTS_MORE = ("|", "&", "?", ":", ".", "=", ">", "extends")
 METHOD = re.compile(
     r"^\s*" + _MODS + r"(?:[\w<>\[\],.?:*&]+\s+)+(?P<name>[A-Za-z_]\w*)\s*(?:<[^>()]*>)?\s*\("
 )
@@ -91,7 +110,35 @@ def _skip_quoted(line: str, k: int) -> int:
     return k + 1
 
 
-def _code_lines(lines: list[str]) -> list[str]:
+_REGEX_BEFORE = set("=(,:[!&|?{};+-*%~^")
+
+
+def _regex_end(line: str, k: int, kept: list[str]) -> int:
+    """Index after a JS regex literal starting at line[k], or -1 when the `/` is a division:
+    a regex follows an operator, an opening bracket, `return`/`typeof`, or starts the line (#274)."""
+    before = "".join(kept).rstrip()
+    if before and before[-1] not in _REGEX_BEFORE and not re.search(r"\b(?:return|typeof)$", before):
+        return -1
+    j, in_class = k + 1, False
+    while j < len(line):
+        c = line[j]
+        if c == "\\":
+            j += 2
+            continue
+        if c == "[":
+            in_class = True
+        elif c == "]":
+            in_class = False
+        elif c == "/" and not in_class:
+            j += 1
+            while j < len(line) and line[j].isalpha():
+                j += 1  # flags
+            return j
+        j += 1
+    return -1
+
+
+def _code_lines(lines: list[str], js: bool = False) -> list[str]:
     """Each line with strings as "", and comments and template literal text (also across lines,
     with their ${...} parts) removed: enough for brace counting and declaration matching."""
     out = []
@@ -131,6 +178,12 @@ def _code_lines(lines: list[str]) -> list[str]:
             if line.startswith("/*", k):
                 in_comment, k = True, k + 2
                 continue
+            if js and c == "/" and visible:
+                end = _regex_end(line, k, kept)
+                if end > 0:
+                    kept.append('""')
+                    k = end
+                    continue
             if c == "`":
                 if visible:
                     kept.append('""')
@@ -282,11 +335,16 @@ def _match_decl(code: str, nxt: str, suffix: str) -> tuple[str, str] | None:
             return "func", m.group("name")
         return None
     if suffix in JS_EXT:
-        m = TS_TYPE_ALIAS.match(code)
+        if stripped.startswith(("?", ":", ".")):
+            return None  # a ternary branch or a chained call continues an expression
+        m = TS_TYPE_ALIAS.match(code) or TS_TYPE_ALIAS_OPEN.match(code)
         if m:
             return "alias", m.group("name")
         m = JS_FIELD_ARROW.match(code)
         if m and m.group("name") not in NOT_NAMES:
+            return "func", m.group("name")
+        m = JS_PROP_FUNC.match(code)
+        if m and (not m.group("arrow") or "{" in code[m.end():]):
             return "func", m.group("name")
     m = TYPE_RE.match(code)
     if m:
@@ -294,7 +352,7 @@ def _match_decl(code: str, nxt: str, suffix: str) -> tuple[str, str] | None:
     m = KEYWORD_FUNC.match(code)
     if m:
         return "func", m.group("name")
-    m = METHOD.match(code)
+    m = None if suffix in JS_EXT else METHOD.match(code)  # `Type name(` is not JS (#275)
     if m and m.group("name") not in NOT_NAMES:
         before_paren = code[: code.index("(")]
         first_word = stripped.split()[0]
@@ -305,9 +363,43 @@ def _match_decl(code: str, nxt: str, suffix: str) -> tuple[str, str] | None:
         tail = code.rstrip()
         opens_block = (tail.endswith(("{", "{}"))
                        or (tail.endswith(")") and nxt.strip().startswith("{")))
+        if suffix in JS_EXT:
+            opens_block = _js_body_follows(code) or (tail.endswith(")") and nxt.strip().startswith("{"))
         if opens_block and not tail.endswith(";"):
             return "method", m.group("name")
     return None
+
+
+# an object-literal function property, named by its key: delete: function _delete (, closeRoutes: () => {
+JS_PROP_FUNC = re.compile(
+    r"^\s*(?P<name>[A-Za-z_$][\w$]*)\s*:\s*(?:async\s+)?(?:function\b|(?P<arrow>\([^)]*\)|[\w$]+)\s*=>)"
+)
+
+
+def _js_body_follows(code: str) -> bool:
+    """A JS method head: the `(` after the name closes on this line and is followed (after a TS
+    return type) by its body's `{`, so calls like `eos(res, function () {` are not taken (#275)."""
+    k = code.find("(")
+    depth = 0
+    for c in range(k, len(code)):
+        if code[c] == "(":
+            depth += 1
+        elif code[c] == ")":
+            depth -= 1
+            if depth == 0:
+                return re.match(r"^\s*(?::[^{=;]+)?\{", code[c + 1:]) is not None
+    return False
+
+
+def _js_assigned(line: str) -> str | None:
+    """The name of a top-level `a.b.c = function` assignment, with ['x'] written as .x."""
+    m = JS_ASSIGN_FUNC.match(line)
+    if not m:
+        return None
+    target = re.sub(r"\[\s*['\"]([^'\"\]]+)['\"]\s*\]", r".\1", m.group("target"))
+    if target in ("module.exports", "exports.default") and m.group("fname"):
+        return m.group("fname")
+    return target
 
 
 def _decl_start(lines: list[str], i: int) -> int:
@@ -322,13 +414,34 @@ def _decl_start(lines: list[str], i: int) -> int:
     return j
 
 
-def _block_end(code: list[str], i: int) -> tuple[int, bool]:
+def _after_params(code: list[str], i: int) -> tuple[int, int]:
+    """(line, column) just after the balanced parameter list that starts on line i, so a
+    destructured or default-object parameter's braces are not taken for the body (#273)."""
+    k = code[i].find("(")
+    if k < 0 or ("{" in code[i][:k] and "=" not in code[i][:k]):
+        return i, 0
+    depth = 0
+    for j in range(i, min(i + 30, len(code))):
+        for c in range(k if j == i else 0, len(code[j])):
+            ch = code[j][c]
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+                if depth == 0:
+                    return j, c + 1
+    return i, 0
+
+
+def _block_end(code: list[str], i: int, func: bool = False) -> tuple[int, bool]:
     """(0-based index of the line closing the block that starts at line i, sure)."""
     depth, opened = 0, False
-    for j in range(i, len(code)):
-        if not opened and "{" not in code[j] and code[j].rstrip().endswith(";"):
+    first, col = _after_params(code, i) if func else (i, 0)
+    for j in range(first, len(code)):
+        text = code[j][col:] if j == first else code[j]
+        if not opened and "{" not in text and text.rstrip().endswith(";"):
             return j, True  # abstract / interface / expression-bodied member
-        for ch in code[j]:
+        for ch in text:
             if ch == "{":
                 depth += 1
                 opened = True
@@ -339,24 +452,70 @@ def _block_end(code: list[str], i: int) -> tuple[int, bool]:
     return min(i + 50, len(code) - 1), False
 
 
+def _ts_expr_end(code: list[str], i: int, member: bool = False) -> tuple[int, bool]:
+    """End line of a TS type alias or bodyless declaration starting at line i: the line where its
+    brackets are balanced again and the next line does not continue the type, or a `;` (#276).
+    An interface member also ends at a `,` outside brackets (#277)."""
+    depth = 0
+    for j in range(i, len(code)):
+        text = code[j].replace("=>", "  ")
+        for k, ch in enumerate(text):
+            if ch in "([{":
+                depth += 1
+            elif ch in ")]}":
+                depth -= 1
+            elif ch == "<" and text[k + 1:k + 2] != "=":
+                depth += 1
+            elif ch == ">" and text[k + 1:k + 2] != "=" and depth > 0:
+                depth -= 1
+            elif (ch == ";" or (member and ch == ",")) and depth <= 0:
+                return j, True
+        tail = code[j].rstrip()
+        if depth > 0 or not tail or tail.endswith(_ENDS_OPEN):
+            continue
+        nxt = next((c.strip() for c in code[j + 1:] if c.strip()), "")
+        if not nxt.startswith(_STARTS_MORE):
+            return j, True
+    return min(i + 50, len(code) - 1), False
+
+
 def _brace_symbols(text: str, suffix: str) -> list[Symbol]:
     lines = text.split("\n")
     out: list[Symbol] = []
-    stack: list[list] = []  # [name, depth_at_declaration, opened]
+    stack: list[list] = []  # [name, depth_at_declaration, opened, kind]
     depth = 0
-    codes = _code_lines(lines)
+    member_end = -1
+    codes = _code_lines(lines, js=suffix in JS_EXT)
     for i, line in enumerate(lines):
         code = codes[i]
         nxt = codes[i + 1] if i + 1 < len(lines) else ""
-        decl = _match_decl(code, nxt, suffix) if depth <= 4 and code.strip() else None
+        decl = None
+        in_interface = (suffix in TS_EXT and stack and stack[-1][3] == "interface" and stack[-1][2]
+                        and depth == stack[-1][1] + 1)
+        if in_interface and i <= member_end:
+            pass  # still inside the previous member or call signature: its parameters are not members
+        elif in_interface and code.strip():
+            m = TS_MEMBER.match(code)
+            decl = (("property" if m.group("kind") == ":" else "method"), m.group("name")) if m else None
+            member_end = _ts_expr_end(codes, i, member=True)[0]
+        elif suffix in JS_EXT and depth == 0 and not stack:
+            assigned = _js_assigned(line)
+            decl = ("func", assigned) if assigned else None
+        if decl is None and not in_interface and depth <= 4 and code.strip():
+            decl = _match_decl(code, nxt, suffix)
         if decl:
             kind, name = decl
             qual = ".".join([s[0] for s in stack] + [name])
-            end, sure = _block_end(codes, i)
+            if in_interface:
+                end, sure = _ts_expr_end(codes, i, member=True)
+            elif suffix in TS_EXT and (kind == "alias" or TS_BODYLESS_FUNC.match(code)):
+                end, sure = _ts_expr_end(codes, i)
+            else:
+                end, sure = _block_end(codes, i, func=kind in ("func", "method"))
             out.append(Symbol(qual, kind, _decl_start(lines, i) + 1, end + 1, _signature(line), len(stack),
                               partial=not sure))
             if kind in TYPE_KINDS and end > i:  # a one-line type can't contain anything
-                stack.append([name, depth, False])
+                stack.append([name, depth, False, kind])
         depth += code.count("{") - code.count("}")
         for entry in stack:
             if depth > entry[1]:
@@ -416,9 +575,10 @@ def find_symbol(text: str, suffix: str, query: str) -> list[Symbol]:
     symbols = outline(text, suffix) or []
 
     def matches(sym: Symbol, q: str, fold: bool) -> bool:
-        name = sym.name.lower() if fold else sym.name
-        q = q.lower() if fold else q
-        return name == q or name.endswith("." + q)
+        names = {sym.name, sym.name.replace(".prototype.", ".")}  # @Reply.send finds Reply.prototype.send
+        if fold:
+            names, q = {n.lower() for n in names}, q.lower()
+        return any(name == q or name.endswith("." + q) for name in names)
 
     exact = [s for s in symbols if matches(s, query, fold=False)]
     return exact or [s for s in symbols if matches(s, query, fold=True)]

@@ -227,12 +227,47 @@ def _execute(cmd: str, cwd: Path, timeout: int) -> tuple[str, int | None, float]
     # (#165). Color codes in the output are stripped afterwards by compress.clean.
     env = dict(os.environ, CI="1", DOTNET_NOLOGO="1", DOTNET_CLI_TELEMETRY_OPTOUT="1")
     started = time.monotonic()
+    # The command runs in its own process group, so a timeout ends the whole tree: killing only
+    # the shell left `npx borp`'s node processes running (#271).
+    group = ({"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt"
+             else {"start_new_session": True})
+    proc = subprocess.Popen(cmd, shell=True, cwd=cwd, env=env, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, **group)
     try:
-        proc = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, timeout=timeout, env=env)
-        out, rc = proc.stdout + b"\n" + proc.stderr, proc.returncode
-    except subprocess.TimeoutExpired as exc:
-        out, rc = (exc.stdout or b"") + b"\n" + (exc.stderr or b""), None
+        stdout, stderr = proc.communicate(timeout=timeout)
+        rc = proc.returncode
+    except subprocess.TimeoutExpired:
+        _kill_tree(proc)
+        try:
+            stdout, stderr = proc.communicate(timeout=5)
+        except subprocess.TimeoutExpired:  # a grandchild that left the group still holds the pipes
+            stdout, stderr = b"", b""
+        rc = None
+    out = (stdout or b"") + b"\n" + (stderr or b"")
     return out.decode("utf-8", "replace"), rc, time.monotonic() - started
+
+
+def _kill_tree(proc: subprocess.Popen) -> None:
+    """End a timed-out command and everything it started: SIGTERM to its group, then SIGKILL."""
+    if os.name == "nt":
+        subprocess.run(["taskkill", "/T", "/F", "/PID", str(proc.pid)], capture_output=True)
+        proc.kill()
+        return
+    import signal
+
+    for sig, grace in ((signal.SIGTERM, 2.0), (signal.SIGKILL, 0)):
+        try:
+            os.killpg(proc.pid, sig)
+        except (ProcessLookupError, PermissionError):
+            return
+        deadline = time.monotonic() + grace
+        while time.monotonic() < deadline:
+            proc.poll()  # reap the shell, so only live members keep the group
+            try:
+                os.killpg(proc.pid, 0)
+            except (ProcessLookupError, PermissionError):
+                return
+            time.sleep(0.05)
 
 
 def op_run(ctx: Context, what: str = "test", cmd: str | None = None, timeout=RUN_TIMEOUT) -> Result:
