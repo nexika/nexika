@@ -387,6 +387,8 @@ def run(argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
         return reader(program, argv, ctx, stdin)
     if program == "pre-commit" and len(argv) > 1 and argv[1] in ("install", "init-templatedir"):
         return pre_commit_install(argv, ctx)
+    if program in HOOK_INSTALLERS:
+        return hook_installer(program, argv, ctx)
     if program in RUNNERS:
         return project_run(ctx, f"Runs {program} in the project.")
     return generic(argv, ctx, stdin)
@@ -400,6 +402,26 @@ def pre_commit_install(argv: list[Arg], ctx: Ctx) -> Stage:
         ", ".join(f".git/hooks/{h}" for h in hooks)
     ctx.add("git-internal", f"Installs a git hook ({where}) that runs whatever .pre-commit-config.yaml says "
                             "on later git commands, without asking.")
+    return Stage()
+
+
+HOOK_INSTALLERS = {"husky", "lefthook", "simple-git-hooks"}
+
+
+def hook_installer(program: str, argv: list[Arg], ctx: Ctx) -> Stage:
+    """husky (v9: `husky`, `husky init`), `lefthook install`, simple-git-hooks: like `pre-commit install`,
+    they make git run project scripts on later git commands (husky sets core.hooksPath) (#217)."""
+    sub = next((str(a) for a in argv[1:] if not a.startswith("-")), "")
+    if any(a in ("-v", "--version", "-h", "--help") for a in argv[1:]):
+        ctx.add("read", f"Shows {program} information.")
+    elif program == "lefthook" and sub not in ("install", "add"):
+        ctx.add("exec", f"Runs `lefthook {sub}`.")
+    elif program == "husky" and sub == "uninstall":
+        ctx.add("exec", "Removes husky's git hooks.")
+    else:
+        what = "sets core.hooksPath to .husky" if program == "husky" else "writes git hooks into .git/hooks"
+        ctx.add("git-internal", f"`{' '.join([program, sub]).strip()}` {what}: git then runs the project's "
+                                "hook scripts on later git commands, without asking.")
     return Stage()
 
 
@@ -773,6 +795,8 @@ def npx(argv, ctx, stdin):
     tool = os.path.basename(tool)
     if os.path.exists(os.path.join(ctx.where.root, "node_modules", ".bin", tool)) or tool in RUNNERS:
         return run([arg(tool), *pos[1:]], ctx, stdin)
+    if tool in HOOK_INSTALLERS:
+        return hook_installer(tool, [arg(tool), *pos[1:]], ctx)
     ctx.add("exec", f"Downloads {name} and runs it.")
     return Stage()
 
