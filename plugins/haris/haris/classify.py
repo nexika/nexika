@@ -630,7 +630,7 @@ def reader(program: str, argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stag
         return Stage()
     if pattern_first and stdin is not None and stdin.environ:  # `env | grep -i token` (#139)
         patterns = values(opts, "-e", "--regexp") or pos[:1]
-        if any(SECRET_VAR.search(p) for p in patterns):
+        if any(SECRET_VAR.search(p) or picks_secret_var(p) for p in patterns):
             ctx.add("secret-read", f"Picks the variables that look like secrets out of the environment "
                                    f"({program}) and prints them into the conversation.")
     if pattern_first and pos and not has(opts, "-e", "--regexp", "-f", "--file"):
@@ -664,6 +664,25 @@ def reader(program: str, argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stag
         root = ctx.where.resolve(pos[-1], ctx.cwd) if program in ("ls", "tree") else ctx.cwd
         return Stage(paths_root=root, filtered=program != "ls")
     return Stage()
+
+
+# Variables that setup-node, npm, gh and the cloud CLIs put in the environment with a secret in them (#215).
+SECRET_ENV_NAMES = ("npm_token", "node_auth_token", "npm_config__authtoken",
+                    "npm_config_//registry.npmjs.org/:_authtoken", "github_token", "gh_token",
+                    "gh_enterprise_token", "gitlab_token",
+                    "aws_secret_access_key", "aws_session_token", "aws_access_key_id",
+                    "azure_client_secret", "google_application_credentials", "anthropic_api_key",
+                    "openai_api_key", "docker_password", "twine_password", "pypi_token", "codecov_token",
+                    "heroku_api_key", "slack_token", "vercel_token", "netlify_auth_token")
+
+
+def picks_secret_var(pattern: str) -> bool:
+    """`env | grep -i npm` lets NPM_TOKEN through: a piece of the pattern is part of a secret's name."""
+    for piece in re.split(r"\\?\|", pattern.lower()):
+        piece = re.sub(r"[\\^$()\[\]?*+{}]|=.*", "", piece).strip()
+        if len(piece) >= 3 and any(piece in name for name in SECRET_ENV_NAMES):
+            return True
+    return False
 
 
 def jq_args(argv: list[Arg]) -> list[Arg]:
