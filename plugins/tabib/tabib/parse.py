@@ -49,6 +49,8 @@ SIGNALS = [
                          r"The version '[^']+' with architecture '[^']+' was not found|"   # setup-python
                          r"(?:^|\s)--[a-z][\w-]+ error: invalid value: '|"   # a tool option from the env
                          r"Artifact directory does not exist|Artifact not found for name")),
+    # A branch rule the workflow's token cannot pass (#262): a re-run fails the same way.
+    ("rules", re.compile(r"(?i)repository rule violations found|\d+ approving reviews? (?:is|are) required")),
     ("segfault", re.compile(r"(?i)segmentation (?:fault|violation)|\bSIGSEGV\b|exit code 139\b|"
                             r"Windows fatal exception: access violation")),
     # GitHub prints this after a timeout, a shutdown and a cancel alike: the weakest sign.

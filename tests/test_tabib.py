@@ -684,6 +684,38 @@ def test_a_fail_fast_cancel_does_not_hide_the_failed_job(ci, project, monkeypatc
     assert record["rerun"] == ""
 
 
+# fastify runs 36796415356 (monthly lock-threads on main) and 30015524264 (dependabot automerge) (#262).
+LOCK_THREADS_LOG = [
+    "##[group]Run dessant/lock-threads@89ae32b08ed1a541efecbab17912962a5e38981c", "with:",
+    "  log-output: false", "##[endgroup]",
+    "##[error]Request failed due to following response errors:", " - Resource not accessible by integration",
+    "Cleaning up orphan processes",
+]
+AUTOMERGE_LOG = [
+    "##[group]Run fastify/github-action-merge-dependabot@1b2ed42db8f9d81a46bac83adedfc03eb5149dff",
+    "##[endgroup]",
+    "PUT /repos/fastify/fastify/pulls/6866/merge - 405 with id 2441:1569B8 in 1765ms",
+    "##[error]Repository rule violations found", "",
+    "At least 2 approving reviews are required by reviewers with write access.",
+]
+
+
+@pytest.mark.parametrize("lines, event, fork, kind", [
+    (LOCK_THREADS_LOG, "schedule", None, "setup"),
+    (LOCK_THREADS_LOG, "push", False, "setup"),
+    (LOCK_THREADS_LOG, "pull_request", True, "infra"),   # a fork's pull request gets no secrets
+    (LOCK_THREADS_LOG, "pull_request", None, "infra"),   # not known to be the repository's own
+    (AUTOMERGE_LOG, "pull_request", False, "setup"),
+])
+def test_a_token_without_a_permission_is_setup(lines, event, fork, kind):
+    found = parse.read_log(gh_log("lock-threads / Lock Threads", lines))["lock-threads / Lock Threads"]
+    verdict = classify.classify({"failures": found["failures"], "signals": found["signals"], "event": event,
+                                 "from_fork": fork})
+    assert verdict["kind"] == kind
+    if kind == "setup":
+        assert any("token cannot do this" in e for e in verdict["evidence"])
+
+
 def test_a_cancel_alone_is_still_a_cancelled_run():
     verdict = classify.classify({"signals": [{"kind": "cancelled", "line": "The operation was canceled.",
                                               "job": "test"}],
