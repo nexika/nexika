@@ -60,7 +60,10 @@ released plugins, published with `amin publish <marketplace name>` as tag `<name
 
 Release candidates: `amin prepare <project> --rc` releases `1.3.0-rc.1` (then `-rc.2` ...) as a
 GitHub pre-release and keeps the notes; a later `amin prepare <project>` promotes to `1.3.0` and
-collects every note.
+collects every note. Other prereleases (`6.0.0-alpha.4`, `-beta.0`, ...) are a line of their own:
+when the version file or the last tag is one, `plan` proposes the next one (`6.0.0-alpha.5`) and
+each consumes its notes; `--pre=beta` starts another label, `NAME=6.0.0` promotes. `prepare` never
+writes a version lower than the version file's without `--allow-lower`.
 
 First release of a project with no tags: `amin history <project>` lists the merged PRs that
 touched it, so notes can be written from real history. It lists only PRs whose merge commit is on

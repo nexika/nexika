@@ -16,7 +16,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-SEMVER = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:-rc\.(\d+))?$")   # 1.3.0 or a release candidate 1.3.0-rc.2
+# 1.3.0, or a SemVer prerelease such as 1.3.0-rc.2, 6.0.0-alpha.4 or 6.0.0-beta.0
+SEMVER = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$")
 TYPES = ("breaking", "added", "changed", "deprecated", "removed", "fixed", "security")
 MAJOR_TYPES = {"breaking", "removed"}
 MINOR_TYPES = {"added", "changed", "deprecated"}
@@ -89,17 +90,32 @@ class Project:
 # ---------------------------------------------------------------- semantic versions
 
 
-def parse(version: str) -> tuple[int, int, int, int, int]:
-    """A sortable key: (major, minor, patch, 0 for a release candidate else 1, rc number)."""
+def parse(version: str) -> tuple:
+    """A sortable key with SemVer precedence: 6.0.0-alpha.4 < 6.0.0-alpha.10 < 6.0.0-beta.0 < 6.0.0-rc.1
+    < 6.0.0. (major, minor, patch, 0 for a prerelease else 1, the prerelease identifiers)."""
     m = SEMVER.match(version.strip())
     if not m:
         raise ValueError(f"not a MAJOR.MINOR.PATCH version: {version!r}")
-    rc = m.group(4)
-    return int(m.group(1)), int(m.group(2)), int(m.group(3)), 0 if rc else 1, int(rc or 0)
+    pre = m.group(4)
+    ids = tuple((0, int(x), "") if x.isdigit() else (1, 0, x) for x in pre.split(".")) if pre else ()
+    return int(m.group(1)), int(m.group(2)), int(m.group(3)), 0 if pre else 1, ids
 
 
 def is_prerelease(version: str) -> bool:
-    return "-rc." in version
+    m = SEMVER.match(version.strip())
+    return bool(m and m.group(4))
+
+
+def final(version: str) -> str:
+    """The release a prerelease leads to: 6.0.0-alpha.4 -> 6.0.0."""
+    return "{}.{}.{}".format(*parse(version)[:3])
+
+
+def prerelease_label(version: str) -> tuple[str, int] | None:
+    """("alpha", 4) for 6.0.0-alpha.4 (also 6.0.0-alpha4); None for a final or another shape."""
+    m = SEMVER.match(version.strip())
+    pre = re.fullmatch(r"([A-Za-z-]+)\.?(\d+)", m.group(4) or "") if m else None
+    return (pre.group(1), int(pre.group(2))) if pre else None
 
 
 def bump(version: str, types: set[str]) -> tuple[str, str]:
@@ -118,6 +134,28 @@ def bump(version: str, types: set[str]) -> tuple[str, str]:
     if types:
         return f"{major}.{minor}.{patch + 1}", "fixes only: patch bump"
     return version, "no notes: no release"
+
+
+def next_version(last: str, types: set[str], last_final: str | None = None,
+                 current: str | None = None) -> tuple[str, str]:
+    """(next version, reason) after the release `last`. On a prerelease line (the version file or the
+    last tag is 6.0.0-alpha.4) the next one continues the line (6.0.0-alpha.5); a release candidate is
+    promoted (1.3.0-rc.2 -> 1.3.0), as is any line whose notes need more than the line's release."""
+    start = last
+    if current and SEMVER.match(current) and is_prerelease(current) and parse(current) > parse(last):
+        start = current
+    if not is_prerelease(start):
+        return bump(start, types)
+    base, label = final(start), prerelease_label(start)
+    required = bump(last_final, types)[0] if last_final else base
+    if parse(required) > parse(base):
+        if label and label[0] != "rc":
+            return f"{required}-{label[0]}.1", f"the notes need {required}: a new {label[0]} line"
+        return required, f"the notes need {required}"
+    if label is None or label[0] == "rc":
+        return base, f"promotes {start} to {base}"
+    return (f"{base}-{label[0]}.{label[1] + 1}",
+            f"next {label[0]} of {base} (or promote: NAME={base}, or --pre=beta)")
 
 
 def is_calver(versions: list[str], today: datetime.date) -> bool:
