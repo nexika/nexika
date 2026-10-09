@@ -174,7 +174,7 @@ def classify(facts: dict) -> dict:
                 "confidence": "medium", "evidence": evidence}
     only = matrix_only(facts.get("jobs") or [])
     what = failures[0]["kind"] if failures else ""
-    if only:
+    if only and failures:   # a matrix value names where a known failure happens, not a cause (#255)
         evidence.append(f"Only the jobs with {only} failed; the same job passed with other values.")
         return {"kind": "matrix", "detail": {"value": only, "count": len(failures), "what": what},
                 "confidence": "medium", "evidence": evidence}

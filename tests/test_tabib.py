@@ -412,6 +412,8 @@ def test_a_test_failing_in_many_jobs_counts_once():
     ({"signals": [{"kind": "auth", "line": "Bad credentials"}]}, "infra"),
     ({"failures": FAIL, "signals": [{"kind": "dependency", "line": "No matching distribution"}]}, "dependency"),
     ({"failures": FAIL, "jobs": jobs(("t (py3.10)", "failure"), ("t (py3.12)", "success"))}, "matrix"),
+    # fastify run 34748583815 (#255): CodeQL's javascript job failed with nothing read: no matrix verdict.
+    ({"jobs": jobs(("Analyze (javascript)", "failure"), ("Analyze (actions)", "success"))}, "unknown"),
     ({"failures": FAIL}, "code"),
     ({}, "unknown"),
 ])
