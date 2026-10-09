@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 
 import pytest
 from conftest import BARQ_ROOT, _git
@@ -257,6 +258,37 @@ def test_run_timeout(project, barq_run):
     assert code == 1 and "TIMED OUT" in out
 
 
+@pytest.mark.skipif(os.name != "posix", reason="process groups are POSIX")
+def test_run_timeout_kills_children(project, barq_run):
+    # #271: the timeout killed only the shell; `npx borp`'s node children kept running
+    pidfile = project / "pidfile"
+    req = json.dumps({"op": "run", "cmd": f"sh -c 'sleep 300 & echo $! > {pidfile}; wait'",
+                      "timeout": 1})
+    code, out = barq_run(req)
+    pid = int(pidfile.read_text())
+    try:
+        assert code == 1 and "TIMED OUT" in out
+        alive = True
+        for _ in range(50):  # the kill is sent before barq returns; give the kernel a moment
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                alive = False
+                break
+            # a killed child of an exited shell may linger as a zombie until init reaps it
+            stat = f"/proc/{pid}/stat"
+            if os.path.exists(stat) and open(stat).read().split(") ")[-1].startswith("Z"):
+                alive = False
+                break
+            time.sleep(0.1)
+        assert not alive, "the command's child process is still running"
+    finally:
+        try:
+            os.kill(pid, 9)
+        except ProcessLookupError:
+            pass
+
+
 def test_run_does_not_change_the_color_environment(project, barq_run, monkeypatch):
     # #165: barq set NO_COLOR=1, and black's suite, green when run directly, went red
     monkeypatch.delenv("NO_COLOR", raising=False)
@@ -482,3 +514,16 @@ def test_session_note_leaves_reads_and_searches_to_the_built_in_tools(barq_env):
     assert "Read" in note and "Edit" in note
     for op in ("run:test", "git-status", "read:PATH:outline", "read:PATH@Symbol", "map"):
         assert op in note
+
+
+def test_symbol_ambiguous_short_name_lists_matches(project, barq_run):
+    # #272: @send silently returned a nested `function send ()`, not Reply.prototype.send
+    (project / "reply.js").write_text(
+        "Reply.prototype.send = function (payload) {\n  return this\n}\n\n"
+        "function onSendEnd (reply) {\n  function send () {\n    reply.end()\n  }\n  send()\n}\n")
+    code, out = barq_run("read:reply.js@send")
+    assert code == 1
+    assert "'send' matches 2 symbols" in out
+    assert "Reply.prototype.send (1-3)" in out and "send (6-8)" in out
+    _, out = barq_run("read:reply.js@Reply.send")
+    assert "1\tReply.prototype.send = function (payload) {" in out
