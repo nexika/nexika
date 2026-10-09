@@ -754,6 +754,25 @@ def upstream(lines: list[str]) -> list[dict]:
     return found[:10]
 
 
+NODE_ERROR = re.compile(r"^\s*([A-Z]\w*Error)(?: \[[\w-]+\])?: (.+)$")
+NODE_MODULE_FRAME = re.compile(r"^\s*at .*node_modules/((?:@[\w.-]+/)?[\w.-]+)/(\S+?:\d+)")
+
+
+def raised(lines: list[str]) -> list[dict]:
+    """JavaScript errors whose innermost frame is inside node_modules/<package>/ (#261): a crash in a
+    dependency's own code. Not an assertion: an assertion library throws what the test asked it to."""
+    found: list[dict] = []
+    for i, line in enumerate(lines[:-1]):
+        if not (m := NODE_ERROR.match(line)) or "Assertion" in m.group(1):
+            continue
+        if frame := NODE_MODULE_FRAME.match(lines[i + 1].replace("\\", "/")):
+            item = {"package": frame.group(1), "place": f"{frame.group(1)}/{frame.group(2)}",
+                    "error": m.group(1), "message": _short(m.group(2))}
+            if item not in found:
+                found.append(item)
+    return found[:10]
+
+
 MISSING_MODULE = re.compile(r"No module named '?([\w.]+)'?|Cannot find module '([^'./][^']*)'")
 
 
@@ -769,12 +788,13 @@ def missing_modules(lines: list[str]) -> list[str]:
 
 
 def read_log(text: str) -> dict:
-    """{job: {failures, signals, errors, frames, missing, upstream, lines}} for each job in a failed log."""
+    """{job: {failures, signals, errors, frames, missing, upstream, raised, lines}} for each job in a failed
+    log."""
     out = {}
     for job, lines in split_jobs(text).items():
         out[job] = {"failures": failures(lines), "signals": signals(lines), "errors": errors(lines),
                     "frames": frames(lines), "missing": missing_modules(lines),
-                    "upstream": upstream(lines), "lines": lines}
+                    "upstream": upstream(lines), "raised": raised(lines), "lines": lines}
     return out
 
 

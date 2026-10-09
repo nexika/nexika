@@ -95,6 +95,18 @@ def raised_upstream(failures: list[dict], upstream: list[dict]) -> dict:
     return first
 
 
+# A branch that only updates dependencies: Dependabot's and Renovate's.
+DEPENDENCY_BRANCH = re.compile(r"^(?:dependabot/(?:npm_and_yarn|npm)/|renovate/)")
+
+
+def crashed_in_dependency(failures: list[dict], raised: list[dict]) -> dict:
+    """The first crash inside a dependency's code, when every failing job has one (#261): {} otherwise."""
+    jobs = {r.get("job") for r in raised}
+    if not raised or any(f.get("job") not in jobs for f in failures):
+        return {}
+    return raised[0]
+
+
 def classify(facts: dict) -> dict:
     """{kind, detail, confidence, evidence} from what triage found."""
     failures = facts.get("failures") or []
@@ -169,6 +181,16 @@ def classify(facts: dict) -> dict:
             evidence.append(f"Only the job{'s' if len(failed) > 1 else ''} "
                             f"{', '.join(repr(name) for name in failed[:3])} failed; the other jobs passed.")
         return {"kind": "dependency", "detail": {"package": upstream["package"]}, "confidence": "medium",
+                "evidence": evidence}
+    crashed = crashed_in_dependency(failures, facts.get("raised") or [])
+    dependency_branch = bool(DEPENDENCY_BRANCH.match(facts.get("branch") or ""))
+    if crashed and (facts.get("lock_changed") or dependency_branch):
+        evidence.append(f"{crashed['error']} raised inside {crashed['package']} ({crashed['place']}), "
+                        f"not in the project's code: {crashed['message']}")
+        evidence.append("Dependency files changed since the last green run." if facts.get("lock_changed")
+                        else f"The branch {facts.get('branch')} only updates dependencies (dependabot or "
+                        "renovate).")
+        return {"kind": "dependency", "detail": {"package": crashed["package"]}, "confidence": "medium",
                 "evidence": evidence}
     missing = facts.get("missing_modules") or []   # modules the project itself does not have
     if "dependency" in signals or missing or (facts.get("lock_changed") and any(

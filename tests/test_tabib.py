@@ -1167,6 +1167,50 @@ def test_the_change_s_own_errors_beside_an_upstream_warning_are_code(ci, project
     assert diagnosis.triage(ci)["kind"] == "code"
 
 
+# fastify run 29506411975 (#261): dependabot bumps TypeScript and eslint crashes inside node_modules.
+NODE_CRASH_LOG = [
+    "##[group]Run npm run lint", "npm run lint", "##[endgroup]",
+    "> fastify@5.6.2 lint", "> eslint", "",
+    "Oops! Something went wrong! :(", "",
+    "ESLint: 9.39.1", "",
+    "TypeError: Cannot read properties of undefined (reading 'Intrinsic')",
+    "    at Object.<anonymous> (/home/runner/work/fastify/fastify/node_modules/ts-api-utils/lib/index.cjs:787:57)",
+    "    at Module._compile (node:internal/modules/cjs/loader:1554:14)",
+    "    at Object.<anonymous> (/home/runner/work/fastify/fastify/node_modules/neostandard/node_modules/"
+    "@typescript-eslint/typescript-estree/dist/convert-comments.js:37:30)",
+    "##[error]Process completed with exit code 2.",
+]
+
+
+def test_a_crash_inside_node_modules_after_a_dependency_change_is_a_dependency_failure(ci, project, monkeypatch):
+    found = parse.read_log(gh_log("quality-check / Lint Code", NODE_CRASH_LOG))["quality-check / Lint Code"]
+    assert [(r["package"], r["error"]) for r in found["raised"]] == [("ts-api-utils", "TypeError")]
+    assert compare.deps_changed(["package.json"]) == ["package.json"]
+    assert compare.deps_changed(["web/package.json"], "jest") == ["web/package.json"]
+    facts = {"raised": [{**r, "job": "quality-check / Lint Code"} for r in found["raised"]],
+             "lock_changed": True}
+    verdict = classify.classify(facts)
+    assert (verdict["kind"], verdict["detail"]) == ("dependency", {"package": "ts-api-utils"})
+    assert any("Dependency files changed" in e for e in verdict["evidence"])
+    assert classify.classify({**facts, "lock_changed": False})["kind"] == "unknown"
+    # Live, from the branch name alone (no green run to compare with).
+    upstream_run(project, monkeypatch, gh_log("quality-check / Lint Code", NODE_CRASH_LOG), jobs=[
+        {"id": 1, "name": "quality-check / Lint Code", "conclusion": "failure", "failed_step": ""}])
+    run = {**fake_run(project), "branch": "dependabot/npm_and_yarn/dev-dependencies-typescript-b7ceb5d816",
+           "jobs": [{"id": 1, "name": "quality-check / Lint Code", "conclusion": "failure", "failed_step": ""}]}
+    monkeypatch.setattr(forge, "find_run", lambda info, run_id=None: run)
+    monkeypatch.setattr(forge, "history", lambda info, run: {"same_commit_passed": None, "last_green": None})
+    record = diagnosis.triage(ci)
+    assert (record["kind"], record["detail"]) == ("dependency", {"package": "ts-api-utils"})
+    assert any("dependabot" in e for e in record["evidence"])
+
+
+def test_an_assertion_inside_node_modules_is_not_a_dependency_failure():
+    lines = ["AssertionError [ERR_ASSERTION]: expected 1 to equal 2",
+             "    at Proxy.assertEqual (/home/runner/work/x/x/node_modules/chai/lib/chai/core/assertions.js:10:5)"]
+    assert parse.read_log("\n".join(lines))[""]["raised"] == []
+
+
 # A workflow that cannot work as written (#127): a re-run fails the same way.
 SETUP_LOGS = {
     # flypythoncom/python run 34004132950: `uv pip install --system` on the runner's own Python.
