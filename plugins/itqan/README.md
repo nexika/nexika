@@ -90,6 +90,8 @@ A plugin with hundreds of skills of which you used one is a context cost worth q
   `grep` pattern), database resets, `terraform destroy`, `kubectl delete`, publishing a package
   (npm, pnpm, yarn, NuGet, twine, cargo, hatch, uv, poetry, flit)
 - commands inside `bash -c "..."` are checked like any other
+- turning off `ignore-scripts` in `.npmrc` (removing `ignore-scripts=true`, setting it to `false`, or
+  `npm config set ignore-scripts false`): npm would run every dependency's install scripts again
 - editing `.env`, `.pypirc`, `.netrc` or key files, or lock files; writing content that contains a
   secret token (the same token shapes Nexika redacts everywhere, PyPI tokens included)
 
