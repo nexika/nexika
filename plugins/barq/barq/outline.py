@@ -74,6 +74,10 @@ TS_TYPE_ALIAS_OPEN = re.compile(
 )
 TS_EXT = {".ts", ".tsx", ".mts", ".cts"}
 TS_BODYLESS_FUNC = re.compile(r"^\s*(?:export\s+)?declare\s+function\b")
+# an interface member: a method signature (name(, name<T>(, [Symbol.x]() or a property (name?: T) (#277)
+TS_MEMBER = re.compile(
+    r"^\s*(?:readonly\s+)?(?P<name>[A-Za-z_$][\w$]*|\[[\w$.]+\])\s*\??\s*(?P<kind>[(<:])"
+)
 # a type goes on when a line ends with an operator, or the next line starts with one
 _ENDS_OPEN = ("|", "&", "?", ":", "=", "=>", ",", "(", "[", "{", "<", "extends", "keyof")
 _STARTS_MORE = ("|", "&", "?", ":", ".", "=", ">", "extends")
@@ -448,9 +452,10 @@ def _block_end(code: list[str], i: int, func: bool = False) -> tuple[int, bool]:
     return min(i + 50, len(code) - 1), False
 
 
-def _ts_expr_end(code: list[str], i: int) -> tuple[int, bool]:
+def _ts_expr_end(code: list[str], i: int, member: bool = False) -> tuple[int, bool]:
     """End line of a TS type alias or bodyless declaration starting at line i: the line where its
-    brackets are balanced again and the next line does not continue the type, or a `;` (#276)."""
+    brackets are balanced again and the next line does not continue the type, or a `;` (#276).
+    An interface member also ends at a `,` outside brackets (#277)."""
     depth = 0
     for j in range(i, len(code)):
         text = code[j].replace("=>", "  ")
@@ -463,7 +468,7 @@ def _ts_expr_end(code: list[str], i: int) -> tuple[int, bool]:
                 depth += 1
             elif ch == ">" and text[k + 1:k + 2] != "=" and depth > 0:
                 depth -= 1
-            elif ch == ";" and depth <= 0:
+            elif (ch == ";" or (member and ch == ",")) and depth <= 0:
                 return j, True
         tail = code[j].rstrip()
         if depth > 0 or not tail or tail.endswith(_ENDS_OPEN):
@@ -477,29 +482,40 @@ def _ts_expr_end(code: list[str], i: int) -> tuple[int, bool]:
 def _brace_symbols(text: str, suffix: str) -> list[Symbol]:
     lines = text.split("\n")
     out: list[Symbol] = []
-    stack: list[list] = []  # [name, depth_at_declaration, opened]
+    stack: list[list] = []  # [name, depth_at_declaration, opened, kind]
     depth = 0
+    member_end = -1
     codes = _code_lines(lines, js=suffix in JS_EXT)
     for i, line in enumerate(lines):
         code = codes[i]
         nxt = codes[i + 1] if i + 1 < len(lines) else ""
         decl = None
-        if suffix in JS_EXT and depth == 0 and not stack:
+        in_interface = (suffix in TS_EXT and stack and stack[-1][3] == "interface" and stack[-1][2]
+                        and depth == stack[-1][1] + 1)
+        if in_interface and i <= member_end:
+            pass  # still inside the previous member or call signature: its parameters are not members
+        elif in_interface and code.strip():
+            m = TS_MEMBER.match(code)
+            decl = (("property" if m.group("kind") == ":" else "method"), m.group("name")) if m else None
+            member_end = _ts_expr_end(codes, i, member=True)[0]
+        elif suffix in JS_EXT and depth == 0 and not stack:
             assigned = _js_assigned(line)
             decl = ("func", assigned) if assigned else None
-        if decl is None and depth <= 4 and code.strip():
+        if decl is None and not in_interface and depth <= 4 and code.strip():
             decl = _match_decl(code, nxt, suffix)
         if decl:
             kind, name = decl
             qual = ".".join([s[0] for s in stack] + [name])
-            if suffix in TS_EXT and (kind == "alias" or TS_BODYLESS_FUNC.match(code)):
+            if in_interface:
+                end, sure = _ts_expr_end(codes, i, member=True)
+            elif suffix in TS_EXT and (kind == "alias" or TS_BODYLESS_FUNC.match(code)):
                 end, sure = _ts_expr_end(codes, i)
             else:
                 end, sure = _block_end(codes, i, func=kind in ("func", "method"))
             out.append(Symbol(qual, kind, _decl_start(lines, i) + 1, end + 1, _signature(line), len(stack),
                               partial=not sure))
             if kind in TYPE_KINDS and end > i:  # a one-line type can't contain anything
-                stack.append([name, depth, False])
+                stack.append([name, depth, False, kind])
         depth += code.count("{") - code.count("}")
         for entry in stack:
             if depth > entry[1]:

@@ -801,3 +801,59 @@ def test_ts_overload_ranges():
     syms = [(s.name, s.line, s.end, s.partial) for s in outline(text, ".ts")]
     assert syms == [("fastify", 1, 3, False), ("fastify.TrustProxyFunction", 2, 2, False),
                     ("fastify", 5, 9, False), ("fastify", 11, 13, False)]
+
+
+INSTANCE_DTS = textwrap.dedent('''\
+    export interface FastifyInstance<
+      RawServer extends RawServerBase = RawServerDefault,
+      Logger extends FastifyBaseLogger = FastifyBaseLogger
+    > {
+      server: RawServer;
+      readonly prefix?: string;
+      addresses(): AddressInfo[]
+      withTypeProvider<Provider extends FastifyTypeProvider>(): FastifyInstance<RawServer, Logger,
+        Provider>;
+
+      after(): FastifyInstance<RawServer, Logger> & SafePromiseLike<undefined>;
+      after(afterListener: (err: Error | null) => void): FastifyInstance<RawServer,
+        Logger>;
+
+      // @ts-ignore - type only available for @types/node >=17
+      [Symbol.asyncDispose](): Promise<undefined>;
+      [key: string]: unknown;
+      (req: Request): void;
+      decorate: DecorationMethod<FastifyInstance<RawServer, Logger>>;
+      addHttpMethod(method: string, methodOptions?: {
+        hasBody: boolean,
+      }): FastifyInstance<RawServer, Logger>;
+      routeOptions: {
+        url: string
+      }
+    }
+
+    export interface Empty {}
+''')
+
+
+def test_dts_interface_members_are_outlined():
+    # #277 (decided): .d.ts interface members (method and property signatures) are outlined
+    syms = [(s.name, s.kind, s.line, s.end) for s in outline(INSTANCE_DTS, ".ts")]
+    assert syms == [
+        ("FastifyInstance", "interface", 1, 26),
+        ("FastifyInstance.server", "property", 5, 5),
+        ("FastifyInstance.prefix", "property", 6, 6),
+        ("FastifyInstance.addresses", "method", 7, 7),
+        ("FastifyInstance.withTypeProvider", "method", 8, 9),
+        ("FastifyInstance.after", "method", 11, 11),
+        ("FastifyInstance.after", "method", 12, 13),
+        ("FastifyInstance.[Symbol.asyncDispose]", "method", 15, 16),
+        ("FastifyInstance.decorate", "property", 19, 19),
+        ("FastifyInstance.addHttpMethod", "method", 20, 22),
+        ("FastifyInstance.routeOptions", "property", 23, 25),
+        ("Empty", "interface", 28, 28),
+    ]
+
+
+def test_dts_interface_member_lookup_returns_all_overloads():
+    found = find_symbol(INSTANCE_DTS, ".ts", "FastifyInstance.after")
+    assert [(s.line, s.end) for s in found] == [(11, 11), (12, 13)]
