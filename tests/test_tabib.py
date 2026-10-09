@@ -201,6 +201,40 @@ def test_borp_names_the_failed_test_file():
     assert failures[0]["message"].startswith("AssertionError [ERR_ASSERTION]")
 
 
+# fastify run 31128098312 (#253): two listen tests pass node:test's 30 s timeout in one job of the matrix.
+NODE_TIMEOUT_LOG = [
+    "✖ /home/runner/work/fastify/fastify/test/listen.5.test.js (30001.935644ms)",
+    "##[error]^[[32m'test timed out after 30000ms'^[[39m",
+    "✖ /home/runner/work/fastify/fastify/test/listen.4.test.js (30001.567056ms)",
+    "##[error]^[[32m'test timed out after 30000ms'^[[39m",
+    "ℹ tests 2347", "ℹ fail 0", "",
+    "✖ failing tests:", "",
+    "test at test/listen.5.test.js:1:1",
+    "✖ /home/runner/work/fastify/fastify/test/listen.5.test.js (30001.935644ms)",
+    "  'test timed out after 30000ms'", "",
+    "test at test/listen.4.test.js:1:1",
+    "✖ /home/runner/work/fastify/fastify/test/listen.4.test.js (30001.567056ms)",
+    "  'test timed out after 30000ms'",
+    "##[error]Process completed with exit code 1.",
+]
+
+
+def test_a_test_s_own_timeout_is_not_a_ci_time_limit():
+    found = parse.read_log(gh_log("test-unit (22, ubuntu-latest)", NODE_TIMEOUT_LOG))["test-unit (22, ubuntu-latest)"]
+    assert [(f["test"], f["file"], f["line"], f.get("timeout")) for f in found["failures"]] == [
+        ("test/listen.5.test.js", "test/listen.5.test.js", 1, True),
+        ("test/listen.4.test.js", "test/listen.4.test.js", 1, True)]
+    assert found["signals"] == []
+    for line in ["Exceeded timeout of 5000 ms for a test.", "E   Failed: Timeout >10.0s"]:
+        assert parse.signals([line]) == []
+    for line in ["##[error]The action has timed out.", "##[error]The job has timed out after 30 minutes"]:
+        assert [s["kind"] for s in parse.signals([line])] == ["timeout"]
+    verdict = classify.classify({"failures": [{**f, "job": "test-unit (22, ubuntu-latest)"}
+                                              for f in found["failures"]]})
+    assert verdict["kind"] == "code"   # flaky or not is the maintainer's open question (#253)
+    assert any("test runner's own time limit" in e for e in verdict["evidence"])
+
+
 def test_node_test_runner_with_only_passes_has_no_failure():
     lines = ["✔ chainable - get (3.459827ms)", "▶ Buffer test", "  ✔ should return 200 (18.4ms)",
              "✔ Buffer test (66.3ms)", "ℹ tests 2347", "ℹ pass 2347", "ℹ fail 0",

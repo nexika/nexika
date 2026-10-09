@@ -21,8 +21,9 @@ MAX_LINES = 200_000
 # ------------------------------------------------------------------ signals (outside the code)
 
 SIGNALS = [
-    ("timeout", re.compile(r"(?i)exceeded the maximum execution time|timed? ?out after \d|"
-                           r"job .{0,40}timed out|deadline exceeded")),
+    # The job's or a step's time limit, not a test's own ("'test timed out after 30000ms'", #253).
+    ("timeout", re.compile(r"(?i)exceeded the maximum execution time|(?:job|step|action) .{0,40}timed out|"
+                           r"deadline exceeded")),
     # "Killed" only as the shell or the kernel says it, never inside a test's own message.
     ("oom", re.compile(r"(?i)exit code 137\b|^\s*Killed\s*$|line \d+:\s+\d+ Killed\b|Killed process \d+|"
                        r"heap out of memory|\bMemoryError\b|OOMKilled|cannot allocate memory")),
@@ -530,6 +531,10 @@ def crash(lines: list[str]) -> dict | None:
     return failure
 
 
+# A test runner's own time limit for one test (#253): node:test, jest, pytest-timeout.
+TEST_TIMEOUT = re.compile(r"test timed out after \d|Exceeded timeout of \d|^(?:Failed: )?Timeout >\s?\d")
+
+
 def failures(lines: list[str]) -> list[dict]:
     found: list[dict] = []
     py_lines: dict[str, int] = {}
@@ -652,6 +657,8 @@ def failures(lines: list[str]) -> list[dict]:
         found.append(crashed)  # the tests stopped with the process; nothing else names the failure
     seen, unique = set(), []
     for f in found:
+        if TEST_TIMEOUT.search(f["message"]):
+            f["timeout"] = True
         key = (f["framework"], f["test"], f["file"], f["line"])
         if key not in seen:
             seen.add(key)

@@ -180,6 +180,9 @@ def classify(facts: dict) -> dict:
                 "confidence": "medium", "evidence": evidence}
     if failures:
         evidence += [f"{f['test'] or f['file']}: {f['message']}" for f in failures[:3]]
+        if all(f.get("timeout") for f in failures):
+            evidence.append("Each failing test hit the test runner's own time limit: a slow or hung test, "
+                            "or a race; a re-run tells which.")
         if "segfault" in signals:
             evidence.append(f"The process crashed (a segmentation fault): {signals['segfault']}")
         # A test failing in N jobs is one failure, "in N jobs" (#175).
