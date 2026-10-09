@@ -254,6 +254,10 @@ def detail(snap: dict, lang: str) -> list[dict]:
         lines = [s for s in [_ci(ci, lang)] if s] or [seg(_off(ci, lang), "dim")]
         more_jobs = (ci.get("failed") or [])[1:8]
         lines += [seg(t("d_ci_job", lang, job=clean(job, 80)), "bad") for job in more_jobs]
+        allowed = ci.get("allowed") or []
+        if allowed:
+            more = f" +{len(allowed) - 1}" if len(allowed) > 1 else ""
+            lines.append(seg(t("d_ci_allowed", lang, job=clean(allowed[0], 80) + more), "dim"))
         if ci.get("url"):
             lines.append(seg(t("d_ci_url", lang, url=clean(ci["url"], 200)), "dim"))
         if ci.get("error"):

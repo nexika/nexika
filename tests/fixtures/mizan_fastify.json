@@ -1078,6 +1078,175 @@
     "startedAt": "2026-02-21T22:49:06Z",
     "updatedAt": "2026-02-21T22:49:16Z"
    }
+  ],
+  "6381": [
+   {
+    "databaseId": 19017924590,
+    "name": "Pull Request Labeler",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "b7514b22defd83504bc376dd3de95384b57cc13d",
+    "event": "pull_request_target",
+    "createdAt": "2025-11-02T20:46:09Z",
+    "startedAt": "2025-11-02T20:46:09Z",
+    "updatedAt": "2025-11-02T20:46:18Z"
+   },
+   {
+    "databaseId": 19017924615,
+    "name": "ci Alternative Runtimes",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "b7514b22defd83504bc376dd3de95384b57cc13d",
+    "event": "pull_request",
+    "createdAt": "2025-11-02T20:46:09Z",
+    "startedAt": "2025-11-02T20:46:09Z",
+    "updatedAt": "2025-11-02T20:50:31Z"
+   },
+   {
+    "databaseId": 19017924621,
+    "name": "integration Alternative Runtimes",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "b7514b22defd83504bc376dd3de95384b57cc13d",
+    "event": "pull_request",
+    "createdAt": "2025-11-02T20:46:09Z",
+    "startedAt": "2025-11-02T20:46:09Z",
+    "updatedAt": "2025-11-02T20:46:33Z"
+   },
+   {
+    "databaseId": 19017924626,
+    "name": "pull request title check",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "b7514b22defd83504bc376dd3de95384b57cc13d",
+    "event": "pull_request",
+    "createdAt": "2025-11-02T20:46:09Z",
+    "startedAt": "2025-11-02T20:46:09Z",
+    "updatedAt": "2025-11-02T20:46:19Z"
+   },
+   {
+    "databaseId": 19017924635,
+    "name": "Test compare",
+    "status": "completed",
+    "conclusion": "skipped",
+    "headSha": "b7514b22defd83504bc376dd3de95384b57cc13d",
+    "event": "pull_request",
+    "createdAt": "2025-11-02T20:46:09Z",
+    "startedAt": "2025-11-02T20:46:09Z",
+    "updatedAt": "2025-11-02T20:46:10Z"
+   },
+   {
+    "databaseId": 19017924646,
+    "name": "ci",
+    "status": "completed",
+    "conclusion": "cancelled",
+    "headSha": "b7514b22defd83504bc376dd3de95384b57cc13d",
+    "event": "pull_request",
+    "createdAt": "2025-11-02T20:46:09Z",
+    "startedAt": "2025-11-02T20:46:09Z",
+    "updatedAt": "2025-11-03T02:47:22Z"
+   },
+   {
+    "databaseId": 19017924672,
+    "name": "integration",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "b7514b22defd83504bc376dd3de95384b57cc13d",
+    "event": "pull_request",
+    "createdAt": "2025-11-02T20:46:09Z",
+    "startedAt": "2025-11-02T20:46:09Z",
+    "updatedAt": "2025-11-02T20:46:41Z"
+   },
+   {
+    "databaseId": 19017924228,
+    "name": "PR #6381",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "b7514b22defd83504bc376dd3de95384b57cc13d",
+    "event": "dynamic",
+    "createdAt": "2025-11-02T20:46:07Z",
+    "startedAt": "2025-11-02T20:46:07Z",
+    "updatedAt": "2025-11-02T20:47:34Z"
+   }
+  ],
+  "7060": [
+   {
+    "databaseId": 36303562096,
+    "name": "Internal Links Check",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "cd3c3c144df86d477d059be27e43f6f7ca052b57",
+    "event": "pull_request",
+    "createdAt": "2026-09-27T07:35:18Z",
+    "startedAt": "2026-09-27T07:38:08Z",
+    "updatedAt": "2026-09-27T07:38:29Z"
+   },
+   {
+    "databaseId": 36303562388,
+    "name": "ci",
+    "status": "completed",
+    "conclusion": "failure",
+    "headSha": "cd3c3c144df86d477d059be27e43f6f7ca052b57",
+    "event": "pull_request",
+    "createdAt": "2026-09-27T07:35:18Z",
+    "startedAt": "2026-09-27T07:38:08Z",
+    "updatedAt": "2026-09-27T07:40:38Z"
+   },
+   {
+    "databaseId": 36303562066,
+    "name": "pull request title check",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "cd3c3c144df86d477d059be27e43f6f7ca052b57",
+    "event": "pull_request",
+    "createdAt": "2026-09-27T07:35:17Z",
+    "startedAt": "2026-09-27T07:38:07Z",
+    "updatedAt": "2026-09-27T07:38:18Z"
+   },
+   {
+    "databaseId": 36303562077,
+    "name": "Test compare",
+    "status": "completed",
+    "conclusion": "skipped",
+    "headSha": "cd3c3c144df86d477d059be27e43f6f7ca052b57",
+    "event": "pull_request",
+    "createdAt": "2026-09-27T07:35:17Z",
+    "startedAt": "2026-09-27T07:38:07Z",
+    "updatedAt": "2026-09-27T07:38:17Z"
+   },
+   {
+    "databaseId": 36303562061,
+    "name": "integration",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "cd3c3c144df86d477d059be27e43f6f7ca052b57",
+    "event": "pull_request",
+    "createdAt": "2026-09-27T07:35:17Z",
+    "startedAt": "2026-09-27T07:38:07Z",
+    "updatedAt": "2026-09-27T07:38:41Z"
+   },
+   {
+    "databaseId": 36303562085,
+    "name": "integration Alternative Runtimes",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "cd3c3c144df86d477d059be27e43f6f7ca052b57",
+    "event": "pull_request",
+    "createdAt": "2026-09-27T07:35:17Z",
+    "startedAt": "2026-09-27T07:38:07Z",
+    "updatedAt": "2026-09-27T07:38:47Z"
+   },
+   {
+    "databaseId": 36303562045,
+    "name": "ci Alternative Runtimes",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "cd3c3c144df86d477d059be27e43f6f7ca052b57",
+    "event": "pull_request",
+    "createdAt": "2026-09-27T07:35:17Z",
+    "startedAt": "2026-09-27T07:38:07Z",
+    "updatedAt": "2026-09-27T07:42:08Z"
+   }
   ]
  },
  "checks": {
@@ -1327,6 +1496,523 @@
     "link": "https://github.com/fastify/fastify/actions/runs/25901725760/job/76126280358",
     "workflow": "Pull Request Labeler",
     "event": "pull_request_target"
+   }
+  ],
+  "6381": [
+   {
+    "name": "automerge",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924646/job/54319798096",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "package",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924646/job/54319797937",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-typescript",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924646/job/54319797878",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924646/job/54319797927",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "package",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924615/job/54308582382",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "coverage-win / check-coverage",
+    "bucket": "cancel",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924646/job/54308517077",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "coverage-nix / check-coverage",
+    "bucket": "cancel",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924646/job/54308517074",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "CodeQL",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/runs/54308513833",
+    "workflow": "",
+    "event": ""
+   },
+   {
+    "name": "install-production (24, ubuntu-latest, 8)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924672/job/54308496731",
+    "workflow": "integration",
+    "event": "pull_request"
+   },
+   {
+    "name": "Check licenses",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924646/job/54308496623",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "Lint",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924646/job/54308496615",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-typescript",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924615/job/54308496576",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "Dependency Review",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924646/job/54308496611",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (20, windows-latest)",
+    "bucket": "fail",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924615/job/54308496586",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "install-production (22, ubuntu-latest, 8)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924672/job/54308496733",
+    "workflow": "integration",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (20, ubuntu-latest)",
+    "bucket": "fail",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924615/job/54308496591",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "pull-request-title-check",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924626/job/54308496531",
+    "workflow": "pull request title check",
+    "event": "pull_request"
+   },
+   {
+    "name": "install-production (20, ubuntu-latest, 8)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924672/job/54308496727",
+    "workflow": "integration",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (20, macos-latest)",
+    "bucket": "fail",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924615/job/54308496584",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "install-production (ubuntu-latest, nsolid, 20, 8)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924621/job/54308496554",
+    "workflow": "integration Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "label",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924590/job/54308496491",
+    "workflow": "Pull Request Labeler",
+    "event": "pull_request_target"
+   },
+   {
+    "name": "Analyze (javascript)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924228/job/54308496153",
+    "workflow": "CodeQL",
+    "event": "dynamic"
+   },
+   {
+    "name": "Analyze (actions)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924228/job/54308496154",
+    "workflow": "CodeQL",
+    "event": "dynamic"
+   },
+   {
+    "name": "test-unit-custom",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924646/job/54308496676",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "run",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/19017924635/job/54308496633",
+    "workflow": "Test compare",
+    "event": "pull_request"
+   }
+  ],
+  "6957": [
+   {
+    "name": "automerge",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651132220/job/106504480607",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "package",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651132220/job/106504479068",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "Test pino compatibility",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651132220/job/106504477537",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651132220/job/106504478421",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-types",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651132220/job/106504477351",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "package",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651131457/job/106504390127",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "coverage-win / check-coverage",
+    "bucket": "fail",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651132220/job/106503800860",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "coverage-nix / check-coverage",
+    "bucket": "fail",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651132220/job/106503800990",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (24, macos-latest)",
+    "bucket": "fail",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651131457/job/106503533345",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "quality-check / Check Licenses",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651132220/job/106503536932",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "install-production (24, ubuntu-latest, 11)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651131503/job/106503534141",
+    "workflow": "integration",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (24, windows-latest)",
+    "bucket": "fail",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651131457/job/106503533285",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "linkChecker",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651131571/job/106503537924",
+    "workflow": "Internal Links Check",
+    "event": "pull_request"
+   },
+   {
+    "name": "install-production (26, ubuntu-latest, 11)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651131503/job/106503533810",
+    "workflow": "integration",
+    "event": "pull_request"
+   },
+   {
+    "name": "quality-check / Lint Code",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651132220/job/106503536576",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "Lint Markdown",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651131418/job/106503532891",
+    "workflow": "Lint Docs",
+    "event": "pull_request"
+   },
+   {
+    "name": "label",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651131400/job/106503534239",
+    "workflow": "Pull Request Labeler",
+    "event": "pull_request_target"
+   },
+   {
+    "name": "quality-check / Dependency Review",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651132220/job/106503536931",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-types",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651131457/job/106503532869",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "install-production (ubuntu-latest, nsolid, 24, 11)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651131460/job/106503533397",
+    "workflow": "integration Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "pull-request-title-check",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651131445/job/106503532971",
+    "workflow": "pull request title check",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (24, ubuntu-latest)",
+    "bucket": "fail",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651131457/job/106503533172",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit-custom",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651132220/job/106503537656",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "run",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/35651131486/job/106503534573",
+    "workflow": "Test compare",
+    "event": "pull_request"
+   }
+  ],
+  "7060": [
+   {
+    "name": "package",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562045/job/108576576548",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "automerge",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562388/job/108576464360",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "package",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562388/job/108576464298",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "Test pino compatibility",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562388/job/108576463893",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-types",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562388/job/108576463713",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562388/job/108576463779",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "coverage-win / check-coverage",
+    "bucket": "fail",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562388/job/108576240069",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "coverage-nix / check-coverage",
+    "bucket": "fail",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562388/job/108576240071",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "quality-check / Dependency Review",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562388/job/108576101029",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "quality-check / Lint Code",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562388/job/108576101068",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "quality-check / Check Licenses",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562388/job/108576100961",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "install-production (ubuntu-latest, nsolid, 20, 8)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562085/job/108576100259",
+    "workflow": "integration Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (20, macos-latest)",
+    "bucket": "fail",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562045/job/108576097427",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "pull-request-title-check",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562066/job/108576099027",
+    "workflow": "pull request title check",
+    "event": "pull_request"
+   },
+   {
+    "name": "linkChecker",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562096/job/108576099753",
+    "workflow": "Internal Links Check",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (20, windows-latest)",
+    "bucket": "fail",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562045/job/108576097394",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "install-production (24, ubuntu-latest, 8)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562061/job/108576098533",
+    "workflow": "integration",
+    "event": "pull_request"
+   },
+   {
+    "name": "install-production (22, ubuntu-latest, 8)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562061/job/108576098677",
+    "workflow": "integration",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (20, ubuntu-latest)",
+    "bucket": "fail",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562045/job/108576097398",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "install-production (26, ubuntu-latest, 8)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562061/job/108576098626",
+    "workflow": "integration",
+    "event": "pull_request"
+   },
+   {
+    "name": "install-production (20, ubuntu-latest, 8)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562061/job/108576098650",
+    "workflow": "integration",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-types",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562045/job/108576097320",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit-custom",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562388/job/108576101727",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "run",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/36303562077/job/108576100070",
+    "workflow": "Test compare",
+    "event": "pull_request"
    }
   ]
  }

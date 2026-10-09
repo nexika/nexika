@@ -10,7 +10,8 @@ these read commands run, with arguments as a list (no shell):
     gh run list --branch=<branch> --limit 20
         --json databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt,event,createdAt,
                workflowDatabaseId
-    gh run list --commit=<head> --limit 20 --json ...   (detached, or the head is not in the list above)
+    gh run list --commit=<head> --limit 20 --json ...   (detached, or the head is not in the list above,
+        or a PR has failed checks: did their runs succeed anyway?)
     gh run list --workflow=<id> --status=completed --limit 20 --json ...
         (CI running and the branch has no finished run of that workflow: for the time left; by id,
         since two workflows may share a name)
@@ -137,10 +138,24 @@ def is_ci(item: dict) -> bool:
     return not item.get("event") or item.get("event") in CI_EVENTS
 
 
-def parse_gh_checks(text: str) -> dict:
+def parse_gh_checks(text: str, runs: list[dict] | None = None) -> dict:
+    """runs: the commit's runs. A failed job in a run that succeeded was allowed to fail
+    (continue-on-error): it is set apart as allowed, not counted as a failure."""
     checks = [c for c in json.loads(text or "[]") if is_ci(c)]  # a labeler alone is no CI: "none"
+    green = {str(r.get("databaseId")) for r in runs or [] if r.get("conclusion") == "success"}
     bad = [c for c in checks if c.get("bucket") == "fail"]
+    allowed = [c for c in bad if (m := RUN_LINK.search(c.get("link") or "")) and m.group(1) in green]
+    if allowed:
+        checks = [c for c in checks if c not in allowed]
+        bad = [c for c in bad if c not in allowed]
     cancelled = [c.get("name", "?") for c in checks if c.get("bucket") == "cancel"]
+    found = parse_checks_left(checks, bad, cancelled)
+    if allowed:
+        found["allowed"] = [job_label(c.get("workflow") or "", c.get("name", "?")) for c in allowed]
+    return found
+
+
+def parse_checks_left(checks: list[dict], bad: list[dict], cancelled: list[str]) -> dict:
     if bad:
         link = next((m.group(1) for c in bad if (m := RUN_LINK.search(c.get("link") or ""))), None)
         flows = list(dict.fromkeys(c.get("workflow") or "" for c in bad))
@@ -384,7 +399,15 @@ def fetch_ci(info: dict, pr: dict | None) -> dict:
         head = info.get("head", "")
         if pr and pr.get("number"):
             argv = ["gh", "pr", "checks", str(int(pr["number"])), "--json", "name,bucket,link,workflow,event"]
-            checks = parse_gh_checks(run_tool(argv, cwd, accept_codes=(0, 1, 8)))
+            text = run_tool(argv, cwd, accept_codes=(0, 1, 8))
+            checks = parse_gh_checks(text)
+            if checks["state"] == "failed" and re.match(r"^[0-9a-f]{7,64}$", head):
+                try:  # which runs ended green anyway: their failed jobs were allowed to fail
+                    by_commit = json.loads(run_tool(["gh", "run", "list", f"--commit={head}", *fields], cwd)
+                                           or "[]")
+                    checks = parse_gh_checks(text, by_commit)
+                except (Off, ValueError, TypeError):
+                    pass
             if checks["state"] not in ("none", "running"):
                 return checks
             # None: `gh pr checks` leaves out runs waiting for approval; the run list below has them.

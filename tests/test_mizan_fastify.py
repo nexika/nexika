@@ -188,3 +188,35 @@ def test_a_labeler_alone_is_no_ci(tmp_path, monkeypatch):
     assert render._ci(found, "en")["text"] == "no CI yet"
     monkeypatch.setattr(forge, "run_tool", fake_gh(RUNS["6699"], CHECKS["6699"]))
     assert forge.fetch_ci(info_for(tmp_path, "6699"), {"number": 6699})["state"] == "none"
+
+
+# ---------------------------------------------------------------- #246: jobs allowed to fail
+
+def test_jobs_allowed_to_fail_in_a_green_run_are_not_failures(tmp_path, monkeypatch):
+    # PR 6381: `ci Alternative Runtimes` has continue-on-error on test-unit; its run ended success.
+    tool = fake_gh(RUNS["6381"], CHECKS["6381"])
+    monkeypatch.setattr(forge, "run_tool", tool)
+    found = forge.fetch_ci(info_for(tmp_path, "6381"), {"number": 6381})
+    assert (found["state"], found["failed"]) == ("cancelled", [])
+    assert f"--commit={head_of('6381')}" in tool.calls[1]
+    assert len(found["allowed"]) == 3
+    # PR 6957 and 7060: ci really failed (coverage); the allowed jobs are not listed next to it.
+    for pr in ("6957", "7060"):
+        monkeypatch.setattr(forge, "run_tool", fake_gh(RUNS[pr], CHECKS[pr]))
+        found = forge.fetch_ci(info_for(tmp_path, pr), {"number": int(pr)})
+        assert found["state"] == "failed" and found["workflows"] == ["ci"], pr
+        assert all(job.startswith("ci/coverage-") for job in found["failed"]), pr
+    text = render.sections_text(render.detail({"git": {"branch": "x"}, "ci": found}, "en"))
+    assert "allowed to fail: ci Alternative Runtimes/test-unit" in text
+
+
+def test_failed_checks_cost_one_run_list_call(tmp_path, monkeypatch):
+    # PR 6957 checks without a run list answer (gh error): the failures are shown as before.
+    def tool(argv, cwd, accept_codes=(0,)):
+        if argv[1:3] == ["run", "list"]:
+            raise forge.Off("off_error", "gh")
+        return json.dumps(CHECKS["6957"])
+
+    monkeypatch.setattr(forge, "run_tool", tool)
+    found = forge.fetch_ci(info_for(tmp_path, "6957"), {"number": 6957})
+    assert found["state"] == "failed" and len(found["failed"]) == 5
