@@ -253,6 +253,8 @@ pass	git tag v-local-test-only
 pass	firebase emulators:start
 pass	env
 pass	env | grep PATH
+pass	env | grep -i lang
+pass	printenv | grep -E '^(HOME|SHELL)='
 pass	printenv | sort
 
 # ---------------------------------------------------------------- dangerous: deleting far too much
@@ -600,6 +602,10 @@ ask	tar czf keys.tgz ~/.ssh
 ask	echo $GITHUB_TOKEN
 ask	printenv AWS_SECRET_ACCESS_KEY
 ask	env | grep -i token
+ask	env | grep -i npm
+ask	printenv | grep -i github
+ask	env | grep -i aws
+ask	env | grep -e foo -e npm_config
 ask	printenv | grep -E 'SECRET|KEY'
 ask	set | grep -i password
 ask	gh auth token
