@@ -1000,9 +1000,12 @@ def h_shell(argv, ctx, stdin):
     if has(opts, "--version", "--help"):
         ctx.add("read", f"Shows {program} information.")
         return Stage()
-    if pos and not has(opts, "-s"):
+    if pos and not has(opts, "-s") and pos[0] not in STDIN_FILES:
         return script_run(program, pos[0], ctx)
     return interpreter_stdin(program, ctx, stdin)
+
+
+STDIN_FILES = {"-", "/dev/stdin", "/dev/fd/0", "/proc/self/fd/0"}  # `sh -` reads its script from stdin
 
 
 def h_eval(argv, ctx, stdin):
