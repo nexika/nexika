@@ -1,8 +1,9 @@
 """Run one task in one arm: Claude Code inside the task's SWE-bench image, then keep the diff.
 
-Both arms get the same image, model, prompt, permission mode, budget and time limit. Arm B adds
-the Nexika plugins from a pinned commit with --plugin-dir. Nothing from the user's own Claude
-Code setup reaches the container except the login.
+Every arm gets the same image, model, prompt, permission mode, budget and time limit. Arm A has
+no plugins, arm B all of Nexika, and an ablation arm such as "itqan" or "haris+barq" only those
+plugins, all from a pinned commit with --plugin-dir. Nothing from the user's own Claude Code setup
+reaches the container except the login.
 """
 
 import json
@@ -45,6 +46,23 @@ Nobody will answer questions: decide for yourself and work until you are done.
 """
 
 
+def arm_plugins(arm):
+    """The Nexika plugins an arm loads: A none, B all, otherwise the names joined by "+"."""
+    if arm == "A":
+        return ()
+    if arm == "B":
+        return metrics.NEXIKA
+    names = tuple(arm.split("+"))
+    unknown = [n for n in names if n not in metrics.NEXIKA]
+    if unknown or not names:
+        raise ValueError(f"unknown arm {arm!r}: use A, B or Nexika plugin names joined by '+'")
+    return names
+
+
+def container_name(task, arm, run):
+    return "agentbench-" + run_name(task, arm, run).lower().replace("__", "-").replace("+", "-")
+
+
 def image_name(instance_id):
     return "swebench/sweb.eval.x86_64." + instance_id.replace("__", "_1776_").lower()
 
@@ -82,6 +100,9 @@ def claude_args(arm, model, budget):
     ]
     if arm == "B":
         args += ["--plugin-dir", PLUGIN_DIR]
+    else:
+        for name in arm_plugins(arm):
+            args += ["--plugin-dir", f"{PLUGIN_DIR}/{name}"]
     return args
 
 
@@ -109,12 +130,12 @@ def export_plugins(repo, sha, dest, sh=_sh):
     return Path(dest) / "plugins"
 
 
-def run_one(task, arm, run, cfg, out_dir, sh=_sh, clock=time.monotonic):
+def run_one(task, arm, run, cfg, out_dir, sh=_sh, clock=time.monotonic, prompt=None, extra_args=()):
     """Run claude on one task in one arm and write stream.jsonl, stderr.txt, diff.patch and
     meta.json (last, so a run without meta.json is redone on resume)."""
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    name = "agentbench-" + run_name(task["instance_id"], arm, run).lower().replace("__", "-")
+    name = container_name(task["instance_id"], arm, run)
     sh(["docker", "rm", "-f", name])
     started = sh(["docker", "run", "-d", "--name", name, "-w", WORKDIR,
                   image_name(task["instance_id"]), "sleep", "infinity"])
@@ -125,11 +146,12 @@ def run_one(task, arm, run, cfg, out_dir, sh=_sh, clock=time.monotonic):
         cmd = ["docker", "exec", "-i", "-w", WORKDIR]
         for key, value in exec_env().items():
             cmd += ["-e", f"{key}={value}"]
-        cmd += [name, *claude_args(arm, cfg["model"], cfg["budget"])]
+        cmd += [name, *claude_args(arm, cfg["model"], cfg["budget"]), *extra_args]
         t0 = clock()
         timed_out = False
         try:
-            proc = sh(cmd, input=build_prompt(task["problem_statement"]), timeout=cfg["timeout"])
+            text = prompt if prompt is not None else build_prompt(task["problem_statement"])
+            proc = sh(cmd, input=text, timeout=cfg["timeout"])
             stdout, stderr, code = proc.stdout, proc.stderr, proc.returncode
         except subprocess.TimeoutExpired as exc:
             timed_out = True
@@ -154,7 +176,7 @@ def run_one(task, arm, run, cfg, out_dir, sh=_sh, clock=time.monotonic):
         "model": cfg["model"],
         "budget_usd": cfg["budget"],
         "timeout_s": cfg["timeout"],
-        "nexika_sha": cfg["nexika_sha"] if arm == "B" else "",
+        "nexika_sha": cfg["nexika_sha"] if arm_plugins(arm) else "",
         "claude_version": cfg.get("claude_version", ""),
         "exit_code": code,
         "timed_out": timed_out,
@@ -162,7 +184,7 @@ def run_one(task, arm, run, cfg, out_dir, sh=_sh, clock=time.monotonic):
         **metrics.diff_stats(diff),
         **metrics.parse_stream(stdout.splitlines()),
     }
-    meta["valid"], meta["invalid_reason"] = metrics.validity(meta, arm)
+    meta["valid"], meta["invalid_reason"] = metrics.validity(meta, arm, arm_plugins(arm))
     (out_dir / "meta.json").write_text(json.dumps(meta, indent=1) + "\n")
     return meta
 
@@ -182,7 +204,7 @@ def _prepare(name, arm, cfg, sh):
            "echo '{\"hasCompletedOnboarding\": true}' > /root/.claude.json"])
     if not any(os.environ.get(key) for key in AUTH_VARS):
         check(["docker", "cp", "-q", cfg["credentials"], f"{name}:/root/.claude/.credentials.json"])
-    if arm == "B":
+    if arm_plugins(arm):
         check(["docker", "cp", "-q", cfg["plugins_dir"], f"{name}:{PLUGIN_DIR}"])
 
 

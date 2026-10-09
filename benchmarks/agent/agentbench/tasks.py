@@ -36,15 +36,21 @@ def fetch_rows(total=500, opener=urllib.request.urlopen):
     return rows
 
 
-def select(rows, quotas, seed, max_per_repo):
+def select(rows, quotas, seed, max_per_repo, scarce_first=False):
     """Pick tasks per difficulty quota, the same ones for the same seed, with at most
-    max_per_repo from one repository (django is almost half of Verified)."""
+    max_per_repo from one repository (django is almost half of Verified). scarce_first fills the
+    difficulty with the fewest tasks first, so the repository cap cannot use up a rare kind."""
     rng = random.Random(seed)
     ordered = sorted(rows, key=lambda r: r["instance_id"])
     rng.shuffle(ordered)
     per_repo = Counter()
     picked = []
-    for difficulty, quota in quotas.items():
+    order = list(quotas)
+    if scarce_first:
+        available = Counter(r["difficulty"] for r in rows)
+        order.sort(key=lambda d: available[d])
+    for difficulty in order:
+        quota = quotas[difficulty]
         taken = 0
         for row in ordered:
             if taken == quota:

@@ -84,6 +84,32 @@ long runs.
 
 **Cost.** Each run is capped by `--budget` (USD) and `--timeout` (seconds). The pilot is 40 runs.
 
+## Ablations, batches and the context cost
+
+An arm is `A` (no plugins), `B` (all of Nexika) or plugin names joined by `+`, such as `itqan` or
+`haris+barq`. That arm loads only those plugins. Each run checks that it loaded exactly its arm's set.
+
+```bash
+# 100 tasks with every hard one (pilot-2.json), five arms, three containers at a time.
+# Each batch of 10 is validated, run, graded, and then its images are deleted.
+python3 benchmarks/agent/bench.py --pilot benchmarks/agent/pilot-2.json pipeline \
+  --model sonnet --arms A,B,itqan,siyaq,haris+barq --jobs 3 \
+  --python ~/nexika-bench/venv/bin/python --workers 3 --test-timeout 900
+
+# The prompt tokens each plugin adds, one short session per plugin (14 sessions)
+python3 benchmarks/agent/bench.py context --model sonnet --task django__django-11848
+```
+
+`pipeline` skips any task whose own gold patch doesn't grade as resolved, and lists it in
+`excluded.json`. A run that ends on an API failure, such as a usage limit, is marked invalid and
+run again on the next start. It never counts as a failed task.
+
+Each run also records:
+- `ran_tests`: whether the agent ran the project's tests;
+- `first_prompt_tokens`: the size of the model's first request, before any work.
+
+The summary has one table per ablation arm, compared with A.
+
 ## What you get
 
 `~/nexika-bench/<pilot>/` (or `$AGENTBENCH_HOME`):

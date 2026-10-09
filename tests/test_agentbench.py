@@ -62,6 +62,23 @@ def test_select_caps_one_repository():
     assert sum(r["repo"] == "django/django" for r in picked) == 3
 
 
+def test_scarce_first_keeps_the_cap_for_rare_tasks():
+    rows = [_row(i, tasks.EASY, "django/django") for i in range(10)]
+    rows += [_row(i, tasks.HARD, "django/django") for i in range(10, 13)]
+    quotas = {tasks.EASY: 3, tasks.HARD: 3}
+    with pytest.raises(ValueError):
+        tasks.select(rows, {tasks.EASY: 4, tasks.HARD: 3}, seed=1, max_per_repo=6)
+    picked = tasks.select(rows, quotas, seed=1, max_per_repo=6, scarce_first=True)
+    assert sum(r["difficulty"] == tasks.HARD for r in picked) == 3
+
+
+def test_pilot_1_still_reproduces():
+    rows = [_row(i, d, repo) for i, (d, repo) in enumerate(
+        [(tasks.EASY, "a/a"), (tasks.MEDIUM, "b/b"), (tasks.HARD, "c/c")] * 10)]
+    quotas = {tasks.EASY: 3, tasks.MEDIUM: 4, tasks.HARD: 2}
+    assert tasks.select(rows, quotas, 1, 10) == tasks.select(rows, quotas, 1, 10, scarce_first=False)
+
+
 def test_select_says_when_a_quota_cannot_be_met():
     with pytest.raises(ValueError, match="1-4 hours"):
         tasks.select([_row(1, tasks.EASY)], {tasks.HARD: 1}, seed=1, max_per_repo=5)
@@ -97,6 +114,19 @@ def test_only_arm_b_loads_nexika_and_both_arms_match_otherwise():
     assert "--plugin-dir" not in a
     assert b[: len(a)] == a and b[len(a):] == ["--plugin-dir", runner.PLUGIN_DIR]
     assert "--strict-mcp-config" in a and a[a.index("--permission-prompts") + 1] == "none"
+
+
+def test_ablation_arms_load_only_their_plugins():
+    a = runner.claude_args("A", "sonnet", 5)
+    one = runner.claude_args("itqan", "sonnet", 5)
+    two = runner.claude_args("haris+barq", "sonnet", 5)
+    assert one[len(a):] == ["--plugin-dir", f"{runner.PLUGIN_DIR}/itqan"]
+    pd = runner.PLUGIN_DIR
+    assert two[len(a):] == ["--plugin-dir", f"{pd}/haris", "--plugin-dir", f"{pd}/barq"]
+    assert runner.arm_plugins("B") == metrics.NEXIKA and runner.arm_plugins("A") == ()
+    with pytest.raises(ValueError, match="unknown arm"):
+        runner.arm_plugins("itqan+ecc")
+    assert runner.container_name("t__x-1", "haris+barq", 1) == "agentbench-t-x-1-haris-barq-r1"
 
 
 def test_exec_env_never_sets_nexika_background(monkeypatch):
@@ -239,14 +269,50 @@ def test_nexika_list_matches_the_marketplace():
 
 @pytest.mark.parametrize("arm,plugins,ok,reason", [
     ("B", list(metrics.NEXIKA), True, ""),
-    ("B", ["haris"], False, "missing"),
+    ("B", ["haris"], False, "arm B without amin"),
     ("A", [], True, ""),
-    ("A", ["hafiz"], False, "arm A with Nexika"),
+    ("A", ["hafiz"], False, "arm A with extra Nexika plugins: hafiz"),
 ])
 def test_validity_checks_the_arm_really_is_that_arm(arm, plugins, ok, reason):
     meta = {"result": "success", "session_id": "s", "plugins_loaded": plugins}
     valid, why = metrics.validity(meta, arm)
     assert valid is ok and reason in why
+
+
+def test_validity_of_an_ablation_arm():
+    meta = {"result": "success", "session_id": "s", "plugins_loaded": ["haris", "barq", "cc-plugin-x"]}
+    assert metrics.validity(meta, "haris+barq", ("haris", "barq")) == (True, "")
+    why = metrics.validity(meta, "itqan", ("itqan",))[1]
+    assert why == "arm itqan with extra Nexika plugins: barq, haris"
+
+
+def test_parse_stream_finds_test_runs_and_the_first_prompt_size():
+    first = {"type": "assistant", "message": {
+        "usage": {"input_tokens": 5, "cache_read_input_tokens": 1000,
+                  "cache_creation_input_tokens": 200},
+        "content": [{"type": "tool_use", "name": "Bash",
+                     "input": {"command": "python -m pytest tests/x.py"}}]}}
+    later = {"type": "assistant", "message": {
+        "usage": {"input_tokens": 9, "cache_read_input_tokens": 9000},
+        "content": [{"type": "tool_use", "name": "Bash",
+                     "input": {"command": "./tests/runtests.py admin"}},
+                    {"type": "tool_use", "name": "Bash", "input": {"command": "grep -rn pytest_plugins ."}}]}}
+    hook = {"type": "system", "subtype": "hook_response", "exit_code": 0, "output": "x" * 40}
+    m = metrics.parse_stream([json.dumps(e) for e in (hook, first, later)])
+    assert m["first_prompt_tokens"] == 1205
+    assert m["test_commands"] == 2 and m["ran_tests"], "grep for a word is not a test run"
+    assert m["hook_output_chars"] == 40
+
+
+def test_an_api_failure_is_not_a_failed_task():
+    stream = [json.dumps(INIT_B), json.dumps({**RESULT, "is_error": True,
+                                              "result": "Claude AI usage limit reached|1760040000"})]
+    meta = metrics.parse_stream(stream)
+    valid, why = metrics.validity(meta, "B")
+    assert not valid and why.startswith("API failure: Claude AI usage limit reached")
+    ok = metrics.parse_stream([json.dumps(INIT_B), json.dumps({**RESULT, "is_error": True,
+                                                              "result": "max turns"})])
+    assert metrics.validity(ok, "B") == (True, "")
 
 
 def test_validity_rejects_a_run_that_never_started():
@@ -351,3 +417,25 @@ def test_markdown_and_csv(tmp_path):
     summary.write_csv(rows, tmp_path / "r.csv")
     header = (tmp_path / "r.csv").read_text().splitlines()[0].split(",")
     assert header == list(summary.COLUMNS)
+
+
+def test_sign_test():
+    assert summary.sign_test(3, 0) == 0.25
+    assert summary.sign_test(0, 0) is None
+    assert summary.sign_test(5, 5) == 1.0
+
+
+def test_ablation_arms_get_their_own_table():
+    rows = summary.merge([
+        _run_row("t1", "A", False, 1.0), _run_row("t1", "B", True, 2.0), _run_row("t1", "itqan", True, 1.5),
+        _run_row("t2", "A", True, 1.0), _run_row("t2", "B", True, 2.0), _run_row("t2", "itqan", False, 1.5),
+    ], {})
+    for row in rows:
+        row["first_prompt_tokens"] = {"A": 20000, "B": 32000, "itqan": 23500}[row["arm"]]
+        row["ran_tests"] = row["arm"] != "A"
+    text = summary.markdown(rows, "p")
+    assert "Arms: A, B, itqan." in text
+    assert "Resolved by B only: 1, by A only: 0 (exact sign test p = 1.00)." in text
+    assert "| itqan | 2 | 50% → 50% | 1 / 1 | 100% (A 0%) |" in text
+    assert "| +3.5k |" in text
+    assert "| <15 min fix | 1/2 | 2/2 | 1/2 |" in text
