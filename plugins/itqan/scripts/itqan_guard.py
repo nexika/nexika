@@ -328,11 +328,34 @@ _ASK_PATTERNS = [
      "Deletes the database."),
     (re.compile(r"\bterraform\s+destroy\b|\bterraform\s+apply\b.*-auto-approve|\bkubectl\s+delete\b|"
                 r"\bhelm\s+uninstall\b"), "infra-destroy", "Destroys infrastructure or cluster resources."),
-    (re.compile(r"\b(npm|pnpm|yarn)\s+publish\b|\bdotnet\s+nuget\s+push\b|\btwine\s+upload\b|"
+    (re.compile(r"\bdotnet\s+nuget\s+push\b|\btwine\s+upload\b|"
                 r"\bcargo\s+publish\b|\b(hatch|uv|poetry|flit)\s+publish\b"), "publish-package",
      "Publishes a package to a public registry."),
     (re.compile(r"(^|[\s;&|(])sudo\s"), "sudo", "Runs a command with administrator rights."),
 ]
+
+
+NODE_MANAGERS = {"npm", "pnpm", "yarn"}
+NODE_VALUE_OPTIONS = {"--tag", "--registry", "--otp", "--access", "-w", "--workspace", "--prefix", "-C",
+                      "--filter", "--dir", "--cwd"}
+PUBLISH_REASON = "Publishes a package to a public registry."
+
+
+def _check_publish(words: list[str]):
+    """`npm publish` read from the words: options may come first (`npm --tag next publish`,
+    `pnpm -r publish`, `yarn npm publish`) and `--dry-run` publishes nothing."""
+    _, words = _strip_env(words)
+    if not words or Path(words[0]).name not in NODE_MANAGERS:
+        return None
+    args, i = words[1:], 0
+    while i < len(args) and args[i].startswith("-"):
+        i += 2 if args[i] in NODE_VALUE_OPTIONS else 1
+    rest = args[i:]
+    if rest[:1] == ["npm"] and Path(words[0]).name == "yarn":
+        rest = rest[1:]
+    if rest[:1] != ["publish"] or any(a == "--dry-run" or a == "--dry-run=true" for a in args):
+        return None
+    return "ask", "publish-package", PUBLISH_REASON
 
 
 SHELLS = {"sh", "bash", "zsh", "dash", "ksh"}
@@ -361,7 +384,8 @@ def check_bash(command: str, cwd: Path, config: dict, depth: int = 0):
             words = _words(piece.strip())
             if not words:
                 continue
-            decision = _check_rm(words, cwd, root) or _check_git(words, cwd, config)
+            decision = (_check_rm(words, cwd, root) or _check_git(words, cwd, config)
+                        or _check_publish(words))
             script = _shell_script(words) if depth < 3 else None
             if not decision and script:
                 decision = check_bash(script, cwd, config, depth + 1)
