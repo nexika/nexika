@@ -144,6 +144,31 @@ def test_signals(line, kind):
     assert parse.signals([line])[0]["kind"] == kind
 
 
+@pytest.mark.parametrize("line", [
+    # fastify (#254): GitHub's outage of 6 Aug (31120530864, 31118738236, 31118715588, 31118716052).
+    "Failed to resolve action download info. Error: Service Unavailable",
+    "##[error]Service Unavailable",
+    "##[error]Internal Server Error",
+    "##[error]Bad Gateway",
+    # fastify run 36890169568: linkinator meets a site that is down.
+    "##[error][503] https://github.com/pinojs/pino/blob/c77d8ec5ce/docs/API.md - HTTP 503",
+    "Action failed to download the metadata. Status code: 502",
+])
+def test_github_service_errors_are_the_network(line):
+    assert [s["kind"] for s in parse.signals([line])] == ["network"]
+
+
+@pytest.mark.parametrize("line", [
+    # A 403 from a download site can be a block that never lifts: not called infra (the open question in #254).
+    "##[error]Action failed to download the metadata. Status code: 403",
+    "##[error]Service Unavailable for maintenance of the docs, see README",
+    "##[error][404] https://github.com/fastify/fastify/tree/5.x - HTTP 404",
+    " * [new branch]        remove_503              -> origin/remove_503",
+])
+def test_lines_that_are_not_a_service_error(line):
+    assert "network" not in [s["kind"] for s in parse.signals([line])]
+
+
 def test_signals_are_named_by_the_most_specific_line():
     # GitHub prints "The operation was canceled." under a runner shutdown too: not a time limit.
     shutdown = ["##[error]The runner has received a shutdown signal.", "##[error]The operation was canceled."]
