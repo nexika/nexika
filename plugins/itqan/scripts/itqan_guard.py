@@ -79,7 +79,8 @@ def needs_quality_check(event: dict) -> bool:
         return True
     command = str((event.get("tool_input") or {}).get("command") or "")
     return tool in ("Bash", "PowerShell") and "git" in command and (
-        "--no-verify" in command or " -n" in command or "SKIP=" in command)
+        "--no-verify" in command or "SKIP=" in command
+        or any(w[:1] == "-" and w[1:2] != "-" and "n" in w for w in command.split()))
 
 
 if __name__ == "__main__":
@@ -236,8 +237,36 @@ def _check_push(rest: list[str], cwd: Path, protected: list[str]):
     return None
 
 
+COMMIT_VALUE_SHORT = set("mFCct")  # short options of `git commit` that take a value
+COMMIT_VALUE_LONG = {"--message", "--file", "--reuse-message", "--reedit-message", "--template",
+                     "--author", "--date", "--cleanup", "--fixup", "--squash", "--trailer"}
+
+
+def _commit_skips_hooks(rest: list[str]) -> bool:
+    """`git commit` arguments with `-n`/`--no-verify`, also inside a cluster such as `-nm` or `-anm`.
+    A cluster is read left to right up to the first letter that takes a value: `-mn` is `-m "n"`."""
+    i = 0
+    while i < len(rest):
+        word = rest[i]
+        i += 1
+        if word == "--":
+            break
+        if word == "--no-verify":
+            return True
+        if word in COMMIT_VALUE_LONG:
+            i += 1
+        elif word.startswith("-") and not word.startswith("--"):
+            for pos, ch in enumerate(word[1:], start=1):
+                if ch == "n":
+                    return True
+                if ch in COMMIT_VALUE_SHORT:
+                    i += pos == len(word) - 1  # the value is the next word
+                    break
+    return False
+
+
 def _check_commit(rest: list[str], cwd: Path):
-    if "--no-verify" in rest or "-n" in rest:
+    if _commit_skips_hooks(rest):
         return "ask", "skip-hooks", "`git commit --no-verify` skips pre-commit checks."
     all_flag = any(a in ("-a", "--all") or (a.startswith("-") and not a.startswith("--") and "a" in a)
                    for a in rest)
@@ -309,7 +338,7 @@ def skip_hooks(command: str):
             args = args[2:]
         if args and args[0] == "commit" and skip:
             return "ask", "skip-hooks", _skip_env_reason(skip)
-        if args and args[0] == "commit" and ("--no-verify" in args or "-n" in args):
+        if args and args[0] == "commit" and _commit_skips_hooks(args[1:]):
             return "ask", "skip-hooks", "`git commit --no-verify` skips pre-commit checks."
         if args and args[0] == "push" and "--no-verify" in args:
             return "ask", "skip-hooks", "`git push --no-verify` skips the repository's push hooks."

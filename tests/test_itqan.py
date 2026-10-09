@@ -113,6 +113,24 @@ def test_skipping_a_pre_commit_hook_asks(guard, repo, command):
     assert decision[:2] == ("ask", "skip-hooks") and "SKIP=" in decision[2]
 
 
+# fastify (#232, cases G92/G92h): `-nm` is `-n -m`, so it skips the hooks; `-mn` is `-m "n"`
+@pytest.mark.parametrize("command", [
+    'git commit -nm "chore: wip"', "git commit -anm x", "git commit -n -m x"])
+def test_combined_no_verify_flags_ask(guard, repo, tmp_path, monkeypatch, command):
+    assert bash(guard, repo, command)[:2] == ("ask", "skip-hooks")
+    monkeypatch.setenv("HARIS_HOME", str(tmp_path / "haris"))
+    (tmp_path / "haris" / "active").mkdir(parents=True)
+    (tmp_path / "haris" / "active" / "s1").touch()
+    event = {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(repo), "session_id": "s1"}
+    assert guard.haris_active(event) and guard.needs_quality_check(event)
+    assert guard.decide(event)[:2] == ("ask", "skip-hooks")
+
+
+@pytest.mark.parametrize("command", ["git commit -mn", 'git commit -am "fix -n flag"', "git commit -m -n"])
+def test_a_message_that_says_n_does_not_skip_hooks(guard, repo, command):
+    assert bash(guard, repo, command) is None
+
+
 def test_skip_env_on_other_commands_passes(guard, repo):
     assert bash(guard, repo, "SKIP=mypy pre-commit run -a") is None
     assert bash(guard, repo, "SKIP= git commit -m wip") is None
