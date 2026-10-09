@@ -32,8 +32,11 @@ setup. Follow what the project already does.
 - State: derive instead of duplicating; don't mutate state or props.
 
 ## Testing
-- Vitest/Jest: one behaviour per test; `describe` by unit; fake timers instead of waiting;
-  mock at the network boundary (msw) rather than internal modules.
+- Use the project's runner: Vitest, Jest, node:test (often through borp), tap. One behaviour per
+  test; `describe` by unit; fake timers instead of waiting.
+- HTTP servers: test in process (`fastify.inject()`, supertest, light-my-request) rather than
+  listening on a real port; if a test must listen, use port 0.
+- Mock at the network boundary (msw) rather than internal modules.
 - Testing Library: query by role/label like a user, not by class names.
 
 ## Review checklist (bugs that bite)
@@ -47,4 +50,9 @@ setup. Follow what the project already does.
 - [ ] new behaviour without a test
 
 ## Commands
-`npm test` / `pnpm test` · `npx tsc --noEmit` · `npm run lint` · with barq: `barq run:test run:build`
+Use the project's own commands: the "Project checks" line of itqan's session note (also
+`itqan_proof.py checks`) lists the package scripts the project defines - test steps, lint,
+type tests (`test:types`, `test:typescript`, `typecheck`, tsd, tstyche) and the scripts its CI
+runs - and is what /itqan:proof runs. Only when nothing is configured: `npm test` / `pnpm test` ·
+`npm run lint` · `npx tsc --noEmit` only when a root tsconfig.json exists and no script checks the
+types · with barq: `barq run:test run:build`
