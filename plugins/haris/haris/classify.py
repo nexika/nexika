@@ -1779,6 +1779,17 @@ def reaches_self(text: str, literals: list[str], ctx: Ctx, data: list[tuple[int,
         for lit in literals if lit and "\n" not in lit and len(lit) < 400 and PATH_LIKE.match(lit))
 
 
+INTERPRETER_BEFORE = re.compile(r"""(?:\bsys\.executable|process\.execPath"""
+                                r"""|['"](?:[\w./-]*/)?(?:python[\d.]*|pypy3?|node|ruby|perl)['"])"""
+                                r"""\s*,\s*['"]-[ce]['"]\s*,\s*$""")
+
+
+def interpreter_code(text: str, start: int) -> bool:
+    """`[sys.executable, '-c', 'pass']`: the string is code for Python or another interpreter that is not
+    a shell (Python's `pass` statement, not the pass password manager) (#266)."""
+    return bool(INTERPRETER_BEFORE.search(text[max(0, start - 200):start]))
+
+
 def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
     """Code given inline (python -c, node -e ...): find what it does, and never approve it."""
     if UNKNOWN in code:
@@ -1788,7 +1799,8 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
             ctx.add("dynamic", f"`{via}` runs code that is only known when it runs.")
         return Stage()
     text = str(code)
-    literals = [next(g for g in m.groups() if g is not None) for m in STRING_LITERAL.finditer(text)]
+    matches = list(STRING_LITERAL.finditer(text))
+    literals = [next(g for g in m.groups() if g is not None) for m in matches]
     # In Python that never runs text as code, what sits in plain strings is data: a file's new contents.
     data = python_strings(text) if re.search(r"python|pypy", lang) and not RUNS_TEXT.search(text) else []
     if reaches_self(text, literals, ctx, data):
@@ -1802,10 +1814,10 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
     executes = bool(code_matches(CODE_EXEC, text, data) or (not NO_BACKTICK_EXEC.search(lang or via)
                                                             and BACKTICK_EXEC.search(text)))
     paths: list[Arg] = []
-    for lit in literals:
+    for i, lit in enumerate(literals):
         if not lit or len(lit) > 400:
             continue
-        if executes and re.match(r"^[\w./~-]", lit):
+        if executes and re.match(r"^[\w./~-]", lit) and not interpreter_code(text, matches[i].start()):
             inner = ctx.child(findings=[])
             try:
                 walk(shell.parse(lit, shell.MAX_DEPTH - 2), inner)
