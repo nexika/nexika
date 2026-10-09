@@ -227,6 +227,11 @@ pass	unzip data.zip
 pass	chmod +x scripts/run.sh
 pass	ln -s src/app.py app.py
 pass	npx create-react-app my-app
+pass	npx -y fastify-helper-unknown
+pass	npm exec --yes some-unknown-pkg -- init
+pass	pnpm dlx create-fastify-thing
+pass	npx @google-cloud/functions-framework --target=f
+pass	npm init fastify
 pass	brew install jq
 pass	open index.html
 pass	code .
@@ -524,6 +529,14 @@ ask	git branch -D feat/old
 ask	git stash clear
 ask	git filter-branch --tree-filter x HEAD
 ask	git commit --no-verify -m x
+ask	npx https://github.com/someuser/fastify-setup
+ask	npx github:someuser/repo
+ask	npx git+https://github.com/u/r.git
+ask	npx someuser/repo
+ask	npm exec -- github:u/r
+ask	pnpm dlx https://example.com/tool.tgz
+ask	npx -p github:u/r tool
+ask	uvx --from git+https://github.com/u/r tool
 ask	pre-commit install
 ask	pre-commit install --hook-type pre-push
 allow	pre-commit run --all-files
