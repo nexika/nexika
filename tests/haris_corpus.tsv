@@ -532,6 +532,11 @@ ask	git branch -D feat/old
 ask	git stash clear
 ask	git filter-branch --tree-filter x HEAD
 ask	git commit --no-verify -m x
+pass	git -c core.hooksPath=/dev/null commit -m x
+pass	git config core.hooksPath /dev/null
+pass	HUSKY=0 git commit -m x
+deny	git config core.hooksPath .husky
+ask	git -c core.hooksPath=.husky commit -m x
 ask	npx https://github.com/someuser/fastify-setup
 ask	npx github:someuser/repo
 ask	npx git+https://github.com/u/r.git

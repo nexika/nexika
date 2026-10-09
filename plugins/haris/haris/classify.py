@@ -2294,7 +2294,7 @@ def h_git(argv, ctx, stdin, depth: int = 0):
             key, _, value = args.pop(0).partition("=")
             if key.lower().startswith("alias."):
                 ctx.git_aliases = {**ctx.git_aliases, key[6:].lower(): value}
-            elif GIT_EXEC_KEYS.match(key):
+            elif runs_program(key, value):
                 ctx.add("risky", f"`git -c {key}=...` makes git run another program.")
         elif a.startswith(("--exec-path=", "--config-env")):
             ctx.add("risky", f"`git {a.split('=')[0]}` makes git run programs from elsewhere.")
@@ -2563,13 +2563,21 @@ def git_config(sub, rest, ctx, stdin):
     key = pos[0] if pos else ""
     value = pos[1] if len(pos) > 1 else ""
     is_alias = key.lower().startswith("alias.")
-    if GIT_EXEC_KEYS.match(key) and (not is_alias or value.startswith("!")):
+    if runs_program(key, value) and (not is_alias or value.startswith("!")):
         ctx.add("persistence", f"Sets git's {key}, which makes git run a program later on its own.")
     elif has(opts, "--global", "--system") or values(opts, "-f", "--file"):
         write_paths(values(opts, "-f", "--file") or [arg("~/.gitconfig")], ctx, "changes git settings in")
     else:
         ctx.add("write", f"Changes the project's git setting {key}.")
     return Stage()
+
+
+def runs_program(key: str, value: str) -> bool:
+    """A git setting that makes git run a program. core.hooksPath=/dev/null runs none: it only switches the
+    hooks off, which the maintainer decided is not worth an ask (#267)."""
+    if key.lower() == "core.hookspath" and value in ("/dev/null", "NUL", "nul"):
+        return False
+    return bool(GIT_EXEC_KEYS.match(key))
 
 
 def git_runs(sub, rest, ctx, stdin):
