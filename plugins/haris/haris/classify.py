@@ -2569,6 +2569,10 @@ def h_gh(argv, ctx, stdin):
     if (group, action) in GH_IRREVERSIBLE:
         ctx.add("remote-irreversible", GH_IRREVERSIBLE[(group, action)])
         return Stage()
+    if (group, action) == ("workflow", "run") and pos[2:3] and RELEASE_WORDS.search(pos[2]):
+        ctx.add("remote-irreversible", f"Starts the workflow {pos[2]}, which by its name deploys, publishes "
+                                       "or releases something.")
+        return Stage()
     if group == "repo" and action == "edit" and has(opts, "--visibility"):
         ctx.add("remote-irreversible", "Changes who can see the repository.")
         return Stage()
