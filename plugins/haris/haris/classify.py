@@ -40,7 +40,8 @@ from .targets import (  # noqa: F401  (the light helpers, kept here by name)
     write_paths,
 )
 
-DEFAULT_PROTECTED = ["main", "master", "develop", "production", "trunk", "stable", "release/*"]
+DEFAULT_PROTECTED = ["main", "master", "develop", "production", "trunk", "stable", "next", "release/*"]
+RELEASE_LINE = re.compile(r"^v?\d+(?:\.\d+)*\.x$")  # a major version's own branch: 4.x, 5.x, v4.x (#227)
 SECRET_VAR = re.compile(r"(?i)(?:token|secret|passw(?:or)?d|passphrase|api_?key|access_?key|private_?key"
                         r"|credential|auth|session_?key|client_?secret|_pat$|^pat_)")
 RISKY_ENV = {"LD_PRELOAD", "LD_AUDIT", "DYLD_INSERT_LIBRARIES", "GIT_SSH_COMMAND", "GIT_SSH", "GIT_EXEC_PATH",
@@ -358,6 +359,13 @@ def run(argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
     if program.endswith(".exe"):
         program = program[:-4]
     ctx.executed.append([program, *argv[1:]])
+    if str(first) in ctx.aliases and "/" not in first:
+        body = ctx.aliases.pop(str(first))  # an alias is not expanded inside its own body
+        try:
+            return shell_string(arg(" ".join([body, *(shquote(a) for a in argv[1:])]), joined_marks(argv)),
+                                ctx, [], f"alias {first}")
+        finally:
+            ctx.aliases[str(first)] = body
     if program in ctx.funcs:
         ctx.add("read", f"Runs the function {program} (checked where it is defined).")
         ctx.forget()
@@ -387,6 +395,8 @@ def run(argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
         return reader(program, argv, ctx, stdin)
     if program == "pre-commit" and len(argv) > 1 and argv[1] in ("install", "init-templatedir"):
         return pre_commit_install(argv, ctx)
+    if program in HOOK_INSTALLERS:
+        return hook_installer(program, argv, ctx)
     if program in RUNNERS:
         return project_run(ctx, f"Runs {program} in the project.")
     return generic(argv, ctx, stdin)
@@ -400,6 +410,26 @@ def pre_commit_install(argv: list[Arg], ctx: Ctx) -> Stage:
         ", ".join(f".git/hooks/{h}" for h in hooks)
     ctx.add("git-internal", f"Installs a git hook ({where}) that runs whatever .pre-commit-config.yaml says "
                             "on later git commands, without asking.")
+    return Stage()
+
+
+HOOK_INSTALLERS = {"husky", "lefthook", "simple-git-hooks"}
+
+
+def hook_installer(program: str, argv: list[Arg], ctx: Ctx) -> Stage:
+    """husky (v9: `husky`, `husky init`), `lefthook install`, simple-git-hooks: like `pre-commit install`,
+    they make git run project scripts on later git commands (husky sets core.hooksPath) (#217)."""
+    sub = next((str(a) for a in argv[1:] if not a.startswith("-")), "")
+    if any(a in ("-v", "--version", "-h", "--help") for a in argv[1:]):
+        ctx.add("read", f"Shows {program} information.")
+    elif program == "lefthook" and sub not in ("install", "add"):
+        ctx.add("exec", f"Runs `lefthook {sub}`.")
+    elif program == "husky" and sub == "uninstall":
+        ctx.add("exec", "Removes husky's git hooks.")
+    else:
+        what = "sets core.hooksPath to .husky" if program == "husky" else "writes git hooks into .git/hooks"
+        ctx.add("git-internal", f"`{' '.join([program, sub]).strip()}` {what}: git then runs the project's "
+                                "hook scripts on later git commands, without asking.")
     return Stage()
 
 
@@ -747,13 +777,17 @@ def h_node_pm(argv, ctx, stdin):
             ctx.add("exec", f"Runs the project script `{sub}`, which may publish or deploy.")
             return Stage()
         return project_run(ctx, f"Runs `{program} {sub}` in the project.")
+    if not pos and has(opts, "--version", "-v"):
+        ctx.add("read", f"Only shows information ({program} --version).")
+        return Stage()
     if sub in ("ls", "list", "ll", "la", "outdated", "view", "info", "why", "explain", "show", "root", "bin",
-               "prefix", "help", "-v", "audit", "doctor", "search", "query", "licenses") \
+               "prefix", "help", "-v", "audit", "doctor", "search", "query", "licenses", "whoami", "ping") \
+            or (sub == "pkg" and rest[:1] == ["get"]) \
             or has(opts, "--version", "-v"):
         if sub == "audit" and "fix" in rest:
             ctx.add("exec", f"`{program} audit fix` changes the project's dependencies.")
         else:
-            ctx.add("read", f"Only shows information ({program} {sub}).")
+            ctx.add("read", f"Only shows information ({program} {sub}{' get' if sub == 'pkg' else ''}).")
         return Stage()
     if sub in ("exec", "x", "dlx") and rest:
         return npx([arg("npx"), *rest], ctx, stdin)
@@ -764,6 +798,11 @@ def h_node_pm(argv, ctx, stdin):
     return Stage()
 
 
+# A package spec that is a URL or a git repository rather than a registry name (#220): npx runs its code.
+GIT_SOURCE = re.compile(r"(?i)^(?:https?://|git\+|git://|ssh://|(?:github|gitlab|bitbucket|gist):"
+                        r"|[\w.-]+/[\w.-]+(?:#\S*)?$)")
+
+
 def npx(argv, ctx, stdin):
     opts, pos = options(argv[1:], {"-p", "--package", "-c", "--call", "--from", "--with"}, first_stops=True)
     calls = values(opts, "-c", "--call")
@@ -772,13 +811,37 @@ def npx(argv, ctx, stdin):
     if not pos:
         ctx.add("exec", f"Runs {argv[0]}.")
         return Stage()
+    sources = [str(v) for v in values(opts, "-p", "--package", "--from", "--with")] + [str(pos[0])]
+    fetched = next((v for v in sources if GIT_SOURCE.match(v)), None)
+    if fetched:
+        ctx.add("download-run", f"Downloads {fetched} (a URL or git repository, not a registry package) and "
+                                "runs its code at once, without you seeing it first.")
+        return Stage()
     name = pos[0]
     tool = name.rsplit("@", 1)[0] if name.count("@") > (1 if name.startswith("@") else 0) else name
     tool = os.path.basename(tool)
     if os.path.exists(os.path.join(ctx.where.root, "node_modules", ".bin", tool)) or tool in RUNNERS:
         return run([arg(tool), *pos[1:]], ctx, stdin)
+    if tool in HOOK_INSTALLERS:
+        return hook_installer(tool, [arg(tool), *pos[1:]], ctx)
     ctx.add("exec", f"Downloads {name} and runs it.")
+    if tool in NODE_DELETERS:  # what it deletes is judged like `rm -r` (#264)
+        return run([arg(tool), *pos[1:]], ctx, stdin)
     return Stage()
+
+
+NODE_DELETERS = {"rimraf", "del-cli", "del", "shx"}
+
+
+def h_shx(argv, ctx, stdin):
+    """shx runs shelljs's versions of the shell commands: `shx rm -rf x` deletes like `rm -rf x`."""
+    rest = argv[1:]
+    while rest and rest[0].startswith("-"):
+        rest = rest[1:]
+    if not rest:
+        ctx.add("exec", f"Runs {argv[0]}.")
+        return Stage()
+    return run(rest, ctx, stdin)
 
 
 def h_pip(argv, ctx, stdin):
@@ -894,13 +957,19 @@ def h_export(argv, ctx, stdin):
     flags = "".join(a[1:] for a in argv[1:] if a.startswith("-") and not a.startswith("--"))
     names = [a for a in argv[1:] if not a.startswith(("-", "+"))]
     if program == "alias":
-        if any("=" in a for a in names):
-            ctx.add("dynamic", "Defines an alias: the command it stands for is only used when it runs, so "
-                               "haris cannot check it.")
+        defined = [a for a in names if "=" in a]
+        for a in defined:  # judged where the same command uses it (#225)
+            name, _, body = a.partition("=")
+            ctx.aliases[name] = body
+        if defined:
+            ctx.add("exec", "Defines an alias, which runs nothing by itself (a later use in this command is "
+                            "checked).")
         else:
             ctx.add("read", "Shows aliases.")
         return Stage()
     if program == "unalias":
+        for a in names:
+            ctx.aliases.pop(a, None)
         ctx.add("read", "Removes aliases.")
         return Stage()
     if not names and "f" not in flags and "F" not in flags:
@@ -988,9 +1057,12 @@ def h_shell(argv, ctx, stdin):
     if has(opts, "--version", "--help"):
         ctx.add("read", f"Shows {program} information.")
         return Stage()
-    if pos and not has(opts, "-s"):
+    if pos and not has(opts, "-s") and pos[0] not in STDIN_FILES:
         return script_run(program, pos[0], ctx)
     return interpreter_stdin(program, ctx, stdin)
+
+
+STDIN_FILES = {"-", "/dev/stdin", "/dev/fd/0", "/proc/self/fd/0"}  # `sh -` reads its script from stdin
 
 
 def h_eval(argv, ctx, stdin):
@@ -2284,7 +2356,8 @@ def git_push(sub, rest, ctx, stdin):
     if force and not deleting:
         dests = [r.lstrip("+").split(":")[-1] for r in refspecs if r.lstrip("+")] or [ctx.git.branch()]
         dests = [d.removeprefix("refs/heads/") for d in dests]
-        hit = [d for d in dests if d and branch_matches(d, protected_branches(ctx))]
+        protected = protected_branches(ctx)
+        hit = [d for d in dests if d and (branch_matches(d, protected) or RELEASE_LINE.match(d))]
         if hit:
             ctx.add("force-push-protected", f"Force-pushes to '{hit[0]}', a shared branch: it rewrites "
                                             f"history "
@@ -2829,6 +2902,11 @@ def h_cloud(argv, ctx, stdin):
         destructive = True
     elif program in ("render", "dokku"):
         destructive = bool(words & {"delete", "destroy", "deploy", "apps:destroy"})
+    if program == "gcloud" and pos[:2] == ["builds", "submit"] and \
+            any(a.split("=", 1)[0] in ("--tag", "-t", "--config", "--pack") for a in argv[1:]):
+        ctx.add("remote-irreversible", "`gcloud builds submit` uploads the source, builds it in the cloud "
+                                       "and publishes the image to a registry (like `docker push`).")
+        return Stage()
     if destructive:
         ctx.add("remote-irreversible", f"`{program} {' '.join(pos[:3])}` deploys, deletes or changes real "
                                        "infrastructure.")
@@ -3163,7 +3241,8 @@ HANDLERS = {
     "env": h_env, "sudo": h_sudo, "doas": h_sudo, "pkexec": h_sudo, "run0": h_sudo, "su": h_su,
     "watch": h_watch, "flock": h_flock, "chroot": h_chroot, "nsenter": h_chroot, "xargs": h_xargs,
     "find": h_find, "gfind": h_find, "rm": h_rm, "rmdir": h_rm, "unlink": h_rm, "srm": h_rm, "trash": h_rm,
-    "trash-put": h_rm, "shred": h_shred, "mv": h_mv, "cp": h_mv, "ln": h_ln, "touch": h_touch, "tee": h_tee,
+    "trash-put": h_rm, "rimraf": h_rm, "del-cli": h_rm, "del": h_rm, "shx": h_shx,
+    "shred": h_shred, "mv": h_mv, "cp": h_mv, "ln": h_ln, "touch": h_touch, "tee": h_tee,
     "install": h_install, "chmod": h_chmod, "chown": h_chmod, "chgrp": h_chmod, "chattr": h_chmod,
     "setfacl": h_chmod, "xattr": h_chmod, "sed": h_sed, "gsed": h_sed, "awk": h_awk, "gawk": h_awk,
     "mawk": h_awk, "nawk": h_awk, "dd": h_dd, "truncate": h_truncate, "tar": h_tar, "gtar": h_tar,
