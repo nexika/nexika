@@ -743,13 +743,17 @@ def h_node_pm(argv, ctx, stdin):
             ctx.add("exec", f"Runs the project script `{sub}`, which may publish or deploy.")
             return Stage()
         return project_run(ctx, f"Runs `{program} {sub}` in the project.")
+    if not pos and has(opts, "--version", "-v"):
+        ctx.add("read", f"Only shows information ({program} --version).")
+        return Stage()
     if sub in ("ls", "list", "ll", "la", "outdated", "view", "info", "why", "explain", "show", "root", "bin",
-               "prefix", "help", "-v", "audit", "doctor", "search", "query", "licenses") \
+               "prefix", "help", "-v", "audit", "doctor", "search", "query", "licenses", "whoami", "ping") \
+            or (sub == "pkg" and rest[:1] == ["get"]) \
             or has(opts, "--version", "-v"):
         if sub == "audit" and "fix" in rest:
             ctx.add("exec", f"`{program} audit fix` changes the project's dependencies.")
         else:
-            ctx.add("read", f"Only shows information ({program} {sub}).")
+            ctx.add("read", f"Only shows information ({program} {sub}{' get' if sub == 'pkg' else ''}).")
         return Stage()
     if sub in ("exec", "x", "dlx") and rest:
         return npx([arg("npx"), *rest], ctx, stdin)
