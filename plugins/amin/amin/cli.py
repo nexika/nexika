@@ -19,7 +19,8 @@ USAGE = f"""amin {__version__} - repository maintainer; you always merge (Nexika
   amin publish NAME [--dry-run]          after the release PR is merged: checks, tag, GitHub Release
   amin fragment add NAME TYPE TEXT [--id ID]   add a change note (TYPE: {', '.join(proj.TYPES)})
   amin fragment list                     notes waiting to be released
-  amin history NAME                      merged PRs touching NAME since its last tag
+  amin history NAME [--from TAG] [--to TAG]
+                                         merged PRs touching NAME since its last tag (or between tags)
   amin triage                            unlabeled issues, possible duplicates, stale issues
   amin work start ISSUE                  branch + isolated worktree for an issue
   amin check-fragment --base REF [--labels a,b]   CI rule: changed projects need a note
@@ -200,8 +201,15 @@ def run(argv: list[str]) -> int:
                 print(f"{p.name:<12} PROBLEM    {problem}")
     elif cmd == "history" and len(argv) > 1:
         p = proj.find(projects, argv[1])
-        tag = gitops.last_tag(runner, p.tag_prefix())
-        lines = release.history(root, runner, p, tag)
+        to = argv[argv.index("--to") + 1] if "--to" in argv[2:-1] else None
+        if "--from" in argv[2:-1]:
+            tag = argv[argv.index("--from") + 1]
+        elif to:   # the release before `to`
+            tag = runner.git("describe", "--tags", "--abbrev=0", "--match", f"{p.tag_prefix()}*", f"{to}^",
+                             check=False).strip() or None
+        else:
+            tag = gitops.last_tag(runner, p.tag_prefix())
+        lines = release.history(root, runner, p, tag, to)
         print("\n".join(lines) or "no merged PRs found for this project")
         if not tag:
             print(f"(no {p.tag('X.Y.Z')} tag found: only the latest {release.UNTAGGED_LIMIT} merged PRs "

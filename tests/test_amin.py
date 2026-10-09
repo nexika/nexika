@@ -441,6 +441,34 @@ def test_publish_resumes_after_the_release_step_failed(market):
         release.publish(market, FakeRunner(market, releases={"alpha-v0.1.0"}), alpha)
 
 
+def test_publish_on_another_branch_is_refused_with_one_true_reason(market):
+    # issue #239: on 5.x publish also said "local main is not the same commit as origin/main", but it had
+    # compared HEAD, not main
+    alpha = released_market(market)
+    _git(market, "switch", "-q", "-c", "5.x")
+    write(market, "more.txt", "x")
+    commit(market)
+    with pytest.raises(release.ReleaseError) as err:
+        release.publish(market, FakeRunner(market), alpha)
+    assert "on branch 5.x; releases are cut from main" in str(err.value)
+    assert "local main is not the same commit" not in str(err.value)
+
+
+def test_old_line_release_is_not_marked_latest(market):
+    # issue #239: a release of an older line must not take "Latest" from a newer final release
+    alpha = released_market(market)
+    _git(market, "tag", "-a", "alpha-v1.0.0", "-m", "x", "HEAD~1")   # a newer final release exists
+    runner = FakeRunner(market)
+    release.publish(market, runner, alpha)
+    create = next(c for c in runner.gh_calls if c[:2] == ("release", "create"))
+    assert "--latest=false" in create
+    runner = FakeRunner(market)
+    _git(market, "tag", "-d", "alpha-v1.0.0")
+    release.publish(market, runner, alpha)
+    create = next(c for c in runner.gh_calls if c[:2] == ("release", "create"))
+    assert "--latest=false" not in create
+
+
 def test_publish_dry_run_creates_nothing(market):
     alpha = released_market(market)
     report = release.publish(market, FakeRunner(market), alpha, dry_run=True)
@@ -568,6 +596,23 @@ def test_check_requires_a_note_for_changed_projects(market):
     fragments.add(market, projects_of(market)["alpha"], "fixed", "Fix.", "3")
     commit(market)
     assert run_check(market) == (True, ["alpha: ok (note added)"])
+
+
+def test_check_fragment_hint_names_the_note_file_not_a_repo_path(tmp_path, monkeypatch):
+    # issue #242: in fastify the hint said `python3 plugins/amin/bin/amin ...`, a path only Nexika has
+    root = init_repo(tmp_path / "fastify", {"package.json": '{"name": "fastify", "version": "5.12.5"}',
+                                            "lib/reply.js": "x\n"})
+    feature_branch(root)
+    write(root, "lib/reply.js", "y\n")
+    commit(root)
+    monkeypatch.delenv("GITHUB_REF", raising=False)
+    ok, lines = run_check(root)
+    hint = "\n".join(lines)
+    assert not ok and "plugins/amin/bin/amin" not in hint.replace(cli.helper_command(), "")
+    assert "changelog.d/<PR>.fixed.md" in hint and "one line for users" in hint
+    assert f'{cli.helper_command()} fragment add fastify fixed "What changed, for users" --id <PR>' in hint
+    monkeypatch.setenv("GITHUB_REF", "refs/pull/7068/merge")   # in CI the PR number is known
+    assert "changelog.d/7068.fixed.md" in "\n".join(run_check(root)[1])
 
 
 def test_check_accepts_release_prs_and_unrelated_files(market):
@@ -863,6 +908,61 @@ BLACK_CHANGES = """# Change Log
 
 - Fix the 26.5.0 regression (#5300)
 """
+
+
+def two_line_repo(tmp_path):
+    """main and a 5.x branch, both after v5.0.0; returns (root, main's commit, 5.x's commit)."""
+    root = init_repo(tmp_path / "app", {"package.json": '{"name": "app", "version": "5.0.0"}', "a.js": "1\n"})
+    _git(root, "tag", "-a", "v5.0.0", "-m", "x")
+    _git(root, "switch", "-q", "-c", "5.x")
+    write(root, "b.js", "backport\n")
+    commit(root, "[Backport 5.x] fix (#11)")
+    on_5x = git_out(root, "rev-parse", "HEAD").strip()
+    _git(root, "switch", "-q", "main")
+    write(root, "a.js", "2\n")
+    commit(root, "fix (#10)")
+    return root, git_out(root, "rev-parse", "HEAD").strip(), on_5x
+
+
+def pr(number, oid, base, day="2099-01-02"):
+    return {"number": number, "title": f"PR {number}", "mergedAt": f"{day}T00:00:00Z", "baseRefName": base,
+            "mergeCommit": {"oid": oid}, "author": {"login": "someone"}, "files": [{"path": "a.js"}]}
+
+
+def test_history_skips_prs_merged_into_another_branch(tmp_path):
+    # issue #240: on fastify's main, history listed the 5 [Backport 5.x] PRs merged into 5.x
+    root, on_main, on_5x = two_line_repo(tmp_path)
+    prs = [pr(10, on_main, "main"), pr(11, on_5x, "5.x"),
+           pr(12, "d" * 40, "main"), pr(13, "e" * 40, "5.x")]   # 12, 13: merge commits not in this clone
+    p = proj.detect(root)[0]
+    lines = release.history(root, FakeRunner(root, prs=prs), p, "v5.0.0")
+    assert lines == ["#10 PR 10 (2099-01-02)", "#12 PR 12 (2099-01-02)"]
+    _git(root, "switch", "-q", "5.x")
+    lines = release.history(root, FakeRunner(root, prs=prs), p, "v5.0.0")
+    assert lines == ["#11 PR 11 (2099-01-02)", "#13 PR 13 (2099-01-02)"]
+
+
+def test_history_between_two_tags(tmp_path, monkeypatch, capsys):
+    # issue #240: "what went into v5.1.0" could not be asked
+    root, on_main, on_5x = two_line_repo(tmp_path)
+    _git(root, "tag", "-a", "v5.1.0", "-m", "x")
+    write(root, "a.js", "3\n")
+    commit(root, "later (#14)")
+    later = git_out(root, "rev-parse", "HEAD").strip()
+    prs = [pr(10, on_main, "main"), pr(11, on_5x, "5.x"), pr(14, later, "main")]
+    runner = FakeRunner(root, prs=prs)
+    p = proj.detect(root)[0]
+    assert release.history(root, runner, p, "v5.0.0", to="v5.1.0") == ["#10 PR 10 (2099-01-02)"]
+    call = next(c for c in runner.gh_calls if c[:2] == ("pr", "list"))
+    assert "merged:<=" in " ".join(call) and "baseRefName" in " ".join(call)
+    monkeypatch.chdir(root)
+    monkeypatch.setattr(gitops, "Runner", lambda r: FakeRunner(r, prs=prs))
+    assert cli.main(["history", "app", "--from", "v5.0.0", "--to", "v5.1.0"]) == 0
+    assert capsys.readouterr().out.strip() == "#10 PR 10 (2099-01-02)"
+    assert cli.main(["history", "app", "--to", "v5.1.0"]) == 0          # from: the tag before v5.1.0
+    assert capsys.readouterr().out.strip() == "#10 PR 10 (2099-01-02)"
+    assert cli.main(["history", "app"]) == 0                             # since the last tag
+    assert capsys.readouterr().out.strip() == "#14 PR 14 (2099-01-02)"
 
 
 def test_changes_md_and_version_headings_are_recognised(tmp_path):

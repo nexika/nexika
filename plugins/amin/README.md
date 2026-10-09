@@ -67,7 +67,9 @@ in `.amin.json`: `prepare` writes no file and prints the notes for the release P
 `publish` rebuilds the release notes from the notes the merged release commit deleted.
 
 First release of a project with no tags: `amin history <project>` lists the merged PRs that
-touched it, so notes can be written from real history.
+touched it, so notes can be written from real history. It lists only PRs whose merge commit is on
+the current branch since the last tag, so a maintenance branch and main each get their own;
+`--from TAG --to TAG` lists what went into one release.
 
 ## Projects
 
