@@ -1209,3 +1209,22 @@ def test_npm_reads_are_allowed_with_the_reason_of_the_step_that_decides(world, c
 def test_npm_pkg_set_still_changes_the_project(world):
     home, project = world
     assert decide(project, "Bash", "npm pkg set scripts.prepare=husky").verdict == "pass"
+
+@pytest.mark.parametrize("command", [
+    "python3 -c \"import subprocess, sys; subprocess.run([sys.executable, '-c', 'pass'])\"",
+    "python3 -c \"import subprocess; subprocess.run(['python3', '-c', 'pass'])\"",
+])
+def test_python_code_handed_to_an_interpreter_is_not_a_shell_command(world, command):
+    """`'-c', 'pass'` gives Python the no-op statement `pass`, not the pass password manager (#266)."""
+    home, project = world
+    d = decide(project, "Bash", command)
+    assert not any("stored password" in f.reason for f in d.findings), d.reason
+
+
+def test_the_pass_password_manager_still_asks(world):
+    home, project = world
+    assert decide(project, "Bash", "pass show github").cls == "secret-read"
+    for code in ("import subprocess; subprocess.run(['bash', '-c', 'pass show x'])",
+                 "import os, subprocess; subprocess.run([os.environ['SHELL'], '-c', 'pass show x'])"):
+        d = decide(project, "Bash", f'python3 -c "{code}"')
+        assert any(f.cls == "secret-read" for f in d.findings), (code, d.reason)
