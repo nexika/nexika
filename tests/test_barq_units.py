@@ -726,3 +726,78 @@ def test_js_object_literal_function_property_named_by_key():
     ''')
     syms = {s.name: (s.line, s.end) for s in outline(text, ".js")}
     assert syms == {"delete": (2, 4), "hasPlugin": (5, 7), "closeRoutes": (8, 8), "get": (11, 11)}
+
+
+# ---------------------------------------------------------------- .d.ts (#276, #277)
+
+UTILS_DTS = textwrap.dedent('''\
+    import * as http from 'node:http'
+
+    type AutocompletePrimitiveBaseType<T> =
+      T extends string ? string :
+        T extends number ? number :
+          never
+
+    export type Autocomplete<T> = T | (AutocompletePrimitiveBaseType<T> & Record<never, never>)
+
+    type _HTTPMethods = 'DELETE' | 'GET' |
+      'PROPFIND' | 'REPORT'
+
+    export type HTTPMethods = Autocomplete<_HTTPMethods | Lowercase<_HTTPMethods>>
+
+    export type RawRequestDefaultExpression<
+      RawServer extends RawServerBase = RawServerDefault
+    > = RawServer extends http.Server ? http.IncomingMessage
+      : never
+
+    export interface Shape {
+      a: string
+    }
+
+    export type FastifyHttpOptions<
+      Server extends http.Server,
+      Logger extends FastifyBaseLogger = FastifyBaseLogger
+    > = FastifyServerOptions<Server, Logger> & {
+      http?: http.ServerOptions | null
+      http2?: false
+    }
+''')
+
+
+def test_ts_one_line_alias_range():
+    syms = {s.name: (s.line, s.end) for s in outline(UTILS_DTS, ".ts")}
+    assert syms["AutocompletePrimitiveBaseType"] == (3, 6)
+    assert syms["Autocomplete"] == (8, 8)
+    assert syms["_HTTPMethods"] == (10, 11)
+    assert syms["HTTPMethods"] == (13, 13)
+
+
+def test_ts_multiline_generic_alias():
+    syms = {s.name: (s.line, s.end) for s in outline(UTILS_DTS, ".ts")}
+    assert syms["RawRequestDefaultExpression"] == (15, 18)
+    assert syms["FastifyHttpOptions"] == (24, 30)
+    assert syms["Shape"] == (20, 22)
+
+
+def test_ts_overload_ranges():
+    text = textwrap.dedent('''\
+        declare namespace fastify {
+          export type TrustProxyFunction = (address: string, hop: number) => boolean
+        }
+
+        declare function fastify<
+          Server extends http2.Http2SecureServer,
+          Logger extends FastifyBaseLogger = FastifyBaseLogger
+        > (opts: fastify.FastifyHttp2SecureOptions<Server, Logger>): FastifyInstance<Server,
+          Logger> & SafePromiseLike<FastifyInstance<Server, Logger>>
+
+        declare function fastify<
+          Server extends http.Server
+        > (opts?: fastify.FastifyHttpOptions<Server>): FastifyInstance<Server>
+
+        // CJS export
+        export = fastify
+    ''')
+    syms = [(s.name, s.line, s.end, s.partial) for s in outline(text, ".ts")]
+    assert syms == [("fastify", 1, 3, False), ("fastify.TrustProxyFunction", 2, 2, False),
+                    ("fastify", 5, 9, False), ("fastify", 11, 13, False)]

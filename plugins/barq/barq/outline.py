@@ -68,6 +68,15 @@ JS_FIELD_ARROW = re.compile(
 TS_TYPE_ALIAS = re.compile(
     r"^\s*(?:export\s+)?(?:declare\s+)?type\s+(?P<name>[A-Za-z_$][\w$]*)\s*(?:<.*>)?\s*="
 )
+# a generic alias whose parameters continue on the next lines: export type X<\n  A\n> = ... (#276)
+TS_TYPE_ALIAS_OPEN = re.compile(
+    r"^\s*(?:export\s+)?(?:declare\s+)?type\s+(?P<name>[A-Za-z_$][\w$]*)\s*<[^=]*$"
+)
+TS_EXT = {".ts", ".tsx", ".mts", ".cts"}
+TS_BODYLESS_FUNC = re.compile(r"^\s*(?:export\s+)?declare\s+function\b")
+# a type goes on when a line ends with an operator, or the next line starts with one
+_ENDS_OPEN = ("|", "&", "?", ":", "=", "=>", ",", "(", "[", "{", "<", "extends", "keyof")
+_STARTS_MORE = ("|", "&", "?", ":", ".", "=", ">", "extends")
 METHOD = re.compile(
     r"^\s*" + _MODS + r"(?:[\w<>\[\],.?:*&]+\s+)+(?P<name>[A-Za-z_]\w*)\s*(?:<[^>()]*>)?\s*\("
 )
@@ -324,7 +333,7 @@ def _match_decl(code: str, nxt: str, suffix: str) -> tuple[str, str] | None:
     if suffix in JS_EXT:
         if stripped.startswith(("?", ":", ".")):
             return None  # a ternary branch or a chained call continues an expression
-        m = TS_TYPE_ALIAS.match(code)
+        m = TS_TYPE_ALIAS.match(code) or TS_TYPE_ALIAS_OPEN.match(code)
         if m:
             return "alias", m.group("name")
         m = JS_FIELD_ARROW.match(code)
@@ -439,6 +448,32 @@ def _block_end(code: list[str], i: int, func: bool = False) -> tuple[int, bool]:
     return min(i + 50, len(code) - 1), False
 
 
+def _ts_expr_end(code: list[str], i: int) -> tuple[int, bool]:
+    """End line of a TS type alias or bodyless declaration starting at line i: the line where its
+    brackets are balanced again and the next line does not continue the type, or a `;` (#276)."""
+    depth = 0
+    for j in range(i, len(code)):
+        text = code[j].replace("=>", "  ")
+        for k, ch in enumerate(text):
+            if ch in "([{":
+                depth += 1
+            elif ch in ")]}":
+                depth -= 1
+            elif ch == "<" and text[k + 1:k + 2] != "=":
+                depth += 1
+            elif ch == ">" and text[k + 1:k + 2] != "=" and depth > 0:
+                depth -= 1
+            elif ch == ";" and depth <= 0:
+                return j, True
+        tail = code[j].rstrip()
+        if depth > 0 or not tail or tail.endswith(_ENDS_OPEN):
+            continue
+        nxt = next((c.strip() for c in code[j + 1:] if c.strip()), "")
+        if not nxt.startswith(_STARTS_MORE):
+            return j, True
+    return min(i + 50, len(code) - 1), False
+
+
 def _brace_symbols(text: str, suffix: str) -> list[Symbol]:
     lines = text.split("\n")
     out: list[Symbol] = []
@@ -457,7 +492,10 @@ def _brace_symbols(text: str, suffix: str) -> list[Symbol]:
         if decl:
             kind, name = decl
             qual = ".".join([s[0] for s in stack] + [name])
-            end, sure = _block_end(codes, i, func=kind in ("func", "method"))
+            if suffix in TS_EXT and (kind == "alias" or TS_BODYLESS_FUNC.match(code)):
+                end, sure = _ts_expr_end(codes, i)
+            else:
+                end, sure = _block_end(codes, i, func=kind in ("func", "method"))
             out.append(Symbol(qual, kind, _decl_start(lines, i) + 1, end + 1, _signature(line), len(stack),
                               partial=not sure))
             if kind in TYPE_KINDS and end > i:  # a one-line type can't contain anything
