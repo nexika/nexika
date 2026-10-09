@@ -45,7 +45,10 @@ CORRECTION = re.compile(
     r"not like that|that'?s not|should have|we (?:use|don'?t|never|always|prefer)|"
     r"you (?:always|never)|shouldn'?t|should not|rather than|back (?:it|that|this) out|"
     r"please (?:also )?(?:remove|put|use|fix|move|rename|drop|delete|revert|keep|change)|lose the|"
-    r"please don'?t|you forgot|you missed|why did you|undo|revert"
+    r"please don'?t|you forgot|you missed|why did you|undo|revert|"
+    # review wording (fastify maintainers): "can you avoid ...", "must not", "I prefer X to Y"
+    r"can you (?:avoid|not|stop|drop|remove)|must not|mustn'?t|(?:i|we) (?:would )?(?:\w+ )?prefer|"
+    r"prefer\s+\S+\s+(?:over|to)|please (?:also )?rewrite|before (?:committing|commit|pushing|merging)"
     r")(?=$|[\s,.!?:;\"')])"
     # a bare "no" only as an answer ("no, ..."), not inside a sentence ("no rush", "there is no test")
     r"|(?i:(?:^|[.!?]\s+)no(?=$|[,.!;:]))"
@@ -60,6 +63,13 @@ CORRECTION = re.compile(
     r"|(?:^|\s)(?:لا|غلط|خطأ|خطا|أبدا|ابدا|دائما|دايما|بدل|بدلا|قلت لك|قلتلك|مش كده|مو هيك|ليش|ليه)"
     r"(?=$|\s|[،.!؟?])"
 )
+
+def is_correction(text: str) -> bool:
+    """Whether a message reads like a correction. Quoted lines (`> ...`, a GitHub reply quoting the
+    other person) are left out: their words are not this message's."""
+    own = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith(">"))
+    return bool(CORRECTION.search(own))
+
 
 EXTRACT_PROMPT = """\
 You extract durable lessons from a developer's corrections of an AI coding assistant.
@@ -285,7 +295,7 @@ def consent_note() -> str:
 
 def hook_signal(hook: dict) -> None:
     prompt = str(hook.get("prompt") or "").strip()
-    if not prompt or prompt.startswith("/") or not CORRECTION.search(prompt):
+    if not prompt or prompt.startswith("/") or not is_correction(prompt):
         return
     cwd = Path(hook.get("cwd") or os.getcwd())
     if not learning_enabled(cwd):
@@ -343,7 +353,7 @@ def correction_exchanges(transcript: Path) -> list[tuple[str, str]]:
             continue
         if obj.get("type") == "assistant":
             last_assistant = text
-        elif obj.get("type") == "user" and not text.startswith(("<", "/")) and CORRECTION.search(text):
+        elif obj.get("type") == "user" and not text.startswith(("<", "/")) and is_correction(text):
             pairs.append((last_assistant[-600:], text[:1000]))
     return pairs[-MAX_EXCHANGES:]
 

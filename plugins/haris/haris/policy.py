@@ -35,6 +35,9 @@ MCP_DESTRUCTIVE = re.compile(r"(?i)(?:^|[_-])(?:delete|remove|drop|destroy|purge
                              r"(?:[_-]|$)")
 
 
+CLASS_RANK = {cls: n for n, cls in enumerate(c.TABLE)}  # TABLE lists the classes from mildest up
+
+
 class Decision:
     """allow, pass, ask or deny, with the class and reason behind it (a plain class, like Finding)."""
     __slots__ = ("verdict", "cls", "reason", "findings", "tainted")
@@ -230,7 +233,9 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
             verdict = {c.ALLOW: c.PASS, c.PASS: c.ASK, c.ASK: c.DENY}.get(verdict, verdict)
         if verdict != c.ALLOW and approved(f, command, approvals):
             verdict = c.ALLOW
-        if best is None or c.LEVEL[verdict] > c.LEVEL[best[1]]:
+        # On a tie the more telling step speaks: the script run, not the `cd` before it (#226).
+        if best is None or (c.LEVEL[verdict], CLASS_RANK.get(f.cls, 0)) > \
+                (c.LEVEL[best[1]], CLASS_RANK.get(best[0].cls, 0)):
             best = (f, verdict)
     finding, verdict = best
     reason = finding.reason
