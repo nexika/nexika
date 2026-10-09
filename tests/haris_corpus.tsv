@@ -268,6 +268,10 @@ deny	cd ~ && rm -rf *
 deny	cd / && rm -rf *
 deny	rm -rf ..
 deny	rm -rf ../..
+deny	rm -rf /Applications
+deny	touch /System/x
+ask	mkdir -p /Applications/VSCodeFastify/code-portable-data/{user-data,extensions}
+ask	xattr -dr com.apple.quarantine /Applications/VSCodeFastify/Code.app
 deny	rimraf ~
 deny	rimraf /
 deny	npx rimraf ..
