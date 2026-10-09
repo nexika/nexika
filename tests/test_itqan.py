@@ -569,6 +569,65 @@ def test_node_checks_run_when_node_modules_exists(proof, tmp_path, monkeypatch):
     assert [c["argv"] for c in proof.detect(root)] == [["npm", "run", "test"]]
 
 
+FASTIFY_SCRIPTS = {
+    "lint": "npm run lint:eslint", "lint:markdown": "markdownlint-cli2", "lint:eslint": "eslint",
+    "test": "npm run lint && npm run unit && npm run test:types",
+    "test:ci": "npm run unit && npm run test:types",
+    "test:types": "tstyche", "unit": "borp", "coverage": "c8 --reporter html borp",
+    "coverage:ci-check-coverage": "borp --coverage --check-coverage --lines 100",
+    "build:validation": "node build/build-validation.js",
+}
+FASTIFY_WORKFLOWS = {
+    ".github__workflows__ci.yml": (
+        "steps:\n  - run: |\n      npm install --ignore-scripts\n      npm run unit\n"
+        "  - run: npm run test:types\n  - run: cd test/bundler/webpack && npm run test\n"),
+    ".github__workflows__coverage-nix.yml": "steps:\n  - run: |\n      npm run coverage:ci-check-coverage\n",
+    ".github__workflows__md-lint.yml": "steps:\n  - run: ./node_modules/.bin/markdownlint-cli2\n",
+    ".github__workflows__package-manager-ci.yml": "steps:\n  - run: pnpm run test:ci\n",
+}
+
+
+def fastify_like(tmp_path):
+    root = node_project(tmp_path, FASTIFY_SCRIPTS, **FASTIFY_WORKFLOWS)
+    (root / "node_modules").mkdir()
+    return root
+
+
+# fastify (#229, cases P1, P5, S-checks-dup, S-checks-coverage)
+def test_a_test_chain_runs_each_step_once_and_ci_gates_are_named(proof, tmp_path, monkeypatch):
+    root = fastify_like(tmp_path)
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+    not_run: list = []
+    checks = proof.detect(root, not_run)
+    assert [(c["kind"], c["argv"][-1]) for c in checks] == [
+        ("lint", "lint"), ("tests", "unit"), ("lint", "test:types"), ("lint", "lint:markdown")]
+    [gate] = not_run
+    assert gate["command"] == "npm run coverage:ci-check-coverage" and "coverage-nix.yml" in gate["reason"]
+    assert gate["kind"] == "other"
+
+
+def test_a_failing_step_does_not_hide_the_next_ones(proof, tmp_path, monkeypatch):
+    root = fastify_like(tmp_path)
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+
+    def fake_run(check, root, timeout):
+        failed = check["argv"][-1] == "unit"
+        return {"name": check["name"], "kind": check["kind"], "command": " ".join(check["argv"]),
+                "defined": "", "exit_code": int(failed), "passed": not failed, "seconds": 0, "tail": []}
+    monkeypatch.setattr(proof, "run_check", fake_run)
+    made = make_proof(proof, root, tmp_path, monkeypatch)
+    results = {c["command"]: c["passed"] for c in made["checks"]}
+    assert results["npm run unit"] is False and results["npm run test:types"] is True
+    assert made["summary"]["checks_passed"] is False
+
+
+def test_a_script_that_is_not_a_chain_stays_one_check(proof, tmp_path, monkeypatch):
+    root = node_project(tmp_path, {"test": "npm run lint && borp", "lint": "eslint"})
+    (root / "node_modules").mkdir()
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+    assert [c["argv"][-1] for c in proof.detect(root)] == ["test", "lint"]
+
+
 def test_session_note_names_the_project_s_own_checks(tmp_path):
     # black case S-pack (#151): the python pack suggested ruff on a project linted by flake8 and black
     root = black_like(tmp_path)

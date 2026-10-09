@@ -75,6 +75,71 @@ def _node_deps_missing(root: Path, package: dict) -> bool:
     return bool(declared) and not installed
 
 
+RUN_SCRIPT = re.compile(r"^(?:npm\s+run(?:-script)?|pnpm(?:\s+run)?|yarn(?:\s+run)?)\s+([\w:.@/-]+)$")
+CI_RUN_SCRIPT = re.compile(r"(?:^|[\s;&|(])(?:npm\s+run(?:-script)?|pnpm(?:\s+run)?|yarn(?:\s+run)?)"
+                           r"\s+([\w:.@/-]+)")
+TYPE_SCRIPT = re.compile(r"(?i)type|tsd|tstyche")
+LINT_SCRIPT = re.compile(r"(?i)lint|markdown|prettier|format")
+TEST_SCRIPT = re.compile(r"(?i)test|unit|coverage|spec|e2e")
+
+
+def _script_kind(name: str) -> str | None:
+    """The check family a package script's name says: type tests and linters are lint, the rest
+    of the test names are tests; None for a script that does not look like a check."""
+    if TYPE_SCRIPT.search(name) or LINT_SCRIPT.search(name):
+        return "lint"
+    if TEST_SCRIPT.search(name):
+        return "tests"
+    return None
+
+
+def _script_steps(body: str, scripts: dict, least: int = 2) -> list[str] | None:
+    """The scripts of a pure `npm run a && npm run b ...` chain, or None for any other body."""
+    steps = []
+    for piece in str(body).split("&&"):
+        m = RUN_SCRIPT.match(piece.strip())
+        if not m or m.group(1) not in scripts:
+            return None
+        steps.append(m.group(1))
+    return steps if len(steps) >= least else None
+
+
+def _reached(names, scripts: dict) -> set[str]:
+    """The scripts these run, themselves included, following `npm run x` chains."""
+    seen, todo = set(), list(names)
+    while todo:
+        name = todo.pop()
+        if name not in seen:
+            seen.add(name)
+            todo += _script_steps(scripts.get(name, ""), scripts, least=1) or []
+    return seen
+
+
+def _ci_scripts(root: Path, scripts: dict) -> dict[str, str]:
+    """Package scripts the CI workflows run (`npm run x`, or the script's own tool from
+    node_modules/.bin or npx): script -> workflow file."""
+    found: dict[str, str] = {}
+    folder = root / ".github" / "workflows"
+    files = sorted([*folder.glob("*.yml"), *folder.glob("*.yaml")]) if folder.is_dir() else []
+    tools = {}
+    for name, body in scripts.items():
+        words = str(body).split()
+        if len(words) == 1:  # a script that is one tool: `"lint:markdown": "markdownlint-cli2"`
+            tools.setdefault(words[0], name)
+    for path in files:
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for name in CI_RUN_SCRIPT.findall(text):
+            if name in scripts:
+                found.setdefault(name, path.name)
+        for tool, name in tools.items():
+            if re.search(rf"(?:node_modules/\.bin/|npx\s+){re.escape(tool)}(?![\w-])", text):
+                found.setdefault(name, path.name)
+    return found
+
+
 def _python_tool(root: Path, tool: str) -> list[str]:
     """How the project runs a Python tool: `uv run` when it has uv.lock, else its virtualenv, else the
     python on PATH (never the interpreter that runs itqan, which has none of the project's packages)."""
@@ -173,9 +238,29 @@ def detect(root: Path, not_run: list | None = None) -> list[dict]:
         scripts = data.get("scripts") if isinstance(data.get("scripts"), dict) else {}
         runner = _package_runner(root)
         missing = _node_deps_missing(root, data)
+        planned: dict[str, str] = {}  # script -> kind, in the order they run
         for script, kind in (("test", "tests"), ("lint", "lint"), ("build", "build")):
             if script not in scripts:
                 continue
+            steps = _script_steps(scripts[script], scripts) if script == "test" else None
+            if steps:  # each step on its own: one failing step no longer hides the next ones
+                for step in steps:
+                    planned.setdefault(step, _script_kind(step) or ("build" if "build" in step else "tests"))
+            else:
+                planned.setdefault(script, kind)
+        covered = _reached([*planned, *(["test"] if "test" in scripts else [])], scripts)
+        for script, workflow in _ci_scripts(root, scripts).items():
+            kind = _script_kind(script)
+            steps = _script_steps(scripts[script], scripts, least=1) or [script]
+            if kind is None or script in covered or set(steps) <= covered:
+                continue  # a CI gate the checks already run
+            if kind == "lint":
+                planned[script] = kind
+            else:
+                skipped.append({"name": f"{runner} {script}", "kind": "other",
+                                "command": f"{runner} run {script}",
+                                "reason": f"run by CI ({workflow}); the proof does not run it"})
+        for script, kind in planned.items():
             if missing:  # `eslint: command not found` would be a false red proof
                 skipped.append({"name": f"{runner} {script}", "kind": kind,
                                 "command": f"{runner} run {script}",
