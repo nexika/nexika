@@ -542,6 +542,14 @@ ask	npx -p github:u/r tool
 ask	uvx --from git+https://github.com/u/r tool
 ask	pre-commit install
 ask	pre-commit install --hook-type pre-push
+ask	npx husky init
+ask	npx husky
+ask	./node_modules/.bin/husky
+ask	husky install
+ask	pnpm dlx husky init
+ask	lefthook install
+ask	npx simple-git-hooks
+allow	husky --version
 allow	pre-commit run --all-files
 ask	git gc --prune=now
 ask	git reflog expire --expire=now --all
