@@ -1217,3 +1217,23 @@ def test_a_secret_echoed_into_a_tracked_file_says_where_it_goes(world, tmp_path)
     assert d.verdict == "ask"
     assert "Writes $NODE_AUTH_TOKEN" in d.reason and ".npmrc, which git tracks" in d.reason, d.reason
     assert "into the conversation" not in d.reason
+
+
+@pytest.mark.parametrize("command,reason", [
+    ("npm pkg get version", "Only shows information (npm pkg get)."),
+    ("npm whoami", "Only shows information (npm whoami)."),
+    ("npm ping", "Only shows information (npm ping)."),
+    ("npm config list", "Shows npm settings."),
+    ("npm -v", "Only shows information (npm --version)."),
+    ("pnpm --version", "Only shows information (pnpm --version)."),
+    ("cd src && npm run test", "Runs the project script `test` in the project."),
+])
+def test_npm_reads_are_allowed_with_the_reason_of_the_step_that_decides(world, command, reason):
+    home, project = world
+    d = decide(project, "Bash", command)
+    assert (d.verdict, d.reason) == ("allow", reason), (d.verdict, d.reason)
+
+
+def test_npm_pkg_set_still_changes_the_project(world):
+    home, project = world
+    assert decide(project, "Bash", "npm pkg set scripts.prepare=husky").verdict == "pass"
