@@ -774,7 +774,23 @@ def npx(argv, ctx, stdin):
     if os.path.exists(os.path.join(ctx.where.root, "node_modules", ".bin", tool)) or tool in RUNNERS:
         return run([arg(tool), *pos[1:]], ctx, stdin)
     ctx.add("exec", f"Downloads {name} and runs it.")
+    if tool in NODE_DELETERS:  # what it deletes is judged like `rm -r` (#264)
+        return run([arg(tool), *pos[1:]], ctx, stdin)
     return Stage()
+
+
+NODE_DELETERS = {"rimraf", "del-cli", "del", "shx"}
+
+
+def h_shx(argv, ctx, stdin):
+    """shx runs shelljs's versions of the shell commands: `shx rm -rf x` deletes like `rm -rf x`."""
+    rest = argv[1:]
+    while rest and rest[0].startswith("-"):
+        rest = rest[1:]
+    if not rest:
+        ctx.add("exec", f"Runs {argv[0]}.")
+        return Stage()
+    return run(rest, ctx, stdin)
 
 
 def h_pip(argv, ctx, stdin):
@@ -3159,7 +3175,8 @@ HANDLERS = {
     "env": h_env, "sudo": h_sudo, "doas": h_sudo, "pkexec": h_sudo, "run0": h_sudo, "su": h_su,
     "watch": h_watch, "flock": h_flock, "chroot": h_chroot, "nsenter": h_chroot, "xargs": h_xargs,
     "find": h_find, "gfind": h_find, "rm": h_rm, "rmdir": h_rm, "unlink": h_rm, "srm": h_rm, "trash": h_rm,
-    "trash-put": h_rm, "shred": h_shred, "mv": h_mv, "cp": h_mv, "ln": h_ln, "touch": h_touch, "tee": h_tee,
+    "trash-put": h_rm, "rimraf": h_rm, "del-cli": h_rm, "del": h_rm, "shx": h_shx,
+    "shred": h_shred, "mv": h_mv, "cp": h_mv, "ln": h_ln, "touch": h_touch, "tee": h_tee,
     "install": h_install, "chmod": h_chmod, "chown": h_chmod, "chgrp": h_chmod, "chattr": h_chmod,
     "setfacl": h_chmod, "xattr": h_chmod, "sed": h_sed, "gsed": h_sed, "awk": h_awk, "gawk": h_awk,
     "mawk": h_awk, "nawk": h_awk, "dd": h_dd, "truncate": h_truncate, "tar": h_tar, "gtar": h_tar,
