@@ -339,13 +339,34 @@ def _decl_start(lines: list[str], i: int) -> int:
     return j
 
 
-def _block_end(code: list[str], i: int) -> tuple[int, bool]:
+def _after_params(code: list[str], i: int) -> tuple[int, int]:
+    """(line, column) just after the balanced parameter list that starts on line i, so a
+    destructured or default-object parameter's braces are not taken for the body (#273)."""
+    k = code[i].find("(")
+    if k < 0 or ("{" in code[i][:k] and "=" not in code[i][:k]):
+        return i, 0
+    depth = 0
+    for j in range(i, min(i + 30, len(code))):
+        for c in range(k if j == i else 0, len(code[j])):
+            ch = code[j][c]
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+                if depth == 0:
+                    return j, c + 1
+    return i, 0
+
+
+def _block_end(code: list[str], i: int, func: bool = False) -> tuple[int, bool]:
     """(0-based index of the line closing the block that starts at line i, sure)."""
     depth, opened = 0, False
-    for j in range(i, len(code)):
-        if not opened and "{" not in code[j] and code[j].rstrip().endswith(";"):
+    first, col = _after_params(code, i) if func else (i, 0)
+    for j in range(first, len(code)):
+        text = code[j][col:] if j == first else code[j]
+        if not opened and "{" not in text and text.rstrip().endswith(";"):
             return j, True  # abstract / interface / expression-bodied member
-        for ch in code[j]:
+        for ch in text:
             if ch == "{":
                 depth += 1
                 opened = True
@@ -374,7 +395,7 @@ def _brace_symbols(text: str, suffix: str) -> list[Symbol]:
         if decl:
             kind, name = decl
             qual = ".".join([s[0] for s in stack] + [name])
-            end, sure = _block_end(codes, i)
+            end, sure = _block_end(codes, i, func=kind in ("func", "method"))
             out.append(Symbol(qual, kind, _decl_start(lines, i) + 1, end + 1, _signature(line), len(stack),
                               partial=not sure))
             if kind in TYPE_KINDS and end > i:  # a one-line type can't contain anything

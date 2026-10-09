@@ -644,3 +644,13 @@ def test_js_outline_module_exports_function():
 def test_js_assignments_inside_functions_are_not_outlined():
     text = "function f () {\n  this.cb = function () {\n    return 1\n  }\n}\n"
     assert [s.name for s in outline(text, ".js")] == ["f"]
+
+
+def test_js_destructured_params_range():
+    # #273: the first `{` on the line was the parameter's, so the symbol ended on its first line
+    text = ("function f ({ a, b = {} }) {\n  return a\n}\n"
+            "const g = ({ a }) => {\n  return a\n}\n"
+            "function printRoutes (opts = {}) {\n  return opts\n}\n"
+            "function addNewRoute ({\n  path,\n  prefixing = false\n}) {\n  return path\n}\n")
+    syms = {s.name: (s.line, s.end) for s in outline(text, ".js")}
+    assert syms == {"f": (1, 3), "g": (4, 6), "printRoutes": (7, 9), "addNewRoute": (10, 15)}
