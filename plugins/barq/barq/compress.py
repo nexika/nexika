@@ -149,6 +149,118 @@ def dotnet_test(lines: list[str]):
 # ---------------------------------------------------------------- JavaScript
 
 
+def tstyche(lines: list[str]):
+    """TSTyche type tests: its 'Tests:' line looked like jest's, and locations were lost (#270)."""
+    counts = {}
+    for ln in lines:
+        m = re.match(r"^(Test files|Assertions):\s+(.*)$", ln.strip())
+        if m:
+            counts[m.group(1)] = re.sub(r",?\s*\d+ total$", "", m.group(2).strip())
+    if len(counts) < 2:
+        return None
+    verdict = "tstyche: " + "; ".join(f"{k} {v}" for k, v in counts.items())
+    details = []
+    message = None
+    for ln in lines:
+        s = ln.strip()
+        if s.startswith("Error: "):
+            if message:
+                details.append(message)
+            message = s[len("Error: "):]
+        elif message:
+            m = re.match(r"^at (\S+:\d+:\d+)$", s)
+            if m:
+                details.append(f"{m.group(1)}: {message}")
+                message = None
+    if message:
+        details.append(message)
+    return verdict, _dedupe(details)
+_NODE_COUNT = re.compile(r"^(?:ℹ|#) (tests|pass|fail|cancelled|skipped|todo) (\d+)\s*$")
+_NODE_OWN_FRAME = re.compile(r"^\s*at (?!.*\((?:node:|.*node_modules))(?!(?:async )?node:)")
+_NODE_MAX_FAILURES = 20
+_NODE_ERROR_LINES = 10
+
+
+def _node_error_excerpt(lines: list[str], start: int) -> list[str]:
+    """Up to ten lines of an error from lines[start]: message, diff, and the test's own frames
+    (node:internal and node_modules frames dropped); stops at the error's property object."""
+    out: list[str] = []
+    for i in range(start, len(lines)):
+        ln, s = lines[i], lines[i].strip()
+        if not s and (i + 1 >= len(lines) or not lines[i + 1][:1].isspace()):
+            break  # a blank line before an unindented one ends the error
+        if s.startswith("at "):
+            if _NODE_OWN_FRAME.match(ln):
+                out.append(ln.rstrip().removesuffix(" {"))
+            if s.endswith("{"):
+                break
+            continue
+        if s in ("}", "{") and out and out[-1].lstrip().startswith("at "):
+            break
+        out.append(ln.rstrip())
+        if len(out) >= _NODE_ERROR_LINES:
+            break
+    while out and not out[-1].strip():
+        out.pop()
+    return out
+
+
+def node_test(lines: list[str]):
+    """Node's built-in runner (node --test, borp): spec ('ℹ tests 3') or TAP ('# tests 3') (#268)."""
+    counts: dict[str, int] = {}
+    for ln in lines:
+        m = _NODE_COUNT.match(ln)
+        if m:
+            counts[m.group(1)] = int(m.group(2))
+    if "tests" not in counts or "pass" not in counts:
+        return None
+    parts = [f"{counts.get('fail', 0)} failed", f"{counts['pass']} passed"]
+    parts += [f"{counts[k]} {k}" for k in ("cancelled", "skipped", "todo") if counts.get(k)]
+    verdict = f"node:test: {', '.join(parts)} ({counts['tests']} tests)"
+
+    details: list[str] = []
+    # an error printed outside any test (a crash on require) is often the only real message
+    crashes: list[str] = []
+    for i, ln in enumerate(lines):
+        if re.match(r"^\w*(?:Error|Exception)\b[^:]*: ", ln) and ln.strip() not in crashes:
+            crashes.append(ln.strip())
+            if len(crashes) <= 3:
+                details += _node_error_excerpt(lines, i)
+    failures = 0
+    in_block = False
+    for i, ln in enumerate(lines):
+        if ln.strip() == "✖ failing tests:":
+            in_block = True
+            continue
+        if in_block:
+            if ln.startswith("test at "):
+                failures += 1
+                if failures <= _NODE_MAX_FAILURES:
+                    details.append(ln.rstrip())
+                    if i + 1 < len(lines) and lines[i + 1].startswith("✖ "):
+                        details.append(lines[i + 1].rstrip())
+                        details += _node_error_excerpt(lines, i + 2)
+            elif ln.strip() and not ln.startswith((" ", "✖ ")):
+                in_block = False
+        if re.match(r"^\s*not ok \d+", ln):
+            failures += 1
+            if failures <= _NODE_MAX_FAILURES:
+                details.append(ln.rstrip())
+                indent = len(ln) - len(ln.lstrip())
+                for nxt in lines[i + 1:i + 40]:
+                    s = nxt.strip()
+                    if s == "..." or (s and len(nxt) - len(nxt.lstrip()) <= indent):
+                        break
+                    m = re.match(r"^(location|failureType|error):\s*(.*)$", s)
+                    if m:
+                        value = m.group(2).strip("'\"")
+                        details.append(" " * indent + f"  {m.group(1)}: {value}")
+    if failures > _NODE_MAX_FAILURES:
+        details.append(f"... {failures - _NODE_MAX_FAILURES} more failing tests")
+    return verdict, details
+
+
+
 def jest_vitest(lines: list[str]):
     verdict = [ln.strip() for ln in lines
                if re.match(r"^\s*Tests:?\s+.*\b(passed|failed|total)\b", ln)]
@@ -288,7 +400,8 @@ def eslint_stylish(lines: list[str]):
 
 
 # Order matters: tsc diagnostics look like MSBuild ones, so tsc is tried first.
-PARSERS = [pytest, dotnet_test, tsc, dotnet_build, jest_vitest, go_test, cargo, eslint_stylish, lint]
+PARSERS = [pytest, dotnet_test, tsc, dotnet_build, node_test, tstyche, jest_vitest, go_test, cargo,
+           eslint_stylish, lint]
 
 
 def summarize(output: str, rc: int | None, root=None) -> tuple[str, list[str], int]:
@@ -306,6 +419,8 @@ def summarize(output: str, rc: int | None, root=None) -> tuple[str, list[str], i
             break
     else:
         verdict, details = generic(lines, rc)
+    if rc and not re.search(r"(?i)fail|error", verdict):
+        verdict = f"failed (exit {rc}): {verdict}"  # a summary that counts only passes (#270)
     details = [ln if len(ln) <= MAX_LINE else
                f"{ln[:MAX_LINE]} ... ({len(ln) - MAX_LINE} more characters)" for ln in details]
     if len(details) > MAX_DETAIL:
