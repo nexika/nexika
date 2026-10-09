@@ -54,7 +54,8 @@ hide the target.
   settings, hooks and plugins, `~/.local/bin`, PowerShell profiles: refused.
 - **History and shared things:** force-pushing `main`, `master`, `develop`, `production`,
   `trunk`, `stable`, `release/*` or the remote's default branch is refused; force-pushing your own
-  branch, `reset --hard` with uncommitted work, `clean -f`, `branch -D` ask. Merging pull
+  branch, `reset --hard` with uncommitted work, `clean -f`, `branch -D` of a branch with commits
+  that are on no remote ask (a squash-merged branch whose remote branch is gone does not). Merging pull
   requests, releases, tags, publishing packages, deploying, `terraform apply/destroy`,
   `kubectl delete`, SQL `DROP`/`TRUNCATE`, deleting repos or buckets **always ask**, and no
   approval removes that (it backs [amin](../amin/README.md), which never merges for you).
@@ -157,8 +158,14 @@ commands only, and only in your own file. In `.haris.json` only `profile` (stric
 | `/haris:audit [--days N]` | the audit log |
 
 The helper behind them: `haris why`, `haris status`, `haris audit`, `haris approvals`,
-`haris check "<command>"` (what haris would decide, without running it) and `haris export
---json`.
+`haris check "<command>"` (what haris would decide, without running it, with this project's
+`--project` approvals applied; one session's approvals are not) and `haris export --json`.
+
+A write whose file name alone is computed (`> logs/$id.log` in a loop) is judged by its folder;
+when the folder is computed too (`$DIR/x`), or is one where a name could run code or hold
+secrets (home, `.git`, `.claude`, CI workflows), haris still asks. After a second ask about
+writes in the same folder outside the project, the ask offers that whole folder for
+`/haris:allow --project write`.
 
 ## Data
 

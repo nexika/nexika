@@ -202,13 +202,14 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
     cwd = os.path.realpath(str(event.get("cwd") or os.getcwd()))
     root = project_root(cwd)
     memory = memory_folder(str(event.get("transcript_path") or ""))
+    session = session or {}
+    tainted = int(session.get("taint") or 0) > 0
     ctx = c.Ctx(Where(root, cfg.get("secret_paths"), memory), cwd, cfg)
+    ctx.cautious = tainted
     findings = list(findings_for(tool, tool_input, ctx))
     findings += rule_findings(cfg, ctx.executed)
     if not findings:
         return Decision(c.PASS, "", "")
-    session = session or {}
-    tainted = int(session.get("taint") or 0) > 0
     command = str(tool_input.get("command") or "") if tool in ("Bash", "PowerShell") else ""
     approvals = list(approvals or []) + [{"kind": "command",
                                           "value": normalize(a)} for a in cfg.get("allow", [])]
@@ -228,7 +229,11 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
         reason += (" (Raised because this session read text that tried to give Claude orders: "
                    f"{session.get('taint_reason') or 'see /haris:why'}.)")
     if verdict == c.ASK and finding.cls == "write-outside" and finding.target:
-        folder = keepable_folder(finding.target, ctx.where)
+        folder, count = shared_folder(finding.target, session.get("outside_asks"), ctx.where)
+        if count > 1:
+            reason += (f" This is the {ordinal(count)} ask about writes in {ctx.show(folder)}/ in this "
+                       "session.")
+        folder = folder or keepable_folder(finding.target, ctx.where)
         if folder:
             reason += (" To stop haris asking about writes there in this project, the user can type: "
                        f"/haris:allow --project write {folder}/")
@@ -248,6 +253,49 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
     return Decision(verdict, finding.cls, readable(reason), findings, tainted)
 
 
+OUTSIDE_ASKS_KEPT = 50
+
+
+def remember_ask(data: dict, decision: Decision) -> bool:
+    """Note in the session's data the folder of a write outside the project that was asked about, so
+    the next ask there can offer the folder they share (#210). True when `data` changed."""
+    if decision.verdict != c.ASK or decision.cls != "write-outside":
+        return False
+    target = next((f.target for f in decision.findings if f.cls == "write-outside" and f.target), "")
+    if not target:
+        return False
+    earlier = [d for d in data.get("outside_asks") or [] if isinstance(d, str)]
+    data["outside_asks"] = (earlier + [os.path.dirname(target)])[-OUTSIDE_ASKS_KEPT:]
+    return True
+
+
+def shared_folder(target: str, earlier, where: Where) -> tuple[str, int]:
+    """The deepest folder that holds `target` and a folder asked about earlier in the session, and is
+    fit for a lasting approval; with how many asks (this one included) fell in it. ("", 0) if none."""
+    earlier = [f for f in earlier if isinstance(f, str) and f.startswith("/")] \
+        if isinstance(earlier, list) else []
+    here = os.path.dirname(target)
+    best = ""
+    for folder in earlier:
+        common = os.path.commonpath([here, folder])
+        if len(common) > len(best) and ordinary_folder(common, where):
+            best = common
+    if not best:
+        return "", 0
+    return best, 1 + sum(1 for f in earlier if under(f, best))
+
+
+def ordinal(n: int) -> str:
+    return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
+
+
+def ordinary_folder(folder: str, where: Where) -> bool:
+    """A folder one may approve writes in for good: not home, a parent of the project, Claude Code's
+    own folder or a protected place."""
+    return bool(folder) and not (where.critical(folder) or under(folder, where.home + "/.claude")
+                                 or where.place(folder + "/_") not in ("home", "outside"))
+
+
 def keepable_folder(target: str, where: Where) -> str:
     """The folder to offer for a lasting approval of writes outside the project: the target's git
     checkout, or the folder it is in; "" when that would be too broad (home, a parent of the project,
@@ -257,10 +305,7 @@ def keepable_folder(target: str, where: Where) -> str:
         probe = os.path.dirname(probe)
     if probe not in ("/", "", where.home):
         folder = probe
-    if (not folder or where.critical(folder) or under(folder, where.home + "/.claude")
-            or where.place(folder + "/_") not in ("home", "outside")):
-        return ""
-    return folder
+    return folder if ordinary_folder(folder, where) else ""
 
 
 CONTROL = re.compile(r"[\x01-\x08\x0b-\x1f\x7f\u200b-\u200f\u202a-\u202e\u2066-\u2069]")
