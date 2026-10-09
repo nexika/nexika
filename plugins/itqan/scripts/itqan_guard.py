@@ -102,7 +102,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import itqan_files  # noqa: E402
 import itqan_secrets  # noqa: E402
 
-DEFAULT_PROTECTED = ["main", "master", "develop", "production", "stable", "release/*"]
+DEFAULT_PROTECTED = ["main", "master", "develop", "production", "stable", "release/*", "[0-9]*.x", "next"]
 
 # The family's shared secret shapes (common/secrets.py), so the guard and the redactor agree on what
 # a secret is.

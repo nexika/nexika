@@ -128,6 +128,26 @@ def test_skipping_a_pre_commit_hook_asks_beside_haris(guard, repo, tmp_path, mon
     assert guard.decide(event)[:2] == ("ask", "skip-hooks")
 
 
+# fastify (#267, cases G81-G83): release lines N.x and `next` are protected by default
+@pytest.mark.parametrize("command", [
+    "git push --force origin 5.x", "git push origin +4.x", "git push -f origin next",
+    "git push -f origin 10.x",
+])
+def test_node_release_branches_are_protected_by_default(guard, repo, command):
+    assert bash(guard, repo, command)[:2] == ("deny", "force-push-protected")
+
+
+# #267, decided: these do not ask (G71, G72, G80)
+@pytest.mark.parametrize("command", [
+    "git push -f origin feat.x", 'HUSKY=0 git commit -m "wip"',
+    'git -c core.hooksPath=/dev/null commit -m "wip"',
+    "npm unpublish fastify@6.0.0-alpha.4", 'npm deprecate fastify@6.0.0-alpha.4 "use alpha.5"',
+])
+def test_decided_node_commands_pass(guard, repo, command):
+    _git(repo, "switch", "-q", "-c", "feat.x")
+    assert bash(guard, repo, command) is None
+
+
 def test_protected_branches_are_configurable(guard, repo):
     (repo / ".itqan.json").write_text(json.dumps({"guard": {"protected_branches": ["trunk"]}}))
     assert bash(guard, repo, "git push -f origin main") is None

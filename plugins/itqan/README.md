@@ -79,7 +79,7 @@ A plugin with hundreds of skills of which you used one is a context cost worth q
 **Refused** (with the reason and the safe alternative):
 - `rm -r` of `/`, `~`, the project root, or anything outside the project
 - force-push to a protected branch (`main`, `master`, `develop`, `production`, `stable`,
-  `release/*`)
+  `release/*`, release lines such as `4.x` and `5.x`, `next`)
 - committing a `.env` / key file, or staged changes that contain a secret token
 - editing files inside `.git/`
 
