@@ -97,7 +97,35 @@ def _skip_quoted(line: str, k: int) -> int:
     return k + 1
 
 
-def _code_lines(lines: list[str]) -> list[str]:
+_REGEX_BEFORE = set("=(,:[!&|?{};+-*%~^")
+
+
+def _regex_end(line: str, k: int, kept: list[str]) -> int:
+    """Index after a JS regex literal starting at line[k], or -1 when the `/` is a division:
+    a regex follows an operator, an opening bracket, `return`/`typeof`, or starts the line (#274)."""
+    before = "".join(kept).rstrip()
+    if before and before[-1] not in _REGEX_BEFORE and not re.search(r"\b(?:return|typeof)$", before):
+        return -1
+    j, in_class = k + 1, False
+    while j < len(line):
+        c = line[j]
+        if c == "\\":
+            j += 2
+            continue
+        if c == "[":
+            in_class = True
+        elif c == "]":
+            in_class = False
+        elif c == "/" and not in_class:
+            j += 1
+            while j < len(line) and line[j].isalpha():
+                j += 1  # flags
+            return j
+        j += 1
+    return -1
+
+
+def _code_lines(lines: list[str], js: bool = False) -> list[str]:
     """Each line with strings as "", and comments and template literal text (also across lines,
     with their ${...} parts) removed: enough for brace counting and declaration matching."""
     out = []
@@ -137,6 +165,12 @@ def _code_lines(lines: list[str]) -> list[str]:
             if line.startswith("/*", k):
                 in_comment, k = True, k + 2
                 continue
+            if js and c == "/" and visible:
+                end = _regex_end(line, k, kept)
+                if end > 0:
+                    kept.append('""')
+                    k = end
+                    continue
             if c == "`":
                 if visible:
                     kept.append('""')
@@ -382,7 +416,7 @@ def _brace_symbols(text: str, suffix: str) -> list[Symbol]:
     out: list[Symbol] = []
     stack: list[list] = []  # [name, depth_at_declaration, opened]
     depth = 0
-    codes = _code_lines(lines)
+    codes = _code_lines(lines, js=suffix in JS_EXT)
     for i, line in enumerate(lines):
         code = codes[i]
         nxt = codes[i + 1] if i + 1 < len(lines) else ""

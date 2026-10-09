@@ -654,3 +654,18 @@ def test_js_destructured_params_range():
             "function addNewRoute ({\n  path,\n  prefixing = false\n}) {\n  return path\n}\n")
     syms = {s.name: (s.line, s.end) for s in outline(text, ".js")}
     assert syms == {"f": (1, 3), "g": (4, 6), "printRoutes": (7, 9), "addNewRoute": (10, 15)}
+
+
+def test_js_regex_literal_with_quotes():
+    # #274: lib/content-type.js - the ' and ` inside the regex hid every symbol after it
+    text = ('const keyValuePairsReg = /(?:^|;)\\s*([\\w!#$%&\'*+.^`|~-]+)=("(?:[\\t\\u00'
+            '20\\u0021\\u0023-\\u005b\\u005d-\\u007e\\u0080-\\u00ff]|\\\\[\\t\\u0020-\\u00ff])*'
+            '"|[\\w!#$%&\'*+.^`|~-]+)/gu\n'
+            "const half = total / 2 / count\n"
+            "class ContentType {\n"
+            "  constructor (s) {\n    this.s = s.split(/[/'\"]/)\n  }\n\n"
+            "  get type () {\n    return this.s\n  }\n"
+            "}\n")
+    syms = {s.name: (s.line, s.end) for s in outline(text, ".js")}
+    assert syms == {"ContentType": (3, 11), "ContentType.constructor": (4, 6),
+                    "ContentType.type": (8, 10)}
