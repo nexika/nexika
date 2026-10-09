@@ -163,6 +163,19 @@ def pick_runs(runs: list[dict], head: str) -> list[dict]:
     return [r for r in runs if r.get("headSha") == runs[0].get("headSha")]
 
 
+def newest_per_workflow(runs: list[dict]) -> list[dict]:
+    """One run per workflow and event, the newest: a title check re-run after a title edit is a new run
+    at the same commit, and the old red one no longer counts."""
+    best: dict = {}
+    for r in runs:
+        key = (r.get("workflowDatabaseId") or r.get("name"), r.get("event"))
+        rank = (str(r.get("createdAt") or ""), r.get("databaseId") or 0)
+        if key not in best or rank > best[key][0]:
+            best[key] = (rank, r)
+    keep = {id(r) for _, r in best.values()}
+    return [r for r in runs if id(r) in keep]
+
+
 def _when(value) -> float | None:
     try:
         return datetime.datetime.fromisoformat(str(value).replace("Z", "+00:00")).timestamp()
@@ -199,7 +212,7 @@ def waited_out(run: dict) -> bool:
 def parse_gh_runs(text: str, head: str, now: float | None = None, history: list[dict] | None = None) -> dict:
     """history: more runs (other commits, other branches) to learn a workflow's usual duration from."""
     every = json.loads(text or "[]")
-    runs = pick_runs(every, head)
+    runs = newest_per_workflow(pick_runs(every, head))
     if not runs:
         return {"state": "none", "failed": [], "failed_run": None}
     done = [r for r in runs if r.get("status") == "completed"]

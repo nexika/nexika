@@ -145,3 +145,15 @@ def test_a_failed_time_left_lookup_keeps_ci_running(tmp_path, monkeypatch):
     found = forge.fetch_ci(info_for(tmp_path, "6957"), None)
     assert (found["state"], found["elapsed"], found["eta"]) == ("running", 120, None)
     assert render._ci(found, "en")["text"] == "CI running 2m"
+
+
+# ---------------------------------------------------------------- #245: a newer run of the same workflow
+
+def test_a_rerun_of_the_same_workflow_supersedes_the_old_one():
+    # PR 6926 and 6833: the title was edited and `pull request title check` re-ran green at the same commit.
+    for pr in ("6926", "6833"):
+        assert forge.parse_gh_runs(json.dumps(RUNS[pr]), head_of(pr))["state"] == "passed", pr
+    # PR 6571: both title check runs failed: still failed, named once.
+    found = forge.parse_gh_runs(json.dumps(RUNS["6571"]), head_of("6571"))
+    assert found["state"] == "failed"
+    assert found["failed"] == ["pull request title check", "Internal Links Check"]
