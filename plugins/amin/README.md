@@ -89,4 +89,7 @@ Anything else: `.amin.json`
 ## Requirements and limits
 - `git` and an authenticated `gh` (GitHub only for now).
 - amin keeps no state of its own: notes, changelogs and tags in the repo are the state.
-- Version files supported: JSON `"version"`, TOML `version =`, MSBuild `<Version>`.
+- Version files supported: JSON `"version"`, TOML `version =`, MSBuild `<Version>`, and any file
+  with a pattern whose one group is the version: in `.amin.json` `"version_files"`,
+  `{"file": "fastify.js", "pattern": "const VERSION = '(.*)'"}`. `projects` and `plan` warn when
+  another source file next to the version file holds the version in a `VERSION` constant.

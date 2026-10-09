@@ -40,7 +40,7 @@ def today() -> datetime.date:
 
 
 def _current_version(root: Path, p: proj.Project) -> tuple[str | None, list[str]]:
-    versions = {vf: proj.read_version(root, vf) for vf in p.version_files}
+    versions = {vf: p.read_version(root, vf) for vf in p.version_files}
     found = {v for v in versions.values() if v}
     if not found:
         return None, [f"no version found in {', '.join(p.version_files)}"]
@@ -60,6 +60,8 @@ def plan(root: Path, runner: gitops.Runner, projects: list[proj.Project]) -> lis
             problems = [] if tag else [f"the version comes from tags and no {p.tag('X.Y.Z')} tag "
                                        "was found: pass NAME=VERSION to prepare"]
         notes, note_problems = fragments.pending(root, p)
+        if current and notes:
+            note_problems = note_problems + _unlisted(root, p, current)
         item = Plan(p, current, tag, notes, problems + note_problems,
                     gitops.commits_since(runner, tag, p.path))
         final_tag = gitops.last_tag(runner, p.tag_prefix(), final_only=True)
@@ -91,6 +93,12 @@ def plan(root: Path, runner: gitops.Runner, projects: list[proj.Project]) -> lis
             item.reason = f"nothing new since {tag}"
         plans.append(item)
     return plans
+
+
+def _unlisted(root: Path, p: proj.Project, version: str) -> list[str]:
+    return [f"{rel} also contains {version}: add it to version_files in .amin.json "
+            f"({{\"file\": \"{rel}\", \"pattern\": \"...(.*)...\"}}), or prepare leaves it behind"
+            for rel in proj.unlisted_version_files(root, p, version)]
 
 
 def render_plan(plans: list[Plan]) -> str:
@@ -239,9 +247,9 @@ def prepare(root: Path, chosen: list[tuple[Plan, str]], date: str | None = None,
             if runner and not note.id.isdigit():
                 note.pr = pr_for(runner, note.path)
         for vf in pl.project.version_files:
-            if proj.read_version(root, vf) != version:
+            if pl.project.read_version(root, vf) != version:
                 if not dry_run:
-                    proj.write_version(root, vf, version)
+                    pl.project.write_version(root, vf, version)
                 changed.append(vf)
         sections = fragments.grouped(pl.notes)
         blocks.append(f"{pl.project.name} {version}\n" + changelog.render(version, date, sections))
@@ -263,9 +271,9 @@ def prepare(root: Path, chosen: list[tuple[Plan, str]], date: str | None = None,
         sections = {"Released": rows}
         blocks.append(f"{whole.name} {whole_version}\n" + changelog.render(whole_version, date, sections))
         for vf in whole.version_files:
-            if proj.read_version(root, vf) != whole_version:
+            if whole.read_version(root, vf) != whole_version:
                 if not dry_run:
-                    proj.write_version(root, vf, whole_version)
+                    whole.write_version(root, vf, whole_version)
                 changed.append(vf)
         if not dry_run:
             changelog.insert(root / whole.changelog, whole.name, whole_version, date, sections)

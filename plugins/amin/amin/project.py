@@ -13,7 +13,7 @@ from __future__ import annotations
 import datetime
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 # 1.3.0, or a SemVer prerelease such as 1.3.0-rc.2, 6.0.0-alpha.4 or 6.0.0-beta.0
@@ -79,6 +79,14 @@ class Project:
     changelog: str
     tag_format: str
     fragments: str           # repo-relative folder holding this project's notes
+    # .amin.json {"file": "fastify.js", "pattern": "const VERSION = '(.*)'"}: file -> its pattern
+    version_patterns: dict[str, str] = field(default_factory=dict)
+
+    def read_version(self, root: Path, rel: str) -> str | None:
+        return read_version(root, rel, self.version_patterns.get(rel))
+
+    def write_version(self, root: Path, rel: str, version: str) -> None:
+        write_version(root, rel, version, self.version_patterns.get(rel))
 
     def tag(self, version: str) -> str:
         return self.tag_format.format(name=self.name, version=version)
@@ -222,8 +230,40 @@ def _pattern(path: str) -> re.Pattern:
     raise ValueError(f"don't know how to read a version from {path}")
 
 
-def _patterns(root: Path, rel: str) -> list[tuple[re.Pattern, int]]:
+class _CustomVersion:
+    """A pattern from .amin.json whose one group is the version, e.g. `const VERSION = '(.*)'`."""
+
+    class _Match:
+        def __init__(self, m: re.Match):
+            self.m = m
+
+        def group(self, n: int) -> str:
+            return self.m.group(1) if n == 2 else ""
+
+    def __init__(self, pattern: str):
+        try:
+            self.rx = re.compile(pattern, re.M)
+        except re.error as exc:
+            raise ValueError(f"bad version pattern {pattern!r}: {exc}") from None
+        if self.rx.groups != 1:
+            raise ValueError(f"a version pattern needs exactly one group (the version): {pattern!r}")
+
+    def search(self, text: str):
+        m = self.rx.search(text)
+        return self._Match(m) if m else None
+
+    def subn(self, repl, text: str, count: int = 0) -> tuple[str, int]:
+        found = list(self.rx.finditer(text))
+        found = found[:count] if count else found
+        for m in reversed(found):
+            text = text[: m.start(1)] + repl(self._Match(m)) + text[m.end(1):]
+        return text, len(found)
+
+
+def _patterns(root: Path, rel: str, custom: str | None = None) -> list[tuple[re.Pattern, int]]:
     """(pattern, how many matches to replace; 0 = all) for a version file."""
+    if custom:
+        return [(_CustomVersion(custom), 1)]
     name = Path(rel).name
     if name == "Cargo.lock":
         return [(_cargo_lock_pattern(_cargo_names((root / rel).parent)), 0)]
@@ -232,18 +272,20 @@ def _patterns(root: Path, rel: str) -> list[tuple[re.Pattern, int]]:
     return [(_pattern(rel), 1)]
 
 
-def read_version(root: Path, rel: str) -> str | None:
+def read_version(root: Path, rel: str, pattern: str | None = None) -> str | None:
+    """The version in a file; pattern: a regex whose one group is the version (a bad one raises)."""
+    custom = _patterns(root, rel, pattern) if pattern else None
     try:
-        m = _patterns(root, rel)[0][0].search((root / rel).read_text(encoding="utf-8"))
+        m = (custom or _patterns(root, rel))[0][0].search((root / rel).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
     return m.group(2).strip() if m else None
 
 
-def write_version(root: Path, rel: str, version: str) -> None:
+def write_version(root: Path, rel: str, version: str, custom: str | None = None) -> None:
     path = root / rel
     content = path.read_text(encoding="utf-8")
-    for pattern, limit in _patterns(root, rel):
+    for pattern, limit in _patterns(root, rel, custom):
         content, count = pattern.subn(lambda m: m.group(1) + version + m.group(3), content, count=limit)
         if not count:
             raise ValueError(f"no version field found in {rel}")
@@ -267,9 +309,12 @@ def _from_config(entries: list[dict]) -> list[Project]:
         name, path = str(item["name"]), str(item.get("path", "."))
         single = path in (".", "")
         folder = path.rstrip("/")
+        files = [str(f["file"]) if isinstance(f, dict) else str(f) for f in item["version_files"]]
+        patterns = {str(f["file"]): str(f["pattern"]) for f in item["version_files"]
+                    if isinstance(f, dict) and f.get("pattern")}
         projects.append(Project(
             name=name, path="." if single else folder,
-            version_files=list(item["version_files"]),
+            version_files=files, version_patterns=patterns,
             changelog=item.get("changelog") or ("CHANGELOG.md" if single else f"{folder}/CHANGELOG.md"),
             tag_format=item.get("tag") or ("v{version}" if single else "{name}-v{version}"),
             fragments="changelog.d" if single else f"changelog.d/{name}",
@@ -343,6 +388,37 @@ def detect(root: Path) -> list[Project]:
         changelog = next((n for n in CHANGELOG_NAMES if (root / n).is_file()), CHANGELOG_NAMES[0])
         return [Project(_manifest_name(root, rel), ".", files, changelog, _tag_format(root), "changelog.d")]
     return []
+
+
+SOURCE_SUFFIXES = (".js", ".mjs", ".cjs", ".ts", ".py", ".rb", ".go", ".rs", ".cs", ".php", ".java", ".kt")
+VERSION_CONSTANT = r"""(?:\b[A-Z_]*VERSION|\b__version__)\s*(?::\s*\w+\s*)?[:=]\s*['"]{}['"]"""
+
+
+def unlisted_version_files(root: Path, p: Project, version: str | None = None) -> list[str]:
+    """Source files in the project's own folder (not below it) that hold its version in a VERSION
+    constant (fastify.js `const VERSION = '5.12.5'`) but are not version files: prepare would leave
+    them behind. amin only warns; it never guesses a file to write."""
+    version = version or next((v for v in (p.read_version(root, f) for f in p.version_files) if v), None)
+    if not version:
+        return []
+    from . import gitops
+    folder = "" if p.path == "." else p.path.rstrip("/") + "/"
+    try:
+        tracked = gitops.Runner(root).git("ls-files", "--", folder or ".", check=False).splitlines()
+    except gitops.CommandError:
+        return []
+    constant = re.compile(VERSION_CONSTANT.format(re.escape(version)))
+    found = []
+    for rel in tracked:
+        if "/" in rel[len(folder):] or not rel.endswith(SOURCE_SUFFIXES) or rel in p.version_files:
+            continue
+        try:
+            text = (root / rel).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        if constant.search(text):
+            found.append(rel)
+    return found
 
 
 def copies(root: Path) -> dict[str, list[str]]:
