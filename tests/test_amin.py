@@ -440,6 +440,34 @@ def test_publish_resumes_after_the_release_step_failed(market):
         release.publish(market, FakeRunner(market, releases={"alpha-v0.1.0"}), alpha)
 
 
+def test_publish_on_another_branch_is_refused_with_one_true_reason(market):
+    # issue #239: on 5.x publish also said "local main is not the same commit as origin/main", but it had
+    # compared HEAD, not main
+    alpha = released_market(market)
+    _git(market, "switch", "-q", "-c", "5.x")
+    write(market, "more.txt", "x")
+    commit(market)
+    with pytest.raises(release.ReleaseError) as err:
+        release.publish(market, FakeRunner(market), alpha)
+    assert "on branch 5.x; releases are cut from main" in str(err.value)
+    assert "local main is not the same commit" not in str(err.value)
+
+
+def test_old_line_release_is_not_marked_latest(market):
+    # issue #239: a release of an older line must not take "Latest" from a newer final release
+    alpha = released_market(market)
+    _git(market, "tag", "-a", "alpha-v1.0.0", "-m", "x", "HEAD~1")   # a newer final release exists
+    runner = FakeRunner(market)
+    release.publish(market, runner, alpha)
+    create = next(c for c in runner.gh_calls if c[:2] == ("release", "create"))
+    assert "--latest=false" in create
+    runner = FakeRunner(market)
+    _git(market, "tag", "-d", "alpha-v1.0.0")
+    release.publish(market, runner, alpha)
+    create = next(c for c in runner.gh_calls if c[:2] == ("release", "create"))
+    assert "--latest=false" not in create
+
+
 def test_publish_dry_run_creates_nothing(market):
     alpha = released_market(market)
     report = release.publish(market, FakeRunner(market), alpha, dry_run=True)
