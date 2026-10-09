@@ -77,7 +77,8 @@ A plugin with hundreds of skills of which you used one is a context cost worth q
 ## The guard
 
 **Refused** (with the reason and the safe alternative):
-- `rm -r` of `/`, `~`, the project root, or anything outside the project
+- `rm -r` of `/`, `~`, the project root, or anything outside the project (also `rimraf`, `del-cli` and
+  `shx rm -r`, run directly or through `npx` or `npm exec`)
 - force-push to a protected branch (`main`, `master`, `develop`, `production`, `stable`,
   `release/*`)
 - committing a `.env` / key file, or staged changes that contain a secret token
