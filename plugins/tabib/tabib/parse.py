@@ -288,6 +288,33 @@ def generated(lines: list[str]) -> list[dict]:
     return found
 
 
+TSTYCHE_FILE = re.compile(r"^(fail|pass)\s+\.?/?(\S+\.tst\.[cm]?tsx?)\s*$")
+TSTYCHE_ERROR = re.compile(r"^Error: (.+)$")
+TSTYCHE_AT = re.compile(r"^\s*at \.?/?(\S+\.[cm]?tsx?):(\d+):\d+\s*$")
+TSD_FILE = re.compile(r"^\s*(\S+\.test-d\.[cm]?tsx?)\s*$")
+TSD_ERROR = re.compile(r"^\s*✖\s+(\d+):\d+\s+(.+?)\s*$")
+
+
+def type_tests(lines: list[str]) -> list[dict]:
+    """TypeScript type tests (#258): tstyche's 'Error: <message>' with the 'at ./x.tst.ts:L:C' after it, under
+    a 'fail <file>' header; tsd's '✖  L:C  <message>' under its '<file>.test-d.ts' header."""
+    found: list[dict] = []
+    in_tstyche, message, tsd_file = False, "", ""
+    for line in lines:
+        if m := TSTYCHE_FILE.match(line.strip()):
+            in_tstyche, message = m.group(1) == "fail", ""
+        elif in_tstyche and (m := TSTYCHE_ERROR.match(line.strip())):
+            message = m.group(1)
+        elif in_tstyche and message and (m := TSTYCHE_AT.match(line)):
+            found.append(_failure("tstyche", "tests", file=m.group(1), line=int(m.group(2)), message=message))
+            message = ""
+        elif m := TSD_FILE.match(line):
+            tsd_file = m.group(1)
+        elif tsd_file and (m := TSD_ERROR.match(line)):
+            found.append(_failure("tsd", "tests", file=tsd_file, line=int(m.group(1)), message=m.group(2)))
+    return [f for f in found if SAFE_PATH.match(f["file"])]
+
+
 def playwright(lines: list[str]) -> list[dict]:
     """Playwright's failed tests: the summary's "failed" group when there is one (a test in its "flaky"
     group passed on a retry), else the numbered error blocks, else the list reporter's ✘ lines."""
@@ -508,6 +535,7 @@ def failures(lines: list[str]) -> list[dict]:
     found += merge_conflict(lines)
     found += generated(lines)
     found += playwright(lines)
+    found += type_tests(lines)
     for block in junit_blocks(lines):
         found += junit_xml(block)
     if not found:   # nothing a tool reports: the step's own words, when its script printed them
