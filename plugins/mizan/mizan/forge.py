@@ -8,11 +8,13 @@ these read commands run, with arguments as a list (no shell):
     gh pr list --state open --search review-requested:@me --json number --limit 100
     gh pr checks <number> --json name,bucket,link,workflow,event
     gh run list --branch=<branch> --limit 20
-        --json databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt,event,createdAt
+        --json databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt,event,createdAt,
+               workflowDatabaseId
     gh run list --commit=<head> --limit 20 --json ...   (detached, or the head is not in the list above,
         or the PR's only passing checks are pull_request_target ones: are its workflows waiting?)
-    gh run list --workflow=<name> --status=completed --limit 20 --json ...
-        (CI running and the branch has no finished run of that workflow: for the time left)
+    gh run list --workflow=<id> --status=completed --limit 20 --json ...
+        (CI running and the branch has no finished run of that workflow: for the time left; by id,
+        since two workflows may share a name)
     gh run view <id> --json jobs
     glab mr list --output json
     glab mr list --reviewer=@me --output json
@@ -40,7 +42,8 @@ PR_TTL, CI_TTL, CI_RUNNING_TTL, LOCK_TTL = 300, 90, 45, 360  # a refresh may wai
 IDLE_AFTER, IDLE_FACTOR = 600, 4
 BIN = Path(__file__).resolve().parent.parent / "bin" / "mizan"
 TOOL = {"github": "gh", "gitlab": "glab"}
-RUN_FIELDS = "databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt,event,createdAt"
+RUN_FIELDS = ("databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt,event,createdAt,"
+              "workflowDatabaseId")
 
 
 def cache_path(repo: str) -> Path:
@@ -384,13 +387,18 @@ def fetch_ci(info: dict, pr: dict | None) -> dict:
         found = parse_gh_runs(json.dumps(mine), head, history=history)
         if found["state"] == "running" and found.get("elapsed") is not None and found.get("eta") is None:
             # No finished run of this workflow on the branch (a fork's new branch): its recent runs anywhere.
-            name = next((r.get("name") for r in pick_runs(mine, head)
-                         if r.get("status") != "completed" and r.get("name")), "")
-            if name:
-                recent = json.loads(run_tool(["gh", "run", "list", f"--workflow={name}", "--status=completed",
-                                              "--json", "name,status,conclusion,startedAt,updatedAt",
-                                              "--limit", "20"], cwd) or "[]")
-                found = parse_gh_runs(json.dumps(mine), head, history=history + recent)
+            going = next((r for r in pick_runs(mine, head)
+                          if r.get("status") != "completed" and r.get("name")), {})
+            workflow = going.get("workflowDatabaseId") or going.get("name")
+            if workflow:
+                try:  # only the time left: an error here never hides that CI is running
+                    recent = json.loads(run_tool(["gh", "run", "list", f"--workflow={workflow}",
+                                                  "--status=completed", "--json",
+                                                  "name,status,conclusion,startedAt,updatedAt",
+                                                  "--limit", "20"], cwd) or "[]")
+                    found = parse_gh_runs(json.dumps(mine), head, history=history + recent)
+                except (Off, ValueError, TypeError):
+                    pass
         if checks and checks["state"] == "running" and found["state"] != "running":
             return checks
         return finish_runs(found, cwd)

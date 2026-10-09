@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 from pathlib import Path
 
 from conftest import PLUGINS
@@ -90,3 +91,57 @@ def test_a_pr_with_its_own_passing_checks_costs_no_extra_call(tmp_path, monkeypa
     monkeypatch.setattr(forge, "run_tool", tool)
     assert forge.fetch_ci(info_for(tmp_path, "6926"), {"number": 6926})["state"] == "passed"
     assert len(tool.calls) == 1
+
+
+# ---------------------------------------------------------------- #247: two workflows named ci
+
+def _ci_running(now: float) -> list:
+    """PR 6957's runs with its `ci` run (workflow 40370) going for two minutes, the rest finished."""
+    runs = [dict(r, workflowDatabaseId=40370 if r["name"] == "ci" else 1) for r in RUNS["6957"]]
+    for r in runs:
+        if r["name"] == "ci":
+            r.update(status="in_progress", conclusion="", startedAt=_iso(now - 120), updatedAt=_iso(now))
+    return runs
+
+
+def _iso(seconds: float) -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(seconds))
+
+
+def test_time_left_asks_for_the_workflow_by_id(tmp_path, monkeypatch):
+    # fastify has two workflows named `ci`: `gh run list --workflow=ci` fails ("not a unique workflow").
+    now = 1_791_367_380.0
+    monkeypatch.setattr(forge.time, "time", lambda: now)
+    calls = []
+
+    def tool(argv, cwd, accept_codes=(0,)):
+        calls.append(argv)
+        if "--workflow=ci" in argv:
+            raise forge.Off("off_error", "gh")
+        if any(a.startswith("--workflow=") for a in argv):
+            return json.dumps([{"name": "ci", "status": "completed", "conclusion": "success",
+                                "startedAt": _iso(now - 9000), "updatedAt": _iso(now - 9000 + 326)}])
+        return json.dumps(_ci_running(now))
+
+    monkeypatch.setattr(forge, "run_tool", tool)
+    found = forge.fetch_ci(info_for(tmp_path, "6957"), None)
+    assert (found["state"], found["elapsed"], found["eta"]) == ("running", 120, 206)
+    assert "--workflow=40370" in calls[-1]
+
+
+def test_a_failed_time_left_lookup_keeps_ci_running(tmp_path, monkeypatch):
+    now = 1_791_367_380.0
+    monkeypatch.setattr(forge.time, "time", lambda: now)
+
+    def tool(argv, cwd, accept_codes=(0,)):
+        if any(a.startswith("--workflow=") for a in argv):
+            raise forge.Off("off_error", "gh")
+        runs = _ci_running(now)
+        for r in runs:
+            del r["workflowDatabaseId"]  # an older gh: the lookup goes by name, and fails
+        return json.dumps(runs)
+
+    monkeypatch.setattr(forge, "run_tool", tool)
+    found = forge.fetch_ci(info_for(tmp_path, "6957"), None)
+    assert (found["state"], found["elapsed"], found["eta"]) == ("running", 120, None)
+    assert render._ci(found, "en")["text"] == "CI running 2m"
