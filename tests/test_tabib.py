@@ -1316,9 +1316,26 @@ def test_a_run_with_no_jobs_gets_a_kind_and_advice(ci, monkeypatch, project):
     monkeypatch.setattr(forge, "find_run", lambda info, run_id=None: {**fake_run(project), "jobs": []})
     monkeypatch.setattr(forge, "failed_log", no_log)
     record = diagnosis.triage(ci)
-    assert record["kind"] == "setup" and record["rerun"] == ""
+    assert (record["kind"], record["detail"], record["confidence"]) == ("unknown", {"jobs": 0}, "low")
+    assert record["rerun"] == ""
     text = cli.report(record, "en")
-    assert "no jobs" in text and "workflow file" in text and record["run"]["url"] in text
+    assert "no jobs or logs" in text and "nothing to diagnose" in text and record["run"]["url"] in text
+    # #263 (maintainer's decision): no guessed cause, only what tabib can see.
+    assert "broken" not in text and "workflow file" not in text and "re-run fails" not in text
+    assert "push" in text
+    assert cli.summary(record, "en")["label"] == "the CI run has no jobs or logs: nothing to diagnose"
+
+
+def test_a_fork_run_with_no_jobs_says_it_is_a_fork(ci, monkeypatch, project):
+    """fastify run 37051739916 (#263): a fork's pull request whose run GitHub never started."""
+    from tabib import cli
+    monkeypatch.setattr(forge, "find_run", lambda info, run_id=None: {
+        **fake_run(project), "jobs": [], "event": "pull_request"})
+    monkeypatch.setattr(forge, "from_fork", lambda info, run: True)
+    record = diagnosis.triage(ci)
+    assert record["kind"] == "unknown"
+    text = cli.report(record, "ar")
+    assert "fork" in cli.report(record, "en") and "pull_request" in text
 
 
 def test_an_expired_log_says_so(ci, monkeypatch):
