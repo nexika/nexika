@@ -62,6 +62,10 @@ Release candidates: `amin prepare <project> --rc` releases `1.3.0-rc.1` (then `-
 GitHub pre-release and keeps the notes; a later `amin prepare <project>` promotes to `1.3.0` and
 collects every note.
 
+A project whose changelog is its GitHub releases (no changelog file) sets `"changelog": "github"`
+in `.amin.json`: `prepare` writes no file and prints the notes for the release PR body, and
+`publish` rebuilds the release notes from the notes the merged release commit deleted.
+
 First release of a project with no tags: `amin history <project>` lists the merged PRs that
 touched it, so notes can be written from real history.
 
