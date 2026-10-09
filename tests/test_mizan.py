@@ -485,6 +485,20 @@ def _fake_gh_on_path(env, monkeypatch, script):
     monkeypatch.setenv("PATH", f"{bin_dir}:/usr/bin:/bin")
 
 
+def test_refresh_asks_no_one_when_the_network_is_off(repo, env, monkeypatch):
+    # fastify case 53: MIZAN_OFFLINE=1 then `mizan refresh` still ran gh five times (#250).
+    git(repo, "remote", "add", "origin", "https://github.com/fastify/fastify.git")
+    _fake_gh_on_path(env, monkeypatch, f'echo called >> "{env}/gh-calls"; echo "[]"\n')
+    done = run("refresh", "--cwd", str(repo))
+    assert not (env / "gh-calls").exists() and not (env / "mizan" / "cache").exists()
+    assert done.returncode == 0 and "network is off" in done.stderr
+    monkeypatch.delenv("MIZAN_OFFLINE")
+    (env / "mizan").mkdir()
+    (env / "mizan" / "config.json").write_text(json.dumps({"network": False}))
+    assert run("refresh", "--cwd", str(repo)).returncode == 0
+    assert not (env / "gh-calls").exists()
+
+
 def test_a_rate_limit_and_a_timeout_are_named(repo, env, monkeypatch):
     # gh's own words when GitHub's API limit is reached (#162).
     _fake_gh_on_path(env, monkeypatch,
