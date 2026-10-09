@@ -92,6 +92,31 @@ def test_dangerous_commands_are_denied(guard, repo, command, rule):
     assert decision is not None and decision[0] == "deny" and decision[1] == rule
 
 
+# fastify (#265, case G79): rimraf, del-cli and `shx rm -rf` get the `rm -r` target rules, also via npx
+@pytest.mark.parametrize(("command", "rule"), [
+    ("npx rimraf ~", "rm-dangerous-target"),
+    ("rimraf /", "rm-dangerous-target"),
+    ("npx --yes rimraf $HOME/projects", "rm-dangerous-target"),
+    ("npm exec -- rimraf ..", "rm-outside-project"),
+    ("npx rimraf@5 .", "rm-project-root"),
+    ("npx del-cli ../other", "rm-outside-project"),
+    ("del ~", "rm-dangerous-target"),
+    ("npx shx rm -rf ~", "rm-dangerous-target"),
+    ("shx rm -r /etc/nginx", "rm-outside-project"),
+])
+def test_node_delete_tools_get_the_rm_target_rules(guard, repo, command, rule):
+    decision = bash(guard, repo, command)
+    assert decision is not None and decision[:2] == ("deny", rule)
+
+
+@pytest.mark.parametrize("command", [
+    "npx rimraf coverage", "rimraf ./dist build", "npm exec rimraf node_modules",
+    "npx del-cli 'dist/**'", "npx shx rm -rf lib/out", "npx shx rm ~/notes.txt", "npx shx ls ~",
+])
+def test_node_delete_tools_inside_the_project_pass(guard, repo, command):
+    assert bash(guard, repo, command) is None
+
+
 def test_force_push_to_feature_branch_is_allowed(guard, repo):
     _git(repo, "switch", "-q", "-c", "feat/x")
     assert bash(guard, repo, "git push --force-with-lease") is None
