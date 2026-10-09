@@ -584,3 +584,66 @@ def test_a_symbol_without_a_closing_brace_is_marked_partial():
     text = "function broken() {\n" + "  x();\n" * 80
     sym = outline(text, ".js")[0]
     assert sym.partial
+
+
+# ---------------------------------------------------------------- tstyche (#270)
+
+TSTYCHE_FAILED = """\
+\x1b[90m····\x1b[0m TSTyche 7.2.5\x1b[90m at /work\x1b[0m
+
+\x1b[34muses\x1b[0m TypeScript 6.0.3\x1b[90m with ./test/types/tsconfig.json\x1b[0m
+
+\x1b[32mpass\x1b[0m \x1b[90m./test/types/\x1b[0mrequest.tst.ts
+\x1b[31mfail\x1b[0m \x1b[90m./test/types/\x1b[0mreply.tst.ts
+
+Targets:    \x1b[31m1 failed\x1b[0m, 1 total
+Test files: \x1b[31m1 failed\x1b[0m, \x1b[32m15 passed\x1b[0m, 16 total
+Tests:      \x1b[32m2 passed\x1b[0m, 2 total
+Assertions: \x1b[31m1 failed\x1b[0m, \x1b[32m1283 passed\x1b[0m, 1284 total
+Suppressed: \x1b[32m60 matched\x1b[0m, 60 total
+Duration:   18.9s
+
+\x1b[31mError: \x1b[0mCannot find name 'PlantedMissingType'.\x1b[90m ts(2304)\x1b[0m
+
+\x1b[31m  129\x1b[0m\x1b[90m | \x1b[0m  prefix: PlantedMissingType;
+     \x1b[90m | \x1b[0m          \x1b[31m~~~~~~~~~~~~~~~~~~\x1b[0m
+
+       \x1b[90m at \x1b[0m\x1b[36m./types/instance.d.ts\x1b[0m\x1b[90m:129:11\x1b[0m
+
+\x1b[31mError: \x1b[0mType 'string' is not the same as type 'number'.
+
+  299 | expect<string>().type.toBe<number>()
+
+        at ./test/types/reply.tst.ts:299:28
+"""
+
+
+def test_tstyche_failure_keeps_location_and_counts():
+    verdict, details, _ = compress.summarize(TSTYCHE_FAILED, 1)
+    assert verdict == "tstyche: Test files 1 failed, 15 passed; Assertions 1 failed, 1283 passed"
+    assert details == [
+        "./types/instance.d.ts:129:11: Cannot find name 'PlantedMissingType'. ts(2304)",
+        "./test/types/reply.tst.ts:299:28: Type 'string' is not the same as type 'number'.",
+    ]
+
+
+def test_tstyche_clean_counts_assertions():
+    verdict, details, _ = summarize("""\
+        Targets:    1 passed, 1 total
+        Test files: 16 passed, 16 total
+        Tests:      2 passed, 2 total
+        Assertions: 1283 passed, 1283 total
+        Suppressed: 60 matched, 60 total
+        Duration:   19.1s
+    """, rc=0)
+    assert verdict == "tstyche: Test files 16 passed; Assertions 1283 passed"
+    assert details == ""
+
+
+def test_a_failed_exit_is_never_reported_as_only_passed():
+    # #270: the jest parser said "Tests: 2 passed, 2 total" for a run that exited 1
+    verdict, _, _ = summarize("""\
+        Tests:       2 passed, 2 total
+        Error: something else broke
+    """, rc=1)
+    assert verdict.startswith("failed (exit 1): ") and "2 passed" in verdict

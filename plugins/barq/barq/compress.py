@@ -149,6 +149,34 @@ def dotnet_test(lines: list[str]):
 # ---------------------------------------------------------------- JavaScript
 
 
+def tstyche(lines: list[str]):
+    """TSTyche type tests: its 'Tests:' line looked like jest's, and locations were lost (#270)."""
+    counts = {}
+    for ln in lines:
+        m = re.match(r"^(Test files|Assertions):\s+(.*)$", ln.strip())
+        if m:
+            counts[m.group(1)] = re.sub(r",?\s*\d+ total$", "", m.group(2).strip())
+    if len(counts) < 2:
+        return None
+    verdict = "tstyche: " + "; ".join(f"{k} {v}" for k, v in counts.items())
+    details = []
+    message = None
+    for ln in lines:
+        s = ln.strip()
+        if s.startswith("Error: "):
+            if message:
+                details.append(message)
+            message = s[len("Error: "):]
+        elif message:
+            m = re.match(r"^at (\S+:\d+:\d+)$", s)
+            if m:
+                details.append(f"{m.group(1)}: {message}")
+                message = None
+    if message:
+        details.append(message)
+    return verdict, _dedupe(details)
+
+
 def jest_vitest(lines: list[str]):
     verdict = [ln.strip() for ln in lines
                if re.match(r"^\s*Tests:?\s+.*\b(passed|failed|total)\b", ln)]
@@ -261,7 +289,7 @@ def lint(lines: list[str]):
 
 
 # Order matters: tsc diagnostics look like MSBuild ones, so tsc is tried first.
-PARSERS = [pytest, dotnet_test, tsc, dotnet_build, jest_vitest, go_test, cargo, lint]
+PARSERS = [pytest, dotnet_test, tsc, dotnet_build, tstyche, jest_vitest, go_test, cargo, lint]
 
 
 def summarize(output: str, rc: int | None) -> tuple[str, list[str], int]:
@@ -275,6 +303,8 @@ def summarize(output: str, rc: int | None) -> tuple[str, list[str], int]:
             break
     else:
         verdict, details = generic(lines, rc)
+    if rc and not re.search(r"(?i)fail|error", verdict):
+        verdict = f"failed (exit {rc}): {verdict}"  # a summary that counts only passes (#270)
     details = [ln if len(ln) <= MAX_LINE else
                f"{ln[:MAX_LINE]} ... ({len(ln) - MAX_LINE} more characters)" for ln in details]
     if len(details) > MAX_DETAIL:
