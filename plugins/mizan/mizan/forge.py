@@ -72,6 +72,7 @@ def save_cache(repo: str, data: dict) -> None:
 # ------------------------------------------------------------------ parsing (pure, tested)
 
 TITLES = {"mr", "mrs", "ms", "miss", "mx", "dr", "prof", "sir"}
+NOT_NAMES = {"undefined", "null", "none"}  # a profile name some tool wrote by mistake: use the login
 
 
 def author_name(author: dict) -> str:
@@ -81,6 +82,8 @@ def author_name(author: dict) -> str:
     if login.startswith("app/") or author.get("is_bot") or login.endswith("[bot]"):
         return login.removeprefix("app/").removesuffix("[bot]") or "?"
     words = str(author.get("name") or "").split()
+    if " ".join(words).lower() in NOT_NAMES:
+        words = []
     while words and words[0].lower().rstrip(".") in TITLES:
         words = words[1:]
     return first_name(" ".join(words)) or login or "?"
