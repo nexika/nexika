@@ -396,7 +396,7 @@ def history(root: Path, runner: gitops.Runner, project: proj.Project, tag: str |
     search = ["--search", " ".join(terms)] if terms else []
     limit = "5000" if since else str(UNTAGGED_LIMIT)   # no tag: only the latest PRs, or gh times out
     prs = runner.gh_json("pr", "list", "--state", "merged", "--limit", limit, *search,
-                         "--json", "number,title,mergedAt,files,mergeCommit,author,baseRefName") or []
+                         "--json", "number,title,mergedAt,files,mergeCommit,author,labels,baseRefName") or []
     upper = to or "HEAD"
     in_range = set(runner.git("rev-list", f"{tag}..{upper}" if tag else upper, check=False).split())
     oids = {(pr.get("mergeCommit") or {}).get("oid") or "" for pr in prs} - in_range - {""}
@@ -422,12 +422,20 @@ def history(root: Path, runner: gitops.Runner, project: proj.Project, tag: str |
 
 CI_FILES = re.compile(r"^(\.github/|\.circleci/|\.gitlab-ci\.yml$|\.pre-commit-config\.yaml$)")
 BOTS = ("[bot]", "dependabot", "pre-commit-ci", "renovate")
+BACKPORT = re.compile(r"^\s*\[backport\b|\bbackport (?:of )?#\d+", re.I)   # not "bump backport-action"
+
+
+def _is_backport(pr: dict) -> bool:
+    """A bot's copy of a human change onto a maintenance branch: "[Backport 5.x] ..." or a backport label."""
+    labels = [str(lb.get("name", "")).lower() for lb in pr.get("labels") or [] if isinstance(lb, dict)]
+    return bool(BACKPORT.search(str(pr.get("title", "")))) or any(lb.startswith("backport") for lb in labels)
 
 
 def _kind(pr: dict, paths: list[str]) -> str:
-    """A mark for PRs that release notes usually leave out: bots, or only CI files changed."""
+    """A mark for PRs that release notes usually leave out: bots (not a bot's backport of a human
+    change, which is the maintenance release's content), or only CI files changed."""
     author = pr.get("author") or {}
-    if author.get("is_bot") or str(author.get("login", "")).endswith(BOTS):
+    if (author.get("is_bot") or str(author.get("login", "")).endswith(BOTS)) and not _is_backport(pr):
         return " [bot]"
     if paths and all(CI_FILES.match(x) for x in paths):
         return " [ci only]"

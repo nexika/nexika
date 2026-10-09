@@ -1006,6 +1006,27 @@ def test_history_skips_the_release_pr_of_the_tag_and_marks_bot_and_ci_prs(tmp_pa
                      "#5143 Fix a crash (2099-01-04)"]
 
 
+def test_history_does_not_mark_backport_prs_as_bot(market):
+    # issue #241: fastify's [Backport 5.x] PRs, opened by github-actions[bot], are the 5.x release notes
+    bot = {"login": "app/github-actions", "is_bot": True}
+    prs = [{"number": 7067, "title": "[Backport 5.x] fix: resolve reply.mediaType", "author": bot,
+            "mergedAt": "2026-10-01T10:00:00Z", "labels": []},
+           {"number": 7048, "title": "fix: a crash (backport #7040)", "author": bot,
+            "mergedAt": "2026-10-02T10:00:00Z", "labels": [{"name": "backport"}]},
+           {"number": 7049, "title": "chore(deps): bump backport-action",
+            "author": {"login": "app/dependabot", "is_bot": True},
+            "mergedAt": "2026-10-03T10:00:00Z", "labels": [{"name": "dependencies"}]}]
+    for pr in prs:
+        pr["files"] = [{"path": "plugins/alpha/main.py"}]
+    runner = FakeRunner(market, prs=prs)
+    lines = release.history(market, runner, projects_of(market)["alpha"], None)
+    assert lines == ["#7067 [Backport 5.x] fix: resolve reply.mediaType (2026-10-01)",
+                     "#7048 fix: a crash (backport #7040) (2026-10-02)",
+                     "#7049 chore(deps): bump backport-action (2026-10-03) [bot]"]
+    call = next(c for c in runner.gh_calls if c[:2] == ("pr", "list"))
+    assert "labels" in call[call.index("--json") + 1]
+
+
 @pytest.mark.parametrize("content", [
     '[project]\nname = "app"\nversion = "2.0.0"\n',
     '[tool.poetry]\nname = "app"\nversion = "2.0.0"\n',
