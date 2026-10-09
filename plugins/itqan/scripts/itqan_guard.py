@@ -197,23 +197,59 @@ def find_secret(text: str) -> str | None:
 # ---------------------------------------------------------------- Bash rules
 
 
-def _check_rm(words: list[str], cwd: Path, root: Path):
-    if not words or Path(words[0]).name != "rm":
+NODE_DELETE_TOOLS = {"rimraf", "del", "del-cli"}  # always delete recursively
+
+
+def _unwrap_npx(words: list[str]) -> list[str]:
+    """`npx [-y] tool ...` and `npm exec [--] tool ...` give `tool ...`."""
+    if words and Path(words[0]).name == "npx":
+        rest = words[1:]
+    elif len(words) > 1 and Path(words[0]).name == "npm" and words[1] in ("exec", "x"):
+        rest = words[2:]
+    else:
+        return words
+    while rest and rest[0].startswith("-"):
+        rest = rest[1:]
+    return rest
+
+
+def _delete_targets(words: list[str]) -> tuple[str, list[str]] | None:
+    """What a recursive delete (`rm -r`, `shx rm -r`, rimraf, del-cli) names, with the word that
+    labels it; None when the command is not one."""
+    words = _unwrap_npx(words)
+    if not words:
+        return None
+    name = Path(words[0]).name.split("@", 1)[0]
+    if name in NODE_DELETE_TOOLS:
+        return name, [w for w in words[1:] if not w.startswith("-")]
+    if name == "shx" and len(words) > 1 and words[1] == "rm":
+        name, words = "shx rm -r", words[1:]
+    elif name == "rm":
+        name = "rm -r"
+    else:
         return None
     short = "".join(w[1:] for w in words[1:] if w.startswith("-") and not w.startswith("--"))
     if "r" not in short.lower() and "--recursive" not in words:
         return None
-    for t in (w for w in words[1:] if not w.startswith("-")):
+    return name, [w for w in words[1:] if not w.startswith("-")]
+
+
+def _check_rm(words: list[str], cwd: Path, root: Path):
+    found = _delete_targets(words)
+    if not found:
+        return None
+    label, targets = found
+    for t in targets:
         if t in HOME_TARGETS or t.startswith(("~/", "$HOME/", "${HOME}/")):
-            return "deny", "rm-dangerous-target", f"`rm -r {t}` would delete far more than the project."
+            return "deny", "rm-dangerous-target", f"`{label} {t}` would delete far more than the project."
         resolved = (cwd / t).resolve()
         if resolved == root:
-            return "deny", "rm-project-root", f"`rm -r {t}` would delete the whole project."
+            return "deny", "rm-project-root", f"`{label} {t}` would delete the whole project."
         try:
             resolved.relative_to(root)
         except ValueError:
             return ("deny", "rm-outside-project",
-                    f"`rm -r {t}` targets {resolved}, outside the project ({root}).")
+                    f"`{label} {t}` targets {resolved}, outside the project ({root}).")
     return None
 
 
