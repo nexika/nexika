@@ -1227,3 +1227,23 @@ def node_project(world, tmp_path):
 def test_a_projects_own_script_runners_are_project_runs(node_project, command, verdict):
     d = decide(node_project, "Bash", command)
     assert d.verdict == verdict, (command, d.cls, d.reason)
+
+
+@pytest.mark.parametrize("command,reason", [
+    ("npm pkg get version", "Only shows information (npm pkg get)."),
+    ("npm whoami", "Only shows information (npm whoami)."),
+    ("npm ping", "Only shows information (npm ping)."),
+    ("npm config list", "Shows npm settings."),
+    ("npm -v", "Only shows information (npm --version)."),
+    ("pnpm --version", "Only shows information (pnpm --version)."),
+    ("cd src && npm run test", "Runs the project script `test` in the project."),
+])
+def test_npm_reads_are_allowed_with_the_reason_of_the_step_that_decides(world, command, reason):
+    home, project = world
+    d = decide(project, "Bash", command)
+    assert (d.verdict, d.reason) == ("allow", reason), (d.verdict, d.reason)
+
+
+def test_npm_pkg_set_still_changes_the_project(world):
+    home, project = world
+    assert decide(project, "Bash", "npm pkg set scripts.prepare=husky").verdict == "pass"
