@@ -78,7 +78,7 @@ def test_a_pr_whose_only_check_is_the_labeler_asks_the_run_list(tmp_path, monkey
     monkeypatch.setattr(forge, "run_tool", tool)
     found = forge.fetch_ci(info_for(tmp_path, "7089"), {"number": 7089})
     assert found["state"] == "approval"
-    assert f"--commit={head_of('7089')}" in tool.calls[1]
+    assert tool.calls[1][1:3] == ["run", "list"]
     tool = fake_gh(RUNS["6994"], CHECKS["6994"])
     monkeypatch.setattr(forge, "run_tool", tool)
     found = forge.fetch_ci(info_for(tmp_path, "6994"), {"number": 6994})
@@ -157,3 +157,34 @@ def test_a_rerun_of_the_same_workflow_supersedes_the_old_one():
     found = forge.parse_gh_runs(json.dumps(RUNS["6571"]), head_of("6571"))
     assert found["state"] == "failed"
     assert found["failed"] == ["pull request title check", "Internal Links Check"]
+
+
+# ---------------------------------------------------------------- #244: runs that are not the commit's CI
+
+def test_schedule_and_dynamic_runs_are_not_the_commits_ci():
+    # main 3 behind at 19d5be0d: monthly schedule jobs failed at it, its push CI is green.
+    assert forge.parse_gh_runs(json.dumps(RUNS["runs-origin_main_3"]), head_of("runs-origin_main_3"))[
+        "state"] == "passed"
+    # PR 6699: only the labeler and a Copilot code review (dynamic) ran: no CI.
+    assert forge.parse_gh_runs(json.dumps(RUNS["6699"]), head_of("6699"))["state"] == "none"
+
+
+def test_the_post_merge_backport_is_not_the_commits_ci(tmp_path, monkeypatch):
+    # dependabot PR 6917: ci failed in its automerge job; the pull_request_target Backport is not CI.
+    found = forge.parse_gh_runs(json.dumps(RUNS["6917"]), head_of("6917"))
+    assert found["failed"] == ["ci"]
+    jobs = {"31110527305": {"jobs": [{"name": "automerge", "conclusion": "failure"}]}}
+    info = info_for(tmp_path, "6917")
+    info["branch"] = info["head"][:8]
+    monkeypatch.setattr(forge, "run_tool", fake_gh(RUNS["6917"], jobs=jobs))
+    assert render._ci(forge.fetch_ci(info, None), "en")["text"] == "CI failed: ci/automerge"
+
+
+def test_a_labeler_alone_is_no_ci(tmp_path, monkeypatch):
+    # PR 6518 (docs fork): `gh pr checks` lists only the pull_request_target labeler.
+    assert forge.parse_gh_checks(json.dumps(CHECKS["6518"]))["state"] == "none"
+    monkeypatch.setattr(forge, "run_tool", fake_gh(RUNS["6518"], CHECKS["6518"]))
+    found = forge.fetch_ci(info_for(tmp_path, "6518"), {"number": 6518})
+    assert render._ci(found, "en")["text"] == "no CI yet"
+    monkeypatch.setattr(forge, "run_tool", fake_gh(RUNS["6699"], CHECKS["6699"]))
+    assert forge.fetch_ci(info_for(tmp_path, "6699"), {"number": 6699})["state"] == "none"

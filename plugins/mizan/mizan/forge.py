@@ -10,8 +10,7 @@ these read commands run, with arguments as a list (no shell):
     gh run list --branch=<branch> --limit 20
         --json databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt,event,createdAt,
                workflowDatabaseId
-    gh run list --commit=<head> --limit 20 --json ...   (detached, or the head is not in the list above,
-        or the PR's only passing checks are pull_request_target ones: are its workflows waiting?)
+    gh run list --commit=<head> --limit 20 --json ...   (detached, or the head is not in the list above)
     gh run list --workflow=<id> --status=completed --limit 20 --json ...
         (CI running and the branch has no finished run of that workflow: for the time left; by id,
         since two workflows may share a name)
@@ -128,10 +127,18 @@ FAILED = ("failure", "timed_out", "startup_failure")  # cancelled is counted apa
 # A run that waits for a maintainer's approval (a first-time contributor's fork) has not run. After
 # 30 days GitHub ends it as failure with no jobs: still not run.
 WAITING, EXPIRED_AFTER = "action_required", 29 * 86400
+# The commit's CI. Not: schedule runs (GitHub tags them with the default branch's head), dynamic runs
+# (Copilot reviews, dependabot updates), pull_request_target runs (a labeler, a backport on close).
+# A run or check with no event (an outside status such as CodeQL) still counts.
+CI_EVENTS = ("push", "pull_request", "merge_group")
+
+
+def is_ci(item: dict) -> bool:
+    return not item.get("event") or item.get("event") in CI_EVENTS
 
 
 def parse_gh_checks(text: str) -> dict:
-    checks = json.loads(text or "[]")
+    checks = [c for c in json.loads(text or "[]") if is_ci(c)]  # a labeler alone is no CI: "none"
     bad = [c for c in checks if c.get("bucket") == "fail"]
     cancelled = [c.get("name", "?") for c in checks if c.get("bucket") == "cancel"]
     if bad:
@@ -147,16 +154,14 @@ def parse_gh_checks(text: str) -> dict:
     if cancelled:
         return {"state": "cancelled", "failed": [], "cancelled": cancelled,
                 "all_cancelled": not any(c.get("bucket") == "pass" for c in checks)}
-    passing = [c for c in checks if c.get("bucket") == "pass"]
-    if passing:
-        # Only pull_request_target checks (a labeler) ran: the PR's own workflows may wait for approval.
-        target_only = all(c.get("event") == "pull_request_target" for c in passing)
-        return {"state": "passed", "failed": [], **({"target_only": True} if target_only else {})}
+    if any(c.get("bucket") == "pass" for c in checks):
+        return {"state": "passed", "failed": []}
     return {"state": "none", "failed": []}
 
 
 def pick_runs(runs: list[dict], head: str) -> list[dict]:
-    """The workflow runs of the local HEAD commit, else of the newest commit that has runs."""
+    """The CI runs of the local HEAD commit, else of the newest commit that has runs."""
+    runs = [r for r in runs if is_ci(r)]
     same = [r for r in runs if r.get("headSha") == head]
     if same or not runs:
         return same
@@ -380,14 +385,9 @@ def fetch_ci(info: dict, pr: dict | None) -> dict:
         if pr and pr.get("number"):
             argv = ["gh", "pr", "checks", str(int(pr["number"])), "--json", "name,bucket,link,workflow,event"]
             checks = parse_gh_checks(run_tool(argv, cwd, accept_codes=(0, 1, 8)))
-            if checks.pop("target_only", False) and re.match(r"^[0-9a-f]{7,64}$", head):
-                # `gh pr checks` leaves out runs waiting for approval: ask for the commit's runs.
-                by_commit = run_tool(["gh", "run", "list", f"--commit={head}", *fields], cwd)
-                found = finish_runs(parse_gh_runs(by_commit, head), cwd)
-                if found["state"] == "approval":
-                    return found
             if checks["state"] not in ("none", "running"):
                 return checks
+            # None: `gh pr checks` leaves out runs waiting for approval; the run list below has them.
             # Running: the run list below says for how long, and about how long is left.
         listed = [] if detached(info) else json.loads(
             run_tool(["gh", "run", "list", f"--branch={branch}", *fields], cwd) or "[]")
