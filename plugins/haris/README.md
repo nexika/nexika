@@ -135,7 +135,7 @@ becomes ask, ask becomes deny).
   "mode": "on",
   "ask": ["terraform plan", "make deploy"],
   "deny": ["kubectl delete"],
-  "allow": ["npm publish --dry-run"],
+  "allow": ["make release-notes"],
   "protected_branches": ["staging"],
   "secret_paths": ["*/secrets/*"],
   "taint_turns": 3

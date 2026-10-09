@@ -1189,3 +1189,15 @@ def test_a_folder_approval_covers_git_in_a_repository_there(world):
         assert d.verdict in ORDINARY, (command, d.verdict, d.cls, d.reason)
     d = decide(project, "Bash", "cd ~/other4 && git checkout -q x", approvals=approvals)
     assert d.verdict == "ask", (d.verdict, d.cls, d.reason)
+
+
+def test_every_allow_example_in_the_readme_allows(world):
+    """The README's Settings example must show an `allow` that does something (#223)."""
+    home, project = world
+    text = (HARIS_ROOT / "README.md").read_text(encoding="utf-8")
+    block = text.split("## Settings", 1)[1].split("```json", 1)[1].split("```", 1)[0]
+    examples = json.loads(block)["allow"]
+    assert examples
+    for command in examples:
+        cfg = dict(policy.effective_config(str(project)), allow=[command])
+        assert decide(project, "Bash", command, cfg).verdict == "allow", command

@@ -729,6 +729,10 @@ def h_node_pm(argv, ctx, stdin):
     rest = pos[1:]
     if sub in ("publish", "unpublish", "deprecate", "owner", "dist-tag", "access", "team") or \
             (sub == "npm" and rest[:1] == ["publish"]):
+        if has(opts, "--dry-run"):
+            ctx.add("exec", f"`{program} {sub} --dry-run` only shows what it would send; nothing reaches the "
+                            "registry.")
+            return Stage()
         ctx.add("remote-irreversible", f"`{program} {sub}` changes a package on the public registry, which "
                                        "others download; it is hard or impossible to take back.")
         return Stage()
