@@ -701,8 +701,13 @@ def helper_crash(lines: list[str]) -> str:
     return ""
 
 
+# A test runner's pass line names a test that passed (#252): "✔ ignores ECONNRESET (19ms)" is no signal.
+PASS_LINE = re.compile(r"^\s*(?:✔|✓|√|ok \d+\b|PASS\b|passed: )|\sPASSED(?:\s|$)")
+
+
 def signals(lines: list[str]) -> list[dict]:
     found = []
+    lines = [line for line in lines if not PASS_LINE.search(line)]
     for kind, pattern in SIGNALS:
         hit = next((line for line in lines if pattern.search(line)), None)
         if hit is None and kind == "setup":

@@ -310,6 +310,19 @@ def test_signals_are_named_by_the_most_specific_line():
         assert [s["kind"] for s in parse.signals([line])] == ["oom"], line
 
 
+@pytest.mark.parametrize("line", [
+    # fastify (#252): a passing test's name matched the network signal in four runs.
+    "✔ default clientError handler ignores ECONNRESET (19ms)",
+    "  ✓ retries after ECONNREFUSED (3 ms)",
+    "ok 12 - handles ETIMEDOUT",
+    "PASS test/econnreset.test.js (5.2 s)",
+    "passed: /home/runner/work/x/x/test/econnreset.test.js (120 ms)",
+    "tests/test_net.py::test_retry_on_ECONNRESET PASSED                 [ 50%]",
+])
+def test_a_passing_test_s_name_is_not_a_signal(line):
+    assert parse.signals([line]) == []
+
+
 def test_excerpt_shows_the_lines_around_a_failure():
     lines = [f"line {i}" for i in range(100)] + ["FAILED tests/x.py::test_y - boom"] + ["after"] * 5
     text = parse.excerpt(lines, ["test_y"], around=3)
