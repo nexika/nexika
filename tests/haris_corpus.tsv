@@ -643,7 +643,13 @@ ask	set -- ~/.ssh/id_rsa; cat $1
 ask	set -- README.md ~/.ssh/id_rsa; shift; cat $1
 ask	source .env
 ask	. .env.production
-ask	alias ls='rm -rf ~'; ls
+deny	alias ls='rm -rf ~'; ls
+deny	alias x='rm -rf ~'; x
+deny	alias x='rm -rf'; x ~
+ask	alias x="$CMD"; x
+pass	alias ll='ls -la'
+pass	alias code-fastify="/Applications/VSCodeFastify/Visual\ Studio\ Code.app/Contents/Resources/app/bin/code"
+pass	alias ll='ls -la'; ll
 allow	git show HEAD:README.md
 allow	git diff --no-index src/app.py src/new.py
 allow	set -euo pipefail
