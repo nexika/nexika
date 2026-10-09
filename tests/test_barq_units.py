@@ -584,3 +584,134 @@ def test_a_symbol_without_a_closing_brace_is_marked_partial():
     text = "function broken() {\n" + "  x();\n" * 80
     sym = outline(text, ".js")[0]
     assert sym.partial
+
+
+# ---------------------------------------------------------------- node:test / borp (#268)
+
+NODE_SUMMARY = """\
+ℹ tests {tests}
+ℹ suites 22
+ℹ pass {passed}
+ℹ fail {failed}
+ℹ cancelled 0
+ℹ skipped 3
+ℹ todo 0
+ℹ duration_ms 30890.5451
+"""
+
+NODE_FAILURE = """\
+✖ failing tests:
+
+test at test/x.test.js:6:1
+✖ case insensitive (452.505044ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+\x20\x20
+    {
+  +   hello: 'world'
+  -   hello: 'WORLD-planted'
+    }
+\x20\x20
+      at assert.<computed> [as deepStrictEqual] (node:internal/test_runner/test:320:18)
+      at TestContext.<anonymous> (/work/test/x.test.js:26:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+parsed config: test/**/*.test.js test/**/*.test.mjs
+"""
+
+
+def _node_passing(n):
+    return "".join(f"✔ should catch error inside formatter {i} (1.2ms)\n" for i in range(n))
+
+
+def test_node_test_spec_one_failure():
+    text = (_node_passing(300) + "✖ case insensitive (452.505044ms)\n"
+            + NODE_SUMMARY.format(tests=304, passed=300, failed=1) + "\n" + NODE_FAILURE)
+    verdict, details, _ = compress.summarize(text, 1)
+    shown = "\n".join(details)
+    assert verdict == "node:test: 1 failed, 300 passed, 3 skipped (304 tests)"
+    assert "test at test/x.test.js:6:1" in shown and "✖ case insensitive (452.505044ms)" in shown
+    assert "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:" in shown
+    assert "-   hello: 'WORLD-planted'" in shown and "/work/test/x.test.js:26:12" in shown
+    assert "✔" not in shown and "node:internal" not in shown
+    assert len(details) < 20
+
+
+def test_node_test_spec_green_has_counts():
+    text = _node_passing(50) + NODE_SUMMARY.format(tests=53, passed=50, failed=0)
+    verdict, details, _ = compress.summarize(text, 0)
+    assert verdict == "node:test: 0 failed, 50 passed, 3 skipped (53 tests)"
+    assert details == []
+
+
+def test_node_test_tap_not_ok():
+    verdict, details, _ = summarize("""\
+        TAP version 13
+        # Subtest: test/zz-hang.test.js
+        not ok 1 - test/zz-hang.test.js
+          ---
+          duration_ms: 3007.358804
+          type: 'test'
+          location: '/work/test/zz-hang.test.js:1:1'
+          failureType: 'testTimeoutFailure'
+          error: 'test timed out after 3000ms'
+          code: 'ERR_TEST_FAILURE'
+          ...
+        1..1
+        # tests 1
+        # suites 0
+        # pass 0
+        # fail 0
+        # cancelled 1
+        # skipped 0
+        # todo 0
+        # duration_ms 3023.196252
+    """)
+    assert verdict == "node:test: 0 failed, 0 passed, 1 cancelled (1 tests)"
+    assert details.split("\n") == [
+        "not ok 1 - test/zz-hang.test.js",
+        "  location: /work/test/zz-hang.test.js:1:1",
+        "  failureType: testTimeoutFailure",
+        "  error: test timed out after 3000ms",
+    ]
+
+
+def test_node_test_crash_outside_tests_is_shown_once():
+    # t2-require: every test file dies on the same require error; the failing-tests block
+    # only says 'test failed', so the error printed before it must be kept
+    crash = """\
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module './lib/does-not-exist'
+Require stack:
+- /work/fastify.js
+- /work/test/{name}.test.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at Object.<anonymous> (/work/fastify.js:48:1)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14) {{
+  code: 'MODULE_NOT_FOUND',
+}}
+
+Node.js v22.23.1
+✖ /work/test/{name}.test.js (493.6ms)
+"""
+    names = [f"t{i}" for i in range(40)]
+    failing = "".join(f"test at test/{n}.test.js:1:1\n✖ /work/test/{n}.test.js (493.6ms)\n"
+                      f"  'test failed'\n\n" for n in names)
+    text = ("".join(crash.format(name=n) for n in names)
+            + NODE_SUMMARY.format(tests=80, passed=37, failed=40) + "\n✖ failing tests:\n\n" + failing)
+    verdict, details, _ = compress.summarize(text, 1)
+    shown = "\n".join(details)
+    assert verdict.startswith("node:test: 40 failed, 37 passed")
+    assert shown.count("Error: Cannot find module './lib/does-not-exist'") == 1
+    assert "at Object.<anonymous> (/work/fastify.js:48:1)" in shown
+    assert "test at test/t0.test.js:1:1" in shown and "more failing tests" in shown
+    assert len(details) <= 80
