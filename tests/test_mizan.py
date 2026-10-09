@@ -237,6 +237,8 @@ def test_a_fork_pr_checked_out_under_another_name_is_found_by_its_head():
     assert forge.parse_gh_prs(json.dumps(FASTIFY_PRS), "BALOGUN-DAVID/main", "0" * 40)["branch_pr"] is None
     twice = FASTIFY_PRS + [{**FASTIFY_PRS[-1], "number": 9999}]  # two PRs at one commit: neither is sure
     assert forge.parse_gh_prs(json.dumps(twice), "BALOGUN-DAVID/main", head)["branch_pr"] is None
+    # A detached HEAD at that commit is on no branch: no PR, no creator (#161).
+    assert forge.parse_gh_prs(json.dumps(FASTIFY_PRS), head[:8], head)["branch_pr"] is None
 
 
 def test_glab_merge_requests():

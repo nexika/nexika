@@ -94,7 +94,7 @@ def parse_gh_prs(text: str, branch: str, head: str = "") -> dict:
     mine = next((pr for pr in items if pr.get("headRefName") == branch
                  and (not pr.get("isCrossRepository") or (head and pr.get("headRefOid") == head))), None)
     at_head = [pr for pr in items if head and pr.get("headRefOid") == head]
-    if mine is None and len(at_head) == 1:
+    if mine is None and len(at_head) == 1 and branch != head[:8]:  # a detached HEAD is on no branch
         mine = at_head[0]  # `gh pr checkout` names a fork's main branch <owner>/main: the head says which PR
     found = {"state": "ok", "tool": "gh", "total": len(items), "per_user": per_user(names),
              "branch_pr": None}
