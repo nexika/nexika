@@ -73,12 +73,41 @@ def test_pytest_failures_with_lines_and_jobs():
     (["src/cart.ts:3:7 - error TS2322: Type 'string' is not assignable."], ("tsc", "TS2322", "src/cart.ts", 3)),
     (["app/cart.py:3:111: E501 Line too long (117 > 110)"], ("ruff", "E501", "app/cart.py", 3)),
     (["E501 Line too long (117 > 110)", "  --> app/cart.py:3:111"], ("ruff", "E501", "app/cart.py", 3)),
-    (["/home/runner/work/shop/src/cart.js", "  3:7  error  'x' is never used  no-unused-vars"],
-     ("eslint", "no-unused-vars", "/home/runner/work/shop/src/cart.js", 3)),
+    (["/home/runner/work/shop/shop/src/cart.js", "  3:7  error  'x' is never used  no-unused-vars"],
+     ("eslint", "no-unused-vars", "src/cart.js", 3)),
+    (["src/cart.js", "  3:7  error  'x' is never used  no-unused-vars"], ("eslint", "no-unused-vars", "src/cart.js", 3)),
 ])
 def test_parsers(lines, expected):
     first = parse.failures([parse.clean_line(line) for line in lines])[0]
     assert (first["framework"], first["test"], first["file"], first["line"]) == expected
+
+
+# fastify run 32483417465 (#256): the lint job's problem matcher puts "##[error]" before eslint's lines.
+ESLINT_MATCHER_LOG = [
+    "/home/runner/work/fastify/fastify/fastify.d.ts",
+    "##[error]  100:80  error  Expected a semicolon  @stylistic/member-delimiter-style",
+    "##[error]  101:7   error  Expected a semicolon  @stylistic/member-delimiter-style",
+    "",
+    "/home/runner/work/fastify/fastify/fastify.js",
+    "##[error]  865:1  error  Expected indentation of 4 spaces  @stylistic/indent-binary-ops",
+    "",
+    "✖ 3 problems (3 errors, 0 warnings)",
+    "##[error]Process completed with exit code 1.",
+]
+
+
+def test_lint_errors_behind_a_problem_matcher_are_read():
+    failures = parse.read_log(gh_log("lint", ESLINT_MATCHER_LOG))["lint"]["failures"]
+    assert [(f["framework"], f["test"], f["file"], f["line"]) for f in failures] == [
+        ("eslint", "@stylistic/member-delimiter-style", "fastify.d.ts", 100),
+        ("eslint", "@stylistic/member-delimiter-style", "fastify.d.ts", 101),
+        ("eslint", "@stylistic/indent-binary-ops", "fastify.js", 865)]
+    verdict = classify.classify({"failures": failures})
+    assert (verdict["kind"], verdict["detail"]["what"]) == ("code", "lint")
+    found = parse.failures(["##[warning]src/a.py:3:1: F401 `os` imported but unused",
+                            "##[error]src/b.py:7: error: Name \"x\" is not defined  [name-defined]"])
+    assert [(f["framework"], f["file"], f["line"]) for f in found] == [("ruff", "src/a.py", 3),
+                                                                       ("mypy", "src/b.py", 7)]
 
 
 def _found(lines):
@@ -142,6 +171,31 @@ def test_mypy_errors_are_read(tmp_path):
 ])
 def test_signals(line, kind):
     assert parse.signals([line])[0]["kind"] == kind
+
+
+@pytest.mark.parametrize("line", [
+    # fastify (#254): GitHub's outage of 6 Aug (31120530864, 31118738236, 31118715588, 31118716052).
+    "Failed to resolve action download info. Error: Service Unavailable",
+    "##[error]Service Unavailable",
+    "##[error]Internal Server Error",
+    "##[error]Bad Gateway",
+    # fastify run 36890169568: linkinator meets a site that is down.
+    "##[error][503] https://github.com/pinojs/pino/blob/c77d8ec5ce/docs/API.md - HTTP 503",
+    "Action failed to download the metadata. Status code: 502",
+])
+def test_github_service_errors_are_the_network(line):
+    assert [s["kind"] for s in parse.signals([line])] == ["network"]
+
+
+@pytest.mark.parametrize("line", [
+    # A 403 from a download site can be a block that never lifts: not called infra (the open question in #254).
+    "##[error]Action failed to download the metadata. Status code: 403",
+    "##[error]Service Unavailable for maintenance of the docs, see README",
+    "##[error][404] https://github.com/fastify/fastify/tree/5.x - HTTP 404",
+    " * [new branch]        remove_503              -> origin/remove_503",
+])
+def test_lines_that_are_not_a_service_error(line):
+    assert "network" not in [s["kind"] for s in parse.signals([line])]
 
 
 def test_signals_are_named_by_the_most_specific_line():
@@ -705,6 +759,50 @@ def test_a_check_message_that_passes_after_a_label_is_not_flaky(ci, monkeypatch)
     assert any("9001" in e for e in record["evidence"])
 
 
+# fastify run 36318290733 (#260): a JavaScript action fails with core.setFailed(): no exit-code line.
+PR_TITLE_LOG = [
+    "##[group]Run fastify/action-pr-title@e8f2ff244ca28c4a1a00edbf2df39b082002e8aa",
+    "with:",
+    "  regex: /^(build|chore|ci|docs|feat|types|fix|perf|refactor|style|test)(?:\\([^\\):]*\\))?!?:\\s/",
+    "  github-token: ***",
+    "##[endgroup]",
+    'Checking pull-request title: "Update lock-threads.yml"',
+    '##[error]Pull Request title "Update lock-threads.yml" failed to pass match regex - /^(build|chore)/',
+    "Cleaning up orphan processes",
+]
+
+
+def test_a_javascript_action_s_own_message_is_the_failure(ci, monkeypatch):
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log("pull-request-title-check", PR_TITLE_LOG))
+    record = diagnosis.triage(ci)
+    assert (record["kind"], record["detail"]["what"]) == ("code", "check")
+    assert [(f["framework"], f["message"]) for f in record["failures"]] == [
+        ("step", 'Pull Request title "Update lock-threads.yml" failed to pass match regex - /^(build|chore)/')]
+    # The author edits the title and the check passes on the same commit: still not flaky.
+    monkeypatch.setattr(forge, "history", lambda info, run: {"same_commit_passed": 9001, "last_green": None})
+    assert diagnosis.triage(ci, refresh=True)["kind"] == "code"
+
+
+@pytest.mark.parametrize("lines", [
+    # fastify run 30849839665: a setup action that cannot download is no check of the project.
+    ["##[group]Run nodesource/setup-nsolid@1ca68d2589d3d56ecd3881dfe6ffa87eeda9c939", "with:", "##[endgroup]",
+     "##[error]Action failed to download the metadata. Status code: 403"],
+    # An action's error that a signal explains is left to the signal.
+    ["##[group]Run dessant/lock-threads@1bf7ec25051fe7c00bdd17e6a7cf3d7bfb7dc771", "##[endgroup]",
+     "##[error]Resource not accessible by integration"],
+    # The token's missing permission is said on the line after the action's error: the signal explains it.
+    ["##[group]Run dessant/lock-threads@89ae32b08ed1a541efecbab17912962a5e38981c", "##[endgroup]",
+     "##[error]Request failed due to following response errors:", " - Resource not accessible by integration"],
+    # fastify run 32202758629: a site that answers a link checker with 403 is not the project's check.
+    ["##[group]Run JustinBeckwith/linkinator-action@7b6b0bc671f6264e1a8daa4488a5bd91ce61dcd4", "##[endgroup]",
+     "##[error][403] https://medium.com/better-programming/x - HTTP 403", "##[error]Detected 1 broken links."],
+    # A run: step's error lines are read as before (#172), not as an action's message.
+    ["##[group]Run npm test", "npm test", "##[endgroup]", "##[error]Something broke"],
+])
+def test_action_errors_that_are_not_a_check(lines):
+    assert parse.failures(lines) == []
+
+
 def test_an_echo_that_is_not_printed_is_not_a_failure():
     lines = ["##[group]Run make", 'echo "Building the docs"', "make docs", "##[endgroup]",
              "make: *** [docs] Error 2", "##[error]Process completed with exit code 2."]
@@ -726,6 +824,59 @@ MERGE_LOG = [
     "Automatic merge failed; fix conflicts and then commit the result.",
     "##[error]Process completed with exit code 1.",
 ]
+
+
+# fastify runs 36454200650 (markdownlint-cli2), 30587884207 (lychee) and 31026578262 (linkinator) (#259).
+MARKDOWNLINT_LOG = [
+    "Linting: 210 file(s)",
+    "##[error]docs/Guides/Ecosystem.md:244:81 error MD013/line-length Line length [Expected: 80; Actual: 106]",
+    "docs/Reference/Warnings.md:39 MD009/no-trailing-spaces Trailing spaces [Expected: 0 or 2; Actual: 1]",
+    "Summary: 2 error(s)",
+    "##[error]Process completed with exit code 1.",
+]
+LYCHEE_LOG = [
+    "[ERROR] file:///home/runner/work/fastify/fastify/docs/latest/Reference/Server#factory | Cannot find file: "
+    "File not found. Check if file exists and path is correct",
+    "# Summary",
+    "| 🚫 Errors      | 3     |",
+    "### Errors in docs/Tutorial/03-create-server.md",
+    "",
+    "* [ERROR] <file:///home/runner/work/fastify/fastify/docs/latest/Reference/Server#factory> | Cannot find file: "
+    "File not found. Check if file exists and path is correct",
+    "### Errors in docs/Tutorial/04-defining-routes.md",
+    "* [404] <https://example.com/gone> | Rejected status code (this depends on your \"accept\" configuration): "
+    "Not Found",
+    "* [502] <https://example.com/down> | Rejected status code: Bad Gateway",
+    "##[error]Process completed with exit code 2.",
+]
+LINKINATOR_LOG = [
+    "##[error][404] https://github.com/fastify/fastify/tree/5.x - HTTP 404",
+    "##[error][503] https://github.com/pinojs/pino/blob/c77d8ec5ce/docs/API.md - HTTP 503",
+    "##[error]Detected 2 broken links.",
+]
+
+
+def test_markdownlint_errors_are_lint_failures():
+    failures = parse.read_log(gh_log("lint", MARKDOWNLINT_LOG))["lint"]["failures"]
+    assert [(f["framework"], f["kind"], f["test"], f["file"], f["line"]) for f in failures] == [
+        ("markdownlint", "lint", "MD013/line-length", "docs/Guides/Ecosystem.md", 244),
+        ("markdownlint", "lint", "MD009/no-trailing-spaces", "docs/Reference/Warnings.md", 39)]
+    assert failures[0]["message"] == "Line length [Expected: 80; Actual: 106]"
+    assert classify.classify({"failures": failures})["detail"]["what"] == "lint"
+
+
+def test_broken_links_name_the_page_and_the_link():
+    failures = parse.read_log(gh_log("linkChecker", LYCHEE_LOG))["linkChecker"]["failures"]
+    assert [(f["framework"], f["kind"], f["test"], f["file"]) for f in failures] == [
+        ("lychee", "links", "docs/latest/Reference/Server#factory", "docs/Tutorial/03-create-server.md"),
+        ("lychee", "links", "https://example.com/gone", "docs/Tutorial/04-defining-routes.md")]
+    assert failures[0]["message"].startswith("Cannot find file")
+    verdict = classify.classify({"failures": failures})
+    assert (verdict["kind"], verdict["detail"]["what"]) == ("code", "links")
+    assert i18n.label("code", verdict["detail"], "en") == "2 broken link(s)"
+    linkinator = parse.failures(LINKINATOR_LOG)   # a site that is down is no broken link of the docs
+    assert [(f["framework"], f["kind"], f["test"]) for f in linkinator] == [
+        ("linkinator", "links", "https://github.com/fastify/fastify/tree/5.x")]
 
 
 def test_a_branch_that_does_not_merge_says_rebase(ci, monkeypatch):
