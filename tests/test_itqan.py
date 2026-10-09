@@ -543,6 +543,16 @@ def test_python_pack_points_to_the_project_s_commands():
     assert "Project checks" in commands and commands.index("Project checks") < commands.index("ruff")
 
 
+# fastify (#231, case S-pack): `npx tsc --noEmit` fails at a root with no tsconfig.json
+def test_node_pack_points_to_the_project_s_commands():
+    pack = (ITQAN / "packs" / "node.md").read_text()
+    commands = pack.split("## Commands", 1)[1]
+    assert "Project checks" in commands and commands.index("Project checks") < commands.index("npm test")
+    assert "test:types" in commands and "root tsconfig.json" in commands
+    testing = pack.split("## Testing", 1)[1].split("##", 1)[0]
+    assert "node:test" in testing and "inject" in testing
+
+
 def test_stacks_are_detected_from_the_repo_root(tmp_path, repo):
     (repo / "pyproject.toml").write_text("[project]\nname='x'\n")
     (repo / "web").mkdir()
