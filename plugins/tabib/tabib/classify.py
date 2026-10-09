@@ -105,9 +105,14 @@ def classify(facts: dict) -> dict:
                if not (s["kind"] == "cancelled" and a_job_failed)}
     evidence: list[str] = []
     if facts.get("no_jobs"):
-        evidence.append("The run has no jobs, so no log: the workflow file did not parse, or no job could "
-                        f"start. GitHub's message is on the run page: {facts.get('url') or '-'}")
-        return {"kind": "setup", "detail": {"jobs": 0}, "confidence": "medium", "evidence": evidence}
+        # Only what tabib can see: no guessed cause (#263, the maintainer's decision).
+        evidence.append("The CI run has no jobs or logs, so there is nothing to diagnose.")
+        if facts.get("event"):
+            evidence.append(f"Event: {facts['event']}.")
+        if facts.get("from_fork"):
+            evidence.append("The run is for a pull request from a fork.")
+        evidence.append(f"Run page: {facts.get('url') or '-'}")
+        return {"kind": "unknown", "detail": {"jobs": 0}, "confidence": "low", "evidence": evidence}
     if facts.get("log_gone"):
         evidence.append("The run's log has expired: GitHub keeps logs for about 90 days.")
         return {"kind": "unknown", "detail": {"log": "expired"}, "confidence": "low", "evidence": evidence}
