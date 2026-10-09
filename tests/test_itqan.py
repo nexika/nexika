@@ -628,6 +628,16 @@ def test_a_script_that_is_not_a_chain_stays_one_check(proof, tmp_path, monkeypat
     assert [c["argv"][-1] for c in proof.detect(root)] == ["test", "lint"]
 
 
+# fastify (#230, case S-checks-name): `npm lint` is not an npm command; `npm test` is
+def test_a_node_check_is_named_by_a_command_that_runs(proof, tmp_path, monkeypatch):
+    root = node_project(tmp_path, {"lint": "eslint", "test": "borp", "build": "tsc"})
+    (root / "node_modules").mkdir()
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+    assert [c["name"] for c in proof.detect(root)] == ["npm test", "npm run lint", "npm run build"]
+    (root / "pnpm-lock.yaml").write_text("")
+    assert [c["name"] for c in proof.detect(root)] == ["pnpm test", "pnpm lint", "pnpm build"]
+
+
 def test_session_note_names_the_project_s_own_checks(tmp_path):
     # black case S-pack (#151): the python pack suggested ruff on a project linted by flake8 and black
     root = black_like(tmp_path)

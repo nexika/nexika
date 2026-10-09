@@ -83,6 +83,14 @@ LINT_SCRIPT = re.compile(r"(?i)lint|markdown|prettier|format")
 TEST_SCRIPT = re.compile(r"(?i)test|unit|coverage|spec|e2e")
 
 
+def _script_check_name(runner: str, script: str) -> str:
+    """A name the user can run: npm runs only test, start and stop without `run` (`npm lint` fails);
+    pnpm and yarn run any script by its name."""
+    if runner == "npm" and script not in ("test", "start", "stop"):
+        return f"npm run {script}"
+    return f"{runner} {script}"
+
+
 def _script_kind(name: str) -> str | None:
     """The check family a package script's name says: type tests and linters are lint, the rest
     of the test names are tests; None for a script that does not look like a check."""
@@ -257,17 +265,18 @@ def detect(root: Path, not_run: list | None = None) -> list[dict]:
             if kind == "lint":
                 planned[script] = kind
             else:
-                skipped.append({"name": f"{runner} {script}", "kind": "other",
+                skipped.append({"name": _script_check_name(runner, script), "kind": "other",
                                 "command": f"{runner} run {script}",
                                 "reason": f"run by CI ({workflow}); the proof does not run it"})
         for script, kind in planned.items():
             if missing:  # `eslint: command not found` would be a false red proof
-                skipped.append({"name": f"{runner} {script}", "kind": kind,
+                skipped.append({"name": _script_check_name(runner, script), "kind": kind,
                                 "command": f"{runner} run {script}",
                                 "reason": "dependencies not installed (no node_modules): install them with "
                                           f"`{_node_install_hint(root)}`, then make the proof again"})
             else:  # what the script runs is recorded, so `"test": "exit 0"` shows
-                add(f"{runner} {script}", kind, [runner, "run", script], str(scripts[script])[:300])
+                add(_script_check_name(runner, script), kind, [runner, "run", script],
+                    str(scripts[script])[:300])
 
     if (root / "go.mod").is_file():
         add("go vet", "lint", ["go", "vet", "./..."])
