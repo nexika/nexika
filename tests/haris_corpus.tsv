@@ -460,6 +460,12 @@ deny	git push origin +stable
 deny	git push origin HEAD:stable --force
 ask	git push --force
 ask	git push -f origin feat/x
+deny	git push --force origin 5.x
+deny	git push -f origin v4.x
+deny	git push origin +4.x
+deny	git push -f origin next
+ask	git push --force origin fix/5.x-docs
+ask	git push -f origin next-steps
 ask	git push origin --delete feat/old
 ask	git push origin :feat/old
 ask	git push origin v1.2.0

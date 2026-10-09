@@ -40,7 +40,8 @@ from .targets import (  # noqa: F401  (the light helpers, kept here by name)
     write_paths,
 )
 
-DEFAULT_PROTECTED = ["main", "master", "develop", "production", "trunk", "stable", "release/*"]
+DEFAULT_PROTECTED = ["main", "master", "develop", "production", "trunk", "stable", "next", "release/*"]
+RELEASE_LINE = re.compile(r"^v?\d+(?:\.\d+)*\.x$")  # a major version's own branch: 4.x, 5.x, v4.x (#227)
 SECRET_VAR = re.compile(r"(?i)(?:token|secret|passw(?:or)?d|passphrase|api_?key|access_?key|private_?key"
                         r"|credential|auth|session_?key|client_?secret|_pat$|^pat_)")
 RISKY_ENV = {"LD_PRELOAD", "LD_AUDIT", "DYLD_INSERT_LIBRARIES", "GIT_SSH_COMMAND", "GIT_SSH", "GIT_EXEC_PATH",
@@ -2299,7 +2300,8 @@ def git_push(sub, rest, ctx, stdin):
     if force and not deleting:
         dests = [r.lstrip("+").split(":")[-1] for r in refspecs if r.lstrip("+")] or [ctx.git.branch()]
         dests = [d.removeprefix("refs/heads/") for d in dests]
-        hit = [d for d in dests if d and branch_matches(d, protected_branches(ctx))]
+        protected = protected_branches(ctx)
+        hit = [d for d in dests if d and (branch_matches(d, protected) or RELEASE_LINE.match(d))]
         if hit:
             ctx.add("force-push-protected", f"Force-pushes to '{hit[0]}', a shared branch: it rewrites "
                                             f"history "
