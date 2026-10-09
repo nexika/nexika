@@ -288,6 +288,42 @@ def generated(lines: list[str]) -> list[dict]:
     return found
 
 
+MARKDOWNLINT = re.compile(r"^(?:##\[(?:error|warning)\])?(\S+\.(?:md|markdown)):(\d+)(?::\d+)?\s+"
+                          r"(?:error\s+)?(MD\d{3}(?:/[\w/-]+)?)\s+(.+)$")
+LYCHEE_PAGE = re.compile(r"^#{2,4} Errors in (\S+)\s*$")
+LYCHEE_LINK = re.compile(r"^\* \[(ERROR|\d{3})\] <(\S+)> \| (.+)$")
+LINKINATOR = re.compile(r"^(?:##\[error\])?\s*\[(\d{3})\] (\S+) - HTTP \d{3}\s*$")
+# A link that is gone or a page that is missing is the docs' own; a site that is down or slow is not (#254).
+GONE = ("404", "410")
+
+
+def _link(url: str) -> str:
+    """A link as the docs have it: a local file:// link relative to the checkout."""
+    return CHECKOUT.sub("", url.removeprefix("file://")) if url.startswith("file://") else url
+
+
+def doc_checks(lines: list[str]) -> list[dict]:
+    """Documentation checks (#259): markdownlint's 'file.md:L:C [error] MDxxx/rule message', lychee's broken
+    links under '### Errors in <page>', linkinator's '[404] <url> - HTTP 404'."""
+    found: list[dict] = []
+    page = ""
+    for line in lines:
+        bare = line.strip()
+        if m := MARKDOWNLINT.match(bare):
+            if SAFE_PATH.match(m.group(1)):
+                found.append(_failure("markdownlint", "lint", m.group(3), m.group(1), int(m.group(2)),
+                                      m.group(4)))
+        elif m := LYCHEE_PAGE.match(bare):
+            page = m.group(1) if SAFE_PATH.match(m.group(1)) else ""
+        elif (m := LYCHEE_LINK.match(bare)) and page:
+            status, message = m.group(1), m.group(3)
+            if status in GONE or (status == "ERROR" and message.startswith("Cannot find file")):
+                found.append(_failure("lychee", "links", _link(m.group(2)), page, message=message))
+        elif (m := LINKINATOR.match(bare)) and m.group(1) in GONE:
+            found.append(_failure("linkinator", "links", m.group(2), message=bare.removeprefix("##[error]")))
+    return found
+
+
 def playwright(lines: list[str]) -> list[dict]:
     """Playwright's failed tests: the summary's "failed" group when there is one (a test in its "flaky"
     group passed on a retry), else the numbered error blocks, else the list reporter's ✘ lines."""
@@ -508,6 +544,7 @@ def failures(lines: list[str]) -> list[dict]:
     found += merge_conflict(lines)
     found += generated(lines)
     found += playwright(lines)
+    found += doc_checks(lines)
     for block in junit_blocks(lines):
         found += junit_xml(block)
     if not found:   # nothing a tool reports: the step's own words, when its script printed them

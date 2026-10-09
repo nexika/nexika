@@ -728,6 +728,59 @@ MERGE_LOG = [
 ]
 
 
+# fastify runs 36454200650 (markdownlint-cli2), 30587884207 (lychee) and 31026578262 (linkinator) (#259).
+MARKDOWNLINT_LOG = [
+    "Linting: 210 file(s)",
+    "##[error]docs/Guides/Ecosystem.md:244:81 error MD013/line-length Line length [Expected: 80; Actual: 106]",
+    "docs/Reference/Warnings.md:39 MD009/no-trailing-spaces Trailing spaces [Expected: 0 or 2; Actual: 1]",
+    "Summary: 2 error(s)",
+    "##[error]Process completed with exit code 1.",
+]
+LYCHEE_LOG = [
+    "[ERROR] file:///home/runner/work/fastify/fastify/docs/latest/Reference/Server#factory | Cannot find file: "
+    "File not found. Check if file exists and path is correct",
+    "# Summary",
+    "| 🚫 Errors      | 3     |",
+    "### Errors in docs/Tutorial/03-create-server.md",
+    "",
+    "* [ERROR] <file:///home/runner/work/fastify/fastify/docs/latest/Reference/Server#factory> | Cannot find file: "
+    "File not found. Check if file exists and path is correct",
+    "### Errors in docs/Tutorial/04-defining-routes.md",
+    "* [404] <https://example.com/gone> | Rejected status code (this depends on your \"accept\" configuration): "
+    "Not Found",
+    "* [502] <https://example.com/down> | Rejected status code: Bad Gateway",
+    "##[error]Process completed with exit code 2.",
+]
+LINKINATOR_LOG = [
+    "##[error][404] https://github.com/fastify/fastify/tree/5.x - HTTP 404",
+    "##[error][503] https://github.com/pinojs/pino/blob/c77d8ec5ce/docs/API.md - HTTP 503",
+    "##[error]Detected 2 broken links.",
+]
+
+
+def test_markdownlint_errors_are_lint_failures():
+    failures = parse.read_log(gh_log("lint", MARKDOWNLINT_LOG))["lint"]["failures"]
+    assert [(f["framework"], f["kind"], f["test"], f["file"], f["line"]) for f in failures] == [
+        ("markdownlint", "lint", "MD013/line-length", "docs/Guides/Ecosystem.md", 244),
+        ("markdownlint", "lint", "MD009/no-trailing-spaces", "docs/Reference/Warnings.md", 39)]
+    assert failures[0]["message"] == "Line length [Expected: 80; Actual: 106]"
+    assert classify.classify({"failures": failures})["detail"]["what"] == "lint"
+
+
+def test_broken_links_name_the_page_and_the_link():
+    failures = parse.read_log(gh_log("linkChecker", LYCHEE_LOG))["linkChecker"]["failures"]
+    assert [(f["framework"], f["kind"], f["test"], f["file"]) for f in failures] == [
+        ("lychee", "links", "docs/latest/Reference/Server#factory", "docs/Tutorial/03-create-server.md"),
+        ("lychee", "links", "https://example.com/gone", "docs/Tutorial/04-defining-routes.md")]
+    assert failures[0]["message"].startswith("Cannot find file")
+    verdict = classify.classify({"failures": failures})
+    assert (verdict["kind"], verdict["detail"]["what"]) == ("code", "links")
+    assert i18n.label("code", verdict["detail"], "en") == "2 broken link(s)"
+    linkinator = parse.failures(LINKINATOR_LOG)   # a site that is down is no broken link of the docs
+    assert [(f["framework"], f["kind"], f["test"]) for f in linkinator] == [
+        ("linkinator", "links", "https://github.com/fastify/fastify/tree/5.x")]
+
+
 def test_a_branch_that_does_not_merge_says_rebase(ci, monkeypatch):
     from tabib import cli
     monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log("analysis / target", MERGE_LOG))
