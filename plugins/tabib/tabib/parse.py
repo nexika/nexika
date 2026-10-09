@@ -28,7 +28,12 @@ SIGNALS = [
                        r"heap out of memory|\bMemoryError\b|OOMKilled|cannot allocate memory")),
     ("network", re.compile(r"(?i)could not resolve host|ECONNRESET|ETIMEDOUT|ECONNREFUSED|EAI_AGAIN|"
                            r"connection (?:timed out|reset)|TLS handshake timeout|temporary failure in name "
-                           r"resolution|50[234] (?:Bad Gateway|Service Unavailable|Gateway Time-?out)")),
+                           r"resolution|50[234] (?:Bad Gateway|Service Unavailable|Gateway Time-?out)|"
+                           # GitHub's own service errors (#254); a 403 is not one: it may never lift.
+                           r"Failed to resolve action download info|\bHTTP 50[0234]\b|"
+                           r"^##\[error\](?:Service Unavailable|Internal Server Error|Bad Gateway|"
+                           r"Gateway Time-?out)\s*$|"
+                           r"failed to download .{0,60}Status code: 5\d\d\b")),
     ("rate_limit", re.compile(r"(?i)rate limit exceeded|429 Too Many Requests|secondary rate limit")),
     ("runner", re.compile(r"(?i)runner has received a shutdown signal|lost communication with the server|"
                           r"was not acquired by runner|"
