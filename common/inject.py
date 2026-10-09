@@ -15,6 +15,11 @@ _VERB = (r"(?:ignore|disregard|forget|override|bypass|discard|abandon|set\s+asid
          r"pay\s+no\s+attention\s+to)")
 _RULES = r"(?:instructions?|prompts?|rules|messages|directions|guidelines|guidance|constraints|orders)"
 _EARLIER = r"(?:previous|prior|above|earlier|preceding|original|system|safety)"
+# An Arabic order verb starts a word: no Arabic letter or vowel mark before it, except a joined
+# و or ف ("and"). Without this, تجاهل ("ignore!") matched inside يتجاهل ("he ignores"), a description.
+_AR_LETTER = r"\u0621-\u065F\u0670-\u06D3"
+_AR_START = rf"(?<![{_AR_LETTER}])(?:[وف][\u064B-\u0652]*)?"
+_AR_END = r"(?![\u0621-\u064A])"  # انس and تخط end the word too: not الانسان, تخطيط
 PATTERNS = [
     ("asks to ignore earlier instructions",
      re.compile(rf"(?i)\b{_VERB}\b[^.\n]{{0,30}}\b(?:all\s+|any\s+|the\s+|your\s+)?{_EARLIER}\b[^.\n]{{0,20}}"
@@ -54,7 +59,8 @@ PATTERNS = [
                 r"(?:(?<!\w)\.env\b|\b(?:ssh\s+keys?|id_rsa|credentials|api[\s_-]?keys?|tokens?|secrets?|passwords?|"
                 r"private\s+keys?)\b)[^\n]{0,60}?\b(?:to|into|at)\s+(?:https?://|\S+\.\w{2,}|\S+@)")),
     ("asks to ignore earlier instructions (Arabic)",
-     re.compile(r"(?:تجاهل|انس|تخط|تجاوز)[^.\n]{0,20}(?:جميع|كل)?\s*(?:التعليمات|الأوامر|التوجيهات|القواعد)|"
+     re.compile(rf"{_AR_START}(?:تجاهل|تجاوز|(?:انس|تخط){_AR_END})[^.\n]{{0,20}}"
+                r"(?:جميع|كل)?\s*(?:التعليمات|الأوامر|التوجيهات|القواعد)|"
                 r"لا\s+(?:تلتزم|تتبع|تعمل)\s+(?:ب)?(?:التعليمات|الأوامر|التوجيهات|القواعد)")),
     ("tries to change who Claude is (Arabic)",
      re.compile(r"أنت\s+الآن\s+(?:مساعد|نموذج|في\s+وضع)|تعليمات\s+(?:جديدة|النظام)\s*:|"
