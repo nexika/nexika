@@ -1189,3 +1189,41 @@ def test_a_folder_approval_covers_git_in_a_repository_there(world):
         assert d.verdict in ORDINARY, (command, d.verdict, d.cls, d.reason)
     d = decide(project, "Bash", "cd ~/other4 && git checkout -q x", approvals=approvals)
     assert d.verdict == "ask", (d.verdict, d.cls, d.reason)
+
+
+@pytest.fixture
+def node_project(world, tmp_path):
+    """fastify's shape: package.json scripts call borp, c8 and tstyche from node_modules/.bin (#221)."""
+    repo = tmp_path / "node-proj"
+    (repo / "node_modules" / ".bin").mkdir(parents=True)
+    scripts = {"unit": "borp", "coverage": "c8 --reporter html borp --reporter=x", "test:types": "tstyche",
+               "deploy": "shipit --prod", "test": "npm run unit && npm run test:types",
+               "lint:markdown": "markdownlint-cli2"}
+    (repo / "package.json").write_text(json.dumps({"name": "p", "scripts": scripts}))
+    for name in ("borp", "c8", "tstyche", "shipit", "unknownbin", "cross-env"):
+        (repo / "node_modules" / ".bin" / name).write_text("")
+    (repo / "node_modules" / "mdl").mkdir()
+    (repo / "node_modules" / "mdl" / "cli.js").write_text("")
+    (repo / "node_modules" / ".bin" / "markdownlint-cli2").symlink_to("../mdl/cli.js")  # as npm links bins
+    _git(repo, "init", "-q")
+    return repo
+
+
+@pytest.mark.parametrize("command,verdict", [
+    ("borp", "allow"),
+    ("npx borp x.test.js", "allow"),
+    ("./node_modules/.bin/borp --coverage", "allow"),
+    ("cross-env A=1 borp", "allow"),
+    ("cross-env PREPUBLISH=true borp --reporter=x && npm run test:types", "allow"),
+    ("c8 --reporter html borp --reporter=x", "allow"),
+    ("npx c8 report --reporter=text", "allow"),
+    ("tstyche", "allow"),
+    ("./node_modules/.bin/markdownlint-cli2", "allow"),
+    ("unknownbin", "pass"),          # in node_modules/.bin but no script calls it
+    ("shipit --prod", "pass"),       # only a release script calls it
+    ("cross-env A=1 rm -rf ~", "deny"),
+    ("c8 rm -rf ~", "deny"),         # a runner that wraps a command: the command is judged
+])
+def test_a_projects_own_script_runners_are_project_runs(node_project, command, verdict):
+    d = decide(node_project, "Bash", command)
+    assert d.verdict == verdict, (command, d.cls, d.reason)
