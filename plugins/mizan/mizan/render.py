@@ -93,6 +93,9 @@ def _ci(ci: dict, lang: str) -> dict | None:
         if ci.get("eta") is not None:
             text += SEP + t("ci_eta", lang, m=max(1, round(ci["eta"] / 60)))
         return seg(text, "warn")
+    if state == "approval":  # the workflows wait for a maintainer, or waited until GitHub gave up
+        expired = bool(ci.get("expired"))
+        return seg(t("ci_expired" if expired else "ci_approval", lang), "dim" if expired else "warn")
     if state == "none":
         return seg(t("ci_none", lang), "dim")
     if state == "loading":
@@ -251,6 +254,10 @@ def detail(snap: dict, lang: str) -> list[dict]:
         lines = [s for s in [_ci(ci, lang)] if s] or [seg(_off(ci, lang), "dim")]
         more_jobs = (ci.get("failed") or [])[1:8]
         lines += [seg(t("d_ci_job", lang, job=clean(job, 80)), "bad") for job in more_jobs]
+        allowed = ci.get("allowed") or []
+        if allowed:
+            more = f" +{len(allowed) - 1}" if len(allowed) > 1 else ""
+            lines.append(seg(t("d_ci_allowed", lang, job=clean(allowed[0], 80) + more), "dim"))
         if ci.get("url"):
             lines.append(seg(t("d_ci_url", lang, url=clean(ci["url"], 200)), "dim"))
         if ci.get("error"):

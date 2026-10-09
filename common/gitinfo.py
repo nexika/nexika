@@ -21,7 +21,9 @@ def git(cwd: str, *args: str, timeout: float = 4) -> str:
 
 
 def first_name(name: str) -> str:
-    return (name or "").strip().split()[0] if (name or "").strip() else ""
+    """'Jean Dupont' is Jean; a bot's commit name 'dependabot[bot]' is dependabot, as in the PR list."""
+    words = (name or "").strip().split()
+    return words[0].removesuffix("[bot]") or words[0] if words else ""
 
 
 def host_of(remote: str) -> str:

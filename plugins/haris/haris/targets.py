@@ -220,6 +220,7 @@ class Ctx:
         self.findings: list[Finding] = []
         self.executed: list[list[str]] = []
         self.funcs: dict[str, object] = {}
+        self.aliases: dict[str, str] = {}  # aliases this command defined (alias x='...')
         self.marks: set[str] = set()
         self.downloaded: set[str] = set()
         self.written: dict[str, str] = {}  # files this command wrote with known text (scripts it may run)
