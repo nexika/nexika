@@ -32,6 +32,7 @@ class Plan:
     reason: str = ""
     status: str = "nothing"   # release | first-release | needs-notes | nothing | error
     calver: bool = False      # calendar versions (YY.M.patch): the date decides the next version
+    last_final: str | None = None   # the newest final release (not a prerelease), its version
 
 
 def today() -> datetime.date:
@@ -61,6 +62,8 @@ def plan(root: Path, runner: gitops.Runner, projects: list[proj.Project]) -> lis
         notes, note_problems = fragments.pending(root, p)
         item = Plan(p, current, tag, notes, problems + note_problems,
                     gitops.commits_since(runner, tag, p.path))
+        final_tag = gitops.last_tag(runner, p.tag_prefix(), final_only=True)
+        item.last_final = final_tag[len(p.tag_prefix()):] if final_tag else None
         types = {n.type for n in notes}
         if current is None:
             item.status, item.reason = "error", problems[0]
@@ -75,9 +78,11 @@ def plan(root: Path, runner: gitops.Runner, projects: list[proj.Project]) -> lis
             last = tag[len(p.tag_prefix()):]
             item.calver = proj.is_calver(gitops.released_versions(runner, p.tag_prefix()), today())
             item.next, item.reason = (proj.calver_bump(last, today()) if item.calver
-                                      else proj.bump(last, types))
+                                      else proj.next_version(last, types, item.last_final, current))
             item.status = "release"
-            if current != last:
+            ahead = (current and proj.SEMVER.match(current) and proj.is_prerelease(current)
+                     and proj.parse(current) > proj.parse(last))   # a prerelease line not tagged yet
+            if current != last and not ahead:
                 item.problems.append(f"version file says {current}, last tag says {last}; using the tag")
         elif item.commits:
             item.status = "needs-notes"
@@ -100,14 +105,26 @@ def render_plan(plans: list[Plan]) -> str:
     return "\n".join(lines) or "no projects detected (see /amin:setup)"
 
 
-def rc_version(runner: gitops.Runner, pl: Plan) -> str:
-    """The next release candidate of the planned version: 1.3.0-rc.1, then -rc.2 ..."""
+def prerelease_version(runner: gitops.Runner, pl: Plan, label: str | None = None) -> str:
+    """The next prerelease of the planned release: 1.3.0-rc.1, then -rc.2 ...; with no label the
+    project's own (6.0.0-alpha.4 in the version file or the last tag -> 6.0.0-alpha.5), else rc."""
     if not pl.next:
         raise ReleaseError(f"{pl.project.name}: no proposed version ({pl.reason})")
-    prefix = pl.project.tag(f"{pl.next}-rc.")
+    base = proj.final(pl.next)
+    if not label:
+        last = pl.last_tag[len(pl.project.tag_prefix()):] if pl.last_tag else ""
+        own = next((proj.prerelease_label(v) for v in (pl.next, pl.current or "", last)
+                    if proj.SEMVER.match(v) and proj.prerelease_label(v)), None)
+        label = own[0] if own else "rc"
+    prefix = pl.project.tag(f"{base}-{label}.")
     tags = runner.git("tag", "--list", f"{prefix}*", check=False).split()
     numbers = [int(t[len(prefix):]) for t in tags if t[len(prefix):].isdigit()]
-    return f"{pl.next}-rc.{max(numbers, default=0) + 1}"
+    return f"{base}-{label}.{max(numbers, default=0) + 1}"
+
+
+def rc_version(runner: gitops.Runner, pl: Plan) -> str:
+    """The next release candidate of the planned version: 1.3.0-rc.1, then -rc.2 ..."""
+    return prerelease_version(runner, pl, "rc")
 
 
 def preflight(runner: gitops.Runner) -> None:
@@ -143,7 +160,7 @@ def pr_for(runner: gitops.Runner, rel: str) -> str | None:
 
 def _umbrella_version(root: Path, runner: gitops.Runner | None, umbrella: proj.Project,
                       types: set[str]) -> str:
-    tag = gitops.last_tag(runner or gitops.Runner(root), umbrella.tag_prefix())
+    tag = gitops.last_tag(runner or gitops.Runner(root), umbrella.tag_prefix(), final_only=True)
     base = tag[len(umbrella.tag_prefix()):] if tag else _current_version(root, umbrella)[0]
     if not base:
         raise ReleaseError(f"{umbrella.name}: no umbrella version found (no tag and no root version file)")
@@ -189,11 +206,21 @@ def prepare(root: Path, chosen: list[tuple[Plan, str]], date: str | None = None,
     blocks = blocks if blocks is not None else []
     for pl, version in chosen:
         proj.parse(version)
+        current = pl.current if pl.current and proj.SEMVER.match(pl.current) else None
+        if current and not allow_lower and proj.parse(version) < proj.parse(current):
+            raise ReleaseError(f"{pl.project.name}: {version} is lower than {current} in the version file "
+                               f"(pass --allow-lower to release {version} anyway)")
         if pl.last_tag:
             last = pl.last_tag[len(pl.project.tag_prefix()):]
             if proj.parse(version) <= proj.parse(last):
                 raise ReleaseError(f"{pl.project.name}: {version} is not newer than {last}")
-            required, reason = proj.bump(last, {n.type for n in pl.notes})
+            types = {n.type for n in pl.notes}
+            if not proj.is_prerelease(last):
+                required, reason = proj.bump(last, types)
+            elif pl.last_final:   # on a prerelease line: what the notes need since the last final release
+                required, reason = proj.bump(pl.last_final, types)
+            else:
+                required, reason = version, ""
             if not allow_lower and not pl.calver and proj.parse(version)[:3] < proj.parse(required)[:3]:
                 raise ReleaseError(f"{pl.project.name}: {version} is too low: {reason}, so it needs at "
                                    f"least {required} (pass --allow-lower to release {version} anyway)")
@@ -221,8 +248,11 @@ def prepare(root: Path, chosen: list[tuple[Plan, str]], date: str | None = None,
         if not dry_run:
             changelog.insert(root / pl.project.changelog, pl.project.name, version, date, sections)
         changed.append(pl.project.changelog)
-        if proj.is_prerelease(version):
-            continue   # a release candidate keeps its notes: the final release collects them all
+        # a release candidate keeps its notes: the final release collects them all; an alpha or a
+        # beta is its own step of a long line, so its notes are released with it
+        label = proj.prerelease_label(version)
+        if proj.is_prerelease(version) and (label is None or label[0] == "rc"):
+            continue
         for note in pl.notes:
             if not dry_run:
                 (root / note.path).unlink()

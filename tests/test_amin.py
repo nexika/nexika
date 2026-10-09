@@ -876,3 +876,94 @@ def test_pyproject_version_is_read_only_from_project_or_poetry(tmp_path, content
     assert proj.read_version(tmp_path, "pyproject.toml") == "2.0.0"
     proj.write_version(tmp_path, "pyproject.toml", "2.1.0")
     assert (tmp_path / "pyproject.toml").read_text() == content.replace("2.0.0", "2.1.0")
+
+
+# ---------------------------------------------------------------- fastify: an alpha line next to 5.x
+
+
+def fastify_repo(tmp_path):
+    """main at 6.0.0-alpha.4 (the v6 line); 5.x branched at v5.12.4 and tagged v5.12.5 after it."""
+    package = '{\n  "name": "fastify",\n  "version": "5.12.4"\n}\n'
+    root = init_repo(tmp_path / "fastify", {"package.json": package, "fastify.js": "module.exports = 1\n"})
+    _git(root, "tag", "-a", "v5.12.4", "-m", "x")
+    _git(root, "switch", "-q", "-c", "5.x")
+    write(root, "package.json", '{\n  "name": "fastify",\n  "version": "5.12.5"\n}\n')
+    commit(root, "Bumped v5.12.5")
+    _git(root, "tag", "-a", "v5.12.5", "-m", "x")
+    _git(root, "switch", "-q", "main")
+    write(root, "package.json", '{\n  "name": "fastify",\n  "version": "6.0.0-alpha.4"\n}\n')
+    commit(root, "Bumped v6.0.0-alpha.4")
+    _git(root, "tag", "-a", "v6.0.0-alpha.4", "-m", "x")
+    return root
+
+
+def test_alpha_versions_parse_and_sort():
+    # issue #236: only -rc.N was understood, so 6.0.0-alpha.5 was "not a MAJOR.MINOR.PATCH version"
+    order = ["5.13.0", "6.0.0-alpha.4", "6.0.0-alpha.10", "6.0.0-beta.0", "6.0.0-rc.1", "6.0.0", "6.0.1"]
+    assert sorted(order, key=proj.parse) == order
+    assert all(proj.is_prerelease(v) for v in order[1:5]) and not proj.is_prerelease("6.0.0")
+    with pytest.raises(ValueError):
+        proj.parse("6.0.0-")
+
+
+def test_plan_continues_an_alpha_line(tmp_path):
+    # issue #236: main at 6.0.0-alpha.4 was planned as 5.13.0 from the 5.x tag v5.12.5
+    root = fastify_repo(tmp_path)
+    p = proj.detect(root)[0]
+    fragments.add(root, p, "fixed", "A fix.", "7068")
+    fragments.add(root, p, "changed", "A change.", "7071")
+    pl = plan_by_name(root)["fastify"]
+    assert (pl.status, pl.last_tag, pl.next) == ("release", "v6.0.0-alpha.4", "6.0.0-alpha.5")
+    assert not pl.problems and "6.0.0" in pl.reason   # the promotion is offered, not chosen
+    runner = gitops.Runner(root)
+    assert release.prerelease_version(runner, pl, "alpha") == "6.0.0-alpha.5"
+    assert release.prerelease_version(runner, pl, "beta") == "6.0.0-beta.1"
+    assert release.prerelease_version(runner, pl) == "6.0.0-alpha.5"     # the project's own label
+    assert release.rc_version(runner, pl) == "6.0.0-rc.1"
+
+
+def test_prepare_never_lowers_the_version_file(tmp_path):
+    # issue #236: prepare wrote 5.13.0 over 6.0.0-alpha.4
+    root = fastify_repo(tmp_path)
+    fragments.add(root, proj.detect(root)[0], "fixed", "A fix.", "7068")
+    pl = plan_by_name(root)["fastify"]
+    pl.last_tag = "v5.12.5"   # what the old plan saw
+    with pytest.raises(release.ReleaseError, match="lower than 6.0.0-alpha.4"):
+        release.prepare(root, [(pl, "5.13.0")], date="2026-10-09")
+    assert proj.read_version(root, "package.json") == "6.0.0-alpha.4"
+
+
+def test_prepare_an_explicit_alpha_or_beta(tmp_path):
+    root = fastify_repo(tmp_path)
+    fragments.add(root, proj.detect(root)[0], "fixed", "A fix.", "7068")
+    _git(root, "switch", "-q", "-c", "release/x")
+    pl = plan_by_name(root)["fastify"]
+    release.prepare(root, [(pl, "6.0.0-beta.0")], date="2026-10-09")
+    assert proj.read_version(root, "package.json") == "6.0.0-beta.0"
+    assert changelog.extract(root / "CHANGELOG.md", "6.0.0-beta.0") == "### Fixed\n- A fix. (#7068)"
+    assert not (root / "changelog.d/7068.fixed.md").exists()   # an alpha or beta is its own release step
+
+
+def test_cli_prepare_takes_a_prerelease_version(tmp_path, monkeypatch, capsys):
+    root = fastify_repo(tmp_path)
+    fragments.add(root, proj.detect(root)[0], "fixed", "A fix.", "7068")
+    commit(root, "note")
+    _git(root, "switch", "-q", "-c", "release/x")
+    monkeypatch.chdir(root)
+    for args, version in ((["fastify=6.0.0-alpha.5"], "6.0.0-alpha.5"), ([], "6.0.0-alpha.5"),
+                          (["--pre=beta"], "6.0.0-beta.1"), (["--rc"], "6.0.0-rc.1")):
+        assert cli.main(["prepare", *args, "--dry-run"]) == 0, capsys.readouterr().err
+        assert f"Would prepare: fastify {version}" in capsys.readouterr().out
+
+
+def test_publish_marks_alpha_as_prerelease(tmp_path):
+    root = fastify_repo(tmp_path)
+    fragments.add(root, proj.detect(root)[0], "fixed", "A fix.", "7068")
+    pl = plan_by_name(root)["fastify"]
+    release.prepare(root, [(pl, pl.next)], date="2026-10-09")
+    commit(root, "Release fastify 6.0.0-alpha.5")
+    _git(root, "push", "-q", "origin", "main")
+    runner = FakeRunner(root)
+    release.publish(root, runner, proj.detect(root)[0])
+    create = next(c for c in runner.gh_calls if c[:2] == ("release", "create"))
+    assert create[2] == "v6.0.0-alpha.5" and "--prerelease" in create
