@@ -258,7 +258,7 @@ def op_run(ctx: Context, what: str = "test", cmd: str | None = None, timeout=RUN
     else:
         name = cmd if len(cmd) <= 60 else cmd[:57] + "..."
     output, rc, elapsed = _execute(cmd, ctx.root, seconds)
-    verdict, details, raw_count = compress.summarize(output, rc)
+    verdict, details, raw_count = compress.summarize(output, rc, ctx.root)
     status = "TIMED OUT" if rc is None else ("ok" if rc == 0 else f"FAILED (exit {rc})")
     header = (f"$ {cmd}\n{verdict}\n"
               f"[{elapsed:.1f}s, {raw_count} output lines -> {len(details)} shown]")
