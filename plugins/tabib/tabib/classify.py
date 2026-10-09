@@ -142,6 +142,16 @@ def classify(facts: dict) -> dict:
     if not failures and infra:
         evidence += [f"{k}: {signals[k]}" for k in infra]
         return {"kind": "infra", "detail": {"signal": infra[0]}, "confidence": "medium", "evidence": evidence}
+    own_run = facts.get("from_fork") is False or (
+        facts.get("from_fork") is None and not str(facts.get("event") or "").startswith("pull_request"))
+    no_permission = "auth" in signals and "not accessible by integration" in signals["auth"].lower()
+    if not failures and ("rules" in signals or (no_permission and own_run)):
+        # The repository's own run: its token lacks a permission, or a branch rule stops it (#262).
+        evidence.append(f"The workflow's token cannot do this (permissions: or a branch rule): "
+                        f"{signals.get('rules') or signals['auth']}")
+        evidence.append("A re-run fails the same way: give the job the permission it needs, or change "
+                        "the rule.")
+        return {"kind": "setup", "detail": {}, "confidence": "medium", "evidence": evidence}
     if not failures and "auth" in signals:
         evidence.append(f"credentials: {signals['auth']}")
         if facts.get("event") == "pull_request" and facts.get("from_fork"):
