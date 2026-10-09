@@ -1191,6 +1191,34 @@ def test_a_folder_approval_covers_git_in_a_repository_there(world):
     assert d.verdict == "ask", (d.verdict, d.cls, d.reason)
 
 
+@pytest.mark.parametrize("command,verdict,cls", [
+    ("npm config set //registry.npmjs.org/:_authToken x", "ask", "secret-write"),
+    ("npm config set fund false", "ask", "secret-write"),
+    ("pnpm config set //registry.npmjs.org/:_authToken x", "ask", "secret-write"),
+    ("npm config delete //registry.npmjs.org/:_authToken", "ask", "secret-write"),
+    ("npm config set fund false --location=project", "pass", "write"),
+    ("npm config set fund false -L project", "pass", "write"),
+    ("npm config get registry", "allow", "read"),
+])
+def test_npm_config_set_is_a_write_to_the_npmrc_it_changes(world, command, verdict, cls):
+    home, project = world
+    d = decide(project, "Bash", command)
+    assert (d.verdict, d.cls) == (verdict, cls), d.reason
+
+
+def test_a_secret_echoed_into_a_tracked_file_says_where_it_goes(world, tmp_path):
+    repo = tmp_path / "node-repo"
+    repo.mkdir()
+    (repo / ".npmrc").write_text("ignore-scripts=true\n")
+    _git(repo, "init", "-q")
+    _git(repo, "add", ".npmrc")
+    _git(repo, "commit", "-q", "-m", "npmrc")
+    d = decide(repo, "Bash", 'echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc')
+    assert d.verdict == "ask"
+    assert "Writes $NODE_AUTH_TOKEN" in d.reason and ".npmrc, which git tracks" in d.reason, d.reason
+    assert "into the conversation" not in d.reason
+
+
 @pytest.mark.parametrize("command,reason", [
     ("npm pkg get version", "Only shows information (npm pkg get)."),
     ("npm whoami", "Only shows information (npm whoami)."),
