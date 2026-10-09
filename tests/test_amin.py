@@ -967,3 +967,29 @@ def test_publish_marks_alpha_as_prerelease(tmp_path):
     release.publish(root, runner, proj.detect(root)[0])
     create = next(c for c in runner.gh_calls if c[:2] == ("release", "create"))
     assert create[2] == "v6.0.0-alpha.5" and "--prerelease" in create
+
+
+def test_last_tag_ignores_tags_not_on_this_branch(tmp_path):
+    # issue #235: the newest tag of the whole repo was taken, whatever branch it was on
+    root = fastify_repo(tmp_path)
+    runner = gitops.Runner(root)
+    assert gitops.last_tag(runner, "v", final_only=True) == "v5.12.4"   # v5.12.5 is on 5.x only
+    _git(root, "switch", "-q", "5.x")
+    assert gitops.last_tag(runner, "v") == "v5.12.5"                    # not main's v6.0.0-alpha.4
+    fragments.add(root, proj.detect(root)[0], "fixed", "A backport.", "7067")
+    pl = plan_by_name(root)["fastify"]
+    assert (pl.last_tag, pl.next, pl.problems) == ("v5.12.5", "5.12.6", [])
+    assert pl.commits == []
+
+
+def test_maintenance_branch_keeps_its_own_line_after_a_new_major(tmp_path):
+    # issue #235: once v6.0.0 existed, 5.x was planned as 6.0.1 ("last tag says 6.0.0; using the tag")
+    root = fastify_repo(tmp_path)
+    write(root, "package.json", '{\n  "name": "fastify",\n  "version": "6.0.0"\n}\n')
+    commit(root, "Bumped v6.0.0")
+    _git(root, "tag", "-a", "v6.0.0", "-m", "x")
+    _git(root, "switch", "-q", "5.x")
+    fragments.add(root, proj.detect(root)[0], "fixed", "A backport.", "7067")
+    pl = plan_by_name(root)["fastify"]
+    assert (pl.last_tag, pl.next, pl.problems) == ("v5.12.5", "5.12.6", [])
+    assert gitops.released_versions(gitops.Runner(root), "v") == ["5.12.5", "5.12.4"]

@@ -52,18 +52,20 @@ def default_branch(runner: Runner) -> str:
 
 
 def last_tag(runner: Runner, prefix: str, final_only: bool = False) -> str | None:
-    """The newest tag <prefix><MAJOR.MINOR.PATCH>, or <prefix><MAJOR.MINOR.PATCH-prerelease> unless
-    final_only, by SemVer precedence (git's own sort puts 6.0.0-alpha.4 after 6.0.0)."""
+    """The last release of this branch: the newest tag reachable from HEAD that is
+    <prefix><MAJOR.MINOR.PATCH>, or <prefix><MAJOR.MINOR.PATCH-prerelease> unless final_only, by SemVer
+    precedence (git's own sort puts 6.0.0-alpha.4 after 6.0.0). A tag of another release line (5.x's
+    v5.12.5 seen from main, main's v6.0.0 seen from 5.x) is not this branch's last release."""
     from .project import SEMVER, parse
-    out = runner.git("tag", "--list", f"{prefix}*", check=False)
+    out = runner.git("tag", "--merged", "HEAD", "--list", f"{prefix}*", check=False)
     found = [(parse(tag[len(prefix):]), tag) for tag in out.split()
              if (m := SEMVER.match(tag[len(prefix):])) and not (final_only and m.group(4))]
     return max(found)[1] if found else None
 
 
 def released_versions(runner: Runner, prefix: str) -> list[str]:
-    """The versions of the tags <prefix><MAJOR.MINOR.PATCH...>, newest first."""
-    out = runner.git("tag", "--list", f"{prefix}*", "--sort=-v:refname", check=False)
+    """The versions of the tags <prefix><MAJOR.MINOR.PATCH...> reachable from HEAD, newest first."""
+    out = runner.git("tag", "--merged", "HEAD", "--list", f"{prefix}*", "--sort=-v:refname", check=False)
     return [tag[len(prefix):] for tag in out.split() if tag[len(prefix):][:1].isdigit()]
 
 
