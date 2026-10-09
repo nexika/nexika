@@ -21,8 +21,9 @@ MAX_LINES = 200_000
 # ------------------------------------------------------------------ signals (outside the code)
 
 SIGNALS = [
-    ("timeout", re.compile(r"(?i)exceeded the maximum execution time|timed? ?out after \d|"
-                           r"job .{0,40}timed out|deadline exceeded")),
+    # The job's or a step's time limit, not a test's own ("'test timed out after 30000ms'", #253).
+    ("timeout", re.compile(r"(?i)exceeded the maximum execution time|(?:job|step|action) .{0,40}timed out|"
+                           r"deadline exceeded")),
     # "Killed" only as the shell or the kernel says it, never inside a test's own message.
     ("oom", re.compile(r"(?i)exit code 137\b|^\s*Killed\s*$|line \d+:\s+\d+ Killed\b|Killed process \d+|"
                        r"heap out of memory|\bMemoryError\b|OOMKilled|cannot allocate memory")),
@@ -317,6 +318,74 @@ def generated(lines: list[str]) -> list[dict]:
     return found
 
 
+NODE_BLOCK = re.compile(r"^✖ failing tests:\s*$")
+NODE_AT = re.compile(r"^test at (\S+?):(\d+):\d+\s*$")
+NODE_FAIL = re.compile(r"^\s*✖ (.+?) \(\d+(?:\.\d+)?m?s\)\s*$")
+NODE_FRAME = re.compile(r"\(?(?:file://)?([^\s()]+?\.[cm]?[jt]sx?):(\d+):\d+\)?\s*$")
+NODE_SUBTESTS = re.compile(r"^'?\d+ subtests? failed'?$")
+BORP_FAILED = re.compile(r"^failed: (\S.*?\.[cm]?[jt]sx?) \([\d,.]+ ?m?s\)\s*$")
+
+
+def _checkout_path(path: str) -> str:
+    return CHECKOUT.sub("", path.replace("\\", "/"))
+
+
+def _node_place(body: list[str], file: str, number: int) -> tuple[str, int]:
+    """The first frame of the checkout, in the test's own file when there is one."""
+    places = []
+    for line in body:
+        if (m := NODE_FRAME.search(line.replace("\\", "/"))) and not FOREIGN.search(m.group(1)):
+            places.append((_checkout_path(m.group(1)), int(m.group(2))))
+    same = [p for p in places if file and p[0] == file]
+    return (same or [(file, number)] if file else places or [("", 0)])[0]
+
+
+def node_test(lines: list[str]) -> list[dict]:
+    """Node's built-in test runner (#251): each test of its '✖ failing tests:' block, with its message and
+    the frame in its file; else borp's 'failed: <file>' lines, placed by the frame in that file."""
+    found: list[dict] = []
+    start = next((i for i, line in enumerate(lines) if NODE_BLOCK.match(line.strip())), -1)
+    if start >= 0:
+        at: tuple[str, int] = ("", 0)
+        entry: dict | None = None
+        body: list[str] = []
+
+        def close():
+            if entry is not None and not NODE_SUBTESTS.match(entry["message"]):
+                entry["file"], entry["line"] = _node_place(body, *at)
+                found.append(entry)
+
+        for line in lines[start + 1:]:
+            if line.startswith("##["):
+                break
+            if m := NODE_AT.match(line.strip()):
+                close()
+                entry, body, at = None, [], (_checkout_path(m.group(1)), int(m.group(2)))
+            elif (m := NODE_FAIL.match(line)) and not line.startswith("    "):
+                close()
+                name = m.group(1)
+                if "/" in name or "\\" in name:   # a file that failed as a whole
+                    name = _checkout_path(name)
+                entry, body = _failure("node:test", "tests", name), []
+            elif entry is not None:
+                body.append(line)
+                if not entry["message"] and line.strip():
+                    entry["message"] = _short(line.strip())
+        close()
+        if found:
+            return found
+    for i, line in enumerate(lines):
+        if not (m := BORP_FAILED.match(line.strip())):
+            continue
+        file = _checkout_path(m.group(1))
+        after = lines[i + 1:i + 400]
+        message = next((x[len("##[error]"):].strip() for x in after
+                        if x.startswith("##[error]") and "Process completed with exit code" not in x), "")
+        found.append(_failure("borp", "tests", file, file, _node_place(after, file, 0)[1],
+                              message or "failed"))
+    return found
+
+
 MARKDOWNLINT = re.compile(r"^(?:##\[(?:error|warning)\])?(\S+\.(?:md|markdown)):(\d+)(?::\d+)?\s+"
                           r"(?:error\s+)?(MD\d{3}(?:/[\w/-]+)?)\s+(.+)$")
 LYCHEE_PAGE = re.compile(r"^#{2,4} Errors in (\S+)\s*$")
@@ -462,6 +531,10 @@ def crash(lines: list[str]) -> dict | None:
     return failure
 
 
+# A test runner's own time limit for one test (#253): node:test, jest, pytest-timeout.
+TEST_TIMEOUT = re.compile(r"test timed out after \d|Exceeded timeout of \d|^(?:Failed: )?Timeout >\s?\d")
+
+
 def failures(lines: list[str]) -> list[dict]:
     found: list[dict] = []
     py_lines: dict[str, int] = {}
@@ -574,6 +647,7 @@ def failures(lines: list[str]) -> list[dict]:
     found += merge_conflict(lines)
     found += generated(lines)
     found += playwright(lines)
+    found += node_test(lines)
     found += doc_checks(lines)
     for block in junit_blocks(lines):
         found += junit_xml(block)
@@ -583,6 +657,8 @@ def failures(lines: list[str]) -> list[dict]:
         found.append(crashed)  # the tests stopped with the process; nothing else names the failure
     seen, unique = set(), []
     for f in found:
+        if TEST_TIMEOUT.search(f["message"]):
+            f["timeout"] = True
         key = (f["framework"], f["test"], f["file"], f["line"])
         if key not in seen:
             seen.add(key)
