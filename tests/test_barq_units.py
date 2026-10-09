@@ -669,3 +669,60 @@ def test_js_regex_literal_with_quotes():
     syms = {s.name: (s.line, s.end) for s in outline(text, ".js")}
     assert syms == {"ContentType": (3, 11), "ContentType.constructor": (4, 6),
                     "ContentType.type": (8, 10)}
+
+
+def test_js_object_of_calls_not_symbols():
+    # #275: lib/errors.js had 95 "symbols", each `FST_ERR_X: createError(` running to the end
+    text = textwrap.dedent('''\
+        const codes = {
+          FST_ERR_NOT_FOUND: createError(
+            'FST_ERR_NOT_FOUND',
+            'Not Found',
+            404
+          ),
+          FST_ERR_OPTIONS_NOT_OBJ: createError(
+            'FST_ERR_OPTIONS_NOT_OBJ',
+            'Options must be an object',
+            TypeError
+          )
+        }
+
+        function fastify (options) {
+          const supported = {
+            bodyless: new Set([
+              'GET'
+            ])
+          }
+          hookRunnerApplication('preClose', boot, fastify, function () {
+            return 1
+          })
+          eos(this.raw, (err) => {
+            done(err)
+          })
+          const x = ok
+            ? appendStackTrace(err, new Error(err.message))
+            : err
+          return supported
+        }
+    ''')
+    assert [s.name for s in outline(text, ".js")] == ["fastify"]
+
+
+def test_js_object_literal_function_property_named_by_key():
+    text = textwrap.dedent('''\
+        const fastify = {
+          delete: function _delete (url, options, handler) {
+            return router.prepareRoute('DELETE', url)
+          },
+          hasPlugin: function (name) {
+            return true
+          },
+          closeRoutes: () => { closing = true },
+          prefix: {
+            configurable: true,
+            get () { return this[kRoutePrefix] }
+          }
+        }
+    ''')
+    syms = {s.name: (s.line, s.end) for s in outline(text, ".js")}
+    assert syms == {"delete": (2, 4), "hasPlugin": (5, 7), "closeRoutes": (8, 8), "get": (11, 11)}

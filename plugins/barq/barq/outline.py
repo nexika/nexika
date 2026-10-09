@@ -322,11 +322,16 @@ def _match_decl(code: str, nxt: str, suffix: str) -> tuple[str, str] | None:
             return "func", m.group("name")
         return None
     if suffix in JS_EXT:
+        if stripped.startswith(("?", ":", ".")):
+            return None  # a ternary branch or a chained call continues an expression
         m = TS_TYPE_ALIAS.match(code)
         if m:
             return "alias", m.group("name")
         m = JS_FIELD_ARROW.match(code)
         if m and m.group("name") not in NOT_NAMES:
+            return "func", m.group("name")
+        m = JS_PROP_FUNC.match(code)
+        if m and (not m.group("arrow") or "{" in code[m.end():]):
             return "func", m.group("name")
     m = TYPE_RE.match(code)
     if m:
@@ -334,7 +339,7 @@ def _match_decl(code: str, nxt: str, suffix: str) -> tuple[str, str] | None:
     m = KEYWORD_FUNC.match(code)
     if m:
         return "func", m.group("name")
-    m = METHOD.match(code)
+    m = None if suffix in JS_EXT else METHOD.match(code)  # `Type name(` is not JS (#275)
     if m and m.group("name") not in NOT_NAMES:
         before_paren = code[: code.index("(")]
         first_word = stripped.split()[0]
@@ -345,9 +350,32 @@ def _match_decl(code: str, nxt: str, suffix: str) -> tuple[str, str] | None:
         tail = code.rstrip()
         opens_block = (tail.endswith(("{", "{}"))
                        or (tail.endswith(")") and nxt.strip().startswith("{")))
+        if suffix in JS_EXT:
+            opens_block = _js_body_follows(code) or (tail.endswith(")") and nxt.strip().startswith("{"))
         if opens_block and not tail.endswith(";"):
             return "method", m.group("name")
     return None
+
+
+# an object-literal function property, named by its key: delete: function _delete (, closeRoutes: () => {
+JS_PROP_FUNC = re.compile(
+    r"^\s*(?P<name>[A-Za-z_$][\w$]*)\s*:\s*(?:async\s+)?(?:function\b|(?P<arrow>\([^)]*\)|[\w$]+)\s*=>)"
+)
+
+
+def _js_body_follows(code: str) -> bool:
+    """A JS method head: the `(` after the name closes on this line and is followed (after a TS
+    return type) by its body's `{`, so calls like `eos(res, function () {` are not taken (#275)."""
+    k = code.find("(")
+    depth = 0
+    for c in range(k, len(code)):
+        if code[c] == "(":
+            depth += 1
+        elif code[c] == ")":
+            depth -= 1
+            if depth == 0:
+                return re.match(r"^\s*(?::[^{=;]+)?\{", code[c + 1:]) is not None
+    return False
 
 
 def _js_assigned(line: str) -> str | None:
