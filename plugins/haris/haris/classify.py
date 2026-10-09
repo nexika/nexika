@@ -2874,6 +2874,11 @@ def h_cloud(argv, ctx, stdin):
         destructive = True
     elif program in ("render", "dokku"):
         destructive = bool(words & {"delete", "destroy", "deploy", "apps:destroy"})
+    if program == "gcloud" and pos[:2] == ["builds", "submit"] and \
+            any(a.split("=", 1)[0] in ("--tag", "-t", "--config", "--pack") for a in argv[1:]):
+        ctx.add("remote-irreversible", "`gcloud builds submit` uploads the source, builds it in the cloud "
+                                       "and publishes the image to a registry (like `docker push`).")
+        return Stage()
     if destructive:
         ctx.add("remote-irreversible", f"`{program} {' '.join(pos[:3])}` deploys, deletes or changes real "
                                        "infrastructure.")

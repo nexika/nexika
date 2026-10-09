@@ -503,6 +503,9 @@ ask	helm uninstall app
 ask	aws s3 rm s3://bucket --recursive
 ask	aws ec2 terminate-instances --instance-ids i-1
 ask	gcloud projects delete p
+ask	gcloud builds submit --tag gcr.io/p/app
+ask	gcloud builds submit --config=cloudbuild.yaml .
+allow	gcloud builds list
 ask	az group delete -n rg
 ask	fly deploy
 ask	vercel --prod
