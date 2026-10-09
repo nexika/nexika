@@ -396,6 +396,46 @@ def test_package_lock_and_cargo_workspaces_are_versioned(tmp_path):
     assert proj.read_version(rust, "Cargo.toml") == "0.4.0"
 
 
+FASTIFY_PACKAGE = '{\n  "name": "fastify",\n  "version": "5.12.5"\n}\n'
+FASTIFY_JS = "'use strict'\n\nconst VERSION = '5.12.5'\n\nmodule.exports = { VERSION }\n"
+
+
+def test_version_file_with_a_custom_pattern_is_read_and_written(tmp_path, monkeypatch, capsys):
+    # issue #237: fastify keeps its version in package.json and in fastify.js (const VERSION = '5.12.5')
+    config = {"projects": [{"name": "fastify", "version_files": [
+        "package.json", {"file": "fastify.js", "pattern": "const VERSION = '(.*)'"}]}]}
+    root = init_repo(tmp_path / "fastify", {"package.json": FASTIFY_PACKAGE,
+                                            "fastify.js": FASTIFY_JS, ".amin.json": json.dumps(config)})
+    [p] = proj.detect(root)
+    assert p.version_files == ["package.json", "fastify.js"]
+    assert proj.read_version(root, "fastify.js", p.version_patterns.get("fastify.js")) == "5.12.5"
+    _git(root, "tag", "-a", "v5.12.5", "-m", "x")
+    fragments.add(root, p, "fixed", "A backport.", "7067")
+    pl = plan_by_name(root)["fastify"]
+    assert (pl.current, pl.next, pl.problems) == ("5.12.5", "5.12.6", [])
+    changed = release.prepare(root, [(pl, pl.next)], date="2026-10-09")
+    assert {"package.json", "fastify.js"} <= set(changed)
+    assert (root / "fastify.js").read_text() == FASTIFY_JS.replace("5.12.5", "5.12.6")
+    with pytest.raises(ValueError, match="one group"):
+        proj.read_version(root, "fastify.js", "const (VERSION) = '(.*)'")
+
+
+def test_projects_warns_about_another_file_holding_the_version(tmp_path, monkeypatch, capsys):
+    # issue #237: amin wrote package.json only and fastify's own version test failed after prepare
+    root = init_repo(tmp_path / "fastify", {"package.json": FASTIFY_PACKAGE,
+                                            "fastify.js": FASTIFY_JS, "lib/other.js": FASTIFY_JS,
+                                            "README.md": "const VERSION = '5.12.5'\n"})
+    [p] = proj.detect(root)
+    assert proj.unlisted_version_files(root, p) == ["fastify.js"]
+    monkeypatch.chdir(root)
+    assert cli.main(["projects"]) == 0
+    out = capsys.readouterr().out
+    assert "fastify.js also contains 5.12.5: add it to version_files in .amin.json" in out
+    _git(root, "tag", "-a", "v5.12.5", "-m", "x")
+    fragments.add(root, p, "fixed", "A backport.", "7067")
+    assert any("fastify.js also contains 5.12.5" in x for x in plan_by_name(root)["fastify"].problems)
+
+
 # ---------------------------------------------------------------- publish
 
 
