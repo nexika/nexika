@@ -279,11 +279,12 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
                       secret="secret" in getattr(heredoc, "marks", ()))
     program = os.path.basename(argv[0]).lower()
     if program in PRINTERS:
+        into = printed_into(cmd, ctx)
         for w in cmd.words[1:]:
             for name in var_names(w):
                 if SECRET_VAR.search(name):
-                    ctx.add("secret-read", f"Prints ${name}, which looks like a secret, into the "
-                                           f"conversation.")
+                    ctx.add("secret-read", f"Writes ${name}, which looks like a secret, into {into}."
+                            if into else f"Prints ${name}, which looks like a secret, into the conversation.")
     ctx.prefix = {name: str(value) for name, value in assigns}
     try:
         stage = run(argv, ctx, stdin)
@@ -306,6 +307,22 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
             else:
                 ctx.written.pop(path, None)
     return stage
+
+
+def printed_into(cmd: shell.Simple, ctx: Ctx) -> str:
+    """The file a printer's output goes to (`echo ... >> .npmrc`), said plainly; "" for the conversation."""
+    for r in cmd.redirects:
+        if r.body is None and r.target and r.op in (">", ">>", ">|", "&>", "&>>") and r.fd in ("", "1"):
+            values_ = expand(r.target, ctx)
+            path = ctx.where.resolve(values_[0], ctx.cwd) if values_ and UNKNOWN not in values_[0] else None
+            if not path or ctx.where.place(path) == "null":
+                return ""
+            shown = ctx.show(path)
+            if path.startswith(ctx.where.root + "/") and \
+                    ctx.git.try_run("ls-files", "--error-unmatch", "--", path) is not None:
+                return f"{shown}, which git tracks (it would be committed)"
+            return shown
+    return ""
 
 
 DOWNLOADERS = {"curl", "wget", "http", "https", "xh", "aria2c", "fetch"}
@@ -724,7 +741,8 @@ YARN_OTHER = {"add", "remove", "install", "upgrade", "up", "dlx", "exec", "confi
 
 def h_node_pm(argv, ctx, stdin):
     program = argv[0]
-    opts, pos = options(argv[1:], {"-w", "--workspace", "--filter", "-C", "--prefix", "--dir", "--cwd"})
+    opts, pos = options(argv[1:], {"-w", "--workspace", "--filter", "-C", "--prefix", "--dir", "--cwd",
+                                   "-L", "--location", "--userconfig"})
     sub = pos[0] if pos else "install"
     rest = pos[1:]
     if sub in ("publish", "unpublish", "deprecate", "owner", "dist-tag", "access", "team") or \
@@ -756,7 +774,30 @@ def h_node_pm(argv, ctx, stdin):
     if sub in ("config", "c") and rest[:1] and rest[0] in ("get", "list", "ls"):
         ctx.add("read", f"Shows {program} settings.")
         return Stage()
+    if sub in ("config", "c") and rest[:1] and rest[0] in ("set", "delete", "rm", "edit", "fix"):
+        return npm_config_write(program, rest[0], opts, ctx)
     ctx.add("exec", f"Runs `{program} {sub}` (installs or changes packages).")
+    return Stage()
+
+
+def npm_config_write(program: str, verb: str, opts: list, ctx: Ctx) -> Stage:
+    """`npm config set` writes the user's ~/.npmrc (or the project's, or the global one): judged as that
+    write, since ~/.npmrc holds the registry tokens (#216)."""
+    location = str((values(opts, "-L", "--location") or [arg("user")])[-1])
+    if has(opts, "-g", "--global"):
+        location = "global"
+    if program == "yarn":
+        target = "~/.yarnrc.yml" if has(opts, "-H", "--home") else ".yarnrc.yml"
+    elif values(opts, "--userconfig"):
+        target = values(opts, "--userconfig")[-1]
+    elif location == "project":
+        target = os.path.join(ctx.where.root, ".npmrc")
+    elif location == "global":
+        ctx.add("write-outside", f"`{program} config {verb}` changes the global npmrc, outside the project.")
+        return Stage()
+    else:
+        target = os.environ.get("NPM_CONFIG_USERCONFIG") or "~/.npmrc"
+    write_paths([arg(target)], ctx, f"`{program} config {verb}` writes to")
     return Stage()
 
 
