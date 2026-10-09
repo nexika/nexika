@@ -91,6 +91,30 @@ def test_black_requests_are_not_flagged(learn, text):
     assert not learn.CORRECTION.search(text)
 
 
+# fastify test set (#234): maintainers' wording the filter missed (L05, L11, L17, L20, L55, L59, L72) ...
+@pytest.mark.parametrize("text", [
+    "can you avoid setTimeout in tests? They are flaky.",
+    "Can you avoid the spread here? it's a hot path and we care about allocations",
+    "Please rewrite to remove use of `you`. See the style guide",
+    'Looks good, but I prefer "rewrite" to "repair." Repair has a different connotation to me.',
+    "prefer `fastify.inject` over starting a real server in tests",
+    "The docs must not use 'you' - see the style guide",
+    "Run npm run lint before committing, neostandard catches the semicolons",
+])
+def test_fastify_corrections_are_flagged(learn, text):
+    assert learn.is_correction(text)
+
+
+# ... and quoted text (L61): a GitHub reply quotes the other person, whose words are not the correction
+def test_quoted_lines_are_not_a_correction(learn, repo):
+    quoted = "> > I will look at this.\r\n> \r\n> Don't yet, need to fix up.\r\n\r\nPlease ping when ready."
+    assert not learn.is_correction(quoted)
+    assert not learn.is_correction("> Don't yet\n\nPlease ping when ready.")
+    assert learn.is_correction("> I used jest\n\nNo, we use borp.")
+    learn.hook_signal({"prompt": quoted, "session_id": "s1", "cwd": str(repo)})
+    assert not (learn.data_home() / "signals.jsonl").exists()
+
+
 # ---------------------------------------------------------------- hooks
 
 

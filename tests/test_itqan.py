@@ -92,6 +92,31 @@ def test_dangerous_commands_are_denied(guard, repo, command, rule):
     assert decision is not None and decision[0] == "deny" and decision[1] == rule
 
 
+# fastify (#265, case G79): rimraf, del-cli and `shx rm -rf` get the `rm -r` target rules, also via npx
+@pytest.mark.parametrize(("command", "rule"), [
+    ("npx rimraf ~", "rm-dangerous-target"),
+    ("rimraf /", "rm-dangerous-target"),
+    ("npx --yes rimraf $HOME/projects", "rm-dangerous-target"),
+    ("npm exec -- rimraf ..", "rm-outside-project"),
+    ("npx rimraf@5 .", "rm-project-root"),
+    ("npx del-cli ../other", "rm-outside-project"),
+    ("del ~", "rm-dangerous-target"),
+    ("npx shx rm -rf ~", "rm-dangerous-target"),
+    ("shx rm -r /etc/nginx", "rm-outside-project"),
+])
+def test_node_delete_tools_get_the_rm_target_rules(guard, repo, command, rule):
+    decision = bash(guard, repo, command)
+    assert decision is not None and decision[:2] == ("deny", rule)
+
+
+@pytest.mark.parametrize("command", [
+    "npx rimraf coverage", "rimraf ./dist build", "npm exec rimraf node_modules",
+    "npx del-cli 'dist/**'", "npx shx rm -rf lib/out", "npx shx rm ~/notes.txt", "npx shx ls ~",
+])
+def test_node_delete_tools_inside_the_project_pass(guard, repo, command):
+    assert bash(guard, repo, command) is None
+
+
 def test_force_push_to_feature_branch_is_allowed(guard, repo):
     _git(repo, "switch", "-q", "-c", "feat/x")
     assert bash(guard, repo, "git push --force-with-lease") is None
@@ -111,6 +136,24 @@ def test_stable_is_a_default_protected_branch(guard, repo):
 def test_skipping_a_pre_commit_hook_asks(guard, repo, command):
     decision = bash(guard, repo, command)
     assert decision[:2] == ("ask", "skip-hooks") and "SKIP=" in decision[2]
+
+
+# fastify (#232, cases G92/G92h): `-nm` is `-n -m`, so it skips the hooks; `-mn` is `-m "n"`
+@pytest.mark.parametrize("command", [
+    'git commit -nm "chore: wip"', "git commit -anm x", "git commit -n -m x"])
+def test_combined_no_verify_flags_ask(guard, repo, tmp_path, monkeypatch, command):
+    assert bash(guard, repo, command)[:2] == ("ask", "skip-hooks")
+    monkeypatch.setenv("HARIS_HOME", str(tmp_path / "haris"))
+    (tmp_path / "haris" / "active").mkdir(parents=True)
+    (tmp_path / "haris" / "active" / "s1").touch()
+    event = {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(repo), "session_id": "s1"}
+    assert guard.haris_active(event) and guard.needs_quality_check(event)
+    assert guard.decide(event)[:2] == ("ask", "skip-hooks")
+
+
+@pytest.mark.parametrize("command", ["git commit -mn", 'git commit -am "fix -n flag"', "git commit -m -n"])
+def test_a_message_that_says_n_does_not_skip_hooks(guard, repo, command):
+    assert bash(guard, repo, command) is None
 
 
 def test_skip_env_on_other_commands_passes(guard, repo):
@@ -524,6 +567,120 @@ def test_a_missing_own_package_is_dependencies_not_installed(proof, tmp_path):
     assert not proof.run_check(other, root, 30).get("not_installed")  # not the project's own package
 
 
+def node_project(tmp_path, scripts, **files):
+    root = tmp_path / "node"
+    root.mkdir()
+    (root / "package.json").write_text(json.dumps({"scripts": scripts, "devDependencies": {"eslint": "^9"}}))
+    for name, text in files.items():
+        path = root / name.replace("__", "/")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+    return root
+
+
+def make_proof(proof, root, tmp_path, monkeypatch):
+    monkeypatch.setenv("ITQAN_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("NEXIKA_STATUS_HOME", str(tmp_path / "status"))
+    args = proof.argparse.Namespace(only=None, review=None, note=[], done=[], open=[], timeout=60)
+    return proof.make(root, args)
+
+
+# fastify (#228, cases P2 and P3): no node_modules is "dependencies not installed", not a failure
+def test_node_checks_without_node_modules_are_not_run(proof, tmp_path, monkeypatch):
+    root = node_project(tmp_path, {"test": "eslint"})
+    made = make_proof(proof, root, tmp_path, monkeypatch)
+    assert made["checks"] == [] and made["summary"]["checks_passed"] is False
+    [entry] = made["not_run"]
+    assert entry["kind"] == "tests" and "dependencies not installed" in entry["reason"]
+    text = proof.describe(made)
+    assert "npm install" in text and "npm ci" not in text and "FAILED" not in text
+
+
+@pytest.mark.parametrize(("lockfile", "hint"), [
+    ("package-lock.json", "npm ci"), ("pnpm-lock.yaml", "pnpm install --frozen-lockfile"),
+    ("yarn.lock", "yarn install --immutable"),
+])
+def test_the_node_install_hint_follows_the_lockfile(proof, tmp_path, monkeypatch, lockfile, hint):
+    root = node_project(tmp_path, {"test": "eslint"}, **{lockfile: ""})
+    assert hint in proof.describe(make_proof(proof, root, tmp_path, monkeypatch))
+
+
+def test_node_checks_run_when_node_modules_exists(proof, tmp_path, monkeypatch):
+    root = node_project(tmp_path, {"test": "exit 0"})
+    (root / "node_modules").mkdir()
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+    assert [c["argv"] for c in proof.detect(root)] == [["npm", "run", "test"]]
+
+
+FASTIFY_SCRIPTS = {
+    "lint": "npm run lint:eslint", "lint:markdown": "markdownlint-cli2", "lint:eslint": "eslint",
+    "test": "npm run lint && npm run unit && npm run test:types",
+    "test:ci": "npm run unit && npm run test:types",
+    "test:types": "tstyche", "unit": "borp", "coverage": "c8 --reporter html borp",
+    "coverage:ci-check-coverage": "borp --coverage --check-coverage --lines 100",
+    "build:validation": "node build/build-validation.js",
+}
+FASTIFY_WORKFLOWS = {
+    ".github__workflows__ci.yml": (
+        "steps:\n  - run: |\n      npm install --ignore-scripts\n      npm run unit\n"
+        "  - run: npm run test:types\n  - run: cd test/bundler/webpack && npm run test\n"),
+    ".github__workflows__coverage-nix.yml": "steps:\n  - run: |\n      npm run coverage:ci-check-coverage\n",
+    ".github__workflows__md-lint.yml": "steps:\n  - run: ./node_modules/.bin/markdownlint-cli2\n",
+    ".github__workflows__package-manager-ci.yml": "steps:\n  - run: pnpm run test:ci\n",
+}
+
+
+def fastify_like(tmp_path):
+    root = node_project(tmp_path, FASTIFY_SCRIPTS, **FASTIFY_WORKFLOWS)
+    (root / "node_modules").mkdir()
+    return root
+
+
+# fastify (#229, cases P1, P5, S-checks-dup, S-checks-coverage)
+def test_a_test_chain_runs_each_step_once_and_ci_gates_are_named(proof, tmp_path, monkeypatch):
+    root = fastify_like(tmp_path)
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+    not_run: list = []
+    checks = proof.detect(root, not_run)
+    assert [(c["kind"], c["argv"][-1]) for c in checks] == [
+        ("lint", "lint"), ("tests", "unit"), ("lint", "test:types"), ("lint", "lint:markdown")]
+    [gate] = not_run
+    assert gate["command"] == "npm run coverage:ci-check-coverage" and "coverage-nix.yml" in gate["reason"]
+    assert gate["kind"] == "other"
+
+
+def test_a_failing_step_does_not_hide_the_next_ones(proof, tmp_path, monkeypatch):
+    root = fastify_like(tmp_path)
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+
+    def fake_run(check, root, timeout):
+        failed = check["argv"][-1] == "unit"
+        return {"name": check["name"], "kind": check["kind"], "command": " ".join(check["argv"]),
+                "defined": "", "exit_code": int(failed), "passed": not failed, "seconds": 0, "tail": []}
+    monkeypatch.setattr(proof, "run_check", fake_run)
+    made = make_proof(proof, root, tmp_path, monkeypatch)
+    results = {c["command"]: c["passed"] for c in made["checks"]}
+    assert results["npm run unit"] is False and results["npm run test:types"] is True
+    assert made["summary"]["checks_passed"] is False
+
+
+def test_a_script_that_is_not_a_chain_stays_one_check(proof, tmp_path, monkeypatch):
+    root = node_project(tmp_path, {"test": "npm run lint && borp", "lint": "eslint"})
+    (root / "node_modules").mkdir()
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+    assert [c["argv"][-1] for c in proof.detect(root)] == ["test", "lint"]
+
+
+# fastify (#230, case S-checks-name): `npm lint` is not an npm command; `npm test` is
+def test_a_node_check_is_named_by_a_command_that_runs(proof, tmp_path, monkeypatch):
+    root = node_project(tmp_path, {"lint": "eslint", "test": "borp", "build": "tsc"})
+    (root / "node_modules").mkdir()
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+    assert [c["name"] for c in proof.detect(root)] == ["npm test", "npm run lint", "npm run build"]
+    (root / "pnpm-lock.yaml").write_text("")
+    assert [c["name"] for c in proof.detect(root)] == ["pnpm test", "pnpm lint", "pnpm build"]
+
+
 def test_session_note_names_the_project_s_own_checks(tmp_path):
     # black case S-pack (#151): the python pack suggested ruff on a project linted by flake8 and black
     root = black_like(tmp_path)
@@ -541,6 +698,16 @@ def test_session_note_has_no_check_line_without_checks(tmp_path, repo):
 def test_python_pack_points_to_the_project_s_commands():
     commands = (ITQAN / "packs" / "python.md").read_text().split("## Commands", 1)[1]
     assert "Project checks" in commands and commands.index("Project checks") < commands.index("ruff")
+
+
+# fastify (#231, case S-pack): `npx tsc --noEmit` fails at a root with no tsconfig.json
+def test_node_pack_points_to_the_project_s_commands():
+    pack = (ITQAN / "packs" / "node.md").read_text()
+    commands = pack.split("## Commands", 1)[1]
+    assert "Project checks" in commands and commands.index("Project checks") < commands.index("npm test")
+    assert "test:types" in commands and "root tsconfig.json" in commands
+    testing = pack.split("## Testing", 1)[1].split("##", 1)[0]
+    assert "node:test" in testing and "inject" in testing
 
 
 def test_stacks_are_detected_from_the_repo_root(tmp_path, repo):
