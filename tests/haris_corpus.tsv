@@ -149,6 +149,9 @@ allow	npm test -- --watch=false
 # ---------------------------------------------------------------- ordinary: changing the project (left to Claude Code's own rules)
 pass	rm -rf build
 pass	rm -rf node_modules
+pass	rimraf node_modules
+pass	npx rimraf dist
+pass	shx rm -rf build
 pass	rm src/old.py
 pass	rm -f src/*.pyc
 pass	mkdir -p src/new
@@ -260,6 +263,15 @@ deny	cd ~ && rm -rf *
 deny	cd / && rm -rf *
 deny	rm -rf ..
 deny	rm -rf ../..
+deny	rimraf ~
+deny	rimraf /
+deny	npx rimraf ..
+deny	npm exec -- rimraf .
+deny	del-cli ~
+deny	npx shx rm -rf ~
+ask	npx rimraf ../other
+ask	rimraf --glob ~/work/other/*
+ask	shx rm -rf ~/work/other
 deny	rm -rf .
 deny	rm -rf ~/.claude
 deny	\rm -rf ~
