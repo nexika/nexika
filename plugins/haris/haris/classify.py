@@ -760,6 +760,11 @@ def h_node_pm(argv, ctx, stdin):
     return Stage()
 
 
+# A package spec that is a URL or a git repository rather than a registry name (#220): npx runs its code.
+GIT_SOURCE = re.compile(r"(?i)^(?:https?://|git\+|git://|ssh://|(?:github|gitlab|bitbucket|gist):"
+                        r"|[\w.-]+/[\w.-]+(?:#\S*)?$)")
+
+
 def npx(argv, ctx, stdin):
     opts, pos = options(argv[1:], {"-p", "--package", "-c", "--call", "--from", "--with"}, first_stops=True)
     calls = values(opts, "-c", "--call")
@@ -767,6 +772,12 @@ def npx(argv, ctx, stdin):
         return shell_string(calls[0], ctx, [], f"{argv[0]} -c")
     if not pos:
         ctx.add("exec", f"Runs {argv[0]}.")
+        return Stage()
+    sources = [str(v) for v in values(opts, "-p", "--package", "--from", "--with")] + [str(pos[0])]
+    fetched = next((v for v in sources if GIT_SOURCE.match(v)), None)
+    if fetched:
+        ctx.add("download-run", f"Downloads {fetched} (a URL or git repository, not a registry package) and "
+                                "runs its code at once, without you seeing it first.")
         return Stage()
     name = pos[0]
     tool = name.rsplit("@", 1)[0] if name.count("@") > (1 if name.startswith("@") else 0) else name
