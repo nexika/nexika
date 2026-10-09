@@ -358,6 +358,13 @@ def run(argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
     if program.endswith(".exe"):
         program = program[:-4]
     ctx.executed.append([program, *argv[1:]])
+    if str(first) in ctx.aliases and "/" not in first:
+        body = ctx.aliases.pop(str(first))  # an alias is not expanded inside its own body
+        try:
+            return shell_string(arg(" ".join([body, *(shquote(a) for a in argv[1:])]), joined_marks(argv)),
+                                ctx, [], f"alias {first}")
+        finally:
+            ctx.aliases[str(first)] = body
     if program in ctx.funcs:
         ctx.add("read", f"Runs the function {program} (checked where it is defined).")
         ctx.forget()
@@ -890,13 +897,19 @@ def h_export(argv, ctx, stdin):
     flags = "".join(a[1:] for a in argv[1:] if a.startswith("-") and not a.startswith("--"))
     names = [a for a in argv[1:] if not a.startswith(("-", "+"))]
     if program == "alias":
-        if any("=" in a for a in names):
-            ctx.add("dynamic", "Defines an alias: the command it stands for is only used when it runs, so "
-                               "haris cannot check it.")
+        defined = [a for a in names if "=" in a]
+        for a in defined:  # judged where the same command uses it (#225)
+            name, _, body = a.partition("=")
+            ctx.aliases[name] = body
+        if defined:
+            ctx.add("exec", "Defines an alias, which runs nothing by itself (a later use in this command is "
+                            "checked).")
         else:
             ctx.add("read", "Shows aliases.")
         return Stage()
     if program == "unalias":
+        for a in names:
+            ctx.aliases.pop(a, None)
         ctx.add("read", "Removes aliases.")
         return Stage()
     if not names and "f" not in flags and "F" not in flags:
