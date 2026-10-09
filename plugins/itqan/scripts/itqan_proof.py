@@ -56,6 +56,25 @@ def _package_runner(root: Path) -> str:
     return "npm"
 
 
+def _node_install_hint(root: Path) -> str:
+    """How to install the project's Node dependencies, following its lockfile: `npm ci` needs
+    package-lock.json and fails without one (fastify has none: `.npmrc` package-lock=false)."""
+    if (root / "pnpm-lock.yaml").is_file():
+        return "pnpm install --frozen-lockfile"
+    if (root / "yarn.lock").is_file():
+        return "yarn install --immutable"
+    if (root / "package-lock.json").is_file() or (root / "npm-shrinkwrap.json").is_file():
+        return "npm ci"
+    return "npm install"
+
+
+def _node_deps_missing(root: Path, package: dict) -> bool:
+    """package.json declares dependencies but they are not installed (no node_modules, no Yarn PnP)."""
+    declared = package.get("dependencies") or package.get("devDependencies")
+    installed = (root / "node_modules").is_dir() or (root / ".pnp.cjs").is_file()
+    return bool(declared) and not installed
+
+
 def _python_tool(root: Path, tool: str) -> list[str]:
     """How the project runs a Python tool: `uv run` when it has uv.lock, else its virtualenv, else the
     python on PATH (never the interpreter that runs itqan, which has none of the project's packages)."""
@@ -147,12 +166,22 @@ def detect(root: Path, not_run: list | None = None) -> list[dict]:
     package = root / "package.json"
     if package.is_file():
         try:
-            scripts = json.loads(package.read_text(encoding="utf-8")).get("scripts") or {}
-        except (ValueError, OSError, AttributeError):
-            scripts = {}
+            data = json.loads(package.read_text(encoding="utf-8"))
+            data = data if isinstance(data, dict) else {}
+        except (ValueError, OSError):
+            data = {}
+        scripts = data.get("scripts") if isinstance(data.get("scripts"), dict) else {}
         runner = _package_runner(root)
+        missing = _node_deps_missing(root, data)
         for script, kind in (("test", "tests"), ("lint", "lint"), ("build", "build")):
-            if script in scripts:  # what the script runs is recorded, so `"test": "exit 0"` shows
+            if script not in scripts:
+                continue
+            if missing:  # `eslint: command not found` would be a false red proof
+                skipped.append({"name": f"{runner} {script}", "kind": kind,
+                                "command": f"{runner} run {script}",
+                                "reason": "dependencies not installed (no node_modules): install them with "
+                                          f"`{_node_install_hint(root)}`, then make the proof again"})
+            else:  # what the script runs is recorded, so `"test": "exit 0"` shows
                 add(f"{runner} {script}", kind, [runner, "run", script], str(scripts[script])[:300])
 
     if (root / "go.mod").is_file():

@@ -524,6 +524,51 @@ def test_a_missing_own_package_is_dependencies_not_installed(proof, tmp_path):
     assert not proof.run_check(other, root, 30).get("not_installed")  # not the project's own package
 
 
+def node_project(tmp_path, scripts, **files):
+    root = tmp_path / "node"
+    root.mkdir()
+    (root / "package.json").write_text(json.dumps({"scripts": scripts, "devDependencies": {"eslint": "^9"}}))
+    for name, text in files.items():
+        path = root / name.replace("__", "/")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+    return root
+
+
+def make_proof(proof, root, tmp_path, monkeypatch):
+    monkeypatch.setenv("ITQAN_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("NEXIKA_STATUS_HOME", str(tmp_path / "status"))
+    args = proof.argparse.Namespace(only=None, review=None, note=[], done=[], open=[], timeout=60)
+    return proof.make(root, args)
+
+
+# fastify (#228, cases P2 and P3): no node_modules is "dependencies not installed", not a failure
+def test_node_checks_without_node_modules_are_not_run(proof, tmp_path, monkeypatch):
+    root = node_project(tmp_path, {"test": "eslint"})
+    made = make_proof(proof, root, tmp_path, monkeypatch)
+    assert made["checks"] == [] and made["summary"]["checks_passed"] is False
+    [entry] = made["not_run"]
+    assert entry["kind"] == "tests" and "dependencies not installed" in entry["reason"]
+    text = proof.describe(made)
+    assert "npm install" in text and "npm ci" not in text and "FAILED" not in text
+
+
+@pytest.mark.parametrize(("lockfile", "hint"), [
+    ("package-lock.json", "npm ci"), ("pnpm-lock.yaml", "pnpm install --frozen-lockfile"),
+    ("yarn.lock", "yarn install --immutable"),
+])
+def test_the_node_install_hint_follows_the_lockfile(proof, tmp_path, monkeypatch, lockfile, hint):
+    root = node_project(tmp_path, {"test": "eslint"}, **{lockfile: ""})
+    assert hint in proof.describe(make_proof(proof, root, tmp_path, monkeypatch))
+
+
+def test_node_checks_run_when_node_modules_exists(proof, tmp_path, monkeypatch):
+    root = node_project(tmp_path, {"test": "exit 0"})
+    (root / "node_modules").mkdir()
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+    assert [c["argv"] for c in proof.detect(root)] == [["npm", "run", "test"]]
+
+
 def test_session_note_names_the_project_s_own_checks(tmp_path):
     # black case S-pack (#151): the python pack suggested ruff on a project linted by flake8 and black
     root = black_like(tmp_path)
