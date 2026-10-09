@@ -1193,7 +1193,7 @@ def test_a_folder_approval_covers_git_in_a_repository_there(world):
 
 @pytest.mark.parametrize("command,verdict,cls", [
     ("npm config set //registry.npmjs.org/:_authToken x", "ask", "secret-write"),
-    ("npm config set ignore-scripts false", "ask", "secret-write"),
+    ("npm config set fund false", "ask", "secret-write"),
     ("pnpm config set //registry.npmjs.org/:_authToken x", "ask", "secret-write"),
     ("npm config delete //registry.npmjs.org/:_authToken", "ask", "secret-write"),
     ("npm config set fund false --location=project", "pass", "write"),
