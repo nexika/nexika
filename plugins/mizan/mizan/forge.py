@@ -6,12 +6,15 @@ these read commands run, with arguments as a list (no shell):
 
     gh pr list --state open --json number,author,headRefName,headRefOid,url,isCrossRepository --limit 200
     gh pr list --state open --search review-requested:@me --json number --limit 100
-    gh pr checks <number> --json name,bucket,link,workflow
+    gh pr checks <number> --json name,bucket,link,workflow,event
     gh run list --branch=<branch> --limit 20
-        --json databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt
-    gh run list --commit=<head> --limit 20 --json ...   (detached, or the head is not in the list above)
-    gh run list --workflow=<name> --status=completed --limit 20 --json ...
-        (CI running and the branch has no finished run of that workflow: for the time left)
+        --json databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt,event,createdAt,
+               workflowDatabaseId
+    gh run list --commit=<head> --limit 20 --json ...   (detached, or the head is not in the list above,
+        or a PR has failed checks: did their runs succeed anyway?)
+    gh run list --workflow=<id> --status=completed --limit 20 --json ...
+        (CI running and the branch has no finished run of that workflow: for the time left; by id,
+        since two workflows may share a name)
     gh run view <id> --json jobs
     glab mr list --output json
     glab mr list --reviewer=@me --output json
@@ -39,7 +42,8 @@ PR_TTL, CI_TTL, CI_RUNNING_TTL, LOCK_TTL = 300, 90, 45, 360  # a refresh may wai
 IDLE_AFTER, IDLE_FACTOR = 600, 4
 BIN = Path(__file__).resolve().parent.parent / "bin" / "mizan"
 TOOL = {"github": "gh", "gitlab": "glab"}
-RUN_FIELDS = "databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt"
+RUN_FIELDS = ("databaseId,status,conclusion,name,headSha,url,startedAt,updatedAt,event,createdAt,"
+              "workflowDatabaseId")
 
 
 def cache_path(repo: str) -> Path:
@@ -68,6 +72,7 @@ def save_cache(repo: str, data: dict) -> None:
 # ------------------------------------------------------------------ parsing (pure, tested)
 
 TITLES = {"mr", "mrs", "ms", "miss", "mx", "dr", "prof", "sir"}
+NOT_NAMES = {"undefined", "null", "none"}  # a profile name some tool wrote by mistake: use the login
 
 
 def author_name(author: dict) -> str:
@@ -77,6 +82,8 @@ def author_name(author: dict) -> str:
     if login.startswith("app/") or author.get("is_bot") or login.endswith("[bot]"):
         return login.removeprefix("app/").removesuffix("[bot]") or "?"
     words = str(author.get("name") or "").split()
+    if " ".join(words).lower() in NOT_NAMES:
+        words = []
     while words and words[0].lower().rstrip(".") in TITLES:
         words = words[1:]
     return first_name(" ".join(words)) or login or "?"
@@ -124,12 +131,37 @@ def job_label(workflow: str, job: str) -> str:
     """'workflow/job', so a job called 'check' says which workflow it belongs to."""
     return f"{workflow}/{job}" if workflow and job and workflow != job else (job or workflow or "?")
 FAILED = ("failure", "timed_out", "startup_failure")  # cancelled is counted apart
+# A run that waits for a maintainer's approval (a first-time contributor's fork) has not run. After
+# 30 days GitHub ends it as failure with no jobs: still not run.
+WAITING, EXPIRED_AFTER = "action_required", 29 * 86400
+# The commit's CI. Not: schedule runs (GitHub tags them with the default branch's head), dynamic runs
+# (Copilot reviews, dependabot updates), pull_request_target runs (a labeler, a backport on close).
+# A run or check with no event (an outside status such as CodeQL) still counts.
+CI_EVENTS = ("push", "pull_request", "merge_group")
 
 
-def parse_gh_checks(text: str) -> dict:
-    checks = json.loads(text or "[]")
+def is_ci(item: dict) -> bool:
+    return not item.get("event") or item.get("event") in CI_EVENTS
+
+
+def parse_gh_checks(text: str, runs: list[dict] | None = None) -> dict:
+    """runs: the commit's runs. A failed job in a run that succeeded was allowed to fail
+    (continue-on-error): it is set apart as allowed, not counted as a failure."""
+    checks = [c for c in json.loads(text or "[]") if is_ci(c)]  # a labeler alone is no CI: "none"
+    green = {str(r.get("databaseId")) for r in runs or [] if r.get("conclusion") == "success"}
     bad = [c for c in checks if c.get("bucket") == "fail"]
+    allowed = [c for c in bad if (m := RUN_LINK.search(c.get("link") or "")) and m.group(1) in green]
+    if allowed:
+        checks = [c for c in checks if c not in allowed]
+        bad = [c for c in bad if c not in allowed]
     cancelled = [c.get("name", "?") for c in checks if c.get("bucket") == "cancel"]
+    found = parse_checks_left(checks, bad, cancelled)
+    if allowed:
+        found["allowed"] = [job_label(c.get("workflow") or "", c.get("name", "?")) for c in allowed]
+    return found
+
+
+def parse_checks_left(checks: list[dict], bad: list[dict], cancelled: list[str]) -> dict:
     if bad:
         link = next((m.group(1) for c in bad if (m := RUN_LINK.search(c.get("link") or ""))), None)
         flows = list(dict.fromkeys(c.get("workflow") or "" for c in bad))
@@ -149,11 +181,25 @@ def parse_gh_checks(text: str) -> dict:
 
 
 def pick_runs(runs: list[dict], head: str) -> list[dict]:
-    """The workflow runs of the local HEAD commit, else of the newest commit that has runs."""
+    """The CI runs of the local HEAD commit, else of the newest commit that has runs."""
+    runs = [r for r in runs if is_ci(r)]
     same = [r for r in runs if r.get("headSha") == head]
     if same or not runs:
         return same
     return [r for r in runs if r.get("headSha") == runs[0].get("headSha")]
+
+
+def newest_per_workflow(runs: list[dict]) -> list[dict]:
+    """One run per workflow and event, the newest: a title check re-run after a title edit is a new run
+    at the same commit, and the old red one no longer counts."""
+    best: dict = {}
+    for r in runs:
+        key = (r.get("workflowDatabaseId") or r.get("name"), r.get("event"))
+        rank = (str(r.get("createdAt") or ""), r.get("databaseId") or 0)
+        if key not in best or rank > best[key][0]:
+            best[key] = (rank, r)
+    keep = {id(r) for _, r in best.values()}
+    return [r for r in runs if id(r) in keep]
 
 
 def _when(value) -> float | None:
@@ -183,23 +229,35 @@ def timing(all_runs: list[dict], running: list[dict], now: float | None = None) 
     return {"elapsed": elapsed, "eta": max(0, usual - elapsed)}
 
 
+def waited_out(run: dict) -> bool:
+    """A failed run that ended a month after it was created: GitHub expired its wait for approval."""
+    start, end = _when(run.get("createdAt")), _when(run.get("updatedAt"))
+    return bool(start and end and end - start >= EXPIRED_AFTER)
+
+
 def parse_gh_runs(text: str, head: str, now: float | None = None, history: list[dict] | None = None) -> dict:
     """history: more runs (other commits, other branches) to learn a workflow's usual duration from."""
     every = json.loads(text or "[]")
-    runs = pick_runs(every, head)
+    runs = newest_per_workflow(pick_runs(every, head))
     if not runs:
         return {"state": "none", "failed": [], "failed_run": None}
     done = [r for r in runs if r.get("status") == "completed"]
     bad = [r for r in done if r.get("conclusion") in FAILED]
     cancelled = [r.get("name", "?") for r in done if r.get("conclusion") == "cancelled"]
     if bad:
-        return {"state": "failed", "failed": [r.get("name", "?") for r in bad], "cancelled": cancelled,
-                "failed_run": bad[0].get("databaseId"), "url": bad[0].get("url", ""),
-                "failed_runs": [[r.get("databaseId"), r.get("name", "?")] for r in bad]}
+        found = {"state": "failed", "failed": [r.get("name", "?") for r in bad], "cancelled": cancelled,
+                 "failed_run": bad[0].get("databaseId"), "url": bad[0].get("url", ""),
+                 "failed_runs": [[r.get("databaseId"), r.get("name", "?")] for r in bad]}
+        if all(waited_out(r) for r in bad):
+            found["maybe_expired"] = True  # fetch_ci looks at one run's jobs: none means it never ran
+        return found
     going = [r for r in runs if r.get("status") != "completed"]
     if going:
         return {"state": "running", "failed": [], "failed_run": None,
                 **timing(every if history is None else history, going, now)}
+    waiting = [r.get("name", "?") for r in done if r.get("conclusion") == WAITING]
+    if waiting:
+        return {"state": "approval", "failed": [], "failed_run": None, "waiting": waiting}
     if cancelled:  # cancelled is not failed: a newer push or a fail-fast matrix stopped it
         ran = [r for r in done if r.get("conclusion") not in ("skipped", "neutral")]
         return {"state": "cancelled", "failed": [], "failed_run": None, "cancelled": cancelled,
@@ -313,6 +371,28 @@ def ours(info: dict, runs: list[dict]) -> list[dict]:
     return keep
 
 
+def finish_runs(found: dict, cwd: str) -> dict:
+    """parse_gh_runs's answer with every failed workflow's failed jobs (`gh run view`), or, when the
+    failed runs are a month old with no jobs, the approval that never came."""
+    run_id = found.pop("failed_run", None)
+    found["run"] = run_id
+    failed_runs = found.pop("failed_runs", [])
+    if found.pop("maybe_expired", False) and failed_runs:
+        text = run_tool(["gh", "run", "view", str(int(failed_runs[0][0])), "--json", "jobs"], cwd)
+        if not (json.loads(text or "{}") or {}).get("jobs"):
+            return {"state": "approval", "expired": True, "failed": [], "run": None,
+                    "waiting": [workflow for _, workflow in failed_runs]}
+    if failed_runs:  # every failed workflow, each with its failed jobs
+        failed = []
+        for number, workflow in failed_runs[:MAX_FAILED_RUNS]:
+            jobs = parse_gh_jobs(run_tool(["gh", "run", "view", str(int(number)), "--json", "jobs"], cwd))
+            failed += [job_label(workflow, job) for job in jobs["failed"]] or [workflow]
+            found["cancelled"] = found.get("cancelled", []) + jobs["cancelled"]
+        found["failed"] = failed + [workflow for _, workflow in failed_runs[MAX_FAILED_RUNS:]]
+        found["workflows"] = list(dict.fromkeys(workflow for _, workflow in failed_runs))
+    return found
+
+
 def fetch_ci(info: dict, pr: dict | None) -> dict:
     tool = TOOL.get(info.get("host"), "gh")
     cwd, branch = info["repo"], info.get("branch", "")
@@ -321,14 +401,23 @@ def fetch_ci(info: dict, pr: dict | None) -> dict:
             argv = ["glab", "ci", "get", f"--branch={branch}", "--output", "json"]
             return parse_glab_pipeline(run_tool(argv, cwd))
         checks = None
-        if pr and pr.get("number"):
-            checks = parse_gh_checks(run_tool(["gh", "pr", "checks", str(int(pr["number"])), "--json",
-                                               "name,bucket,link,workflow"], cwd, accept_codes=(0, 1, 8)))
-            if checks["state"] not in ("none", "running"):
-                return checks
-            # Running: the run list below says for how long, and about how long is left.
         fields = ["--json", RUN_FIELDS, "--limit", "20"]
         head = info.get("head", "")
+        if pr and pr.get("number"):
+            argv = ["gh", "pr", "checks", str(int(pr["number"])), "--json", "name,bucket,link,workflow,event"]
+            text = run_tool(argv, cwd, accept_codes=(0, 1, 8))
+            checks = parse_gh_checks(text)
+            if checks["state"] == "failed" and re.match(r"^[0-9a-f]{7,64}$", head):
+                try:  # which runs ended green anyway: their failed jobs were allowed to fail
+                    by_commit = json.loads(run_tool(["gh", "run", "list", f"--commit={head}", *fields], cwd)
+                                           or "[]")
+                    checks = parse_gh_checks(text, by_commit)
+                except (Off, ValueError, TypeError):
+                    pass
+            if checks["state"] not in ("none", "running"):
+                return checks
+            # None: `gh pr checks` leaves out runs waiting for approval; the run list below has them.
+            # Running: the run list below says for how long, and about how long is left.
         listed = [] if detached(info) else json.loads(
             run_tool(["gh", "run", "list", f"--branch={branch}", *fields], cwd) or "[]")
         mine = ours(info, listed)
@@ -340,27 +429,21 @@ def fetch_ci(info: dict, pr: dict | None) -> dict:
         found = parse_gh_runs(json.dumps(mine), head, history=history)
         if found["state"] == "running" and found.get("elapsed") is not None and found.get("eta") is None:
             # No finished run of this workflow on the branch (a fork's new branch): its recent runs anywhere.
-            name = next((r.get("name") for r in pick_runs(mine, head)
-                         if r.get("status") != "completed" and r.get("name")), "")
-            if name:
-                recent = json.loads(run_tool(["gh", "run", "list", f"--workflow={name}", "--status=completed",
-                                              "--json", "name,status,conclusion,startedAt,updatedAt",
-                                              "--limit", "20"], cwd) or "[]")
-                found = parse_gh_runs(json.dumps(mine), head, history=history + recent)
+            going = next((r for r in pick_runs(mine, head)
+                          if r.get("status") != "completed" and r.get("name")), {})
+            workflow = going.get("workflowDatabaseId") or going.get("name")
+            if workflow:
+                try:  # only the time left: an error here never hides that CI is running
+                    recent = json.loads(run_tool(["gh", "run", "list", f"--workflow={workflow}",
+                                                  "--status=completed", "--json",
+                                                  "name,status,conclusion,startedAt,updatedAt",
+                                                  "--limit", "20"], cwd) or "[]")
+                    found = parse_gh_runs(json.dumps(mine), head, history=history + recent)
+                except (Off, ValueError, TypeError):
+                    pass
         if checks and checks["state"] == "running" and found["state"] != "running":
             return checks
-        run_id = found.pop("failed_run", None)
-        found["run"] = run_id
-        failed_runs = found.pop("failed_runs", [])
-        if failed_runs:  # every failed workflow, each with its failed jobs
-            failed = []
-            for number, workflow in failed_runs[:MAX_FAILED_RUNS]:
-                jobs = parse_gh_jobs(run_tool(["gh", "run", "view", str(int(number)), "--json", "jobs"], cwd))
-                failed += [job_label(workflow, job) for job in jobs["failed"]] or [workflow]
-                found["cancelled"] = found.get("cancelled", []) + jobs["cancelled"]
-            found["failed"] = failed + [workflow for _, workflow in failed_runs[MAX_FAILED_RUNS:]]
-            found["workflows"] = list(dict.fromkeys(workflow for _, workflow in failed_runs))
-        return found
+        return finish_runs(found, cwd)
     except Off as off:
         return {"state": "off", "why": off.reason, "tool": off.tool}
     except (ValueError, TypeError):

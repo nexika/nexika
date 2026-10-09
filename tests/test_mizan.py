@@ -241,6 +241,21 @@ def test_a_fork_pr_checked_out_under_another_name_is_found_by_its_head():
     assert forge.parse_gh_prs(json.dumps(FASTIFY_PRS), head[:8], head)["branch_pr"] is None
 
 
+def test_a_profile_name_that_is_not_a_name_falls_back_to_the_login():
+    # fastify PR 7063: the author's GitHub profile name is the string "undefined" (#249).
+    assert forge.author_name({"login": "TheForgivenOne", "name": "undefined"}) == "TheForgivenOne"
+    for word in ("null", "None", "UNDEFINED", " undefined "):
+        assert forge.author_name({"login": "x", "name": word}) == "x"
+    assert forge.author_name({"login": "x", "name": "Nullah Kay"}) == "Nullah"
+
+
+def test_a_bot_that_started_a_branch_is_named_like_in_the_pr_list():
+    # fastify's dependabot branches: the commit author is dependabot[bot], the PR list says dependabot (#249).
+    assert gitinfo.first_name("dependabot[bot]") == "dependabot"
+    assert gitinfo.first_name("github-actions[bot]") == "github-actions"
+    assert gitinfo.first_name("Jean Dupont") == "Jean"
+
+
 def test_glab_merge_requests():
     mrs = json.dumps([{"iid": 9, "author": {"username": "sara", "name": "Sara Nabil"}, "source_branch": "fix/y",
                        "web_url": "w"}])

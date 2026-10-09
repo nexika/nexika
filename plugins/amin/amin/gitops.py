@@ -14,17 +14,18 @@ class Runner:
     def __init__(self, root: Path):
         self.root = root
 
-    def run(self, *args: str, check: bool = True) -> str:
+    def run(self, *args: str, check: bool = True, input: str | None = None) -> str:
         try:
-            res = subprocess.run(list(args), cwd=self.root, capture_output=True, text=True, timeout=120)
+            res = subprocess.run(list(args), cwd=self.root, capture_output=True, text=True, timeout=120,
+                                 input=input)
         except (OSError, subprocess.TimeoutExpired) as exc:
             raise CommandError(f"{args[0]}: {exc}") from None
         if check and res.returncode != 0:
             raise CommandError(f"{' '.join(args[:3])}...: {(res.stderr or res.stdout).strip()[:400]}")
         return res.stdout
 
-    def git(self, *args: str, check: bool = True) -> str:
-        return self.run("git", *args, check=check)
+    def git(self, *args: str, check: bool = True, input: str | None = None) -> str:
+        return self.run("git", *args, check=check, input=input)
 
     def gh(self, *args: str, check: bool = True) -> str:
         return self.run("gh", *args, check=check)
