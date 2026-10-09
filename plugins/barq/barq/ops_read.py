@@ -66,6 +66,12 @@ def op_read(ctx: Context, path: str, start=None, end=None, symbol: str | None = 
             names = [s.name for s in (outline(raw, p.suffix) or [])]
             hint = ", ".join(names[:30]) + (" ..." if len(names) > 30 else "")
             raise OpError(f"no symbol '{symbol}' in {shown}. Symbols: {hint or 'none found'}")
+        distinct = list(dict.fromkeys(s.name for s in found))
+        if len(distinct) > 1 and "." not in symbol:
+            # a short name that several symbols end with: list them, never pick one (#272)
+            listed = ", ".join(f"{s.name} ({s.line}-{s.end})" for s in found)
+            raise OpError(f"'{symbol}' matches {len(found)} symbols in {shown}: {listed}. Read one with "
+                          f"@<qualified name> or read:{shown}:START:END")
         parts = [numbered(lines[s.line - 1:s.end], s.line) for s in found]
         spans = ", ".join(f"{s.line}-{s.end}" for s in found)
         partial = [s for s in found if s.partial]
