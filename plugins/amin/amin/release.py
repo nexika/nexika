@@ -334,23 +334,36 @@ def _when(stamp: str) -> datetime.datetime | None:
 UNTAGGED_LIMIT = 200
 
 
-def history(root: Path, runner: gitops.Runner, project: proj.Project, tag: str | None) -> list[str]:
-    """Merged PRs that touched the project since tag (to write first-release notes)."""
+def history(root: Path, runner: gitops.Runner, project: proj.Project, tag: str | None,
+            to: str | None = None) -> list[str]:
+    """Merged PRs that touched the project in tag..to (to: HEAD by default), to write release notes.
+    A PR counts when its merge commit is in that range, so each release line (main, 5.x) gets its own
+    PRs; a merge commit missing from this clone counts when the PR's base is the current branch."""
     since = _when(runner.git("log", "-1", "--format=%cI", tag, check=False)) if tag else None
-    search = ["--search", f"merged:>={since.astimezone(datetime.timezone.utc).date()}"] if since else []
+    until = _when(runner.git("log", "-1", "--format=%cI", to, check=False)) if to else None
+    terms = ([f"merged:>={since.astimezone(datetime.timezone.utc).date()}"] if since else []) + (
+        [f"merged:<={until.astimezone(datetime.timezone.utc).date()}"] if until else [])
+    search = ["--search", " ".join(terms)] if terms else []
     limit = "5000" if since else str(UNTAGGED_LIMIT)   # no tag: only the latest PRs, or gh times out
     prs = runner.gh_json("pr", "list", "--state", "merged", "--limit", limit, *search,
-                         "--json", "number,title,mergedAt,files,mergeCommit,author") or []
-    # a PR merged as the tagged commit (the release PR itself) or before it is already released
-    released = set(runner.git("rev-list", "--max-count=2000", tag, check=False).split()) if tag else set()
+                         "--json", "number,title,mergedAt,files,mergeCommit,author,baseRefName") or []
+    upper = to or "HEAD"
+    in_range = set(runner.git("rev-list", f"{tag}..{upper}" if tag else upper, check=False).split())
+    oids = {(pr.get("mergeCommit") or {}).get("oid") or "" for pr in prs} - in_range - {""}
+    checked = runner.git("cat-file", "--batch-check", input="\n".join(sorted(oids)) + "\n",
+                         check=False) if oids else ""
+    missing = {line.split()[0] for line in checked.splitlines() if line.endswith(" missing")}
+    branch = None if to else runner.git("rev-parse", "--abbrev-ref", "HEAD", check=False).strip()
     out = []
     for pr in sorted(prs, key=lambda x: _when(x.get("mergedAt", "")) or datetime.datetime.min.replace(
             tzinfo=datetime.timezone.utc)):
-        merged = _when(pr.get("mergedAt", ""))
-        if since and (merged is None or merged <= since):
-            continue
-        if ((pr.get("mergeCommit") or {}).get("oid") or "") in released:
-            continue
+        oid = (pr.get("mergeCommit") or {}).get("oid") or ""
+        if oid not in in_range:   # git can't tell: the merge time and the PR's base branch decide
+            merged = _when(pr.get("mergedAt", ""))
+            if (oid and oid not in missing                    # merged into another line, or released
+                    or pr.get("baseRefName") not in (None, "", branch)
+                    or since and (merged is None or merged <= since) or until and merged and merged > until):
+                continue
         paths = [f.get("path", "") for f in pr.get("files") or []]
         if project.path == "." or any(x == project.path or x.startswith(project.path + "/") for x in paths):
             out.append(f"#{pr['number']} {pr['title']} ({pr.get('mergedAt', '')[:10]}){_kind(pr, paths)}")

@@ -795,6 +795,61 @@ BLACK_CHANGES = """# Change Log
 """
 
 
+def two_line_repo(tmp_path):
+    """main and a 5.x branch, both after v5.0.0; returns (root, main's commit, 5.x's commit)."""
+    root = init_repo(tmp_path / "app", {"package.json": '{"name": "app", "version": "5.0.0"}', "a.js": "1\n"})
+    _git(root, "tag", "-a", "v5.0.0", "-m", "x")
+    _git(root, "switch", "-q", "-c", "5.x")
+    write(root, "b.js", "backport\n")
+    commit(root, "[Backport 5.x] fix (#11)")
+    on_5x = git_out(root, "rev-parse", "HEAD").strip()
+    _git(root, "switch", "-q", "main")
+    write(root, "a.js", "2\n")
+    commit(root, "fix (#10)")
+    return root, git_out(root, "rev-parse", "HEAD").strip(), on_5x
+
+
+def pr(number, oid, base, day="2099-01-02"):
+    return {"number": number, "title": f"PR {number}", "mergedAt": f"{day}T00:00:00Z", "baseRefName": base,
+            "mergeCommit": {"oid": oid}, "author": {"login": "someone"}, "files": [{"path": "a.js"}]}
+
+
+def test_history_skips_prs_merged_into_another_branch(tmp_path):
+    # issue #240: on fastify's main, history listed the 5 [Backport 5.x] PRs merged into 5.x
+    root, on_main, on_5x = two_line_repo(tmp_path)
+    prs = [pr(10, on_main, "main"), pr(11, on_5x, "5.x"),
+           pr(12, "d" * 40, "main"), pr(13, "e" * 40, "5.x")]   # 12, 13: merge commits not in this clone
+    p = proj.detect(root)[0]
+    lines = release.history(root, FakeRunner(root, prs=prs), p, "v5.0.0")
+    assert lines == ["#10 PR 10 (2099-01-02)", "#12 PR 12 (2099-01-02)"]
+    _git(root, "switch", "-q", "5.x")
+    lines = release.history(root, FakeRunner(root, prs=prs), p, "v5.0.0")
+    assert lines == ["#11 PR 11 (2099-01-02)", "#13 PR 13 (2099-01-02)"]
+
+
+def test_history_between_two_tags(tmp_path, monkeypatch, capsys):
+    # issue #240: "what went into v5.1.0" could not be asked
+    root, on_main, on_5x = two_line_repo(tmp_path)
+    _git(root, "tag", "-a", "v5.1.0", "-m", "x")
+    write(root, "a.js", "3\n")
+    commit(root, "later (#14)")
+    later = git_out(root, "rev-parse", "HEAD").strip()
+    prs = [pr(10, on_main, "main"), pr(11, on_5x, "5.x"), pr(14, later, "main")]
+    runner = FakeRunner(root, prs=prs)
+    p = proj.detect(root)[0]
+    assert release.history(root, runner, p, "v5.0.0", to="v5.1.0") == ["#10 PR 10 (2099-01-02)"]
+    call = next(c for c in runner.gh_calls if c[:2] == ("pr", "list"))
+    assert "merged:<=" in " ".join(call) and "baseRefName" in " ".join(call)
+    monkeypatch.chdir(root)
+    monkeypatch.setattr(gitops, "Runner", lambda r: FakeRunner(r, prs=prs))
+    assert cli.main(["history", "app", "--from", "v5.0.0", "--to", "v5.1.0"]) == 0
+    assert capsys.readouterr().out.strip() == "#10 PR 10 (2099-01-02)"
+    assert cli.main(["history", "app", "--to", "v5.1.0"]) == 0          # from: the tag before v5.1.0
+    assert capsys.readouterr().out.strip() == "#10 PR 10 (2099-01-02)"
+    assert cli.main(["history", "app"]) == 0                             # since the last tag
+    assert capsys.readouterr().out.strip() == "#14 PR 14 (2099-01-02)"
+
+
 def test_changes_md_and_version_headings_are_recognised(tmp_path):
     # issue #154: amin made a new CHANGELOG.md, appended after the oldest release, and found no notes
     black = black_repo(tmp_path, {"CHANGES.md": BLACK_CHANGES})
