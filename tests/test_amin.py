@@ -528,6 +528,23 @@ def test_check_requires_a_note_for_changed_projects(market):
     assert run_check(market) == (True, ["alpha: ok (note added)"])
 
 
+def test_check_fragment_hint_names_the_note_file_not_a_repo_path(tmp_path, monkeypatch):
+    # issue #242: in fastify the hint said `python3 plugins/amin/bin/amin ...`, a path only Nexika has
+    root = init_repo(tmp_path / "fastify", {"package.json": '{"name": "fastify", "version": "5.12.5"}',
+                                            "lib/reply.js": "x\n"})
+    feature_branch(root)
+    write(root, "lib/reply.js", "y\n")
+    commit(root)
+    monkeypatch.delenv("GITHUB_REF", raising=False)
+    ok, lines = run_check(root)
+    hint = "\n".join(lines)
+    assert not ok and "plugins/amin/bin/amin" not in hint.replace(cli.helper_command(), "")
+    assert "changelog.d/<PR>.fixed.md" in hint and "one line for users" in hint
+    assert f'{cli.helper_command()} fragment add fastify fixed "What changed, for users" --id <PR>' in hint
+    monkeypatch.setenv("GITHUB_REF", "refs/pull/7068/merge")   # in CI the PR number is known
+    assert "changelog.d/7068.fixed.md" in "\n".join(run_check(root)[1])
+
+
 def test_check_accepts_release_prs_and_unrelated_files(market):
     _git(market, "tag", "-a", "alpha-v0.1.0", "-m", "x")
     fragments.add(market, projects_of(market)["alpha"], "added", "Outline mode.", "1")
