@@ -214,6 +214,33 @@ def test_names_from_the_black_pr_list():
     assert forge.author_name({"login": "drx", "name": "Dr."}) == "drx"
 
 
+# fastify/fastify (MIT): five of its open fork PRs, trimmed from `gh pr list` on 2026-10-09 (#52).
+FASTIFY_PRS = [
+    {"number": 7081, "author": {"login": "whoalin1", "name": ""},
+     "headRefName": "patch-1", "headRefOid": "ccb7d83b175b2599e137fc52cc3c903f45eff1f0", "isCrossRepository": True},
+    {"number": 7080, "author": {"login": "whoalin1", "name": ""},
+     "headRefName": "main", "headRefOid": "d691ca80672dd37bdc1bb0af8bcb0c97eee9c00f", "isCrossRepository": True},
+    {"number": 7064, "author": {"login": "LuizTakeda", "name": "Luiz Takeda"},
+     "headRefName": "patch-1", "headRefOid": "2b4f9ed3de1d0b69ad15b648a1aad35954c67be7", "isCrossRepository": True},
+    {"number": 6798, "author": {"login": "Akenne-dev", "name": "Kadri Kehinde Karimat"},
+     "headRefName": "main", "headRefOid": "7288df477397894f1593476ef4d2fb7e5afa5f05", "isCrossRepository": True},
+    {"number": 6757, "author": {"login": "BALOGUN-DAVID", "name": "BALOGUN DAVID TAIWO"},
+     "headRefName": "main", "headRefOid": "34059bcc6c31d2b1ddcab09628197b2679b860af", "isCrossRepository": True},
+]
+
+
+def test_a_fork_pr_checked_out_under_another_name_is_found_by_its_head():
+    # `gh pr checkout 6757` names the fork's main branch BALOGUN-DAVID/main (#248).
+    head = next(p["headRefOid"] for p in FASTIFY_PRS if p["number"] == 6757)
+    found = forge.parse_gh_prs(json.dumps(FASTIFY_PRS), "BALOGUN-DAVID/main", head)
+    assert found["branch_pr"]["number"] == 6757 and found["branch_pr"]["author"] == "BALOGUN"
+    assert forge.parse_gh_prs(json.dumps(FASTIFY_PRS), "BALOGUN-DAVID/main", "0" * 40)["branch_pr"] is None
+    twice = FASTIFY_PRS + [{**FASTIFY_PRS[-1], "number": 9999}]  # two PRs at one commit: neither is sure
+    assert forge.parse_gh_prs(json.dumps(twice), "BALOGUN-DAVID/main", head)["branch_pr"] is None
+    # A detached HEAD at that commit is on no branch: no PR, no creator (#161).
+    assert forge.parse_gh_prs(json.dumps(FASTIFY_PRS), head[:8], head)["branch_pr"] is None
+
+
 def test_a_profile_name_that_is_not_a_name_falls_back_to_the_login():
     # fastify PR 7063: the author's GitHub profile name is the string "undefined" (#249).
     assert forge.author_name({"login": "TheForgivenOne", "name": "undefined"}) == "TheForgivenOne"
