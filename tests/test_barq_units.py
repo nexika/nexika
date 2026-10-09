@@ -584,3 +584,63 @@ def test_a_symbol_without_a_closing_brace_is_marked_partial():
     text = "function broken() {\n" + "  x();\n" * 80
     sym = outline(text, ".js")[0]
     assert sym.partial
+
+
+# ---------------------------------------------------------------- JS outlines on fastify (#272-#276)
+
+REPLY_JS = textwrap.dedent('''\
+    'use strict'
+
+    function Reply (res, request, log) {
+      this.raw = res
+    }
+
+    Reply.prototype.send = function (payload) {
+      if (payload === undefined) {
+        return this
+      }
+      return this
+    }
+
+    Reply.prototype['code'] = function (code) {
+      return this
+    }
+
+    Reply.prototype.then = async (fulfilled) => {
+      return fulfilled()
+    }
+
+    function onSendEnd (reply) {
+      function send () {
+        reply.raw.end()
+      }
+      send()
+    }
+
+    module.exports = Reply
+''')
+
+
+def test_js_outline_prototype_methods():
+    syms = {s.name: (s.line, s.end) for s in outline(REPLY_JS, ".js")}
+    assert syms["Reply.prototype.send"] == (7, 12)
+    assert syms["Reply.prototype.code"] == (14, 16)
+    assert syms["Reply.prototype.then"] == (18, 20)
+    assert "module.exports" not in syms  # an assignment of a name, not a function
+
+
+def test_js_symbol_prototype_lookup():
+    assert [(s.line, s.end) for s in find_symbol(REPLY_JS, ".js", "Reply.prototype.send")] == [(7, 12)]
+    assert [(s.line, s.end) for s in find_symbol(REPLY_JS, ".js", "Reply.send")] == [(7, 12)]
+
+
+def test_js_outline_module_exports_function():
+    text = "'use strict'\n\nmodule.exports = function noopSet () {\n  return {\n    add () {}\n  }\n}\n"
+    syms = outline(text, ".js")
+    assert [(s.name, s.line, s.end) for s in syms][0] == ("noopSet", 3, 7)
+    assert syms[0].signature == "module.exports = function noopSet ()"
+
+
+def test_js_assignments_inside_functions_are_not_outlined():
+    text = "function f () {\n  this.cb = function () {\n    return 1\n  }\n}\n"
+    assert [s.name for s in outline(text, ".js")] == ["f"]

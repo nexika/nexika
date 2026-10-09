@@ -54,6 +54,12 @@ JS_ARROW = re.compile(
     r"(?:\([^)]*\)|\w+)\s*(?::[^=]+)?=>"
 )
 JS_EXT = {".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"}
+# a function assigned to a property at the top level: Reply.prototype.send = function (payload) {,
+# module.exports = function noopSet () {, X.prototype['y'] = async (a) => { (#272)
+JS_ASSIGN_FUNC = re.compile(
+    r"^(?P<target>[A-Za-z_$][\w$]*(?:\.[\w$]+|\[\s*['\"][^'\"\]]+['\"]\s*\])+)\s*=\s*(?:async\s+)?"
+    r"(?:function\b\s*\*?\s*(?P<fname>[\w$]+)?|\([^)]*\)\s*=>|[\w$]+\s*=>)"
+)
 # class fields holding an arrow function: handleClick = (e) => {, private load = async () => {
 JS_FIELD_ARROW = re.compile(
     r"^\s*" + _MODS + r"(?P<name>[A-Za-z_$][\w$]*)\s*(?::[^=]+)?=\s*(?:async\s+)?"
@@ -310,6 +316,17 @@ def _match_decl(code: str, nxt: str, suffix: str) -> tuple[str, str] | None:
     return None
 
 
+def _js_assigned(line: str) -> str | None:
+    """The name of a top-level `a.b.c = function` assignment, with ['x'] written as .x."""
+    m = JS_ASSIGN_FUNC.match(line)
+    if not m:
+        return None
+    target = re.sub(r"\[\s*['\"]([^'\"\]]+)['\"]\s*\]", r".\1", m.group("target"))
+    if target in ("module.exports", "exports.default") and m.group("fname"):
+        return m.group("fname")
+    return target
+
+
 def _decl_start(lines: list[str], i: int) -> int:
     """Include attributes, decorators and doc comments directly above a declaration."""
     j = i
@@ -348,7 +365,12 @@ def _brace_symbols(text: str, suffix: str) -> list[Symbol]:
     for i, line in enumerate(lines):
         code = codes[i]
         nxt = codes[i + 1] if i + 1 < len(lines) else ""
-        decl = _match_decl(code, nxt, suffix) if depth <= 4 and code.strip() else None
+        decl = None
+        if suffix in JS_EXT and depth == 0 and not stack:
+            assigned = _js_assigned(line)
+            decl = ("func", assigned) if assigned else None
+        if decl is None and depth <= 4 and code.strip():
+            decl = _match_decl(code, nxt, suffix)
         if decl:
             kind, name = decl
             qual = ".".join([s[0] for s in stack] + [name])
@@ -416,9 +438,10 @@ def find_symbol(text: str, suffix: str, query: str) -> list[Symbol]:
     symbols = outline(text, suffix) or []
 
     def matches(sym: Symbol, q: str, fold: bool) -> bool:
-        name = sym.name.lower() if fold else sym.name
-        q = q.lower() if fold else q
-        return name == q or name.endswith("." + q)
+        names = {sym.name, sym.name.replace(".prototype.", ".")}  # @Reply.send finds Reply.prototype.send
+        if fold:
+            names, q = {n.lower() for n in names}, q.lower()
+        return any(name == q or name.endswith("." + q) for name in names)
 
     exact = [s for s in symbols if matches(s, query, fold=False)]
     return exact or [s for s in symbols if matches(s, query, fold=True)]
