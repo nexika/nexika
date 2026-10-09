@@ -705,6 +705,50 @@ def test_a_check_message_that_passes_after_a_label_is_not_flaky(ci, monkeypatch)
     assert any("9001" in e for e in record["evidence"])
 
 
+# fastify run 36318290733 (#260): a JavaScript action fails with core.setFailed(): no exit-code line.
+PR_TITLE_LOG = [
+    "##[group]Run fastify/action-pr-title@e8f2ff244ca28c4a1a00edbf2df39b082002e8aa",
+    "with:",
+    "  regex: /^(build|chore|ci|docs|feat|types|fix|perf|refactor|style|test)(?:\\([^\\):]*\\))?!?:\\s/",
+    "  github-token: ***",
+    "##[endgroup]",
+    'Checking pull-request title: "Update lock-threads.yml"',
+    '##[error]Pull Request title "Update lock-threads.yml" failed to pass match regex - /^(build|chore)/',
+    "Cleaning up orphan processes",
+]
+
+
+def test_a_javascript_action_s_own_message_is_the_failure(ci, monkeypatch):
+    monkeypatch.setattr(forge, "failed_log", lambda info, run: gh_log("pull-request-title-check", PR_TITLE_LOG))
+    record = diagnosis.triage(ci)
+    assert (record["kind"], record["detail"]["what"]) == ("code", "check")
+    assert [(f["framework"], f["message"]) for f in record["failures"]] == [
+        ("step", 'Pull Request title "Update lock-threads.yml" failed to pass match regex - /^(build|chore)/')]
+    # The author edits the title and the check passes on the same commit: still not flaky.
+    monkeypatch.setattr(forge, "history", lambda info, run: {"same_commit_passed": 9001, "last_green": None})
+    assert diagnosis.triage(ci, refresh=True)["kind"] == "code"
+
+
+@pytest.mark.parametrize("lines", [
+    # fastify run 30849839665: a setup action that cannot download is no check of the project.
+    ["##[group]Run nodesource/setup-nsolid@1ca68d2589d3d56ecd3881dfe6ffa87eeda9c939", "with:", "##[endgroup]",
+     "##[error]Action failed to download the metadata. Status code: 403"],
+    # An action's error that a signal explains is left to the signal.
+    ["##[group]Run dessant/lock-threads@1bf7ec25051fe7c00bdd17e6a7cf3d7bfb7dc771", "##[endgroup]",
+     "##[error]Resource not accessible by integration"],
+    # The token's missing permission is said on the line after the action's error: the signal explains it.
+    ["##[group]Run dessant/lock-threads@89ae32b08ed1a541efecbab17912962a5e38981c", "##[endgroup]",
+     "##[error]Request failed due to following response errors:", " - Resource not accessible by integration"],
+    # fastify run 32202758629: a site that answers a link checker with 403 is not the project's check.
+    ["##[group]Run JustinBeckwith/linkinator-action@7b6b0bc671f6264e1a8daa4488a5bd91ce61dcd4", "##[endgroup]",
+     "##[error][403] https://medium.com/better-programming/x - HTTP 403", "##[error]Detected 1 broken links."],
+    # A run: step's error lines are read as before (#172), not as an action's message.
+    ["##[group]Run npm test", "npm test", "##[endgroup]", "##[error]Something broke"],
+])
+def test_action_errors_that_are_not_a_check(lines):
+    assert parse.failures(lines) == []
+
+
 def test_an_echo_that_is_not_printed_is_not_a_failure():
     lines = ["##[group]Run make", 'echo "Building the docs"', "make docs", "##[endgroup]",
              "make: *** [docs] Error 2", "##[error]Process completed with exit code 2."]

@@ -213,9 +213,18 @@ STEP_EXIT = re.compile(r"^##\[error\]Process completed with exit code [1-9]")
 ECHO = re.compile(r"""\becho\s+(?:-e\s+)?(["'])(.+?)\1""")
 
 
+# A JavaScript action's step: "Run owner/action@ref". One that sets up the job (checkout, setup-*, cache,
+# artifacts) is no check of the project when it fails.
+STEP_ACTION = re.compile(r"^##\[group\]Run [\w.-]+/[\w./-]+@\S+\s*$")
+LINK_STATUS = re.compile(r"^\[\d{3}\] \S+")   # a link checker's "[403] <url>": a site's answer, not a check
+SETUP_ACTION = re.compile(r"(?i)^##\[group\]Run [\w.-]+/(?:[\w.-]*setup[\w.-]*|checkout|cache|"
+                          r"(?:upload|download)-artifact)(?:/[\w./-]*)?@")
+
+
 def steps(lines: list[str]):
     """Each step that failed: (its script and env, its output), from GitHub's '##[group]Run ...' header to
-    its '##[error]Process completed with exit code N'."""
+    its '##[error]Process completed with exit code N', or for a JavaScript action (no exit-code line) to
+    its first '##[error]' line, the last line of the output (#260)."""
     header: list[str] = []
     output: list[str] = []
     in_header = False
@@ -229,15 +238,28 @@ def steps(lines: list[str]):
             if header:
                 yield header, output
             header, output = [], []
+        elif header and line.startswith("##[error]") and STEP_ACTION.match(header[0]):
+            yield header, output + [line]
+            header, output = [], []
         elif header:
             output.append(line)
 
 
 def step_message(lines: list[str]) -> list[dict]:
     """A failed step's own message (#172): an output line the step's script prints with echo, such as
-    black's "Please add '(#5235)' change line to CHANGES.md"."""
+    black's "Please add '(#5235)' change line to CHANGES.md", or a JavaScript action's '##[error]' (#260)."""
     found = []
+    signalled: bool | None = None
     for header, output in steps(lines):
+        if STEP_ACTION.match(header[0]):   # core.setFailed(): the action's own '##[error]' line (#260)
+            said = output[-1].removeprefix("##[error]").strip() if output else ""
+            if not said or SETUP_ACTION.match(header[0]) or LINK_STATUS.match(said):
+                continue
+            if signalled is None:   # a sign of trouble outside the code explains the action's error
+                signalled = any(pattern.search(line) for line in lines for _, pattern in SIGNALS)
+            if not signalled:
+                found.append(_failure("step", "check", message=said))
+            continue
         echoed = [m.group(2).split("$")[0].strip() for line in header for m in ECHO.finditer(line)]
         echoed = [e for e in echoed if len(e) >= 10]
         said = [line.strip() for line in output
