@@ -514,3 +514,16 @@ def test_session_note_leaves_reads_and_searches_to_the_built_in_tools(barq_env):
     assert "Read" in note and "Edit" in note
     for op in ("run:test", "git-status", "read:PATH:outline", "read:PATH@Symbol", "map"):
         assert op in note
+
+
+def test_symbol_ambiguous_short_name_lists_matches(project, barq_run):
+    # #272: @send silently returned a nested `function send ()`, not Reply.prototype.send
+    (project / "reply.js").write_text(
+        "Reply.prototype.send = function (payload) {\n  return this\n}\n\n"
+        "function onSendEnd (reply) {\n  function send () {\n    reply.end()\n  }\n  send()\n}\n")
+    code, out = barq_run("read:reply.js@send")
+    assert code == 1
+    assert "'send' matches 2 symbols" in out
+    assert "Reply.prototype.send (1-3)" in out and "send (6-8)" in out
+    _, out = barq_run("read:reply.js@Reply.send")
+    assert "1\tReply.prototype.send = function (payload) {" in out
