@@ -288,6 +288,74 @@ def generated(lines: list[str]) -> list[dict]:
     return found
 
 
+NODE_BLOCK = re.compile(r"^✖ failing tests:\s*$")
+NODE_AT = re.compile(r"^test at (\S+?):(\d+):\d+\s*$")
+NODE_FAIL = re.compile(r"^\s*✖ (.+?) \(\d+(?:\.\d+)?m?s\)\s*$")
+NODE_FRAME = re.compile(r"\(?(?:file://)?([^\s()]+?\.[cm]?[jt]sx?):(\d+):\d+\)?\s*$")
+NODE_SUBTESTS = re.compile(r"^'?\d+ subtests? failed'?$")
+BORP_FAILED = re.compile(r"^failed: (\S.*?\.[cm]?[jt]sx?) \([\d,.]+ ?m?s\)\s*$")
+
+
+def _checkout_path(path: str) -> str:
+    return CHECKOUT.sub("", path.replace("\\", "/"))
+
+
+def _node_place(body: list[str], file: str, number: int) -> tuple[str, int]:
+    """The first frame of the checkout, in the test's own file when there is one."""
+    places = []
+    for line in body:
+        if (m := NODE_FRAME.search(line.replace("\\", "/"))) and not FOREIGN.search(m.group(1)):
+            places.append((_checkout_path(m.group(1)), int(m.group(2))))
+    same = [p for p in places if file and p[0] == file]
+    return (same or [(file, number)] if file else places or [("", 0)])[0]
+
+
+def node_test(lines: list[str]) -> list[dict]:
+    """Node's built-in test runner (#251): each test of its '✖ failing tests:' block, with its message and
+    the frame in its file; else borp's 'failed: <file>' lines, placed by the frame in that file."""
+    found: list[dict] = []
+    start = next((i for i, line in enumerate(lines) if NODE_BLOCK.match(line.strip())), -1)
+    if start >= 0:
+        at: tuple[str, int] = ("", 0)
+        entry: dict | None = None
+        body: list[str] = []
+
+        def close():
+            if entry is not None and not NODE_SUBTESTS.match(entry["message"]):
+                entry["file"], entry["line"] = _node_place(body, *at)
+                found.append(entry)
+
+        for line in lines[start + 1:]:
+            if line.startswith("##["):
+                break
+            if m := NODE_AT.match(line.strip()):
+                close()
+                entry, body, at = None, [], (_checkout_path(m.group(1)), int(m.group(2)))
+            elif (m := NODE_FAIL.match(line)) and not line.startswith("    "):
+                close()
+                name = m.group(1)
+                if "/" in name or "\\" in name:   # a file that failed as a whole
+                    name = _checkout_path(name)
+                entry, body = _failure("node:test", "tests", name), []
+            elif entry is not None:
+                body.append(line)
+                if not entry["message"] and line.strip():
+                    entry["message"] = _short(line.strip())
+        close()
+        if found:
+            return found
+    for i, line in enumerate(lines):
+        if not (m := BORP_FAILED.match(line.strip())):
+            continue
+        file = _checkout_path(m.group(1))
+        after = lines[i + 1:i + 400]
+        message = next((x[len("##[error]"):].strip() for x in after
+                        if x.startswith("##[error]") and "Process completed with exit code" not in x), "")
+        found.append(_failure("borp", "tests", file, file, _node_place(after, file, 0)[1],
+                              message or "failed"))
+    return found
+
+
 def playwright(lines: list[str]) -> list[dict]:
     """Playwright's failed tests: the summary's "failed" group when there is one (a test in its "flaky"
     group passed on a retry), else the numbered error blocks, else the list reporter's ✘ lines."""
@@ -508,6 +576,7 @@ def failures(lines: list[str]) -> list[dict]:
     found += merge_conflict(lines)
     found += generated(lines)
     found += playwright(lines)
+    found += node_test(lines)
     for block in junit_blocks(lines):
         found += junit_xml(block)
     if not found:   # nothing a tool reports: the step's own words, when its script printed them

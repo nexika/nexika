@@ -118,6 +118,67 @@ def test_go_verbose_location_before_the_fail_line():
     assert found == {"TestTotal": ("cart_test.go", 17), "TestTax": ("tax_test.go", 9)}
 
 
+# fastify run 36249120349 (#251): node:test's spec reporter, then its "✖ failing tests:" block.
+NODE_TEST_LOG = [
+    "✔ should throw error if invalid logger is returned (3.74486ms)",
+    "✖ request child loggers inherit the level without resetting it (17.548394ms)",
+    "##[error]AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+    "✔ diagnostics channel sync events fire in expected order (138.408605ms)",
+    "ℹ tests 2347", "ℹ pass 2342", "ℹ fail 1", "",
+    "✖ failing tests:", "",
+    "test at test/child-logger-factory.test.js:130:1",
+    "✖ request child loggers inherit the level without resetting it (17.548394ms)",
+    "  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+    "  ",
+    "  2 !== 1",
+    "  ",
+    "      at assert.<computed> [as strictEqual] (node:internal/test_runner/test:347:18)",
+    "      at TestContext.<anonymous> (/home/runner/work/fastify/fastify/test/child-logger-factory.test.js:156:12)",
+    "      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+    "      at async Test.run (node:internal/test_runner/test:1409:7) {",
+    "    generatedMessage: true,",
+    "  }",
+    "##[group]Test results (2342 passed, 1 failed)",
+    "##[error]Process completed with exit code 1.",
+]
+# fastify run 31715959264: borp lists each test file; no "failing tests" block on Windows or Linux.
+BORP_LOG = [
+    "passed: D:\\a\\fastify\\fastify\\test\\internals\\request-validate.test.js (987.7 ms)",
+    "failed: D:\\a\\fastify\\fastify\\test\\internals\\reply.test.js (1,093 ms)",
+    "passed: D:\\a\\fastify\\fastify\\test\\close.test.js (8,396 ms)",
+    "##[error]AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+    "+ actual - expected", "", "+ 'undefined'", "- 'string'", "",
+    "    at assert.<computed> [as strictEqual] (node:internal/test_runner/test:341:18)",
+    "    at TestContext.<anonymous> (D:\\a\\fastify\\fastify\\test\\internals\\reply.test.js:52:12)",
+    "##[error]Process completed with exit code 1.",
+]
+
+
+def test_node_test_runner_failures_are_read():
+    found = parse.read_log(gh_log("Test pino compatibility (^9)", NODE_TEST_LOG))
+    failures = found["Test pino compatibility (^9)"]["failures"]
+    assert [(f["framework"], f["kind"], f["test"], f["file"], f["line"]) for f in failures] == [
+        ("node:test", "tests", "request child loggers inherit the level without resetting it",
+         "test/child-logger-factory.test.js", 156)]
+    assert failures[0]["message"] == "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:"
+    assert classify.classify({"failures": failures})["kind"] == "code"
+
+
+def test_borp_names_the_failed_test_file():
+    failures = parse.read_log(gh_log("coverage-win / check-coverage", BORP_LOG))[
+        "coverage-win / check-coverage"]["failures"]
+    assert [(f["framework"], f["file"], f["line"]) for f in failures] == [
+        ("borp", "test/internals/reply.test.js", 52)]
+    assert failures[0]["message"].startswith("AssertionError [ERR_ASSERTION]")
+
+
+def test_node_test_runner_with_only_passes_has_no_failure():
+    lines = ["✔ chainable - get (3.459827ms)", "▶ Buffer test", "  ✔ should return 200 (18.4ms)",
+             "✔ Buffer test (66.3ms)", "ℹ tests 2347", "ℹ pass 2347", "ℹ fail 0",
+             "passed: /home/runner/work/fastify/fastify/test/close.test.js (7,985 ms)"]
+    assert parse.failures(lines) == []
+
+
 def test_mypy_errors_are_read(tmp_path):
     lines = ["src/cart.py:12: error: Incompatible types in assignment (expression has type \"str\", "
              "variable has type \"int\")  [assignment]",
