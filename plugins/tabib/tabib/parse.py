@@ -99,6 +99,8 @@ PW_ERROR = re.compile(r"^\s*(?:\w+)?Error\b")
 JUNIT_START = re.compile(r"<(testsuites|testsuite)\b")
 FAULT_HEADER = re.compile(r"Fatal Python error: Segmentation fault")
 FAULT_FRAME = re.compile(r'^\s*File "([^"]+)", line (\d+) in (test\w*)')
+# GitHub's problem matchers print "##[error]" before a linter's own line (#256).
+MATCHER = re.compile(r"^##\[(?:error|warning)\]")
 ERROR_LINE = re.compile(r"(?i)^(?:##\[error\]|error(?:\[\w+\])?:|fatal:|npm ERR!|E\s{3})"
                         r"|\b\w+(?:Error|Exception): ")
 
@@ -413,6 +415,7 @@ def failures(lines: list[str]) -> list[dict]:
     ruff_code = ""
     dotnet_last: dict | None = None
     for i, line in enumerate(lines):
+        bare = MATCHER.sub("", line)   # the lint parsers' line, without a problem matcher's prefix
         if m := PY_SECTION.match(line):
             py_section = m.group(1) if "." in m.group(1) or m.group(1).startswith("test") else ""
         if m := PY_LOC.match(line):
@@ -424,7 +427,7 @@ def failures(lines: list[str]) -> list[dict]:
         if m := PYTEST.match(line):
             node = m.group(2) + (m.group(3) or "")
             found.append(_failure("pytest", "tests", node, m.group(2), 0, m.group(4) or m.group(1).lower()))
-        elif m := MYPY.match(line):
+        elif m := MYPY.match(bare):
             found.append(_failure("mypy", "build", m.group(4) or "mypy", m.group(1), int(m.group(2)),
                                   m.group(3)))
         elif m := GO_RUN.match(line):
@@ -467,10 +470,10 @@ def failures(lines: list[str]) -> list[dict]:
                                if f["framework"] == "cargo" and not f["file"]), None)
                 if target:
                     target.update(file=m.group(2), line=int(m.group(3)), message=_short(message))
-        elif m := TSC.match(line):
+        elif m := TSC.match(bare):
             found.append(_failure("tsc", "build", m.group(4), m.group(1), int(m.group(2) or m.group(3)),
                                   m.group(5)))
-        elif m := RUFF.match(line):
+        elif m := RUFF.match(bare):
             found.append(_failure("ruff", "lint", m.group(3), m.group(1), int(m.group(2)), m.group(4)))
         elif m := RUFF_CODE.match(line):
             ruff_code = line
@@ -479,8 +482,8 @@ def failures(lines: list[str]) -> list[dict]:
             found.append(_failure("ruff", "lint", code, m.group(1), int(m.group(2)), message))
             ruff_code = ""
         elif m := ESLINT_FILE.match(line):
-            eslint_file = m.group(1)
-        elif (m := ESLINT.match(line)) and eslint_file:
+            eslint_file = CHECKOUT.sub("", m.group(1).replace("\\", "/"))
+        elif (m := ESLINT.match(bare)) and eslint_file:
             found.append(_failure("eslint", "lint", m.group(3), eslint_file, int(m.group(1)), m.group(2)))
         elif m := JEST_FILE.match(line):
             found.append(_failure("jest", "tests", m.group(2) or "", m.group(1)))

@@ -73,12 +73,41 @@ def test_pytest_failures_with_lines_and_jobs():
     (["src/cart.ts:3:7 - error TS2322: Type 'string' is not assignable."], ("tsc", "TS2322", "src/cart.ts", 3)),
     (["app/cart.py:3:111: E501 Line too long (117 > 110)"], ("ruff", "E501", "app/cart.py", 3)),
     (["E501 Line too long (117 > 110)", "  --> app/cart.py:3:111"], ("ruff", "E501", "app/cart.py", 3)),
-    (["/home/runner/work/shop/src/cart.js", "  3:7  error  'x' is never used  no-unused-vars"],
-     ("eslint", "no-unused-vars", "/home/runner/work/shop/src/cart.js", 3)),
+    (["/home/runner/work/shop/shop/src/cart.js", "  3:7  error  'x' is never used  no-unused-vars"],
+     ("eslint", "no-unused-vars", "src/cart.js", 3)),
+    (["src/cart.js", "  3:7  error  'x' is never used  no-unused-vars"], ("eslint", "no-unused-vars", "src/cart.js", 3)),
 ])
 def test_parsers(lines, expected):
     first = parse.failures([parse.clean_line(line) for line in lines])[0]
     assert (first["framework"], first["test"], first["file"], first["line"]) == expected
+
+
+# fastify run 32483417465 (#256): the lint job's problem matcher puts "##[error]" before eslint's lines.
+ESLINT_MATCHER_LOG = [
+    "/home/runner/work/fastify/fastify/fastify.d.ts",
+    "##[error]  100:80  error  Expected a semicolon  @stylistic/member-delimiter-style",
+    "##[error]  101:7   error  Expected a semicolon  @stylistic/member-delimiter-style",
+    "",
+    "/home/runner/work/fastify/fastify/fastify.js",
+    "##[error]  865:1  error  Expected indentation of 4 spaces  @stylistic/indent-binary-ops",
+    "",
+    "✖ 3 problems (3 errors, 0 warnings)",
+    "##[error]Process completed with exit code 1.",
+]
+
+
+def test_lint_errors_behind_a_problem_matcher_are_read():
+    failures = parse.read_log(gh_log("lint", ESLINT_MATCHER_LOG))["lint"]["failures"]
+    assert [(f["framework"], f["test"], f["file"], f["line"]) for f in failures] == [
+        ("eslint", "@stylistic/member-delimiter-style", "fastify.d.ts", 100),
+        ("eslint", "@stylistic/member-delimiter-style", "fastify.d.ts", 101),
+        ("eslint", "@stylistic/indent-binary-ops", "fastify.js", 865)]
+    verdict = classify.classify({"failures": failures})
+    assert (verdict["kind"], verdict["detail"]["what"]) == ("code", "lint")
+    found = parse.failures(["##[warning]src/a.py:3:1: F401 `os` imported but unused",
+                            "##[error]src/b.py:7: error: Name \"x\" is not defined  [name-defined]"])
+    assert [(f["framework"], f["file"], f["line"]) for f in found] == [("ruff", "src/a.py", 3),
+                                                                       ("mypy", "src/b.py", 7)]
 
 
 def _found(lines):
