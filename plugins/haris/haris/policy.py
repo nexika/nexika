@@ -104,6 +104,15 @@ def write_tool(tool_input: dict, ctx: c.Ctx) -> None:
     for edit in tool_input.get("edits") or []:
         if isinstance(edit, dict):
             text += "\n" + str(edit.get("new_string") or "")
+    if os.path.basename(path) == ".npmrc":
+        resolved = ctx.where.resolve(path, ctx.cwd)
+        before = c.rc_text(resolved)
+        old = "\n".join(str(tool_input.get(k) or "") for k in ("old_string",))
+        dropped = c.IGNORE_SCRIPTS_ON.search(before) and (
+            ("content" in tool_input and not c.IGNORE_SCRIPTS_ON.search(text))
+            or ("ignore-scripts" in old and not c.IGNORE_SCRIPTS_ON.search(text)))
+        if dropped or c.IGNORE_SCRIPTS_OFF.search(text):
+            ctx.add("risky", c.IGNORE_SCRIPTS_OFF_REASON.format(path=os.path.basename(path)))
     if any(p.search(text) for p in secrets.PATTERNS):
         ctx.add("secret-write", f"Writes what looks like a real key or token into "
                                 f"{os.path.basename(path)}. Load it "
