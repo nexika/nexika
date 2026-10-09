@@ -93,6 +93,9 @@ def _ci(ci: dict, lang: str) -> dict | None:
         if ci.get("eta") is not None:
             text += SEP + t("ci_eta", lang, m=max(1, round(ci["eta"] / 60)))
         return seg(text, "warn")
+    if state == "approval":  # the workflows wait for a maintainer, or waited until GitHub gave up
+        expired = bool(ci.get("expired"))
+        return seg(t("ci_expired" if expired else "ci_approval", lang), "dim" if expired else "warn")
     if state == "none":
         return seg(t("ci_none", lang), "dim")
     if state == "loading":

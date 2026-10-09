@@ -1,0 +1,575 @@
+{
+ "_source": "fastify/fastify (MIT), real gh JSON from 2026-10-09, trimmed; built from the mizan public test set (#52)",
+ "runs": {
+  "7089": [
+   {
+    "databaseId": 37832297777,
+    "name": "ci",
+    "status": "completed",
+    "conclusion": "action_required",
+    "headSha": "a4440bf5091da285a214040364f5d41d7bce0b6b",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T19:29:10Z",
+    "startedAt": "2026-10-08T19:29:10Z",
+    "updatedAt": "2026-10-08T19:29:10Z"
+   },
+   {
+    "databaseId": 37832296461,
+    "name": "integration",
+    "status": "completed",
+    "conclusion": "action_required",
+    "headSha": "a4440bf5091da285a214040364f5d41d7bce0b6b",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T19:29:09Z",
+    "startedAt": "2026-10-08T19:29:09Z",
+    "updatedAt": "2026-10-08T19:29:09Z"
+   },
+   {
+    "databaseId": 37832296329,
+    "name": "pull request title check",
+    "status": "completed",
+    "conclusion": "action_required",
+    "headSha": "a4440bf5091da285a214040364f5d41d7bce0b6b",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T19:29:09Z",
+    "startedAt": "2026-10-08T19:29:09Z",
+    "updatedAt": "2026-10-08T19:29:09Z"
+   },
+   {
+    "databaseId": 37832296326,
+    "name": "integration Alternative Runtimes",
+    "status": "completed",
+    "conclusion": "action_required",
+    "headSha": "a4440bf5091da285a214040364f5d41d7bce0b6b",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T19:29:09Z",
+    "startedAt": "2026-10-08T19:29:09Z",
+    "updatedAt": "2026-10-08T19:29:09Z"
+   },
+   {
+    "databaseId": 37832296362,
+    "name": "Test compare",
+    "status": "completed",
+    "conclusion": "action_required",
+    "headSha": "a4440bf5091da285a214040364f5d41d7bce0b6b",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T19:29:09Z",
+    "startedAt": "2026-10-08T19:29:09Z",
+    "updatedAt": "2026-10-08T19:29:09Z"
+   },
+   {
+    "databaseId": 37832296506,
+    "name": "ci Alternative Runtimes",
+    "status": "completed",
+    "conclusion": "action_required",
+    "headSha": "a4440bf5091da285a214040364f5d41d7bce0b6b",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T19:29:09Z",
+    "startedAt": "2026-10-08T19:29:09Z",
+    "updatedAt": "2026-10-08T19:29:09Z"
+   },
+   {
+    "databaseId": 37832296181,
+    "name": "Pull Request Labeler",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "a4440bf5091da285a214040364f5d41d7bce0b6b",
+    "event": "pull_request_target",
+    "createdAt": "2026-10-08T19:29:09Z",
+    "startedAt": "2026-10-08T19:29:09Z",
+    "updatedAt": "2026-10-08T19:29:17Z"
+   }
+  ],
+  "7087": [
+   {
+    "databaseId": 37788959649,
+    "name": "integration",
+    "status": "completed",
+    "conclusion": "action_required",
+    "headSha": "af387e13b84b3e1cf53ae4b0066af9c931241251",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T14:00:44Z",
+    "startedAt": "2026-10-08T14:00:44Z",
+    "updatedAt": "2026-10-08T14:00:44Z"
+   },
+   {
+    "databaseId": 37788959687,
+    "name": "ci Alternative Runtimes",
+    "status": "completed",
+    "conclusion": "action_required",
+    "headSha": "af387e13b84b3e1cf53ae4b0066af9c931241251",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T14:00:44Z",
+    "startedAt": "2026-10-08T14:00:44Z",
+    "updatedAt": "2026-10-08T14:00:44Z"
+   },
+   {
+    "databaseId": 37788960638,
+    "name": "ci",
+    "status": "completed",
+    "conclusion": "action_required",
+    "headSha": "af387e13b84b3e1cf53ae4b0066af9c931241251",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T14:00:44Z",
+    "startedAt": "2026-10-08T14:00:44Z",
+    "updatedAt": "2026-10-08T14:00:44Z"
+   },
+   {
+    "databaseId": 37788959753,
+    "name": "integration Alternative Runtimes",
+    "status": "completed",
+    "conclusion": "action_required",
+    "headSha": "af387e13b84b3e1cf53ae4b0066af9c931241251",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T14:00:44Z",
+    "startedAt": "2026-10-08T14:00:44Z",
+    "updatedAt": "2026-10-08T14:00:44Z"
+   },
+   {
+    "databaseId": 37788959683,
+    "name": "Test compare",
+    "status": "completed",
+    "conclusion": "action_required",
+    "headSha": "af387e13b84b3e1cf53ae4b0066af9c931241251",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T14:00:44Z",
+    "startedAt": "2026-10-08T14:00:44Z",
+    "updatedAt": "2026-10-08T14:00:44Z"
+   },
+   {
+    "databaseId": 37788959717,
+    "name": "pull request title check",
+    "status": "completed",
+    "conclusion": "action_required",
+    "headSha": "af387e13b84b3e1cf53ae4b0066af9c931241251",
+    "event": "pull_request",
+    "createdAt": "2026-10-08T14:00:44Z",
+    "startedAt": "2026-10-08T14:00:44Z",
+    "updatedAt": "2026-10-08T14:00:44Z"
+   }
+  ],
+  "6994": [
+   {
+    "databaseId": 33218617348,
+    "name": "Pull Request Labeler",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "baac6fb57f37bba55171777bdafb351269eaa1e9",
+    "event": "pull_request_target",
+    "createdAt": "2026-08-28T22:55:37Z",
+    "startedAt": "2026-08-28T22:55:37Z",
+    "updatedAt": "2026-08-28T22:55:44Z"
+   },
+   {
+    "databaseId": 33218617482,
+    "name": "integration Alternative Runtimes",
+    "status": "completed",
+    "conclusion": "failure",
+    "headSha": "baac6fb57f37bba55171777bdafb351269eaa1e9",
+    "event": "pull_request",
+    "createdAt": "2026-08-28T22:55:37Z",
+    "startedAt": "2026-08-28T22:55:37Z",
+    "updatedAt": "2026-09-27T22:56:45Z"
+   },
+   {
+    "databaseId": 33218617935,
+    "name": "ci",
+    "status": "completed",
+    "conclusion": "failure",
+    "headSha": "baac6fb57f37bba55171777bdafb351269eaa1e9",
+    "event": "pull_request",
+    "createdAt": "2026-08-28T22:55:37Z",
+    "startedAt": "2026-08-28T22:55:37Z",
+    "updatedAt": "2026-09-27T22:56:45Z"
+   },
+   {
+    "databaseId": 33218617542,
+    "name": "Test compare",
+    "status": "completed",
+    "conclusion": "failure",
+    "headSha": "baac6fb57f37bba55171777bdafb351269eaa1e9",
+    "event": "pull_request",
+    "createdAt": "2026-08-28T22:55:37Z",
+    "startedAt": "2026-08-28T22:55:37Z",
+    "updatedAt": "2026-09-27T22:56:45Z"
+   },
+   {
+    "databaseId": 33218617468,
+    "name": "pull request title check",
+    "status": "completed",
+    "conclusion": "failure",
+    "headSha": "baac6fb57f37bba55171777bdafb351269eaa1e9",
+    "event": "pull_request",
+    "createdAt": "2026-08-28T22:55:37Z",
+    "startedAt": "2026-08-28T22:55:37Z",
+    "updatedAt": "2026-09-27T22:56:45Z"
+   },
+   {
+    "databaseId": 33218617466,
+    "name": "integration",
+    "status": "completed",
+    "conclusion": "failure",
+    "headSha": "baac6fb57f37bba55171777bdafb351269eaa1e9",
+    "event": "pull_request",
+    "createdAt": "2026-08-28T22:55:37Z",
+    "startedAt": "2026-08-28T22:55:37Z",
+    "updatedAt": "2026-09-27T22:56:45Z"
+   },
+   {
+    "databaseId": 33218617505,
+    "name": "ci Alternative Runtimes",
+    "status": "completed",
+    "conclusion": "failure",
+    "headSha": "baac6fb57f37bba55171777bdafb351269eaa1e9",
+    "event": "pull_request",
+    "createdAt": "2026-08-28T22:55:37Z",
+    "startedAt": "2026-08-28T22:55:37Z",
+    "updatedAt": "2026-09-27T22:56:45Z"
+   }
+  ],
+  "6926": [
+   {
+    "databaseId": 33190877638,
+    "name": "pull request title check",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "33bbb37393fbc6c140ead3046d3bd4366e335ebd",
+    "event": "pull_request",
+    "createdAt": "2026-08-28T16:37:49Z",
+    "startedAt": "2026-09-02T12:40:49Z",
+    "updatedAt": "2026-09-02T12:41:00Z"
+   },
+   {
+    "databaseId": 33129184442,
+    "name": "Test compare",
+    "status": "completed",
+    "conclusion": "skipped",
+    "headSha": "33bbb37393fbc6c140ead3046d3bd4366e335ebd",
+    "event": "pull_request",
+    "createdAt": "2026-08-28T00:16:23Z",
+    "startedAt": "2026-08-28T15:47:14Z",
+    "updatedAt": "2026-08-28T15:47:17Z"
+   },
+   {
+    "databaseId": 33129184338,
+    "name": "pull request title check",
+    "status": "completed",
+    "conclusion": "failure",
+    "headSha": "33bbb37393fbc6c140ead3046d3bd4366e335ebd",
+    "event": "pull_request",
+    "createdAt": "2026-08-28T00:16:23Z",
+    "startedAt": "2026-08-28T15:47:14Z",
+    "updatedAt": "2026-08-28T15:47:26Z"
+   },
+   {
+    "databaseId": 33129184348,
+    "name": "Internal Links Check",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "33bbb37393fbc6c140ead3046d3bd4366e335ebd",
+    "event": "pull_request",
+    "createdAt": "2026-08-28T00:16:23Z",
+    "startedAt": "2026-08-28T15:47:14Z",
+    "updatedAt": "2026-08-28T15:47:33Z"
+   },
+   {
+    "databaseId": 33129184398,
+    "name": "integration Alternative Runtimes",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "33bbb37393fbc6c140ead3046d3bd4366e335ebd",
+    "event": "pull_request",
+    "createdAt": "2026-08-28T00:16:23Z",
+    "startedAt": "2026-08-28T15:47:14Z",
+    "updatedAt": "2026-08-28T15:47:49Z"
+   },
+   {
+    "databaseId": 33129184320,
+    "name": "integration",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "33bbb37393fbc6c140ead3046d3bd4366e335ebd",
+    "event": "pull_request",
+    "createdAt": "2026-08-28T00:16:23Z",
+    "startedAt": "2026-08-28T15:47:14Z",
+    "updatedAt": "2026-08-28T15:47:52Z"
+   },
+   {
+    "databaseId": 33129184287,
+    "name": "Lint Docs",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "33bbb37393fbc6c140ead3046d3bd4366e335ebd",
+    "event": "pull_request",
+    "createdAt": "2026-08-28T00:16:23Z",
+    "startedAt": "2026-08-28T15:47:14Z",
+    "updatedAt": "2026-08-28T15:47:58Z"
+   },
+   {
+    "databaseId": 33129184441,
+    "name": "ci Alternative Runtimes",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "33bbb37393fbc6c140ead3046d3bd4366e335ebd",
+    "event": "pull_request",
+    "createdAt": "2026-08-28T00:16:23Z",
+    "startedAt": "2026-08-28T15:47:14Z",
+    "updatedAt": "2026-08-28T15:50:48Z"
+   },
+   {
+    "databaseId": 33129184782,
+    "name": "ci",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "33bbb37393fbc6c140ead3046d3bd4366e335ebd",
+    "event": "pull_request",
+    "createdAt": "2026-08-28T00:16:23Z",
+    "startedAt": "2026-08-28T15:47:14Z",
+    "updatedAt": "2026-08-28T15:52:44Z"
+   },
+   {
+    "databaseId": 33129183139,
+    "name": "Pull Request Labeler",
+    "status": "completed",
+    "conclusion": "success",
+    "headSha": "33bbb37393fbc6c140ead3046d3bd4366e335ebd",
+    "event": "pull_request_target",
+    "createdAt": "2026-08-28T00:16:22Z",
+    "startedAt": "2026-08-28T00:16:22Z",
+    "updatedAt": "2026-08-28T00:16:29Z"
+   }
+  ]
+ },
+ "checks": {
+  "7089": [
+   {
+    "name": "label",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/37832296181/job/113500439555",
+    "workflow": "Pull Request Labeler",
+    "event": "pull_request_target"
+   }
+  ],
+  "6994": [
+   {
+    "name": "label",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33218617348/job/99007708601",
+    "workflow": "Pull Request Labeler",
+    "event": "pull_request_target"
+   }
+  ],
+  "6926": [
+   {
+    "name": "pull-request-title-check",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33190877638/job/100251055004",
+    "workflow": "pull request title check",
+    "event": "pull_request"
+   },
+   {
+    "name": "automerge",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98903413511",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "package",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98903198202",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (26, macos-latest)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98902700385",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (26, windows-latest)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98902699998",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-types",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98902699972",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (26, ubuntu-latest)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98902700084",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (24, windows-latest)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98902700153",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (24, ubuntu-latest)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98902700083",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (24, macos-latest)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98902700089",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "Test pino compatibility (^10)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98902700003",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "Test pino compatibility (^9)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98902699974",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "package",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184441/job/98902692484",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "coverage-nix / check-coverage",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98902124477",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "coverage-win / check-coverage",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98902124571",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "linkChecker",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184348/job/98901925010",
+    "workflow": "Internal Links Check",
+    "event": "pull_request"
+   },
+   {
+    "name": "Lint Markdown",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184287/job/98901927102",
+    "workflow": "Lint Docs",
+    "event": "pull_request"
+   },
+   {
+    "name": "install-production (24, ubuntu-latest, 11)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184320/job/98901929476",
+    "workflow": "integration",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (24, macos-latest)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184441/job/98901925935",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "quality-check / Lint Code",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98901929686",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "quality-check / Dependency Review",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98901930063",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "quality-check / Check Licenses",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98901929968",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (24, windows-latest)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184441/job/98901925914",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "install-production (26, ubuntu-latest, 11)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184320/job/98901929174",
+    "workflow": "integration",
+    "event": "pull_request"
+   },
+   {
+    "name": "install-production (ubuntu-latest, nsolid, 24, 11)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184398/job/98901925833",
+    "workflow": "integration Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit (24, ubuntu-latest)",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184441/job/98901925894",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-types",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184441/job/98901925719",
+    "workflow": "ci Alternative Runtimes",
+    "event": "pull_request"
+   },
+   {
+    "name": "test-unit-custom",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184782/job/98901930524",
+    "workflow": "ci",
+    "event": "pull_request"
+   },
+   {
+    "name": "run",
+    "bucket": "skipping",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129184442/job/98901926866",
+    "workflow": "Test compare",
+    "event": "pull_request"
+   },
+   {
+    "name": "label",
+    "bucket": "pass",
+    "link": "https://github.com/fastify/fastify/actions/runs/33129183139/job/98714433215",
+    "workflow": "Pull Request Labeler",
+    "event": "pull_request_target"
+   }
+  ]
+ }
+}
