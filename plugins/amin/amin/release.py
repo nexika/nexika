@@ -275,7 +275,7 @@ def publish(root: Path, runner: gitops.Runner, project: proj.Project, dry_run: b
     runner.git("fetch", "--quiet", "--tags", "origin", default, check=False)
     head = runner.git("rev-parse", "HEAD").strip()
     remote = runner.git("rev-parse", f"origin/{default}", check=False).strip()
-    if head != remote:
+    if branch == default and head != remote:   # on another branch, the line above already refused
         failures.append(f"local {default} is not the same commit as origin/{default}: pull or push first")
     if project.version_files:
         version, problems = _current_version(root, project)
@@ -318,10 +318,22 @@ def publish(root: Path, runner: gitops.Runner, project: proj.Project, dry_run: b
     try:
         url = runner.gh("release", "create", tag, "--title", f"{project.name} {version}",
                         "--notes-file", notes_file, "--verify-tag",
-                        *(["--prerelease"] if proj.is_prerelease(version) else [])).strip()
+                        *(["--prerelease"] if proj.is_prerelease(version) else []),
+                        *(["--latest=false"] if _newer_final(runner, project, version) else [])).strip()
     finally:
         Path(notes_file).unlink(missing_ok=True)
     return report + ([] if pushed else [f"tag {tag} pushed"]) + [f"release published: {url}"]
+
+
+def _newer_final(runner: gitops.Runner, project: proj.Project, version: str) -> str | None:
+    """A final release above version (any branch): an older line's release must not become "Latest"."""
+    prefix = project.tag_prefix()
+    for tag in runner.git("tag", "--list", f"{prefix}*", check=False).split():
+        other = tag[len(prefix):]
+        if (proj.SEMVER.match(other) and not proj.is_prerelease(other) and proj.SEMVER.match(version)
+                and proj.parse(other) > proj.parse(version)):
+            return other
+    return None
 
 
 def _when(stamp: str) -> datetime.datetime | None:
