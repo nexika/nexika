@@ -773,6 +773,17 @@ def test_python_pack_points_to_the_project_s_commands():
     assert "Project checks" in commands and commands.index("Project checks") < commands.index("ruff")
 
 
+def test_session_note_says_which_tests_to_run_before_done(tmp_path):
+    # #344: the agent ran some tests, not the ones that catch what it broke
+    out = run_hooks("session-start", {"cwd": str(tmp_path), "session_id": "s1"}, tmp_path / "h")
+    assert "the test that shows it works" in out
+    assert "existing tests of every file you edited" in out
+    assert "failed before your change, say so" in out
+    # read again on every turn: the fixed part (no helper paths) stays a few lines
+    fixed = [ln for ln in out.splitlines() if "python3 " not in ln]
+    assert len("\n".join(fixed)) <= 520
+
+
 # fastify (#231, case S-pack): `npx tsc --noEmit` fails at a root with no tsconfig.json
 def test_node_pack_points_to_the_project_s_commands():
     pack = (ITQAN / "packs" / "node.md").read_text()
