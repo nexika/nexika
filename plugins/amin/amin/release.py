@@ -253,9 +253,10 @@ def prepare(root: Path, chosen: list[tuple[Plan, str]], date: str | None = None,
                 changed.append(vf)
         sections = fragments.grouped(pl.notes)
         blocks.append(f"{pl.project.name} {version}\n" + changelog.render(version, date, sections))
-        if not dry_run:
-            changelog.insert(root / pl.project.changelog, pl.project.name, version, date, sections)
-        changed.append(pl.project.changelog)
+        if not pl.project.github_changelog:   # else: publish rebuilds the notes from the consumed ones
+            if not dry_run:
+                changelog.insert(root / pl.project.changelog, pl.project.name, version, date, sections)
+            changed.append(pl.project.changelog)
         # a release candidate keeps its notes: the final release collects them all; an alpha or a
         # beta is its own step of a long line, so its notes are released with it
         label = proj.prerelease_label(version)
@@ -322,9 +323,16 @@ def publish(root: Path, runner: gitops.Runner, project: proj.Project, dry_run: b
         problems = [] if version else [f"{project.changelog} has no version section: run prepare first"]
     failures += problems
     tag = project.tag(version or "?")
-    notes = changelog.extract(root / project.changelog, version or "?")
-    if not notes:
-        failures.append(f"{project.changelog} has no section for {version}: run prepare and merge that PR")
+    if project.github_changelog:
+        notes = released_notes(root, runner, project, version) if version else None
+        if not notes:
+            failures.append(f"no released notes for {version}: the release commit (made by prepare and "
+                            f"merged) deletes the notes in {project.fragments}/")
+    else:
+        notes = changelog.extract(root / project.changelog, version or "?")
+        if not notes:
+            failures.append(f"{project.changelog} has no section for {version}: "
+                            "run prepare and merge that PR")
     # a tag already on HEAD with no release yet means an earlier publish stopped half way: finish it
     tagged = runner.git("rev-parse", "-q", "--verify", f"refs/tags/{tag}^{{commit}}", check=False).strip()
     pushed = bool(runner.git("ls-remote", "--tags", "origin", f"refs/tags/{tag}", check=False).strip())
@@ -361,6 +369,45 @@ def publish(root: Path, runner: gitops.Runner, project: proj.Project, dry_run: b
     finally:
         Path(notes_file).unlink(missing_ok=True)
     return report + ([] if pushed else [f"tag {tag} pushed"]) + [f"release published: {url}"]
+
+
+def released_notes(root: Path, runner: gitops.Runner, project: proj.Project, version: str) -> str | None:
+    """The release notes of a project whose changelog is its GitHub releases: rebuilt from the notes
+    that the release commit (the newest one that deleted notes and set this version) consumed, so
+    nothing is stored anywhere new. A release candidate keeps its notes: they are still pending."""
+    folder = project.fragments
+    sha = runner.git("log", "-1", "--diff-filter=D", "--format=%H", "HEAD", "--", f"{folder}/",
+                     check=False).strip()
+    notes: list[fragments.Fragment] = []
+    if sha and all(_version_at(root, runner, sha, vf) == version for vf in project.version_files):
+        deleted = runner.git("show", "--diff-filter=D", "--name-only", "--format=", sha, "--", f"{folder}/",
+                             check=False).split()
+        for rel in deleted:
+            m = fragments.NAME.match(rel.rsplit("/", 1)[-1])
+            if rel.rsplit("/", 1)[0] != folder or not m or fragments.check_name(m.group(0)):
+                continue
+            text = runner.git("show", f"{sha}^:{rel}", check=False).strip()
+            if text:
+                notes.append(fragments.Fragment(rel, m.group("id"), m.group("type"), text))
+    elif proj.is_prerelease(version):
+        notes = fragments.pending(root, project)[0]
+    for note in notes:
+        if not note.id.isdigit():
+            note.pr = pr_for(runner, note.path)
+    sections = fragments.grouped(notes)
+    if not sections:
+        return None
+    return changelog.render(version, "", sections).split("\n", 1)[1].strip()
+
+
+def _version_at(root: Path, runner: gitops.Runner, sha: str, rel: str) -> str | None:
+    """The version a version file held in commit sha."""
+    text = runner.git("show", f"{sha}:{rel}", check=False)
+    try:
+        m = proj._patterns(root, rel)[0][0].search(text) if text else None
+    except ValueError:
+        return None
+    return m.group(2).strip() if m else None
 
 
 def _newer_final(runner: gitops.Runner, project: proj.Project, version: str) -> str | None:
