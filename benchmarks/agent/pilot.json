@@ -1,0 +1,33 @@
+{
+ "name": "pilot-1",
+ "dataset": "princeton-nlp/SWE-bench_Verified",
+ "seed": 333,
+ "quotas": {
+  "<15 min fix": 6,
+  "15 min - 1 hour": 10,
+  "1-4 hours": 4
+ },
+ "max_per_repo": 4,
+ "instance_ids": [
+  "sphinx-doc__sphinx-8269",
+  "pytest-dev__pytest-7982",
+  "django__django-15315",
+  "scikit-learn__scikit-learn-13328",
+  "django__django-9296",
+  "sympy__sympy-19954",
+  "django__django-15731",
+  "sympy__sympy-24661",
+  "astropy__astropy-13977",
+  "django__django-11848",
+  "pytest-dev__pytest-8399",
+  "pydata__xarray-7233",
+  "psf__requests-2931",
+  "astropy__astropy-14539",
+  "matplotlib__matplotlib-24026",
+  "scikit-learn__scikit-learn-26323",
+  "pylint-dev__pylint-8898",
+  "sympy__sympy-14248",
+  "sphinx-doc__sphinx-9461",
+  "sphinx-doc__sphinx-11510"
+ ]
+}
