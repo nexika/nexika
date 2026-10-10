@@ -2460,6 +2460,7 @@ def h_git(argv, ctx, stdin, depth: int = 0):
                 ctx.git_aliases = {**ctx.git_aliases, key[6:].lower(): value}
             elif runs_program(key, value):
                 ctx.add("risky", f"`git -c {key}=...` makes git run another program.")
+            repoint(key, ctx)
         elif a.startswith(("--exec-path=", "--config-env")):
             ctx.add("risky", f"`git {a.split('=')[0]}` makes git run programs from elsewhere.")
         elif a in ("--git-dir", "--work-tree", "--namespace", "--super-prefix", "--exec-path") and args:
@@ -2567,10 +2568,36 @@ def git_push(sub, rest, ctx, stdin):
         else:
             ctx.add("history-rewrite", f"Force-pushes {', '.join(d for d in dests if d) or 'this branch'}, "
                                        "replacing what is on the remote.")
+    stranger = push_stranger(pos[0] if pos else (values(opts, "--repo") or [None])[0],
+                             has(opts, "--all", "--branches", "--mirror"), ctx)
+    if stranger:
+        ctx.add("egress-risk", stranger)
     if stdin is not None and stdin.secret:
         ctx.add("egress-secret", "Sends a secret with git push.")
     ctx.add("egress", f"Sends commits to {remote_name}.")
     return Stage()
+
+
+def push_stranger(dest: str | None, everything: bool, ctx: Ctx) -> str:
+    """Why a push goes somewhere the repository did not already send its work, or "": an address given
+    on the command line, a remote this command added or pointed elsewhere, a name that is no remote, or
+    every branch to a remote other than origin. Anyone may own such a place (#351)."""
+    repointed = ctx.repointed
+    if dest is None:
+        if repointed:
+            return ("Pushes after this command changed where pushes go (a remote's address or a "
+                    "rewrite rule): the commits can reach a repository anyone may own.")
+        return ""
+    if "*" in repointed or dest in repointed:
+        return (f"Pushes to {dest}, a remote this command added or pointed at a new address: it can belong "
+                "to anyone. Push to a remote the repository already had, or ask the user first.")
+    if UNKNOWN in dest or "://" in dest or HOST_ARG.match(dest) or dest.startswith(("/", ".", "~")) or \
+            dest not in ctx.git.remotes() | {"origin"}:
+        return (f"Pushes to {dest}, which is not one of the repository's remotes: it can belong to "
+                "anyone. Push to a remote the repository already had, or ask the user first.")
+    if everything and dest != "origin":
+        return f"Pushes every branch to {dest}, not to origin."
+    return ""
 
 
 def git_commit(sub, rest, ctx, stdin):
@@ -2696,6 +2723,9 @@ GIT_LIST_READS = {"tag": {"", "-l", "--list", "-n", "--contains", "--points-at",
 def git_listing(sub, rest, ctx, stdin):
     """tag, stash, remote, worktree, reflog, notes: listing is a read, the rest changes the repo."""
     first = rest[0] if rest else ""
+    if sub == "remote" and first in ("add", "set-url", "rename"):
+        _, names = options(rest[1:], {"-t", "-m"})
+        ctx.repointed |= {str(n) for n in names[:2 if first == "rename" else 1]}
     if first in GIT_LIST_READS.get(sub, set()):
         ctx.add("read", f"Only shows information (git {sub} {first}).")
     elif sub == "stash" and first in ("drop", "clear"):
@@ -2726,6 +2756,7 @@ def git_config(sub, rest, ctx, stdin):
         return Stage()
     key = pos[0] if pos else ""
     value = pos[1] if len(pos) > 1 else ""
+    repoint(key, ctx)
     is_alias = key.lower().startswith("alias.")
     if runs_program(key, value) and (not is_alias or value.startswith("!")):
         ctx.add("persistence", f"Sets git's {key}, which makes git run a program later on its own.")
@@ -2734,6 +2765,20 @@ def git_config(sub, rest, ctx, stdin):
     else:
         ctx.add("write", f"Changes the project's git setting {key}.")
     return Stage()
+
+
+REPOINT_KEY = re.compile(r"(?i)^remote\.(.+)\.(?:url|pushurl)$")
+PUSH_TARGET_KEY = re.compile(r"(?i)^(?:url\..+\.(?:insteadof|pushinsteadof)|remote\.pushdefault"
+                             r"|branch\..+\.(?:remote|pushremote))$")
+
+
+def repoint(key: str, ctx: Ctx) -> None:
+    """Note a git setting that changes where a later push in the same command goes (#351)."""
+    m = REPOINT_KEY.match(key)
+    if m:
+        ctx.repointed.add(m.group(1))
+    elif PUSH_TARGET_KEY.match(key):
+        ctx.repointed.add("*")
 
 
 def runs_program(key: str, value: str) -> bool:

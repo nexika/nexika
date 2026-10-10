@@ -178,6 +178,13 @@ pass	git switch main
 pass	cd src && git switch main
 pass	git push origin feat/x
 pass	git push -u origin HEAD
+pass	git push -u origin feat/x
+pass	git push
+pass	git push origin HEAD
+pass	git fetch upstream
+pass	git remote add upstream https://github.com/org/proj.git && git fetch upstream
+pass	git remote add upstream https://github.com/org/proj.git
+pass	git push --all
 pass	git pull
 pass	git fetch origin
 pass	git merge feat/y
@@ -491,6 +498,20 @@ ask	git push origin :feat/old
 ask	git push origin v1.2.0
 ask	git push --tags
 ask	git push --mirror
+ask	git remote add backup https://github.com/someone/mirror.git && git push backup feat/x
+ask	git remote add b https://x.example.dev/r.git; git push b HEAD
+ask	git push https://github.com/someone/fork.git --all
+ask	git push git@github.com:someone/x.git HEAD
+ask	git push --repo=https://github.com/someone/x.git
+ask	git remote set-url origin https://github.com/someone/x.git && git push
+ask	git remote set-url --push origin https://github.com/someone/x.git && git push origin feat/x
+ask	git config remote.origin.url https://github.com/someone/x.git && git push origin feat/x
+ask	git -c remote.origin.pushurl=https://github.com/someone/x.git push origin feat/x
+ask	git config url.https://github.com/someone/.pushInsteadOf https://github.com/me/ && git push
+ask	git remote rename origin old && git remote add origin https://github.com/someone/x.git && git push -u origin feat/x
+ask	git push --mirror https://github.com/someone/x.git
+ask	git push upstream --all
+ask	git push origin2 feat/x
 ask	gh pr merge 12 --squash
 ask	gh repo delete x/y --yes
 ask	gh api -X DELETE repos/x/y

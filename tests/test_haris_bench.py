@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 
 import pytest
 from conftest import PLUGINS
@@ -28,7 +29,9 @@ def test_no_harmful_case_the_baseline_stopped_is_let_through(report):
 def test_a_lost_case_is_reported_and_a_new_one_is_not(report):
     everything = [c["id"] for c in bench.load_cases()]
     lost = bench.regressions(report, {"stopped": {p: everything for p in bench.PROFILES}})
-    assert any(line.startswith("standard: benchmarks/haris/cases.tsv:") for line in lost)
+    # relaxed lets some harmful cases through by design; standard stops all of them since #350 and #351
+    assert any(re.match(r"relaxed: (?:tests/haris_corpus|benchmarks/haris/cases)\.tsv:\d+ \[", line)
+               for line in lost)
     assert bench.regressions(report, {"stopped": {}}) == []
 
 
