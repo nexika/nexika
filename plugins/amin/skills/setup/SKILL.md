@@ -16,6 +16,9 @@ on a branch with a pull request (never commit to the default branch).
    {"projects": [{"name": "api", "path": "src/Api", "version_files": ["src/Api/Api.csproj"]}]}
    ```
    (optional per project: `"changelog"`, `"tag": "{name}-v{version}"`).
+   If `projects` says the changelog file is missing and `gh release list --limit 5` shows
+   releases, ask whether the release notes live in GitHub releases; if so, propose
+   `"changelog": "github"` for that project (amin then writes no changelog file).
 2. **Notes folder.** If `changelog.d/README.md` is missing, create it explaining the rule:
    one file per change, `changelog.d/<project>/<id>.<type>.md` (single project:
    `changelog.d/<id>.<type>.md`), types breaking / added / changed / deprecated / removed /

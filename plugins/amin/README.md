@@ -65,6 +65,10 @@ when the version file or the last tag is one, `plan` proposes the next one (`6.0
 each consumes its notes; `--pre=beta` starts another label, `NAME=6.0.0` promotes. `prepare` never
 writes a version lower than the version file's without `--allow-lower`.
 
+A project whose changelog is its GitHub releases (no changelog file) sets `"changelog": "github"`
+in `.amin.json`: `prepare` writes no file and prints the notes for the release PR body, and
+`publish` rebuilds the release notes from the notes the merged release commit deleted.
+
 First release of a project with no tags: `amin history <project>` lists the merged PRs that
 touched it, so notes can be written from real history. It lists only PRs whose merge commit is on
 the current branch since the last tag, so a maintenance branch and main each get their own;

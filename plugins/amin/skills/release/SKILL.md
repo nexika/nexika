@@ -37,7 +37,7 @@ the promotion (`--pre=beta`, or `<project>=6.0.0`) as a choice, never pick it yo
    whole repo is released too (root version and CHANGELOG; publish it with
    `amin publish <marketplace name>` after the project tags).
 3. Commit (`Release <project> <version>, ...`), push, and open the PR with the sections in the
-   body. **Stop and ask the user to review and merge it.**
+   body (for a `"changelog": "github"` project, the release notes `prepare` printed). **Stop and ask the user to review and merge it.**
 
 ## 5. Publish (after the user says the release PR is merged)
 1. `git switch <default branch> && git pull`.

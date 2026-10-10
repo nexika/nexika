@@ -946,6 +946,55 @@ def test_a_check_message_that_passes_after_a_label_is_not_flaky(ci, monkeypatch)
     assert any("9001" in e for e in record["evidence"])
 
 
+# fastify run 37053342355 (#257): c8 (borp --check-coverage) finds a branch the tests do not cover.
+COVERAGE_LOG = [
+    "[command]/usr/bin/git config --global --add safe.directory /home/runner/work/fastify/fastify",
+    "ERROR: Coverage for branches (99.96%) does not meet global threshold (100%)",
+    "-------------------------------|---------|----------|---------|---------|-------------------",
+    "File                           | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s ",
+    "-------------------------------|---------|----------|---------|---------|-------------------",
+    "All files                      |     100 |    99.96 |     100 |     100 |                   ",
+    " fastify                       |     100 |      100 |     100 |     100 |                   ",
+    "  fastify.js                   |     100 |      100 |     100 |     100 |                   ",
+    " fastify/lib                   |     100 |    99.95 |     100 |     100 |                   ",
+    "  reply.js                     |     100 |      100 |     100 |     100 |                   ",
+    "  request.js                   |     100 |    99.22 |     100 |     100 | 234               ",
+    " fastify/test/types            |     100 |      100 |     100 |     100 |                   ",
+    "  validation.js                |      93 |    96.25 |     100 |      93 | ...22-132,134-144 ",
+    "-------------------------------|---------|----------|---------|---------|-------------------",
+    "##[error]Process completed with exit code 1.",
+]
+
+
+def test_a_coverage_threshold_that_is_not_met_is_a_code_failure():
+    failures = parse.read_log(gh_log("coverage-nix / check-coverage", COVERAGE_LOG[:11] + COVERAGE_LOG[-2:]))[
+        "coverage-nix / check-coverage"]["failures"]
+    assert [(f["framework"], f["kind"], f["file"], f["line"]) for f in failures] == [
+        ("coverage", "coverage", "lib/request.js", 234)]
+    assert failures[0]["message"] == "Coverage for branches (99.96%) does not meet global threshold (100%)"
+    verdict = classify.classify({"failures": failures})
+    assert (verdict["kind"], verdict["detail"]["what"]) == ("code", "coverage")
+    assert i18n.label("code", verdict["detail"], "en") == "coverage below the threshold in 1 file(s)"
+    files = [(f["file"], f["line"]) for f in parse.failures(COVERAGE_LOG)]
+    assert files == [("lib/request.js", 234), ("test/types/validation.js", 132)]
+
+
+@pytest.mark.parametrize("line", [
+    'Jest: "global" coverage threshold for lines (90%) not met: 85.5%',
+    "FAIL Required test coverage of 95% not reached. Total coverage: 93.10%",
+])
+def test_other_coverage_thresholds(line):
+    found = parse.failures([line, "##[error]Process completed with exit code 1."])
+    assert [(f["kind"], f["file"]) for f in found] == [("coverage", "")]
+
+
+def test_a_coverage_table_alone_is_no_failure():
+    assert parse.failures(COVERAGE_LOG[2:-1]) == []
+    windows = ['[command]"C:\\Program Files\\Git\\bin\\git.exe" config --global --add safe.directory D:\\a\\fastify\\fastify']
+    assert [f["file"] for f in parse.failures(windows + COVERAGE_LOG[1:])][0] == "lib/request.js"
+    assert [f["file"] for f in parse.failures(COVERAGE_LOG[1:])][0] == "fastify/lib/request.js"
+
+
 # fastify run 36318290733 (#260): a JavaScript action fails with core.setFailed(): no exit-code line.
 PR_TITLE_LOG = [
     "##[group]Run fastify/action-pr-title@e8f2ff244ca28c4a1a00edbf2df39b082002e8aa",

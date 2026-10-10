@@ -347,6 +347,48 @@ def type_tests(lines: list[str]) -> list[dict]:
     return [f for f in found if SAFE_PATH.match(f["file"])]
 
 
+COVERAGE_UNMET = re.compile(
+    r"(Coverage for (?:lines|branches|functions|statements) \([\d.]+%\) does not meet (?:global )?threshold"
+    r" \([\d.]+%\)"                                                       # c8, nyc
+    r"|coverage threshold for (?:lines|branches|functions|statements) \([\d.]+%\) not met: [\d.]+%"   # jest
+    r"|Required test coverage of [\d.]+% not reached\. Total coverage: [\d.]+%)")              # pytest-cov
+COVERAGE_ROW = re.compile(r"^( *)([^|]*?\S)\s*\|((?:\s*[\d.]+\s*\|){4})\s*(\S*)\s*$")
+COVERAGE_LINE = re.compile(r"^(?:\.\.\.\d*-)?(\d+)")
+CHECKOUT_NAME = re.compile(r"(?:/work|\b[A-Za-z]:/a)/([^/\s]+)/\1(?:/|\s|$)")
+
+
+def coverage(lines: list[str]) -> list[dict]:
+    """A coverage threshold that is not met (#257): one failure per file the table shows below 100%, at its
+    first uncovered line; one without a place when there is no table (pytest-cov)."""
+    unmet = next((m.group(1) for line in lines if (m := COVERAGE_UNMET.search(line))), "")
+    if not unmet:
+        return []
+    found: list[dict] = []
+    folders: dict[int, str] = {}
+    # c8 names folders from the checkout's own folder ("fastify/lib"): that name is dropped.
+    checkout = next((m.group(1) for line in lines
+                     if (m := CHECKOUT_NAME.search(line.replace("\\", "/")))), "")
+    for line in lines:
+        if not (m := COVERAGE_ROW.match(line)) or m.group(2) in ("All files", "File"):
+            continue
+        depth, name = len(m.group(1)), m.group(2).strip()
+        if "." not in name.rsplit("/", 1)[-1]:   # a folder
+            folders = {d: f for d, f in folders.items() if d < depth}
+            first, _, rest = name.partition("/")
+            folders[depth] = rest if checkout and first == checkout else name
+            continue
+        percents = [float(p) for p in m.group(3).replace("|", " ").split()]
+        if min(percents) >= 100:
+            continue
+        folder = next((folders[d] for d in sorted(folders, reverse=True) if d < depth), "")
+        file = f"{folder}/{name}" if folder else name
+        first = COVERAGE_LINE.match(m.group(4) or "")
+        if SAFE_PATH.match(file):
+            found.append(_failure("coverage", "coverage", file, file, int(first.group(1)) if first else 0,
+                                  unmet))
+    return found or [_failure("coverage", "coverage", "coverage", message=unmet)]
+
+
 NODE_BLOCK = re.compile(r"^✖ failing tests:\s*$")
 NODE_AT = re.compile(r"^test at (\S+?):(\d+):\d+\s*$")
 NODE_FAIL = re.compile(r"^\s*✖ (.+?) \(\d+(?:\.\d+)?m?s\)\s*$")
@@ -677,6 +719,7 @@ def failures(lines: list[str]) -> list[dict]:
     found += generated(lines)
     found += playwright(lines)
     found += type_tests(lines)
+    found += coverage(lines)
     found += node_test(lines)
     found += doc_checks(lines)
     for block in junit_blocks(lines):
