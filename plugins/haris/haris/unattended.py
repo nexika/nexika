@@ -15,21 +15,25 @@ from __future__ import annotations
 import json
 import os
 
-# The questions that may pass unattended: deleting files inside the project (strict asks about it;
-# git or a rebuild restores them). Never a secret, a path outside the project or unknown, the network,
-# publishing, pushing, destructive git (discard, history-rewrite), hidden code (dynamic) or a user's
-# own ask rule.
+# The questions that may pass unattended: deleting files inside the project that git or a rebuild
+# gives back (strict asks about deletes). Never a secret, a path outside the project or unknown, the
+# network, publishing, pushing, destructive git (discard, history-rewrite), hidden code (dynamic) or a
+# user's own ask rule.
 MAY_PASS = frozenset({"delete"})
+# What else the command may do: only read. Anything that writes, runs a program or links could put
+# something else where a target was checked (`ln -s ~ build && rm -rf build/`).
+BESIDE = frozenset({"read"})
 TRUE = ("1", "true", "yes")
 
 
-def detect(env, root: str, setting: str = "auto") -> str:
+def detect(env, cwd: str, setting: str = "auto") -> str:
     """Why this session is unattended, or "" when someone may be there (the default).
 
     Claude Code says so itself (CLAUDE_CODE_SESSION_ATTENDED, set for every hook): 1 is attended, 0 is
-    `claude -p` or a background session. Without it: HARIS_UNATTENDED=1, or CI=true. A signal the
-    project's own Claude settings set (.claude/settings*.json "env") does not count: a cloned
-    repository must not be able to loosen haris."""
+    `claude -p` or a background session. Without it: HARIS_UNATTENDED=1, or CI=true. A signal that
+    Claude settings in a project folder set (.claude/settings*.json "env" in the working folder, the
+    Claude Code project folder or any folder above them below home) does not count: a cloned repository,
+    or a submodule in it, must not be able to loosen haris."""
     if setting == "off":
         return ""
     attended = str(env.get("CLAUDE_CODE_SESSION_ATTENDED") or "").strip()
@@ -43,11 +47,31 @@ def detect(env, root: str, setting: str = "auto") -> str:
         name, why = "CI", "it runs in CI"
     else:
         return ""
-    return "" if name in project_env(root) else why
+    return "" if name in project_env(project_folders(cwd, str(env.get("CLAUDE_PROJECT_DIR") or ""))) else why
 
 
-def project_env(root: str) -> set[str]:
-    """The environment variables the project's Claude Code settings set."""
+def project_folders(*starts: str) -> list[str]:
+    """Each start folder and the folders above it, stopping before home (whose .claude is the user's own)
+    and the root."""
+    home = os.path.realpath(os.path.expanduser("~"))
+    out: list[str] = []
+    for start in starts:
+        folder = os.path.realpath(start) if start else ""
+        while folder and folder not in (home, os.path.dirname(folder)) and folder not in out:
+            out.append(folder)
+            folder = os.path.dirname(folder)
+    return out
+
+
+def project_env(folders: list[str]) -> set[str]:
+    """The environment variables Claude Code settings in these folders set."""
+    names: set[str] = set()
+    for folder in folders:
+        names |= settings_env(folder)
+    return names
+
+
+def settings_env(root: str) -> set[str]:
     names: set[str] = set()
     for name in ("settings.json", "settings.local.json"):
         try:
@@ -61,15 +85,16 @@ def project_env(root: str) -> set[str]:
     return names
 
 
-def may_pass(asked: list, inside) -> bool:
-    """Whether an ask may pass unattended: every finding it asks about is a reversible change inside the
-    project. `asked` holds the findings whose verdict is ask; `inside(path)` says whether a path is an
-    ordinary place in the project (not .git, CI or Claude settings)."""
-    return bool(asked) and all(f.cls in MAY_PASS and f.target and inside(f.target) for f in asked)
+def may_pass(asked: list, findings: list, restorable) -> bool:
+    """Whether an ask may pass unattended: every finding it asks about is a delete that `restorable(path)`
+    accepts (git or a rebuild gives it back), and the command does nothing else but read. `asked` holds
+    the findings whose verdict is ask, `findings` all of them."""
+    return bool(asked) and all(f.cls in MAY_PASS and f.target and restorable(f.target) for f in asked) \
+        and all(f in asked or f.cls in BESIDE | MAY_PASS for f in findings)
 
 
-PASS_NOTE = ("Passed without a question: this session is unattended ({why}), and this is a reversible "
-             "change inside the project. haris logged it; /haris:audit shows it.")
+PASS_NOTE = ("Passed without a question: this session is unattended ({why}), and git or a rebuild gives "
+             "back what this deletes. haris logged it; /haris:audit shows it.")
 DENY_NOTE = (" Nobody can answer a question in this session ({why}), so haris refuses what it would "
              "otherwise ask about. Find a way that stays inside the project, or leave this step for the "
              "user and say so.")

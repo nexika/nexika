@@ -246,7 +246,7 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
     away = str(cfg.get("unattended_why") or "")
     if verdict == c.ASK and away:  # nobody can answer: pass a reversible change in the project, or refuse
         from . import unattended
-        if not tainted and unattended.may_pass(asked, lambda p: inside_project(p, ctx.where)):
+        if not tainted and unattended.may_pass(asked, findings, lambda p: restorable(p, ctx)):
             return Decision(c.PASS, finding.cls, readable(unattended.PASS_NOTE.format(why=away) + " "
                                                           + finding.reason), findings, tainted, "passed")
         return Decision(c.DENY, finding.cls, readable(finding.reason + unattended.DENY_NOTE.format(why=away)),
@@ -286,8 +286,35 @@ def inside_project(path: str, where: Where) -> bool:
     path = path.rstrip("/")
     if path == where.root or not under(path, where.root) or where.place(path) != "project":
         return False
+    if any(under(path, t) or under(t, path) for t in where.trees()[1:]):
+        return False
     top = path[len(where.root) + 1:].split("/")[0]
     return not guarded_inside(path + "/", where.root) and top != ".github"
+
+
+# Folders a build or an install makes again: deleting one loses nothing (#343).
+REGENERATED = {"build", "dist", "node_modules", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache",
+               ".tox", "target", "coverage", "htmlcov", ".next", ".nuxt", ".turbo", ".parcel-cache"}
+
+
+def restorable(path: str, ctx: c.Ctx) -> bool:
+    """A delete target that git or a rebuild gives back, checked on disk now (#343): a file git tracks
+    with no uncommitted change, or a build folder (REGENERATED) with nothing tracked or a repository in
+    it. Never a pattern (`find -name`, a glob), a path that does not exist yet, or a link."""
+    where = ctx.where
+    raw = path.rstrip("/")
+    if not raw or raw.endswith("/_") or UNKNOWN in raw or any(ch in raw for ch in "*?["):
+        return False
+    if not inside_project(raw, where) or os.path.islink(raw) or os.path.realpath(raw) != raw:
+        return False
+    git = ctx.git
+    if os.path.isfile(raw):
+        tracked = git.try_run("ls-files", "--", raw)
+        clean = git.try_run("status", "--porcelain", "--ignored", "--untracked-files=all", "--", raw)
+        return bool(tracked and tracked.strip()) and clean == ""
+    if os.path.isdir(raw) and os.path.basename(raw) in REGENERATED:
+        return git.try_run("ls-files", "--", raw) == "" and not os.path.lexists(os.path.join(raw, ".git"))
+    return False
 
 
 OUTSIDE_ASKS_KEPT = 50

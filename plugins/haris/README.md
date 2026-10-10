@@ -119,12 +119,15 @@ becomes ask, ask becomes deny).
 In `claude -p`, CI or a background session nobody can answer a question, so an ask would end as a
 refusal anyway. haris treats a session as unattended only on a clear signal: Claude Code's own
 `CLAUDE_CODE_SESSION_ATTENDED=0`, or, when Claude Code does not set it, `HARIS_UNATTENDED=1` or
-`CI=true`. A signal set by the project's own `.claude/settings*.json` does not count, and an unknown
-session is attended. There:
+`CI=true`. A signal set by a project's `.claude/settings*.json` (in the working folder or any
+folder above it, below home) does not count, and an unknown session is attended. There:
 
 - a reversible change inside the project that the profile asks about passes without a question.
-  Today that is one thing: deleting ordinary files in the project under `strict` (not `.git`, CI,
-  `.claude` or other files that make tools run commands). Each one is logged.
+  Today that is one thing, a delete under `strict`, and only when git or a rebuild gives it back: a
+  file git tracks with no uncommitted change, or a build folder (`build`, `dist`, `node_modules`,
+  `__pycache__` ...) with nothing tracked in it. Not a pattern (`find -name`, a glob), a link, a
+  path that does not exist yet, another worktree, `.git`, CI, `.claude` or other files that make
+  tools run commands, and only when the command does nothing else but read. Each one is logged.
 - every other ask is refused by haris itself, with its reason, so the agent learns why: secrets,
   paths outside the project or unknown, the network, publishing, pushing, destructive git and code
   haris cannot see. Everything refused today stays refused, and a session marked after a

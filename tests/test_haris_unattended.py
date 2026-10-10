@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 
 import pytest
+from conftest import _git
 from haris_world import build_world, corpus_lines, decide, home_path  # puts haris on sys.path
 
 from haris import cli, config, hooks, policy, state, unattended  # isort: skip
@@ -121,7 +122,7 @@ def test_risky_asks_are_refused_with_the_reason(world, command, profile):
         assert d.unattended == "refused" and "Nobody can answer" in d.reason
 
 
-@pytest.mark.parametrize("command", ["rm src/old.py", "rm -rf build", "rm -rf node_modules"])
+@pytest.mark.parametrize("command", ["rm data.txt", "rm -f README.md", "rm -rf build", "rm -rf node_modules"])
 def test_a_delete_inside_the_project_passes_unattended_under_strict(world, command):
     home, project = world
     assert decide(project, "Bash", command, dict(away(project), unattended_why="")).verdict == "pass"
@@ -143,15 +144,15 @@ def test_deletes_of_guarded_project_parts_still_stop(world, command):
 
 def test_a_marked_session_passes_nothing_unattended(world):
     home, project = world
-    d = policy.decide({"tool_name": "Bash", "tool_input": {"command": "rm src/old.py"}, "cwd": str(project)},
+    d = policy.decide({"tool_name": "Bash", "tool_input": {"command": "rm data.txt"}, "cwd": str(project)},
                       away(project, "strict"), {"taint": 2})
     assert d.verdict == "deny" and d.unattended == "refused"
 
 
 def test_an_ask_rule_of_the_user_is_refused_not_passed(world):
     home, project = world
-    cfg = dict(away(project, "strict"), ask=["rm src/old.py"])
-    assert decide(project, "Bash", "rm src/old.py", cfg).verdict == "deny"
+    cfg = dict(away(project, "strict"), ask=["rm data.txt"])
+    assert decide(project, "Bash", "rm data.txt", cfg).verdict == "deny"
 
 
 # ---------------------------------------------------------------- the hook, the audit and the summary
@@ -176,14 +177,14 @@ def test_the_hook_passes_logs_refuses_and_sums_up(strict_user, monkeypatch, caps
     home, project = strict_user
     monkeypatch.setenv("CLAUDE_CODE_SESSION_ATTENDED", "0")
     assert hooks.on_stop({"session_id": SESSION}) == ""
-    assert hooks.on_pre_tool_use(event(project, "rm src/old.py")) == ""
+    assert hooks.on_pre_tool_use(event(project, "rm data.txt")) == ""
     out = json.loads(hooks.on_pre_tool_use(event(project, "git reset --hard")))["hookSpecificOutput"]
     assert out["permissionDecision"] == "deny" and "Nobody can answer" in out["permissionDecisionReason"]
     log = [e for e in state.read_audit() if e.get("session") == SESSION[:8]]
     assert [(e["decision"], e["class"]) for e in log] == [("unattended", "delete"), ("deny", "discard")]
     assert all(e["unattended"] == "Claude Code reports that no one attends this session" for e in log)
     note = json.loads(hooks.on_stop({"session_id": SESSION}))["systemMessage"]
-    assert "let 1 question(s) pass and refused 1" in note and "rm src/old.py" in note
+    assert "let 1 question(s) pass and refused 1" in note and "rm data.txt" in note
     assert hooks.on_stop({"session_id": SESSION}) == ""  # said once
     assert cli.main(["audit", "--decision", "unattended"]) == 0
     assert "unattended delete" in " ".join(capsys.readouterr().out.split())
@@ -194,7 +195,7 @@ def test_an_attended_session_still_asks(strict_user, monkeypatch):
     monkeypatch.setenv("CLAUDE_CODE_SESSION_ATTENDED", "1")
     monkeypatch.setenv("CI", "true")
     session = "here-" + "1" * 8
-    out = json.loads(hooks.on_pre_tool_use(event(project, "rm src/old.py", session)))["hookSpecificOutput"]
+    out = json.loads(hooks.on_pre_tool_use(event(project, "rm data.txt", session)))["hookSpecificOutput"]
     assert out["permissionDecision"] == "ask"
     assert hooks.on_stop({"session_id": session}) == ""
 
@@ -208,3 +209,69 @@ def test_the_stop_hook_is_registered_and_quiet_in_background_calls():
     hooks_json = json.loads((cli.Path(hooks.__file__).parents[1] / "hooks" / "hooks.json").read_text())
     assert "haris\\\" hook stop" in json.dumps(hooks_json["hooks"]["Stop"])
     assert "stop" in cli.HOOKS
+
+
+# ---------------------------------------------------------------- bypasses found in review
+
+
+@pytest.fixture(scope="module")
+def rich(tmp_path_factory):
+    """The corpus world plus a link to ~/.ssh, a folder holding a secret, a nested repository and a
+    second worktree inside the project."""
+    base = tmp_path_factory.mktemp("haris-away-rich")
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setenv("HOME", str(base / "home"))
+        mp.setenv("HARIS_HOME", str(base / "home" / ".claude" / "nexika" / "haris"))
+        home, project = build_world(base)
+        (project / "lnk").symlink_to(home / ".ssh")
+        (project / "config").mkdir()
+        (project / "config" / ".env.local").write_text("TOKEN=x\n")
+        (project / "vendor" / "sub").mkdir(parents=True)
+        _git(project / "vendor" / "sub", "init", "-q")
+        _git(project, "worktree", "add", "-q", "-b", "side", str(project / "wt"))
+        mp.chdir(project)
+        yield home, project
+
+
+@pytest.mark.parametrize("command", [
+    # a link made in the same command, or a program that may make one
+    "ln -s ~/.ssh newlink && rm -rf newlink/",
+    "rm -rf build && ln -s ~ build && rm -rf build/",
+    "mkdir x && ln -s ~/.ssh x/y && find x -L -delete",
+    "rm -rf build && npm run build && rm -rf build/",
+    # a pattern at the project root
+    "find . -type f -delete", "find . -name '.env*' -delete", "find . -path '*/.gi?/*' -delete",
+    "find src/.. -type f -delete", "find -L . -type f -delete", "find . -name '*' -exec rm -rf {} +",
+    "find . -maxdepth 1 -name '.*' -delete", "rsync -a --delete /tmp/empty/ ./",
+    "rsync -a --delete /tmp/empty/ src/../", "rm -f src/*.py",
+    # another worktree, a secret inside a folder, a nested repository, a link
+    "rm -rf wt", "rm -rf wt/src", "find wt -type f -delete", "rm -rf config", "rm -rf vendor/sub",
+    "rm -rf vendor", "rm -rf lnk", "rm -rf lnk/",
+    # work git cannot give back: uncommitted or untracked
+    "rm -rf src/app.py", "shred -u src/app.py", "rm -rf scripts", "rm -f package.json.bak",
+])
+def test_review_bypasses_never_pass_unattended(rich, command):
+    home, project = rich
+    d = decide(project, "Bash", command, away(project, "strict"))
+    assert d.verdict in ("ask", "deny") and d.unattended != "passed", (d.verdict, d.cls, d.reason)
+
+
+@pytest.mark.parametrize("command", ["Remove-Item -Recurse -Force wt", "Remove-Item -Recurse -Force config"])
+def test_review_bypasses_in_powershell(rich, command):
+    home, project = rich
+    d = decide(project, "PowerShell", command, away(project, "strict"))
+    assert d.verdict in ("ask", "deny") and d.unattended != "passed", (d.verdict, d.cls, d.reason)
+
+
+def test_a_submodule_cannot_declare_the_session_unattended(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    clone = tmp_path / "home" / "work" / "clone"
+    (clone / ".claude").mkdir(parents=True)
+    (clone / ".claude" / "settings.json").write_text(json.dumps({"env": {"CI": "true"}}))
+    sub = clone / "libs" / "dep"
+    sub.mkdir(parents=True)
+    (sub / ".git").write_text("gitdir: ../../.git/modules/dep\n")
+    assert unattended.detect({"CI": "true"}, str(clone)) == ""
+    assert unattended.detect({"CI": "true"}, str(sub)) == ""
+    assert unattended.detect({"CI": "true", "CLAUDE_PROJECT_DIR": str(clone)}, str(tmp_path)) == ""
+    assert unattended.detect({"CI": "true"}, str(tmp_path / "home" / "work")) == "it runs in CI"

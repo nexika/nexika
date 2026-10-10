@@ -794,7 +794,7 @@ def reader(program: str, argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stag
                     ctx.add("secret-read", f"Prints ${name}, which looks like a secret, into the "
                                            f"conversation.")
             if not pos:
-                ctx.add("exec", "Prints the environment (it can hold secrets).")
+                environ_dump(ctx)
                 return Stage(environ=True)
         ctx.add("read", f"Only shows information ({program}).")
         if program in PRINTERS and not any(UNKNOWN in a for a in argv[1:]):
@@ -1141,7 +1141,7 @@ def h_export(argv, ctx, stdin):
         ctx.add("read", "Removes aliases.")
         return Stage()
     if not names and "f" not in flags and "F" not in flags:
-        ctx.add("exec", "Prints the environment (it can hold secrets).")
+        environ_dump(ctx)
         return Stage(environ=True)
     for a in names:
         name, eq, value = a.partition("=")
@@ -1164,7 +1164,7 @@ def h_set(argv, ctx, stdin):
         ctx.add("read", "Shifts the arguments.")
         return Stage()
     if len(argv) == 1:
-        ctx.add("exec", "Prints the environment (it can hold secrets).")
+        environ_dump(ctx)
         return Stage(environ=True)
     _, pos = options(argv[1:], {"-o", "+o"})
     if "--" in argv[1:] or pos:
@@ -1310,9 +1310,16 @@ def h_env(argv, ctx, stdin):
         return shell_string(arg(split[0] + " " + " ".join(shquote(p) for p in pos), split[0].marks), ctx, [],
                             "env -S")
     if not pos:
-        ctx.add("exec", "Prints the environment (it can hold secrets).")
+        environ_dump(ctx)
         return Stage(environ=True)
     return run(pos, ctx, stdin)
+
+
+def environ_dump(ctx: Ctx) -> None:
+    """The whole environment, every token in it: what reads it is as secret as a named secret, also
+    through $(...), a subshell or a group (#350)."""
+    ctx.add("exec", "Prints the environment (it can hold secrets).")
+    ctx.marks.add("secret")
 
 
 def shquote(value: str) -> str:
@@ -2445,6 +2452,10 @@ GIT_WRITE = {"mv", "init", "apply", "am", "cherry-pick", "merge", "revert", "com
              "maintenance", "instaweb"}
 
 
+GIT_ELSEWHERE_ENV = {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_CONFIG", "GIT_CONFIG_GLOBAL",
+                     "GIT_CONFIG_SYSTEM", "GIT_CONFIG_PARAMETERS"}
+
+
 def h_git(argv, ctx, stdin, depth: int = 0):
     args = list(argv[1:])
     gctx = ctx
@@ -2465,6 +2476,12 @@ def h_git(argv, ctx, stdin, depth: int = 0):
             ctx.add("risky", f"`git {a.split('=')[0]}` makes git run programs from elsewhere.")
         elif a in ("--git-dir", "--work-tree", "--namespace", "--super-prefix", "--exec-path") and args:
             args.pop(0)
+            if a in ("--git-dir", "--work-tree"):
+                ctx.repointed.add("*")
+        elif a.startswith(("--git-dir=", "--work-tree=")):
+            ctx.repointed.add("*")
+    if any(k in GIT_ELSEWHERE_ENV or k.startswith("GIT_CONFIG_") for k in (*ctx.prefix, *ctx.vars)):
+        ctx.repointed.add("*")
     if not args:
         ctx.add("read", "Shows git help.")
         return Stage()
@@ -2476,6 +2493,13 @@ def h_git(argv, ctx, stdin, depth: int = 0):
                 return shell_string(arg(alias[1:] + " " + " ".join(shquote(r) for r in rest)), gctx, [],
                                     f"git {sub}")
             return h_git([arg("git"), *[arg(w) for w in alias.split()], *rest], gctx, stdin, depth + 1)
+    if sub == "send-pack" or (sub == "subtree" and rest[:1] == ["push"]):
+        _, pos = options(rest[1:] if sub == "subtree" else rest, {"-P", "--prefix", "-m", "--message",
+                                                                  "--receive-pack", "--exec"})
+        why = push_stranger(pos[0] if pos else None, False, gctx) if pos else ""
+        gctx.add("egress-risk" if why or sub == "send-pack" else "egress",
+                 why or f"Sends commits with git {sub}.")
+        return Stage()
     handler = GIT_SUBS.get(sub)
     if handler:
         before = len(gctx.findings)
@@ -2583,6 +2607,9 @@ def push_stranger(dest: str | None, everything: bool, ctx: Ctx) -> str:
     on the command line, a remote this command added or pointed elsewhere, a name that is no remote, or
     every branch to a remote other than origin. Anyone may own such a place (#351)."""
     repointed = ctx.repointed
+    if not ctx.in_project():
+        return ("Pushes from a repository outside the project, whose remotes haris does not know: the "
+                "commits can reach a repository anyone may own.")
     if dest is None:
         if repointed:
             return ("Pushes after this command changed where pushes go (a remote's address or a "
@@ -2758,6 +2785,8 @@ def git_config(sub, rest, ctx, stdin):
     value = pos[1] if len(pos) > 1 else ""
     repoint(key, ctx)
     is_alias = key.lower().startswith("alias.")
+    if is_alias and value:  # a later `git <alias>` in the same command runs it (#351)
+        ctx.git_aliases = {**ctx.git_aliases, key[6:].lower(): value}
     if runs_program(key, value) and (not is_alias or value.startswith("!")):
         ctx.add("persistence", f"Sets git's {key}, which makes git run a program later on its own.")
     elif has(opts, "--global", "--system") or values(opts, "-f", "--file"):

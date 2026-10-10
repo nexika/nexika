@@ -54,7 +54,7 @@ def on_pre_tool_use(event: dict) -> str:
     from . import policy
     from . import targets as c
     data = state.load_session(session)
-    cfg = {**cfg, "unattended_why": unattended.detect(os.environ, root, cfg["unattended"])}
+    cfg = {**cfg, "unattended_why": unattended.detect(os.environ, cwd, cfg["unattended"])}
     try:
         decision = policy.decide(event, cfg, data, state.approvals(session, root))
     except Exception as exc:  # haris must never wave a call through because it failed
