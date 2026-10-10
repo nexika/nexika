@@ -16,6 +16,7 @@ TEXT = {
         "k_code_links": "{count} broken link(s)",
         "k_code_": "{count} failure(s)", "one_job": "{label}, in one job",
         "k_matrix": "fails only on {value}", "k_flaky": "likely flaky: the same commit passed",
+        "k_flaky_timeout": "likely flaky: timed out in one job only",
         "k_infra": "outside the code: {signal}", "k_dependency": "a dependency problem",
         "k_dependency_module": "a dependency problem: {module} is not installed",
         "k_setup": "the CI setup is broken",
@@ -65,6 +66,7 @@ TEXT = {
         "k_code_links": "{count} رابط معطّل",
         "k_code_": "{count} إخفاق", "one_job": "{label}، في مهمة واحدة",
         "k_matrix": "يفشل فقط على {value}", "k_flaky": "متقلّب على الأرجح: نفس التعديل نجح",
+        "k_flaky_timeout": "متقلّب على الأرجح: تجاوز الحد الزمني في مهمة واحدة فقط",
         "k_infra": "خارج الكود: {signal}", "k_dependency": "مشكلة في الاعتماديات",
         "k_dependency_module": "مشكلة في الاعتماديات: {module} غير مثبّت",
         "k_setup": "إعداد CI معطّل",
@@ -152,6 +154,8 @@ def label(kind: str, detail: dict, language: str = "") -> str:
         return t("k_unknown_expired", language)
     if kind == "unknown" and detail.get("jobs") == 0:
         return t("k_unknown_nojobs", language)
+    if kind == "flaky" and detail.get("timeout"):
+        return t("k_flaky_timeout", language)
     if kind == "matrix":
         return t("k_matrix", language, value=detail.get("value", "?"))
     return t(f"k_{kind}", language)

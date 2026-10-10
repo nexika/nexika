@@ -220,6 +220,16 @@ def classify(facts: dict) -> dict:
                 "confidence": "medium", "evidence": evidence}
     only = matrix_only(facts.get("jobs") or [])
     what = failures[0]["kind"] if failures else ""
+    timed_out = bool(failures) and all(f.get("timeout") for f in failures)
+    if only and timed_out and one_matrix_job(facts.get("jobs") or []):
+        # A test that only ran out of time in one job says little about its version: a slow runner or a race
+        # is more likely, and "fails only on 22" sends the reader after a bug that is not there (#362).
+        evidence += [f"{f['test'] or f['file']}: {f['message']}" for f in failures[:3]]
+        evidence.append(f"Each failing test hit the test runner's own time limit, in one job only (the one "
+                        f"with {only}); the same job passed with other values. A slow runner or a race is "
+                        "more likely than a version difference: a re-run tells which.")
+        return {"kind": "flaky", "detail": {"timeout": True, "value": only}, "confidence": "low",
+                "evidence": evidence}
     if only and failures:   # a matrix value names where a known failure happens, not a cause (#255)
         evidence.append(f"Only the jobs with {only} failed; the same job passed with other values.")
         return {"kind": "matrix", "detail": {"value": only, "count": len(failures), "what": what},

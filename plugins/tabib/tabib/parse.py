@@ -367,7 +367,9 @@ COVERAGE_UNMET = re.compile(
     r"|coverage threshold for (?:lines|branches|functions|statements) \([\d.]+%\) not met: [\d.]+%"   # jest
     r"|Required test coverage of [\d.]+% not reached\. Total coverage: [\d.]+%)")              # pytest-cov
 COVERAGE_ROW = re.compile(r"^( *)([^|]*?\S)\s*\|((?:\s*[\d.]+\s*\|){4})\s*(\S*)\s*$")
-COVERAGE_LINE = re.compile(r"^(?:\.\.\.\d*-)?(\d+)")
+# c8 cuts a long list from the left: "...22-132,134-144". The cut range's numbers are not its own, so the
+# first full range gives the line; with nothing else there is no line (#362).
+COVERAGE_LINE = re.compile(r"^(?:\.\.\.[^,]*,)?(\d+)")
 CHECKOUT_NAME = re.compile(r"(?:/work|\b[A-Za-z]:/a)/([^/\s]+)/\1(?:/|\s|$)")
 
 
@@ -616,6 +618,15 @@ def crash(lines: list[str]) -> dict | None:
     return failure
 
 
+def same_file(frame: str, file: str) -> bool:
+    """A frame's path names the test's file, with or without the CI machine's folders in front:
+    '/home/runner/work/black/black/tests/test_black.py' and 'tests/test_black.py' (#362)."""
+    frame, file = frame.replace("\\", "/"), file.replace("\\", "/")
+    while file.startswith(("./", "../")):
+        file = file.partition("/")[2]
+    return bool(file) and (frame == file or frame.endswith("/" + file) or file.endswith("/" + frame))
+
+
 # ------------------------------------------------------------------ mocha (#360)
 # The spec and dot reporters end with an "N failing" block: "  1) suite", deeper "suite" lines, the test's
 # title ending in ":" (old mocha puts it all on the numbered line), the error, then the stack.
@@ -705,7 +716,8 @@ TEST_TIMEOUT = re.compile(r"test timed out after \d|Exceeded timeout of \d|^(?:F
 def failures(lines: list[str]) -> list[dict]:
     found: list[dict] = []
     py_lines: dict[str, int] = {}
-    py_test_lines: dict[str, int] = {}  # "TestTax.test_rate[eu]" -> its own line, from its FAILURES section
+    # "TestTax.test_rate[eu]" -> the places in its FAILURES section; its line is the first in its own file
+    py_test_lines: dict[str, list[tuple[str, int]]] = {}
     py_section = ""
     go_run = ""  # the test `go test -v` is running: its locations come before "--- FAIL"
     go_locs: dict[str, tuple[str, int, str]] = {}
@@ -724,7 +736,7 @@ def failures(lines: list[str]) -> list[dict]:
         if m := PY_LOC.match(line):
             py_lines.setdefault(m.group(1), int(m.group(2)))
             if py_section:
-                py_test_lines.setdefault(py_section, int(m.group(2)))
+                py_test_lines.setdefault(py_section, []).append((m.group(1), int(m.group(2))))
         if m := JS_LOC.search(line):
             js_lines.setdefault(m.group(1).split("/")[-1], int(m.group(2)))
         if m := PYTEST.match(line):
@@ -800,7 +812,9 @@ def failures(lines: list[str]) -> list[dict]:
             f.update(file=file, line=number, message=_short(message))
         if f["framework"] == "pytest" and not f["line"]:
             name = f["test"].partition("::")[2].replace("::", ".")
-            f["line"] = py_test_lines.get(name) or py_lines.get(f["file"], 0)
+            # A frame in another file (unittest's case.py) is never the test file's line (#362).
+            own = (n for path, n in py_test_lines.get(name, []) if same_file(path, f["file"]))
+            f["line"] = next(own, 0) or py_lines.get(f["file"], 0)
         elif f["framework"] == "jest" and not f["line"] and f["file"]:
             f["line"] = js_lines.get(f["file"].split("/")[-1], 0)
     if pending_jest:  # jest names tests under "●", each after the "FAIL <file>" it belongs to
