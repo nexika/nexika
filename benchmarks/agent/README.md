@@ -96,6 +96,12 @@ python3 benchmarks/agent/bench.py --pilot benchmarks/agent/pilot-2.json pipeline
   --model sonnet --arms A,B,itqan,siyaq,haris+barq --jobs 3 \
   --python ~/nexika-bench/venv/bin/python --workers 3 --test-timeout 900
 
+# The 42 hard tasks of pilot-2, three runs each (pilot-3.json): A, B and a lean arm without
+# lawha, prof, manar and bayan (#336). Three runs per task narrow the interval on hard tasks.
+python3 benchmarks/agent/bench.py --pilot benchmarks/agent/pilot-3.json pipeline \
+  --model sonnet --runs 3 --arms A,B,amin+barq+hafiz+haris+itqan+mizan+siyaq+tabib --jobs 3 \
+  --python ~/nexika-bench/venv/bin/python --workers 3 --test-timeout 900
+
 # The prompt tokens each plugin adds, one short session per plugin (14 sessions)
 python3 benchmarks/agent/bench.py context --model sonnet --task django__django-11848
 ```
