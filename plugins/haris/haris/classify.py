@@ -121,7 +121,20 @@ def node(n, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         return Stage()
     if isinstance(n, shell.Group):
         inner = ctx.child() if n.subshell else ctx
-        walk(n.body, inner)
+        if n.each and ctx.unroll_budget[0] >= len(n.each):
+            # judged once per word, for what each would do; a `break` may stop at any word, so after
+            # the loop its variables and folder are not known
+            ctx.unroll_budget[0] -= len(n.each)
+            walk(n.body[:1], inner)  # the list itself
+            each, moved = inner.child(), False
+            for body in n.each:
+                walk(body, each)
+                moved = moved or each.cwd != inner.cwd
+            inner.forget()
+            if moved:
+                inner.cwd = None
+        else:
+            walk(n.body, inner)
         for r in n.redirects:
             redirect(r, ctx, [])
         return Stage(secret="secret" in inner.marks)
@@ -1663,8 +1676,9 @@ def h_editor(argv, ctx, stdin):
 
 # ---------------------------------------------------------------- interpreters and inline code
 
-CODE_EXEC = re.compile(r"\b(?:os\.system|os\.popen|subprocess|Popen|check_output|check_call|execSync"
-                       r"|execFileSync"
+EXEC_SETTING = re.compile(r"\s*=\s*(?:True|False|None|\d+)\b")
+CODE_EXEC = re.compile(r"\b(?:os\.system|os\.popen|os\.posix_spawnp?|os\.spawn[lv]p?e?|subprocess|Popen"
+                       r"|check_output|check_call|execSync|execFileSync"
                        r"|spawnSync|spawn|child_process|pty\.spawn|Runtime\.getRuntime|shell_exec|passthru"
                        r"|proc_open|IO\.popen|Kernel\.system|do shell script|os\.exec[lv]p?e?)\b"
                        r"|\b(?:system|popen|exec)\s*\(")
@@ -1800,6 +1814,14 @@ def code_matches(pattern: re.Pattern, text: str, data: list[tuple[int, int]]) ->
     return [m for m in pattern.finditer(text) if not any(a <= m.start() < b for a, b in data)]
 
 
+def exec_calls(text: str, data: list[tuple[int, int]]) -> list[re.Match]:
+    """What CODE_EXEC finds, less a name set to a constant: a keyword argument or a setting such as
+    `sympy.test(subprocess=False)` runs nothing (#342). Every other mention still counts, an import
+    included: the call may come later through a name haris does not follow (`sys.modules[...]`)."""
+    return [m for m in code_matches(CODE_EXEC, text, data)
+            if not EXEC_SETTING.match(text, m.end())]
+
+
 def code_targets(text: str, pattern: re.Pattern, data: list[tuple[int, int]] = ()) -> list[Arg]:
     """What the calls `pattern` finds act on: the path each one names, or UNKNOWN for a call whose path is
     only known when it runs (a variable set elsewhere, a computed string). Never a stray string from
@@ -1928,7 +1950,7 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
         ctx.add("remote-shell", f"`{via}` connects a shell to the network: whoever is on the other side can "
                                 "run commands here.")
     network = bool(CODE_NET.search(text))
-    executes = bool(code_matches(CODE_EXEC, text, data) or (not NO_BACKTICK_EXEC.search(lang or via)
+    executes = bool(exec_calls(text, data) or (not NO_BACKTICK_EXEC.search(lang or via)
                                                             and BACKTICK_EXEC.search(text)))
     paths: list[Arg] = []
     for i, lit in enumerate(literals):

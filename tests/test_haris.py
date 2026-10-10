@@ -15,53 +15,16 @@ from pathlib import Path
 
 import pytest
 from conftest import PLUGINS, _git
+from haris_world import HARIS_ROOT, build_world, corpus_lines, decide, home_path  # puts haris on sys.path
 
-HARIS_ROOT = PLUGINS / "haris"
-if str(HARIS_ROOT) not in sys.path:
-    sys.path.insert(0, str(HARIS_ROOT))
+from haris import classify, cli, hooks, inject, policy, shell, state  # isort: skip
 
-from haris import classify, cli, hooks, inject, policy, shell, state  # noqa: E402
-
-CORPUS = PLUGINS.parent / "tests" / "haris_corpus.tsv"
 SESSION = "5e55a0b1-1111-2222-3333-444455556666"
 FAKE_GH = "gh" + "p_" + "a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6q7R8"   # built so no token sits in the source
 DANGEROUS, ORDINARY = {"ask", "deny"}, {"allow", "pass"}
 
 
 # ---------------------------------------------------------------- the world the corpus runs in
-
-
-def build_world(base):
-    """A home folder with keys and shell profiles, and a project inside it on branch feat/x."""
-    home = base / "home"
-    project = home / "work" / "proj"
-    for d in ("src", "build", "node_modules/.bin", "scripts", "tests"):
-        (project / d).mkdir(parents=True, exist_ok=True)
-    files = {
-        "src/app.py": "print('hi')\n", "README.md": "# demo\n", "package.json": '{"name": "demo"}\n',
-        ".env": "API_KEY=abc\n", ".env.example": "API_KEY=\n", ".env.production": "API_KEY=prod\n",
-        "data.txt": "a b\n", "list.txt": "a\n", "node_modules/.bin/jest": "", "scripts/build.sh": "echo\n",
-    }
-    for name, text in files.items():
-        (project / name).write_text(text)
-    for name, text in {".ssh/id_rsa": "KEY", ".ssh/id_rsa.pub": "PUB", ".ssh/id_ed25519": "KEY",
-                       ".aws/credentials": "[default]", ".bashrc": "", ".netrc": "",
-                       ".docker/config.json": "{}",
-                       ".claude/settings.json": "{}", ".gitconfig": "[alias]\n\tco = checkout\n"}.items():
-        path = home / name
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text)
-    _git(project, "init", "-q", "-b", "main")
-    _git(project, "config", "user.email", "t@example.com")
-    _git(project, "config", "user.name", "Test")
-    _git(project, "add", "src", "README.md", "package.json", ".env.example", "data.txt", "list.txt")
-    _git(project, "commit", "-q", "-m", "initial")
-    _git(project, "switch", "-q", "-c", "feat/x")
-    remote = project / ".git" / "refs" / "remotes" / "origin"
-    remote.mkdir(parents=True)
-    (remote / "HEAD").write_text("ref: refs/remotes/origin/main\n")
-    (project / "src" / "app.py").write_text("print('changed')\n")  # uncommitted work
-    return home, project
 
 
 @pytest.fixture(scope="module")
@@ -76,46 +39,13 @@ def world(tmp_path_factory):
         yield home, project
 
 
-def decide(project, tool, value, cfg=None, session=None, approvals=None):
-    if tool in ("Bash", "PowerShell"):
-        tool_input = {"command": value}
-    elif tool == "WebFetch":
-        tool_input = {"url": value}
-    elif tool == "WebSearch":
-        tool_input = {"query": value}
-    elif tool.startswith("mcp__"):
-        tool_input = json.loads(value)
-    elif tool in ("Grep", "Glob"):
-        tool_input = {"path": value}
-    else:
-        tool_input = {"file_path": value}
-    cfg = cfg or policy.effective_config(str(project))
-    return policy.decide({"tool_name": tool, "tool_input": tool_input, "cwd": str(project)}, cfg, session,
-                         approvals)
-
-
-def corpus_lines():
-    out = []
-    for n, line in enumerate(CORPUS.read_text(encoding="utf-8").splitlines(), 1):
-        if not line.strip() or line.startswith("#"):
-            continue
-        expected, _, rest = line.partition("\t")
-        tool, value = "Bash", rest
-        if rest.startswith("@"):
-            tool, _, value = rest[1:].partition("\t")
-        value = value.replace("↵", "\n").replace("{PLUGIN}", str(HARIS_ROOT))
-        out.append((n, expected, tool, value))
-    return out
-
-
 @pytest.fixture(scope="module")
 def results(world):
     home, project = world
     cfg = policy.effective_config(str(project))
     out = []
-    for n, expected, tool, value in corpus_lines():
-        if tool in ("Read", "Write", "Edit") and value.startswith("~"):
-            value = str(home) + value[1:]
+    for n, expected, tool, value, _ in corpus_lines():
+        value = home_path(tool, value, home)
         start = time.perf_counter()
         d = decide(project, tool, value, cfg)
         out.append((n, expected, tool, value, d, time.perf_counter() - start))
@@ -128,8 +58,8 @@ def results(world):
 def test_corpus_is_big_enough():
     lines = corpus_lines()
     assert len(lines) >= 300
-    assert sum(1 for _, e, _, _ in lines if e in DANGEROUS) >= 150
-    assert all(e in DANGEROUS | ORDINARY for _, e, _, _ in lines)
+    assert sum(1 for _, e, *_ in lines if e in DANGEROUS) >= 150
+    assert all(e in DANGEROUS | ORDINARY for _, e, *_ in lines)
 
 
 def test_gate_no_dangerous_command_is_missed(results):
@@ -189,6 +119,31 @@ def test_parser_limits_nesting_and_length():
         shell.parse("echo " + "$(" * 40 + ")" * 40)
     with pytest.raises(shell.ParseError):
         shell.parse("echo " + "x" * (shell.MAX_LENGTH + 1))
+
+
+def test_for_list_written_out_is_judged_word_by_word(world):
+    home, project = world
+    few = " ".join(["src/app.py"] * shell.MAX_UNROLLED)
+    assert decide(project, "Bash", f"for f in {few}; do sed -i s/a/b/ $f; done").verdict == "pass"
+    # a longer list stays unknown: haris never judges only the first words of it
+    many = few + " ~/.bashrc"
+    assert decide(project, "Bash", f"for f in {many}; do sed -i s/a/b/ $f; done").verdict == "ask"
+    # a word that is only known when it runs keeps the whole list unknown
+    for word in ("$HOME/x", "src/*.py", "$(ls)", "{a,b}"):
+        cmd = f"for f in src/app.py {word}; do sed -i s/a/b/ $f; done"
+        assert decide(project, "Bash", cmd).verdict == "ask", word
+
+
+def test_nested_written_out_loops_stay_fast_and_safe(world):
+    """Judging every word of nested loops multiplies the work; past a budget the rest stays unknown."""
+    home, project = world
+    words = " ".join(f"w{i}" for i in range(shell.MAX_UNROLLED))
+    last = " ".join(f"build/{i}" for i in range(shell.MAX_UNROLLED - 1)) + " ~"
+    cmd = f"for a in {words}; do for b in {words}; do for c in {last}; do rm -rf $c; done; done; done"
+    start = time.perf_counter()
+    d = decide(project, "Bash", cmd)
+    assert time.perf_counter() - start < 0.5
+    assert d.verdict in DANGEROUS
 
 
 def test_parser_finds_commands_in_heredoc_substitutions():

@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 
 MAX_DEPTH = 12
 MAX_LENGTH = 100_000
+MAX_UNROLLED = 32              # a longer written-out `for` list stays unknown
+GLOB_CHARS = re.compile(r"[*?\[{]")
 NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 ASSIGNMENT = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)(\+?=)")
 FD_PREFIX = re.compile(r"\d+(?=[<>])|\{[A-Za-z_][A-Za-z0-9_]*\}(?=[<>])")
@@ -77,6 +79,7 @@ class Group:
     body: list
     subshell: bool
     redirects: list[Redirect] = field(default_factory=list)
+    each: list | None = None   # a `for` over words written out: the body once per word (#342)
 
 
 @dataclass
@@ -413,6 +416,12 @@ class Lexer:
 # ---------------------------------------------------------------- parser
 
 
+def written_out(word: Word) -> bool:
+    """A word whose value is in the text itself: no variable, substitution or glob (`~` is fine)."""
+    return all(p.kind == "tilde" or p.kind == "lit" and (p.quoted or not GLOB_CHARS.search(p.text))
+               for p in word.parts)
+
+
 class Parser:
     def __init__(self, toks: list[Tok], depth: int = 0):
         self.t, self.k, self.depth = toks, 0, depth
@@ -531,7 +540,7 @@ class Parser:
             self._expect_word("done")
             return Group(body, False, self._redirects())
         if word in ("for", "select"):
-            return self._for()
+            return self._for(word)
         if word == "case":
             return self._case()
         if word == "function":
@@ -581,9 +590,10 @@ class Parser:
         self._expect_word("fi")
         return Group(body, False, self._redirects())
 
-    def _for(self) -> Group:
+    def _for(self, keyword: str = "for") -> Group:
         self.k += 1
         body: list = []
+        name, words = "", []
         if self._is(self._peek(), "op", "("):
             words = []
             while not (self._is(self._peek(), "op", ")") and self._is(self._peek(1), "op", ")")):
@@ -608,16 +618,22 @@ class Parser:
                     words.append(self._peek().word)
                     self.k += 1
             body.append(Pipeline([Simple(words, data=True)]))
-            if NAME.fullmatch(name):
-                # one word (a glob, say) gives the loop variable a known shape; several stay unknown
-                value = words[0] if len(words) == 1 else Word([Part("var", "?")])
-                body.append(Pipeline([Simple([], assigns=[(name, value)])]))
         while self._is(self._peek(), "op", ";") or self._is(self._peek(), "op", "\n"):
             self.k += 1
         self._expect_word("do")
-        body += self.list({"done"})
+        inner = self.list({"done"})
         self._expect_word("done")
-        return Group(body, False, self._redirects())
+        each = None
+        if NAME.fullmatch(name):
+            # one word (a glob, say) gives the loop variable a known shape; several stay unknown
+            value = words[0] if len(words) == 1 else Word([Part("var", "?")])
+            body.append(Pipeline([Simple([], assigns=[(name, value)])]))
+            if keyword == "for" and 1 < len(words) <= MAX_UNROLLED and all(map(written_out, words)):
+                # written out word by word: the body can be judged once per word, as if typed out (#342);
+                # never `select`, whose variable is what the user types
+                each = [[Pipeline([Simple([], assigns=[(name, word)])])] + inner for word in words]
+        body += inner
+        return Group(body, False, self._redirects(), each)
 
     def _case(self) -> Group:
         self.k += 1
