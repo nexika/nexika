@@ -95,6 +95,18 @@ def raised_upstream(failures: list[dict], upstream: list[dict]) -> dict:
     return first
 
 
+# A branch that only updates dependencies: Dependabot's and Renovate's.
+DEPENDENCY_BRANCH = re.compile(r"^(?:dependabot/(?:npm_and_yarn|npm)/|renovate/)")
+
+
+def crashed_in_dependency(failures: list[dict], raised: list[dict]) -> dict:
+    """The first crash inside a dependency's code, when every failing job has one (#261): {} otherwise."""
+    jobs = {r.get("job") for r in raised}
+    if not raised or any(f.get("job") not in jobs for f in failures):
+        return {}
+    return raised[0]
+
+
 def classify(facts: dict) -> dict:
     """{kind, detail, confidence, evidence} from what triage found."""
     failures = facts.get("failures") or []
@@ -105,9 +117,14 @@ def classify(facts: dict) -> dict:
                if not (s["kind"] == "cancelled" and a_job_failed)}
     evidence: list[str] = []
     if facts.get("no_jobs"):
-        evidence.append("The run has no jobs, so no log: the workflow file did not parse, or no job could "
-                        f"start. GitHub's message is on the run page: {facts.get('url') or '-'}")
-        return {"kind": "setup", "detail": {"jobs": 0}, "confidence": "medium", "evidence": evidence}
+        # Only what tabib can see: no guessed cause (#263, the maintainer's decision).
+        evidence.append("The CI run has no jobs or logs, so there is nothing to diagnose.")
+        if facts.get("event"):
+            evidence.append(f"Event: {facts['event']}.")
+        if facts.get("from_fork"):
+            evidence.append("The run is for a pull request from a fork.")
+        evidence.append(f"Run page: {facts.get('url') or '-'}")
+        return {"kind": "unknown", "detail": {"jobs": 0}, "confidence": "low", "evidence": evidence}
     if facts.get("log_gone"):
         evidence.append("The run's log has expired: GitHub keeps logs for about 90 days.")
         return {"kind": "unknown", "detail": {"log": "expired"}, "confidence": "low", "evidence": evidence}
@@ -142,6 +159,16 @@ def classify(facts: dict) -> dict:
     if not failures and infra:
         evidence += [f"{k}: {signals[k]}" for k in infra]
         return {"kind": "infra", "detail": {"signal": infra[0]}, "confidence": "medium", "evidence": evidence}
+    own_run = facts.get("from_fork") is False or (
+        facts.get("from_fork") is None and not str(facts.get("event") or "").startswith("pull_request"))
+    no_permission = "auth" in signals and "not accessible by integration" in signals["auth"].lower()
+    if not failures and ("rules" in signals or (no_permission and own_run)):
+        # The repository's own run: its token lacks a permission, or a branch rule stops it (#262).
+        evidence.append(f"The workflow's token cannot do this (permissions: or a branch rule): "
+                        f"{signals.get('rules') or signals['auth']}")
+        evidence.append("A re-run fails the same way: give the job the permission it needs, or change "
+                        "the rule.")
+        return {"kind": "setup", "detail": {}, "confidence": "medium", "evidence": evidence}
     if not failures and "auth" in signals:
         evidence.append(f"credentials: {signals['auth']}")
         if facts.get("event") == "pull_request" and facts.get("from_fork"):
@@ -160,6 +187,16 @@ def classify(facts: dict) -> dict:
                             f"{', '.join(repr(name) for name in failed[:3])} failed; the other jobs passed.")
         return {"kind": "dependency", "detail": {"package": upstream["package"]}, "confidence": "medium",
                 "evidence": evidence}
+    crashed = crashed_in_dependency(failures, facts.get("raised") or [])
+    dependency_branch = bool(DEPENDENCY_BRANCH.match(facts.get("branch") or ""))
+    if crashed and (facts.get("lock_changed") or dependency_branch):
+        evidence.append(f"{crashed['error']} raised inside {crashed['package']} ({crashed['place']}), "
+                        f"not in the project's code: {crashed['message']}")
+        evidence.append("Dependency files changed since the last green run." if facts.get("lock_changed")
+                        else f"The branch {facts.get('branch')} only updates dependencies (dependabot or "
+                        "renovate).")
+        return {"kind": "dependency", "detail": {"package": crashed["package"]}, "confidence": "medium",
+                "evidence": evidence}
     missing = facts.get("missing_modules") or []   # modules the project itself does not have
     if "dependency" in signals or missing or (facts.get("lock_changed") and any(
             "No module named" in f["message"] or "Cannot find module" in f["message"] for f in failures)):
@@ -174,12 +211,15 @@ def classify(facts: dict) -> dict:
                 "confidence": "medium", "evidence": evidence}
     only = matrix_only(facts.get("jobs") or [])
     what = failures[0]["kind"] if failures else ""
-    if only:
+    if only and failures:   # a matrix value names where a known failure happens, not a cause (#255)
         evidence.append(f"Only the jobs with {only} failed; the same job passed with other values.")
         return {"kind": "matrix", "detail": {"value": only, "count": len(failures), "what": what},
                 "confidence": "medium", "evidence": evidence}
     if failures:
         evidence += [f"{f['test'] or f['file']}: {f['message']}" for f in failures[:3]]
+        if all(f.get("timeout") for f in failures):
+            evidence.append("Each failing test hit the test runner's own time limit: a slow or hung test, "
+                            "or a race; a re-run tells which.")
         if "segfault" in signals:
             evidence.append(f"The process crashed (a segmentation fault): {signals['segfault']}")
         # A test failing in N jobs is one failure, "in N jobs" (#175).
