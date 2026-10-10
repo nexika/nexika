@@ -251,6 +251,12 @@ class Ctx:
         # remotes this command added or pointed elsewhere (remote add, set-url, config remote.x.url),
         # shared with every child; "*" when it changed where any push goes (insteadOf, pushDefault) (#351)
         self.repointed: set[str] = set()
+        # what outlasts this command, for the session to remember (#357), shared with every child:
+        # remotes it added or pointed elsewhere in the repository's config ("*": a rewrite rule that
+        # moves every remote), and files it filled with the whole environment or a secret
+        self.moved_remotes: set[str] = set()
+        self.staged: set[str] = set()
+        self.session_remotes: frozenset = frozenset()  # remotes moved earlier in the session
         self.cautious = False  # the session read text that tried to give orders: computed paths ask
         # loop bodies one command may judge word by word, shared with every child: nested loops would
         # multiply the work, and a slow check is no check (#342)
@@ -273,6 +279,15 @@ class Ctx:
         self.findings.append(Finding(cls, reason, target))
         if cls in ("secret-read", "egress-secret"):
             self.marks.add("secret")
+
+    def stage(self, path: str | None) -> None:
+        """`path` now holds the whole environment or a secret: sending it later sends that (#357)."""
+        where = self.where
+        if not path or UNKNOWN in path or path in (*where.trees(), *where.temps) or where.critical(path):
+            return  # never a whole project, home or temporary folder: it would make every read a secret
+        if where.place(path, writing=True) not in ("null", "unknown"):
+            self.staged.add(path)
+            self.where.staged.add(path)
 
     def forget(self, args: bool = False) -> None:
         """Something haris does not follow (a function, eval, source) may have changed the variables."""
@@ -406,7 +421,7 @@ def write_paths(values_: list[Arg], ctx: Ctx, verb: str = "writes to") -> None:
             continue
         for path, contents in targets(value, ctx):
             path = path or (contents + "/_" if contents else None)
-            place = ctx.where.place(path)
+            place = ctx.where.place(path, writing=True)
             if place == "null":
                 continue
             if place == "unknown":

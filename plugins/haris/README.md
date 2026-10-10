@@ -48,7 +48,11 @@ hide the target.
 - **Data leaving the machine:** what `curl`, `wget`, `scp`, `rsync`, `nc`, `ssh`, `gh`, web
   searches, web fetches and MCP tools send is checked for secrets (the same rules as hafiz's
   redaction, in a copy a test keeps identical). A secret file, a secret read by another command
-  (`cat .env | curl -d @-`, `$(cat ~/.ssh/id_rsa)`) or a literal key is **refused**.
+  (`cat .env | curl -d @-`, `$(cat ~/.ssh/id_rsa)`) or a literal key is **refused**. So is a
+  file an earlier command in the session filled with the whole environment or a secret (`env >
+  /tmp/e`, `cp ~/.aws/credentials /tmp/c`, `env | tee f`): sending it later is sending the secret.
+  A push to a remote added or pointed at a new address earlier in the session asks, like one
+  added in the same command.
 - **Persistence:** shell profiles, `crontab`, launchd, systemd, `.git/hooks` and `.git/config`,
   git settings that run programs (`core.hooksPath`, `core.pager`, `!` aliases), Claude Code
   settings, hooks and plugins, `~/.local/bin`, PowerShell profiles: refused.
@@ -198,7 +202,8 @@ writes in the same folder outside the project, the ask offers that whole folder 
 ## Data
 
 In `~/.claude/nexika/haris/` (`HARIS_HOME` moves it), owner-only (folders 0700, files 0600):
-`config.json`, `sessions/<id>.json` (taint and session approvals, kept 7 days),
+`config.json`, `sessions/<id>.json` (taint, session approvals, and the names of remotes moved and
+paths of files staged with a secret in this session, never their contents; kept 7 days),
 `approvals.json` (`--project` approvals), `audit.jsonl` (every ask, refusal, approval,
 injection warning and ask let pass in an unattended session; secrets in commands replaced with `[secret]`; rotated at 1 MB) and
 `active/<id>`. Nothing is sent anywhere.
@@ -219,8 +224,8 @@ injection warning and ask let pass in an unattended session; secrets in commands
 ## Speed and testing
 
 Every check is pure Python (stdlib only, 3.10+), with no network and no AI call; it runs git
-only for `git commit`, `reset --hard` and `checkout`/`restore` (with every program-running git
-option switched off). `tests/haris_corpus.tsv` holds 758 adversarial and ordinary commands
+only for `git commit`, `reset --hard`, `checkout`/`restore`, and a `git push` that names no remote
+after the session moved one (with every program-running git option switched off). `tests/haris_corpus.tsv` holds 758 adversarial and ordinary commands
 (464 of them dangerous) with their expected decisions, and CI fails unless no dangerous
 command is missed, fewer than 2% of ordinary commands are blocked, and checks stay under 50 ms.
 The [haris benchmark](../../benchmarks/haris/README.md) adds real commands from the agent benchmark

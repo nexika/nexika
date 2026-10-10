@@ -21,10 +21,11 @@ def _git(cwd, *args):
     subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True)
 
 
-def build_world(base):
-    """A home folder with keys and shell profiles, and a project inside it on branch feat/x."""
+def build_world(base, name="proj"):
+    """A home folder with keys and shell profiles, and a project inside it on branch feat/x (in
+    ~/work/<name>: a benchmark session that changes its project gets one of its own)."""
     home = base / "home"
-    project = home / "work" / "proj"
+    project = home / "work" / name
     for d in ("src", "build", "node_modules/.bin", "scripts", "tests"):
         (project / d).mkdir(parents=True, exist_ok=True)
     files = {

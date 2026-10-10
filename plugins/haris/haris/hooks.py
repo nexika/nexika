@@ -61,6 +61,7 @@ def on_pre_tool_use(event: dict) -> str:
         decision = policy.Decision(c.ASK, "error", f"haris hit an internal error ({type(exc).__name__}) "
                                                    f"and could "
                                                    "not check this, so it asks you instead.")
+    changed = policy.remember(data, decision)  # remotes moved and files staged with a secret (#357)
     if decision.verdict in (c.ASK, c.DENY) or decision.unattended:
         entry = {"session": session[:8], "project": os.path.basename(root), "tool": event.get("tool_name"),
                  "decision": "unattended" if decision.unattended == "passed" else decision.verdict,
@@ -69,11 +70,11 @@ def on_pre_tool_use(event: dict) -> str:
         if decision.unattended:
             entry["unattended"] = cfg["unattended_why"]
         state.log(entry)
-        changed = policy.remember_ask(data, decision)
+        changed = policy.remember_ask(data, decision) or changed
         if decision.unattended:
-            changed = remember_unattended(data, decision.unattended, _detail(event))
-        if changed:
-            state.save_session(session, {**data, "project": data.get("project") or root})
+            changed = remember_unattended(data, decision.unattended, _detail(event)) or changed
+    if changed:
+        state.save_session(session, {**data, "project": data.get("project") or root})
     if cfg["mode"] == "watch" or decision.verdict == c.PASS:
         return ""
     return _out("PreToolUse", permissionDecision=decision.verdict,
