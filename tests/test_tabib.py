@@ -578,6 +578,106 @@ def test_a_frame_outside_the_test_file_gives_the_test_no_line():
     assert [(f["file"], f["line"]) for f in parse.failures(placed)] == [("tests/test_black.py", 2104)]
 
 
+# expressjs/express runs 37533322411 and 34755690134 (#366): the test computes a cookie's expiry, the server
+# computes it again a moment later, across a second boundary. Only that one job failed.
+CLOCK_RACES = [
+    ("Run tests (windows-latest, 24)", [
+        "  1 failing",
+        "",
+        "  1) res",
+        "       .clearCookie(name, options)",
+        "         should set both maxAge and expires when passed:",
+        '     Error: expected "Set-Cookie" of "sid=; Max-Age=10; Path=/; Expires=Tue, 06 Oct 2026 21:22:43 GMT", '
+        'got "sid=; Max-Age=10; Path=/; Expires=Tue, 06 Oct 2026 21:22:44 GMT"',
+        "      at Context.<anonymous> (test\\res.clearCookie.js:64:8)",
+        "      at process.processImmediate (node:internal/timers:574:21)",
+    ]),
+    ("Run tests (windows-latest, 0.10)", [
+        "  1 failing",
+        "",
+        "  1) res .clearCookie(name, options) should set both maxAge and expires when passed:",
+        '     Error: expected "Set-Cookie" of "sid=; Max-Age=10; Path=/; Expires=Sun, 13 Sep 2026 11:57:31 GMT", '
+        'got "sid=; Max-Age=10; Path=/; Expires=Sun, 13 Sep 2026 11:57:32 GMT"',
+        "      at Test._assertHeader (node_modules\\supertest\\lib\\test.js:231:12)",
+        "      at net.js:1277:10",
+    ]),
+]
+
+
+def express_matrix(failed: str) -> list[dict]:
+    """express's test matrix: two systems, several Node versions, every value on both; one job failed."""
+    names = [f"Run tests ({system}, {node})" for system in ("ubuntu-latest", "windows-latest")
+             for node in ("0.10", "16", "22", "24")]
+    return jobs(("Lint", "success"), *[(n, "failure" if n == failed else "success") for n in names])
+
+
+def mocha_failures(job: str, lines: list[str]) -> list[dict]:
+    return [{**f, "job": job} for f in parse.read_log(gh_log(job, lines))[job]["failures"]]
+
+
+@pytest.mark.parametrize("job,lines", CLOCK_RACES)
+def test_a_clock_race_in_one_job_is_flaky(job, lines):
+    found = mocha_failures(job, lines)
+    assert [f["framework"] for f in found] == ["mocha"]
+    verdict = classify.classify({"failures": found, "jobs": express_matrix(job)})
+    assert (verdict["kind"], verdict["confidence"]) == ("flaky", "low")
+    assert any("clock race" in e and "1 second" in e for e in verdict["evidence"])
+    assert i18n.label(verdict["kind"], verdict["detail"], "en") == "likely flaky: a clock race in one job only"
+
+
+def _with_message(found: list[dict], old: str, new: str) -> list[dict]:
+    return [{**f, "message": f["message"].replace(old, new)} for f in found]
+
+
+def test_a_time_difference_that_is_not_a_clock_race_stays_code():
+    job, lines = CLOCK_RACES[0]
+    found = mocha_failures(job, lines)
+    matrix = express_matrix(job)
+
+    def kind(failures, jobs_=matrix):
+        return classify.classify({"failures": failures, "jobs": jobs_})["kind"]
+
+    # An hour off: a time-zone bug, not a race.
+    assert kind(_with_message(found, "21:22:44 GMT\"", "22:22:43 GMT\"")) == "code"
+    # A minute off: too slow for a second boundary.
+    assert kind(_with_message(found, "21:22:44 GMT\"", "21:23:44 GMT\"")) == "code"
+    # One second off, but the cookie's value differs too: a real difference beside the time.
+    assert kind(_with_message(found, "got \"sid=;", "got \"sid=abc;")) == "code"
+    # The same time on both sides: whatever differs, it is not the clock.
+    assert kind(_with_message(found, "21:22:44 GMT\"", "21:22:43 GMT\"")) == "code"
+    # A real bug in one job, with no time in it.
+    assert kind(_with_message(found, found[0]["message"], 'Error: expected 200 "OK", got 404 "Not Found"')) == "code"
+    # A clock race beside a real failure in the same job.
+    other = {**found[0], "test": "res .send() should send a body", "message": "Error: expected 200, got 500"}
+    assert kind(found + [other]) == "code"
+    # The same race in two jobs that share Node 24: not one job of the matrix.
+    two = [(n, "failure" if n.endswith(", 24)") else "success") for n in (j["name"] for j in matrix)]
+    both = found + [{**found[0], "job": "Run tests (ubuntu-latest, 24)"}]
+    assert kind(both, jobs(*two)) == "matrix"
+    # Outside a matrix: no sibling passed, so nothing says the code is fine.
+    assert kind(found, jobs((job, "failure"))) == "code"
+
+
+@pytest.mark.parametrize("message", [
+    "AssertionError: assert '2026-10-06T21:22:43Z' == '2026-10-06T21:22:44Z'",
+    "AssertionError: expected 2026-10-06 21:22:43.998 to equal 2026-10-06 21:22:45.001",
+    "Error: expected 'updated at Tue, 06 Oct 2026 21:22:59 GMT' to equal 'updated at Tue, 06 Oct 2026 21:23:00 GMT'",
+])
+def test_clock_race_reads_iso_and_http_dates(message):
+    assert classify.clock_race(message) in (1, 2)
+
+
+@pytest.mark.parametrize("message", [
+    "AssertionError: assert '2026-10-06T21:22:43Z' == '2026-10-06T22:22:43Z'",
+    "AssertionError: assert '2026-10-06T21:22:43Z' == '2026-10-06T21:22:43+01:00'",
+    "AssertionError: assert 'a 2026-10-06T21:22:43Z' == 'b 2026-10-06T21:22:44Z'",
+    "Error: created 2026-10-06T21:22:43Z, expected 41 == 42",
+    "Error: expected 200, got 404",
+])
+def test_clock_race_needs_two_times_a_second_or_two_apart_and_nothing_else(message):
+    assert classify.clock_race(message) == 0
+
+
 @pytest.mark.parametrize("facts,kind", [
     ({"failures": FAIL, "same_commit_passed": 99}, "flaky"),
     ({"jobs": jobs(("test", "cancelled"), ("lint", "success"))}, "infra"),
