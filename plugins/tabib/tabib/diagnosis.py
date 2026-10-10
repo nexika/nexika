@@ -49,12 +49,14 @@ def rerun_command(run: dict) -> str:
     return f"gh run rerun {int(run['id'])} --failed"
 
 
-def _gather(log: str) -> tuple[list[dict], list[dict], list[str], dict, list[str], list[str], list[dict]]:
-    failures, signals, errors, excerpts, frames, missing, raised = [], [], [], {}, [], [], []
+def _gather(log: str) -> tuple[list[dict], list[dict], list[str], dict, list[str], list[str], list[dict],
+                              list[dict]]:
+    failures, signals, errors, excerpts, frames, missing, raised, crashed = [], [], [], {}, [], [], [], []
     seen = set()
     for job, found in parse.read_log(log).items():
         missing += [m for m in found["missing"] if m not in missing]
         raised += [{**u, "job": job, "message": secrets.redact(u["message"])} for u in found["upstream"]]
+        crashed += [{**r, "job": job, "message": secrets.redact(r["message"])} for r in found["raised"]]
         for f in found["failures"]:
             failures.append({**f, "job": job, "message": secrets.redact(f["message"])})
         for s in found["signals"]:
@@ -67,7 +69,7 @@ def _gather(log: str) -> tuple[list[dict], list[dict], list[str], dict, list[str
             needles = [f["test"].split("::")[-1] or f["file"] for f in found["failures"][:4]]
             needles += [s["line"][:60] for s in found["signals"][:2]]
             excerpts[job or "log"] = secrets.redact(parse.excerpt(found["lines"], needles))
-    return failures[:50], signals, errors[:12], excerpts, frames[:30], missing[:10], raised[:20]
+    return failures[:50], signals, errors[:12], excerpts, frames[:30], missing[:10], raised[:20], crashed[:20]
 
 
 def places(failures: list[dict], frames: list[str]) -> list[tuple[str, int, int]]:
@@ -124,7 +126,7 @@ def triage(info: dict, run_id: int | None = None, refresh: bool = False) -> dict
             if not forge.EXPIRED.search(str(off)):
                 raise
             log_gone = True
-    failures, signals, errors, excerpts, frames, missing, raised = _gather(log)
+    failures, signals, errors, excerpts, frames, missing, raised, crashed = _gather(log)
     fork = forge.from_fork(info, run)
     hist = forge.history(info, run)
     flaky = forge.flaky_tests(info, run, failures) if not hist.get("same_commit_passed") else []
@@ -143,6 +145,7 @@ def triage(info: dict, run_id: int | None = None, refresh: bool = False) -> dict
              "lock_changed": suspects.get("lock_changed"),
              "missing_modules": [m for m in missing if m not in own],
              "upstream": [u for u in raised if u["package"] not in own_packages],
+             "raised": crashed, "branch": run.get("branch") or "",
              "base_failures": forge.base_failures(info, run) if failures else []}
     verdict = classify.classify(facts)
     record = {"schema": SCHEMA, "version": __version__, "created": now(), "repo": info["repo"],

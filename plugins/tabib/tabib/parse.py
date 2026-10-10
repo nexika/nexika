@@ -21,8 +21,9 @@ MAX_LINES = 200_000
 # ------------------------------------------------------------------ signals (outside the code)
 
 SIGNALS = [
-    ("timeout", re.compile(r"(?i)exceeded the maximum execution time|timed? ?out after \d|"
-                           r"job .{0,40}timed out|deadline exceeded")),
+    # The job's or a step's time limit, not a test's own ("'test timed out after 30000ms'", #253).
+    ("timeout", re.compile(r"(?i)exceeded the maximum execution time|(?:job|step|action) .{0,40}timed out|"
+                           r"deadline exceeded")),
     # "Killed" only as the shell or the kernel says it, never inside a test's own message.
     ("oom", re.compile(r"(?i)exit code 137\b|^\s*Killed\s*$|line \d+:\s+\d+ Killed\b|Killed process \d+|"
                        r"heap out of memory|\bMemoryError\b|OOMKilled|cannot allocate memory")),
@@ -48,6 +49,8 @@ SIGNALS = [
                          r"The version '[^']+' with architecture '[^']+' was not found|"   # setup-python
                          r"(?:^|\s)--[a-z][\w-]+ error: invalid value: '|"   # a tool option from the env
                          r"Artifact directory does not exist|Artifact not found for name")),
+    # A branch rule the workflow's token cannot pass (#262): a re-run fails the same way.
+    ("rules", re.compile(r"(?i)repository rule violations found|\d+ approving reviews? (?:is|are) required")),
     ("segfault", re.compile(r"(?i)segmentation (?:fault|violation)|\bSIGSEGV\b|exit code 139\b|"
                             r"Windows fatal exception: access violation")),
     # GitHub prints this after a timeout, a shutdown and a cancel alike: the weakest sign.
@@ -359,6 +362,74 @@ def coverage(lines: list[str]) -> list[dict]:
     return found or [_failure("coverage", "coverage", "coverage", message=unmet)]
 
 
+NODE_BLOCK = re.compile(r"^✖ failing tests:\s*$")
+NODE_AT = re.compile(r"^test at (\S+?):(\d+):\d+\s*$")
+NODE_FAIL = re.compile(r"^\s*✖ (.+?) \(\d+(?:\.\d+)?m?s\)\s*$")
+NODE_FRAME = re.compile(r"\(?(?:file://)?([^\s()]+?\.[cm]?[jt]sx?):(\d+):\d+\)?\s*$")
+NODE_SUBTESTS = re.compile(r"^'?\d+ subtests? failed'?$")
+BORP_FAILED = re.compile(r"^failed: (\S.*?\.[cm]?[jt]sx?) \([\d,.]+ ?m?s\)\s*$")
+
+
+def _checkout_path(path: str) -> str:
+    return CHECKOUT.sub("", path.replace("\\", "/"))
+
+
+def _node_place(body: list[str], file: str, number: int) -> tuple[str, int]:
+    """The first frame of the checkout, in the test's own file when there is one."""
+    places = []
+    for line in body:
+        if (m := NODE_FRAME.search(line.replace("\\", "/"))) and not FOREIGN.search(m.group(1)):
+            places.append((_checkout_path(m.group(1)), int(m.group(2))))
+    same = [p for p in places if file and p[0] == file]
+    return (same or [(file, number)] if file else places or [("", 0)])[0]
+
+
+def node_test(lines: list[str]) -> list[dict]:
+    """Node's built-in test runner (#251): each test of its '✖ failing tests:' block, with its message and
+    the frame in its file; else borp's 'failed: <file>' lines, placed by the frame in that file."""
+    found: list[dict] = []
+    start = next((i for i, line in enumerate(lines) if NODE_BLOCK.match(line.strip())), -1)
+    if start >= 0:
+        at: tuple[str, int] = ("", 0)
+        entry: dict | None = None
+        body: list[str] = []
+
+        def close():
+            if entry is not None and not NODE_SUBTESTS.match(entry["message"]):
+                entry["file"], entry["line"] = _node_place(body, *at)
+                found.append(entry)
+
+        for line in lines[start + 1:]:
+            if line.startswith("##["):
+                break
+            if m := NODE_AT.match(line.strip()):
+                close()
+                entry, body, at = None, [], (_checkout_path(m.group(1)), int(m.group(2)))
+            elif (m := NODE_FAIL.match(line)) and not line.startswith("    "):
+                close()
+                name = m.group(1)
+                if "/" in name or "\\" in name:   # a file that failed as a whole
+                    name = _checkout_path(name)
+                entry, body = _failure("node:test", "tests", name), []
+            elif entry is not None:
+                body.append(line)
+                if not entry["message"] and line.strip():
+                    entry["message"] = _short(line.strip())
+        close()
+        if found:
+            return found
+    for i, line in enumerate(lines):
+        if not (m := BORP_FAILED.match(line.strip())):
+            continue
+        file = _checkout_path(m.group(1))
+        after = lines[i + 1:i + 400]
+        message = next((x[len("##[error]"):].strip() for x in after
+                        if x.startswith("##[error]") and "Process completed with exit code" not in x), "")
+        found.append(_failure("borp", "tests", file, file, _node_place(after, file, 0)[1],
+                              message or "failed"))
+    return found
+
+
 MARKDOWNLINT = re.compile(r"^(?:##\[(?:error|warning)\])?(\S+\.(?:md|markdown)):(\d+)(?::\d+)?\s+"
                           r"(?:error\s+)?(MD\d{3}(?:/[\w/-]+)?)\s+(.+)$")
 LYCHEE_PAGE = re.compile(r"^#{2,4} Errors in (\S+)\s*$")
@@ -504,6 +575,10 @@ def crash(lines: list[str]) -> dict | None:
     return failure
 
 
+# A test runner's own time limit for one test (#253): node:test, jest, pytest-timeout.
+TEST_TIMEOUT = re.compile(r"test timed out after \d|Exceeded timeout of \d|^(?:Failed: )?Timeout >\s?\d")
+
+
 def failures(lines: list[str]) -> list[dict]:
     found: list[dict] = []
     py_lines: dict[str, int] = {}
@@ -617,6 +692,7 @@ def failures(lines: list[str]) -> list[dict]:
     found += generated(lines)
     found += playwright(lines)
     found += coverage(lines)
+    found += node_test(lines)
     found += doc_checks(lines)
     for block in junit_blocks(lines):
         found += junit_xml(block)
@@ -626,6 +702,8 @@ def failures(lines: list[str]) -> list[dict]:
         found.append(crashed)  # the tests stopped with the process; nothing else names the failure
     seen, unique = set(), []
     for f in found:
+        if TEST_TIMEOUT.search(f["message"]):
+            f["timeout"] = True
         key = (f["framework"], f["test"], f["file"], f["line"])
         if key not in seen:
             seen.add(key)
@@ -668,8 +746,13 @@ def helper_crash(lines: list[str]) -> str:
     return ""
 
 
+# A test runner's pass line names a test that passed (#252): "✔ ignores ECONNRESET (19ms)" is no signal.
+PASS_LINE = re.compile(r"^\s*(?:✔|✓|√|ok \d+\b|PASS\b|passed: )|\sPASSED(?:\s|$)")
+
+
 def signals(lines: list[str]) -> list[dict]:
     found = []
+    lines = [line for line in lines if not PASS_LINE.search(line)]
     for kind, pattern in SIGNALS:
         hit = next((line for line in lines if pattern.search(line)), None)
         if hit is None and kind == "setup":
@@ -714,6 +797,25 @@ def upstream(lines: list[str]) -> list[dict]:
     return found[:10]
 
 
+NODE_ERROR = re.compile(r"^\s*([A-Z]\w*Error)(?: \[[\w-]+\])?: (.+)$")
+NODE_MODULE_FRAME = re.compile(r"^\s*at .*node_modules/((?:@[\w.-]+/)?[\w.-]+)/(\S+?:\d+)")
+
+
+def raised(lines: list[str]) -> list[dict]:
+    """JavaScript errors whose innermost frame is inside node_modules/<package>/ (#261): a crash in a
+    dependency's own code. Not an assertion: an assertion library throws what the test asked it to."""
+    found: list[dict] = []
+    for i, line in enumerate(lines[:-1]):
+        if not (m := NODE_ERROR.match(line)) or "Assertion" in m.group(1):
+            continue
+        if frame := NODE_MODULE_FRAME.match(lines[i + 1].replace("\\", "/")):
+            item = {"package": frame.group(1), "place": f"{frame.group(1)}/{frame.group(2)}",
+                    "error": m.group(1), "message": _short(m.group(2))}
+            if item not in found:
+                found.append(item)
+    return found[:10]
+
+
 MISSING_MODULE = re.compile(r"No module named '?([\w.]+)'?|Cannot find module '([^'./][^']*)'")
 
 
@@ -729,12 +831,13 @@ def missing_modules(lines: list[str]) -> list[str]:
 
 
 def read_log(text: str) -> dict:
-    """{job: {failures, signals, errors, frames, missing, upstream, lines}} for each job in a failed log."""
+    """{job: {failures, signals, errors, frames, missing, upstream, raised, lines}} for each job in a failed
+    log."""
     out = {}
     for job, lines in split_jobs(text).items():
         out[job] = {"failures": failures(lines), "signals": signals(lines), "errors": errors(lines),
                     "frames": frames(lines), "missing": missing_modules(lines),
-                    "upstream": upstream(lines), "lines": lines}
+                    "upstream": upstream(lines), "raised": raised(lines), "lines": lines}
     return out
 
 
