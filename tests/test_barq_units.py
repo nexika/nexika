@@ -586,6 +586,44 @@ def test_a_symbol_without_a_closing_brace_is_marked_partial():
     assert sym.partial
 
 
+# ---------------------------------------------------------------- ESLint stylish (#269)
+
+
+def test_eslint_stylish_keeps_file_per_finding():
+    blocks = "".join(
+        f"/work/lib/f{i}.js\n"
+        f"  436:1   warning  Unexpected var, use let or const instead             no-var\n"
+        f"  437:7   error    'unused' is assigned a value but never used          no-unused-vars\n"
+        f"  438:17  error    Expected '===' and instead saw '=='                  eqeqeq\n\n"
+        for i in range(29))
+    text = ("\n> fastify@6.0.0 lint:eslint\n> eslint\n\n\n" + blocks
+            + "✖ 87 problems (58 errors, 29 warnings)\n"
+            "  0 errors and 29 warnings potentially fixable with the `--fix` option.\n")
+    verdict, details, _ = compress.summarize(text, 1, root="/work")
+    assert verdict == "eslint: 87 problems (58 errors, 29 warnings)"
+    findings = details
+    assert len(findings) == 87
+    assert findings[0] == ("lib/f0.js:437:7: error 'unused' is assigned a value but never used"
+                           " (no-unused-vars)")
+    assert "lib/f28.js:438:17: error Expected '===' and instead saw '==' (eqeqeq)" in findings
+    assert all(f.startswith("lib/f") for f in findings)
+    first_warning = next(i for i, f in enumerate(findings) if " warning " in f)
+    assert all(" error " in f for f in findings[:first_warning]) and first_warning == 58
+
+
+def test_eslint_stylish_counts_without_root():
+    verdict, details, _ = summarize("""\
+        /abs/lib/hooks.js
+          435:1   warning  Unexpected var, use let or const instead  no-var
+          438:7   error    'x' is assigned a value but never used    no-unused-vars
+
+        ✖ 2 problems (1 error, 1 warning)
+    """)
+    assert verdict == "eslint: 2 problems (1 error, 1 warning)"
+    assert details.split("\n") == [
+        "/abs/lib/hooks.js:438:7: error 'x' is assigned a value but never used (no-unused-vars)",
+        "/abs/lib/hooks.js:435:1: warning Unexpected var, use let or const instead (no-var)",
+    ]
 # ---------------------------------------------------------------- tstyche (#270)
 
 TSTYCHE_FAILED = """\
