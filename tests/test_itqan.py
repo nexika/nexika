@@ -332,6 +332,25 @@ def test_sql_drop_still_asks_after_a_search(guard, repo):
     assert bash(guard, repo, "grep -c x f && psql -c 'DROP TABLE users'")[:2] == ("ask", "sql-drop")
 
 
+# fastify (#233, cases G99 and G57): publish is read from the words, not from `npm publish` side by side
+@pytest.mark.parametrize("command", [
+    "npm --tag next publish", "pnpm -r publish", "npm -w a publish",
+    "npm --registry https://r.example publish",
+    "yarn npm publish", "pnpm --filter ./packages/a publish --no-git-checks", "npm publish --tag next",
+    "bash -c 'npm --tag next publish'", "npm ci && npm publish",
+])
+def test_npm_publish_asks_with_options_before_it(guard, repo, command):
+    assert bash(guard, repo, command)[:2] == ("ask", "publish-package")
+
+
+@pytest.mark.parametrize("command", [
+    "npm publish --dry-run", "pnpm publish --dry-run -r", "npm pack --dry-run", "npm run publish-docs",
+    "npm view fastify publish", "echo npm publish",
+])
+def test_a_dry_run_or_another_command_publishes_nothing(guard, repo, command):
+    assert bash(guard, repo, command) is None
+
+
 def test_reset_hard_asks_only_when_there_are_changes(guard, repo):
     assert bash(guard, repo, "git reset --hard HEAD") is None
     (repo / "app.py").write_text("changed\n")
