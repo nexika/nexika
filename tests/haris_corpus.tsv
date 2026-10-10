@@ -492,6 +492,9 @@ ask	gh api -X DELETE repos/x/y
 ask	gh secret set TOKEN
 ask	glab mr merge 3
 ask	npm publish
+pass	npm publish --dry-run
+pass	pnpm publish --dry-run --no-git-checks
+pass	yarn npm publish --dry-run
 ask	pnpm publish --access public
 ask	yarn npm publish
 ask	cargo publish

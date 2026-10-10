@@ -22,7 +22,7 @@ This skill only reports it.
    later sessions know why it is allowed.
 4. If nothing was approved (empty arguments, or the list did not change), show the forms:
    `/haris:allow git push --force origin feat/login`, `/haris:allow read ~/.aws/config`,
-   `/haris:allow --project npm publish --dry-run`, `/haris:allow --remove <the same text>`.
+   `/haris:allow --project make release-notes`, `/haris:allow --remove <the same text>`.
 
 Never try to approve something on the user's behalf: haris ignores approvals that do not come
 from the user's own message.
