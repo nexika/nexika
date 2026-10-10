@@ -1,0 +1,1531 @@
+typing	UNKNOWN STEP	2026-07-31T03:21:07.9535558Z typing: commands[0]> mypy
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9936365Z src/flask/testing.py:85: error: "__init__" of "EnvironBuilder" gets multiple
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9937274Z values for keyword argument "path"  [misc]
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9939955Z             super().__init__(base_url=base_url, path=path, *args, **kwargs...
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9940699Z             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9941490Z src/flask/testing.py:85: error: "__init__" of "EnvironBuilder" gets multiple
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9942187Z values for keyword argument "base_url"  [misc]
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9942817Z             super().__init__(base_url=base_url, path=path, *args, **kwargs...
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9943832Z             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9944536Z src/flask/testing.py:95: error: Function is missing a type annotation 
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9945177Z [no-untyped-def]
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9945592Z         def open(self, *args, **kwargs):
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9946043Z         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9946704Z src/flask/testing.py:99: error: Incompatible types in assignment (expression
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9947834Z has type "TestResponse", variable has type "Request")  [assignment]
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9948547Z                 request = super().open(*args, **kwargs)
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9949098Z                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9950078Z src/flask/testing.py:102: error: "FlaskClient" has no attribute "_new_contexts"
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9950800Z  [attr-defined]
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9951156Z             for cm in self._new_contexts:
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9951757Z                       ^~~~~~~~~~~~~~~~~~
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9952316Z src/flask/testing.py:103: error: "FlaskClient" has no attribute
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9952938Z "_context_stack"  [attr-defined]
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9953420Z                 self._context_stack.enter_context(cm)
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9953907Z                 ^~~~~~~~~~~~~~~~~~~
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9954519Z src/flask/testing.py:105: error: "FlaskClient" has no attribute "_new_contexts"
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9955153Z  [attr-defined]
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9955502Z             self._new_contexts.clear()
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9955973Z             ^~~~~~~~~~~~~~~~~~
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9956563Z src/flask/testing.py:109: error: Cannot determine type of "preserve_context" 
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9957196Z [has-type]
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9957864Z             if self.preserve_context:
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9958329Z                ^~~~~~~~~~~~~~~~~~~~~
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9958978Z src/flask/testing.py:121: error: "FlaskClient" has no attribute
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9959636Z "_context_stack"  [attr-defined]
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9960117Z             self._context_stack.close()
+typing	UNKNOWN STEP	2026-07-31T03:21:08.9960574Z             ^~~~~~~~~~~~~~~~~~~
+typing	UNKNOWN STEP	2026-07-31T03:21:09.0058428Z Found 9 errors in 1 file (checked 27 source files)
+typing	UNKNOWN STEP	2026-07-31T03:21:09.0135986Z   evaluation failed :( (2.58 seconds)
+typing	UNKNOWN STEP	2026-07-31T03:21:09.0673893Z ##[error]Process completed with exit code 1.
+typing	UNKNOWN STEP	2026-07-31T03:21:09.0799611Z Post job cleanup.
+typing	UNKNOWN STEP	2026-07-31T03:21:09.1675482Z [command]/usr/bin/git version
+typing	UNKNOWN STEP	2026-07-31T03:21:09.1715046Z git version 2.54.0
+typing	UNKNOWN STEP	2026-07-31T03:21:09.2774147Z Cleaning up orphan processes
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5298952Z ________ ERROR at teardown of TestStreaming.test_streaming_with_context ________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5310054Z tests/conftest.py:79: in leak_detector
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5310670Z     assert not leaks
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5311167Z E   AssertionError: assert not [<AppContext 140229992781200 of flask_test, GET 'http://localhost/?name=World'>]
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5311816Z _ ERROR at teardown of TestStreaming.test_streaming_with_context_as_decorator __
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5312246Z tests/conftest.py:79: in leak_detector
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5312522Z     assert not leaks
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5312983Z E   AssertionError: assert not [<AppContext 140230001640624 of flask_test, GET 'http://localhost/?name=World'>]
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5313625Z _ ERROR at teardown of TestStreaming.test_streaming_with_context_and_custom_close _
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5314049Z tests/conftest.py:79: in leak_detector
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5314304Z     assert not leaks
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5314744Z E   AssertionError: assert not [<AppContext 140230001645584 of flask_test, GET 'http://localhost/?name=World'>]
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5315357Z _________ ERROR at teardown of TestStreaming.test_stream_keeps_session _________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5315761Z tests/conftest.py:79: in leak_detector
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5316018Z     assert not leaks
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5316419Z E   AssertionError: assert not [<AppContext 140229994926704 of flask_test, GET 'http://localhost/'>]
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5316986Z __________ ERROR at teardown of test_bad_request_debug_message[False] __________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5317422Z   + Exception Group Traceback (most recent call last):
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5342616Z     | RuntimeError: Cannot pop this context (<AppContext 140229994926704 of flask_test, GET 'http://localhost/'>), it is not pushed.
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5343162Z     | 
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5343446Z     | The above exception was the direct cause of the following exception:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5343799Z     | 
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5343995Z     | Traceback (most recent call last):
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5344824Z     |   File "/home/runner/work/flask/flask/.tox/py3.14/lib/python3.14/site-packages/_pytest/unraisableexception.py", line 67, in collect_unraisable
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5355047Z     | RuntimeError: Cannot pop this context (<AppContext 140230001645584 of flask_test, GET 'http://localhost/?name=World'>), it is not pushed.
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5355629Z     | 
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5355924Z     | The above exception was the direct cause of the following exception:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5356297Z     | 
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5356495Z     | Traceback (most recent call last):
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5357119Z     |   File "/home/runner/work/flask/flask/.tox/py3.14/lib/python3.14/site-packages/_pytest/unraisableexception.py", line 67, in collect_unraisable
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5357829Z     |     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5358222Z     |     ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5358967Z     | pytest.PytestUnraisableExceptionWarning: Exception ignored while closing generator <generator object stream_with_context.<locals>.generator at 0x7f89d6ca2c40>: None
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5359925Z     | 
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5360122Z     +---------------- 3 ----------------
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5360410Z     | Traceback (most recent call last):
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5360939Z     |   File "/home/runner/work/flask/flask/.tox/py3.14/lib/python3.14/site-packages/flask/helpers.py", line 137, in generator
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5361467Z     |     yield from gen
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5361690Z     | GeneratorExit
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5361889Z     | 
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5362182Z     | During handling of the above exception, another exception occurred:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5362540Z     | 
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5362735Z     | Traceback (most recent call last):
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5363256Z     |   File "/home/runner/work/flask/flask/.tox/py3.14/lib/python3.14/site-packages/flask/helpers.py", line 133, in generator
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5363767Z     |     with ctx:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5363961Z     |          ^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5366987Z     |     raise RuntimeError(f"Cannot pop this context ({self!r}), it is not pushed.")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5367862Z     | RuntimeError: Cannot pop this context (<AppContext 140230001640624 of flask_test, GET 'http://localhost/?name=World'>), it is not pushed.
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5368525Z     | 
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5368930Z     | The above exception was the direct cause of the following exception:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5369644Z     | 
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5370003Z     | Traceback (most recent call last):
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5385512Z ___________________ ERROR at teardown of test_simple_stream ____________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5385904Z tests/conftest.py:79: in leak_detector
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5386168Z     assert not leaks
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5386594Z E   AssertionError: assert not [<AppContext 140229993658512 of flask_test, GET 'http://localhost/'>]
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5387167Z ___________ ERROR at teardown of test_template_filter_with_template ____________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5387667Z .tox/py3.14/lib/python3.14/site-packages/flask/helpers.py:137: in generator
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5388044Z     yield from gen
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5388257Z E   GeneratorExit
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5388378Z 
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5388561Z During handling of the above exception, another exception occurred:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5389036Z .tox/py3.14/lib/python3.14/site-packages/flask/helpers.py:133: in generator
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5389710Z     with ctx:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5389919Z          ^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5390576Z     self.pop(exc_value)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5390896Z .tox/py3.14/lib/python3.14/site-packages/flask/ctx.py:466: in pop
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5391372Z     raise RuntimeError(f"Cannot pop this context ({self!r}), it is not pushed.")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5392055Z E   RuntimeError: Cannot pop this context (<AppContext 140229993658512 of flask_test, GET 'http://localhost/'>), it is not pushed.
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5392534Z 
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5392715Z The above exception was the direct cause of the following exception:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5393192Z .tox/py3.14/lib/python3.14/site-packages/_pytest/runner.py:361: in from_call
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5393590Z     result: TResult | None = func()
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5393847Z                              ^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5398753Z .tox/py3.14/lib/python3.14/site-packages/_pytest/capture.py:905: in pytest_runtest_teardown
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5399173Z     return (yield)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5399707Z             ^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5400135Z .tox/py3.14/lib/python3.14/site-packages/_pytest/unraisableexception.py:188: in pytest_runtest_teardown
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5400636Z     collect_unraisable(item.config)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5401083Z .tox/py3.14/lib/python3.14/site-packages/_pytest/unraisableexception.py:79: in collect_unraisable
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5401528Z     raise errors[0]
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5401910Z .tox/py3.14/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: in collect_unraisable
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5402456Z     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5403263Z E   pytest.PytestUnraisableExceptionWarning: Exception ignored while closing generator <generator object stream_with_context.<locals>.generator at 0x7f89d6d8cd40>: None
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5404202Z __________________ ERROR at teardown of test_iterable_loader ___________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5404696Z .tox/py3.14/lib/python3.14/site-packages/flask/helpers.py:137: in generator
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5405063Z     yield from gen
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5405263Z E   GeneratorExit
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5405391Z 
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5405570Z During handling of the above exception, another exception occurred:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5406026Z .tox/py3.14/lib/python3.14/site-packages/flask/helpers.py:133: in generator
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5406381Z     with ctx:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5406566Z          ^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5407207Z     self.pop(exc_value)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5407511Z .tox/py3.14/lib/python3.14/site-packages/flask/ctx.py:466: in pop
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5407989Z     raise RuntimeError(f"Cannot pop this context ({self!r}), it is not pushed.")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5408716Z E   RuntimeError: Cannot pop this context (<AppContext 140229992781200 of flask_test, GET 'http://localhost/?name=World'>), it is not pushed.
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5409209Z 
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5409615Z The above exception was the direct cause of the following exception:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5410132Z .tox/py3.14/lib/python3.14/site-packages/_pytest/runner.py:361: in from_call
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5410516Z     result: TResult | None = func()
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5410765Z                              ^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5415532Z .tox/py3.14/lib/python3.14/site-packages/_pytest/capture.py:905: in pytest_runtest_teardown
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5415956Z     return (yield)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5416154Z             ^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5416911Z .tox/py3.14/lib/python3.14/site-packages/_pytest/unraisableexception.py:188: in pytest_runtest_teardown
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5417407Z     collect_unraisable(item.config)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5417842Z .tox/py3.14/lib/python3.14/site-packages/_pytest/unraisableexception.py:79: in collect_unraisable
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5418294Z     raise errors[0]
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5418682Z .tox/py3.14/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: in collect_unraisable
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5419231Z     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5420257Z E   pytest.PytestUnraisableExceptionWarning: Exception ignored while closing generator <generator object stream_with_context.<locals>.generator at 0x7f89d6ca0840>: None
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5421048Z =================================== FAILURES ===================================
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5421473Z _________ test_app_tearing_down_with_handled_exception_by_app_handler __________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5421991Z tests/test_appctx.py:110: in test_app_tearing_down_with_handled_exception_by_app_handler
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5422403Z     client.get("/")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5422703Z .tox/py3.14/lib/python3.14/site-packages/werkzeug/test.py:1162: in get
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5423197Z     return self.open(*args, **kw)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5423754Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5424106Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5424346Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5424679Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5425121Z ____________________________ test_context_refcounts ____________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5425498Z tests/test_appctx.py:191: in test_context_refcounts
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5425799Z     res = client.get("/")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5427246Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5427592Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5427828Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5428154Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5428599Z _____________________________ test_robust_teardown _____________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5428972Z tests/test_appctx.py:251: in test_robust_teardown
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5429257Z     client.get()
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5446924Z tests/test_async.py:84: in test_async_route
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5447199Z     response = test_client.get(path)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5448669Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5449019Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5449248Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5449799Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5450250Z _______________________ test_async_error_handler[/error] _______________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5450635Z tests/test_async.py:93: in test_async_error_handler
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5450938Z     response = test_client.get(path)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5451187Z                ^^^^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5452534Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5452880Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5453113Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5453436Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5453883Z _____________________ test_async_error_handler[/bp/error] ______________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5454276Z tests/test_async.py:93: in test_async_error_handler
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5454575Z     response = test_client.get(path)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5454817Z                ^^^^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5456032Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5456401Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5456631Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5456951Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5457513Z _______________________ test_async_before_after_request ________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5457923Z tests/test_async.py:140: in test_async_before_after_request
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5458246Z     test_client.get("/")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5459667Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5460023Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5460255Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5460576Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5461019Z ______________________________ test_options_work _______________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5461381Z tests/test_basic.py:37: in test_options_work
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5461675Z     rv = client.open("/", method="OPTIONS")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5462276Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5462624Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5462863Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5463182Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5463624Z ________________________ test_options_on_multiple_rules ________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5464040Z tests/test_basic.py:51: in test_options_on_multiple_rules
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5464369Z     rv = client.open("/", method="OPTIONS")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5464969Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5465325Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5465564Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5465895Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5466331Z ____________________________ test_method_route[get] ____________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5466696Z tests/test_basic.py:64: in test_method_route
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5466990Z     assert client_method("/").data == b"Hello"
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5467267Z            ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5467579Z .tox/py3.14/lib/python3.14/site-packages/werkzeug/test.py:1162: in get
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5467931Z     return self.open(*args, **kw)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5468476Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5468824Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5469211Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5469825Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5470269Z ___________________________ test_method_route[post] ____________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5470643Z tests/test_basic.py:64: in test_method_route
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5470939Z     assert client_method("/").data == b"Hello"
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5471210Z            ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5471532Z .tox/py3.14/lib/python3.14/site-packages/werkzeug/test.py:1167: in post
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5471909Z     return self.open(*args, **kw)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5472460Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5472810Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5473042Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5473365Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5473810Z ____________________________ test_method_route[put] ____________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5474172Z tests/test_basic.py:64: in test_method_route
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5474594Z     assert client_method("/").data == b"Hello"
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5474853Z            ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5475161Z .tox/py3.14/lib/python3.14/site-packages/werkzeug/test.py:1172: in put
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5475510Z     return self.open(*args, **kw)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5476057Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5476403Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5476635Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5476956Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5477395Z __________________________ test_method_route[delete] ___________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5477764Z tests/test_basic.py:64: in test_method_route
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5478060Z     assert client_method("/").data == b"Hello"
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5478324Z            ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5478642Z .tox/py3.14/lib/python3.14/site-packages/werkzeug/test.py:1177: in delete
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5479011Z     return self.open(*args, **kw)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5479897Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5480260Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5480495Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5480816Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5481251Z ___________________________ test_method_route[patch] ___________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5481615Z tests/test_basic.py:64: in test_method_route
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5481904Z     assert client_method("/").data == b"Hello"
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5482168Z            ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5482504Z .tox/py3.14/lib/python3.14/site-packages/werkzeug/test.py:1182: in patch
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5482867Z     return self.open(*args, **kw)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5483425Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5483776Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5484010Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5484342Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5484796Z _________________ test_provide_automatic_options_attr_disable __________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5485252Z tests/test_basic.py:82: in test_provide_automatic_options_attr_disable
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5485610Z     rv = client.options()
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5487201Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:96: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5487597Z     if isinstance(args[0], werkzeug.wrappers.Request):
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5487894Z                   ^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5488118Z E   IndexError: tuple index out of range
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5488479Z __________________ test_provide_automatic_options_attr_enable __________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5488934Z tests/test_basic.py:99: in test_provide_automatic_options_attr_enable
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5489286Z     rv = client.options()
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5490914Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:96: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5491301Z     if isinstance(args[0], werkzeug.wrappers.Request):
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5491592Z                   ^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5491825Z E   IndexError: tuple index out of range
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5492309Z __________________ test_provide_automatic_options_arg_disable __________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5492761Z tests/test_basic.py:112: in test_provide_automatic_options_arg_disable
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5493114Z     rv = client.options()
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5494553Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:96: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5494937Z     if isinstance(args[0], werkzeug.wrappers.Request):
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5495227Z                   ^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5495462Z E   IndexError: tuple index out of range
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5495816Z ________________ test_provide_automatic_options_method_disable _________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5496275Z tests/test_basic.py:125: in test_provide_automatic_options_method_disable
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5496632Z     rv = client.options()
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5498095Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:96: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5498476Z     if isinstance(args[0], werkzeug.wrappers.Request):
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5498757Z                   ^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5498973Z E   IndexError: tuple index out of range
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5499307Z ___________________________ test_request_dispatching ___________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5499830Z tests/test_basic.py:138: in test_request_dispatching
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5500139Z     assert client.get("/").data == b"GET"
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5500388Z            ^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5500695Z .tox/py3.14/lib/python3.14/site-packages/werkzeug/test.py:1162: in get
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5501042Z     return self.open(*args, **kw)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5501576Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5501923Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5502151Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5502722Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5503220Z _______________________________ test_url_mapping _______________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5503576Z tests/test_basic.py:176: in test_url_mapping
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5503859Z     assert client.get("/").data == b"GET"
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5504246Z            ^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5504548Z .tox/py3.14/lib/python3.14/site-packages/werkzeug/test.py:1162: in get
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5504894Z     return self.open(*args, **kw)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5505432Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5505770Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5506007Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5506331Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5506784Z ____________________________ test_werkzeug_routing _____________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5507165Z tests/test_basic.py:210: in test_werkzeug_routing
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5507482Z     assert client.get("/foo/").data == b"index"
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5507760Z            ^^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5508088Z .tox/py3.14/lib/python3.14/site-packages/werkzeug/test.py:1162: in get
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5508454Z     return self.open(*args, **kw)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5508999Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5509664Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5509894Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5510219Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5510671Z ___________________________ test_endpoint_decorator ____________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5511055Z tests/test_basic.py:230: in test_endpoint_decorator
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5511379Z     assert client.get("/foo/").data == b"index"
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5511651Z            ^^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5511964Z .tox/py3.14/lib/python3.14/site-packages/werkzeug/test.py:1162: in get
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5512319Z     return self.open(*args, **kw)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5512878Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5513224Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5513457Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5513789Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5514228Z ____________________________ test_session_accessed _____________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5514601Z tests/test_basic.py:248: in test_session_accessed
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5514892Z     with client:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5515386Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:109: in __enter__
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5515771Z     if self.preserve_context:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5516005Z        ^^^^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5516343Z E   AttributeError: 'FlaskClient' object has no attribute 'preserve_context'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5516802Z ______________________________ test_session_path _______________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5517165Z tests/test_basic.py:284: in test_session_path
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5517530Z     rv = client.get("/", "http://example.com:8080/foo")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5519137Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5519604Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5519844Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5520176Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5520640Z _____________________ test_session_using_application_root ______________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5521113Z tests/test_basic.py:306: in test_session_using_application_root
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5521622Z     rv = client.get("/", "http://example.com:8080/")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5523228Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5523586Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5523821Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5524151Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5524610Z _____________________ test_session_using_session_settings ______________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5525043Z tests/test_basic.py:332: in test_session_using_session_settings
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5525444Z     rv = client.get("/", "http://www.example.com:8080/test/")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5527185Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5527534Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5527768Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5528101Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5528563Z ____________________ test_session_using_samesite_attribute _____________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5529003Z tests/test_basic.py:365: in test_session_using_samesite_attribute
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5529498Z     rv = client.get("/")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5530942Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5531302Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5531535Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5531861Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5532316Z ______________________ test_session_secret_key_fallbacks _______________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5532742Z tests/test_basic.py:408: in test_session_secret_key_fallbacks
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5533065Z     client.post()
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5534291Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:96: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5534694Z     if isinstance(args[0], werkzeug.wrappers.Request):
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5534997Z                   ^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5535232Z E   IndexError: tuple index out of range
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5535584Z ___________________________ test_session_expiration ____________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5535966Z tests/test_basic.py:434: in test_session_expiration
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5536266Z     rv = client.get("/")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5537678Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5538024Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5538258Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5538716Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5539165Z ___________________________ test_session_stored_last ___________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5539681Z tests/test_basic.py:463: in test_session_stored_last
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5540000Z     assert client.get("/").data == b"None"
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5540260Z            ^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5540563Z .tox/py3.14/lib/python3.14/site-packages/werkzeug/test.py:1162: in get
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5540925Z     return self.open(*args, **kw)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5541474Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5541821Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5542055Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5542383Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5542835Z __________________________ test_session_special_types __________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5543239Z tests/test_basic.py:483: in test_session_special_types
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5543536Z     with client:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5544154Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:109: in __enter__
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5544533Z     if self.preserve_context:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5544768Z        ^^^^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5545112Z E   AttributeError: 'FlaskClient' object has no attribute 'preserve_context'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5545577Z _________________________ test_session_cookie_setting __________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5545978Z tests/test_basic.py:524: in test_session_cookie_setting
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5546287Z     run_test(expect_header=True)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5547385Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:109: in __enter__
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5547765Z     if self.preserve_context:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5547995Z        ^^^^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5548331Z E   AttributeError: 'FlaskClient' object has no attribute 'preserve_context'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5548795Z ___________________________ test_session_vary_cookie ___________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5549179Z tests/test_basic.py:590: in test_session_vary_cookie
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5549624Z     expect("/set")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5551535Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5551896Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5552131Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5552455Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5552911Z __________________________ test_session_refresh_vary ___________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5553295Z tests/test_basic.py:611: in test_session_refresh_vary
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5553607Z     rv = client.get("/login")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5555035Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5555384Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5555625Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5556066Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5556521Z ____________________________ test_extended_flashing ____________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5556896Z tests/test_basic.py:691: in test_extended_flashing
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5557190Z     client.get("/")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5558394Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5558742Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5558979Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5559301Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5559872Z ___________________________ test_request_processing ____________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5560271Z tests/test_basic.py:727: in test_request_processing
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5560570Z     rv = client.get("/").data
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5562132Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5562480Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5562710Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5563032Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5563486Z ___________________ test_request_preprocessing_early_return ____________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5563931Z tests/test_basic.py:754: in test_request_preprocessing_early_return
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5564295Z     rv = client.get("/").data.strip()
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5565743Z .tox/py3.14/lib/python3.14/site-packages/flask/testing.py:102: in open
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5566089Z     for cm in self._new_contexts:
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5566328Z               ^^^^^^^^^^^^^^^^^^
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5566652Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5567094Z ________________________ test_after_request_processing _________________________
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5567496Z tests/test_basic.py:769: in test_after_request_processing
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.5567814Z     resp = client.get("/")
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6209755Z FAILED tests/test_appctx.py::test_app_tearing_down_with_handled_exception_by_app_handler
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6210567Z FAILED tests/test_appctx.py::test_context_refcounts - AttributeError: 'FlaskC...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6211352Z FAILED tests/test_appctx.py::test_robust_teardown - IndexError: tuple index o...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6212135Z FAILED tests/test_async.py::test_async_route[/] - AttributeError: 'FlaskClien...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6212867Z FAILED tests/test_async.py::test_async_route[/home] - AttributeError: 'FlaskC...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6213581Z FAILED tests/test_async.py::test_async_route[/bp/] - AttributeError: 'FlaskCl...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6214304Z FAILED tests/test_async.py::test_async_route[/view] - AttributeError: 'FlaskC...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6215039Z FAILED tests/test_async.py::test_async_route[/methodview] - AttributeError: '...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6215753Z FAILED tests/test_async.py::test_async_error_handler[/error] - AttributeError...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6216474Z FAILED tests/test_async.py::test_async_error_handler[/bp/error] - AttributeEr...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6217245Z FAILED tests/test_async.py::test_async_before_after_request - AttributeError:...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6218042Z FAILED tests/test_basic.py::test_options_work - AttributeError: 'FlaskClient'...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6218805Z FAILED tests/test_basic.py::test_options_on_multiple_rules - AttributeError: ...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6219762Z FAILED tests/test_basic.py::test_method_route[get] - AttributeError: 'FlaskCl...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6220531Z FAILED tests/test_basic.py::test_method_route[post] - AttributeError: 'FlaskC...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6221283Z FAILED tests/test_basic.py::test_method_route[put] - AttributeError: 'FlaskCl...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6222040Z FAILED tests/test_basic.py::test_method_route[delete] - AttributeError: 'Flas...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6222789Z FAILED tests/test_basic.py::test_method_route[patch] - AttributeError: 'Flask...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6223726Z FAILED tests/test_basic.py::test_provide_automatic_options_attr_disable - Ind...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6224505Z FAILED tests/test_basic.py::test_provide_automatic_options_attr_enable - Inde...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6225260Z FAILED tests/test_basic.py::test_provide_automatic_options_arg_disable - Inde...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6226017Z FAILED tests/test_basic.py::test_provide_automatic_options_method_disable - I...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6226787Z FAILED tests/test_basic.py::test_request_dispatching - AttributeError: 'Flask...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6227532Z FAILED tests/test_basic.py::test_url_mapping - AttributeError: 'FlaskClient' ...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6228291Z FAILED tests/test_basic.py::test_werkzeug_routing - AttributeError: 'FlaskCli...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6229060Z FAILED tests/test_basic.py::test_endpoint_decorator - AttributeError: 'FlaskC...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6230019Z FAILED tests/test_basic.py::test_session_accessed - AttributeError: 'FlaskCli...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6230769Z FAILED tests/test_basic.py::test_session_path - AttributeError: 'FlaskClient'...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6231530Z FAILED tests/test_basic.py::test_session_using_application_root - AttributeEr...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6232276Z FAILED tests/test_basic.py::test_session_using_session_settings - AttributeEr...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6233219Z FAILED tests/test_basic.py::test_session_using_samesite_attribute - Attribute...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6233994Z FAILED tests/test_basic.py::test_session_secret_key_fallbacks - IndexError: t...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6234754Z FAILED tests/test_basic.py::test_session_expiration - AttributeError: 'FlaskC...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6235496Z FAILED tests/test_basic.py::test_session_stored_last - AttributeError: 'Flask...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6236232Z FAILED tests/test_basic.py::test_session_special_types - AttributeError: 'Fla...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6236996Z FAILED tests/test_basic.py::test_session_cookie_setting - AttributeError: 'Fl...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6237744Z FAILED tests/test_basic.py::test_session_vary_cookie - AttributeError: 'Flask...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6238494Z FAILED tests/test_basic.py::test_session_refresh_vary - AttributeError: 'Flas...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6239219Z FAILED tests/test_basic.py::test_extended_flashing - AttributeError: 'FlaskCl...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6240175Z FAILED tests/test_basic.py::test_request_processing - AttributeError: 'FlaskC...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6240921Z FAILED tests/test_basic.py::test_request_preprocessing_early_return - Attribu...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6241657Z FAILED tests/test_basic.py::test_after_request_processing - AttributeError: '...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6242423Z FAILED tests/test_basic.py::test_teardown_request_handler - AttributeError: '...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6243165Z FAILED tests/test_basic.py::test_teardown_request_handler_debug_mode - Attrib...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6243976Z FAILED tests/test_basic.py::test_teardown_request_handler_error - AttributeEr...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6244715Z FAILED tests/test_basic.py::test_before_after_request_order - AttributeError:...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6245467Z FAILED tests/test_basic.py::test_error_handling - AttributeError: 'FlaskClien...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6246228Z FAILED tests/test_basic.py::test_error_handling_processing - AttributeError: ...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6309937Z FAILED tests/test_user_error_handler.py::test_error_handler_http_subclass - A...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6310144Z FAILED tests/test_user_error_handler.py::test_error_handler_blueprint - Attri...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6310352Z FAILED tests/test_user_error_handler.py::test_default_error_handler - Attribu...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6310678Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_class_or_code[InternalServerError]
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6311058Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_class_or_code[500]
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6311298Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_generic_http
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6311517Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_generic
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6311718Z FAILED tests/test_views.py::test_basic_view - AttributeError: 'FlaskClient' o...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6311923Z FAILED tests/test_views.py::test_method_based_view - AttributeError: 'FlaskCl...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6312127Z FAILED tests/test_views.py::test_view_patching - AttributeError: 'FlaskClient...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6312331Z FAILED tests/test_views.py::test_view_inheritance - AttributeError: 'FlaskCli...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6312536Z FAILED tests/test_views.py::test_view_decorators - AttributeError: 'FlaskClie...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6312735Z FAILED tests/test_views.py::test_view_provide_automatic_options_attr_disable
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6312948Z FAILED tests/test_views.py::test_view_provide_automatic_options_attr_enable
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6313159Z FAILED tests/test_views.py::test_provide_automatic_options_method_disable - I...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6313358Z FAILED tests/test_views.py::test_implicit_head - AttributeError: 'FlaskClient...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6313561Z FAILED tests/test_views.py::test_explicit_head - AttributeError: 'FlaskClient...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6313759Z FAILED tests/test_views.py::test_endpoint_override - AttributeError: 'FlaskCl...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6313957Z FAILED tests/test_views.py::test_methods_var_inheritance - AttributeError: 'F...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6314156Z FAILED tests/test_views.py::test_multiple_inheritance - AttributeError: 'Flas...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6314355Z FAILED tests/test_views.py::test_remove_method_from_parent - AttributeError: ...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6314558Z FAILED tests/test_views.py::test_init_once - AttributeError: 'FlaskClient' ob...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6314770Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context - Ass...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6314987Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context_as_decorator
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6315225Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context_and_custom_close
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6315426Z ERROR tests/test_helpers.py::TestStreaming::test_stream_keeps_session - Asser...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6315631Z ERROR tests/test_json.py::test_bad_request_debug_message[False] - ExceptionGr...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6315840Z ERROR tests/test_templating.py::test_simple_stream - AssertionError: assert n...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6316058Z ERROR tests/test_templating.py::test_template_filter_with_template - pytest.P...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6316388Z ERROR tests/test_templating.py::test_iterable_loader - pytest.PytestUnraisabl...
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6316550Z ================== 234 failed, 257 passed, 8 errors in 11.01s ==================
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6922524Z py3.14: exit 1 (12.64 seconds) /home/runner/work/flask/flask> pytest -v --tb=short --basetemp=/home/runner/work/flask/flask/.tox/tmp/py3.14 pid=2370
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6927401Z   py3.14: FAIL code 1 (13.19=setup[0.55]+cmd[12.64] seconds)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.6927595Z   evaluation failed :( (13.28 seconds)
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.7371853Z ##[error]Process completed with exit code 1.
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.7493573Z Post job cleanup.
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.8325435Z [command]/usr/bin/git version
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.8363639Z git version 2.54.0
+3.14	UNKNOWN STEP	2026-07-31T03:21:17.9425992Z Cleaning up orphan processes
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5518897Z ________ ERROR at teardown of TestStreaming.test_streaming_with_context ________
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5519679Z tests/conftest.py:79: in leak_detector
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5520393Z     assert not leaks
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5521268Z E   AssertionError: assert not [<AppContext 3255475728368 of flask_test, GET 'http://localhost/?name=World'>]
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5522467Z _ ERROR at teardown of TestStreaming.test_streaming_with_context_as_decorator __
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5523260Z tests/conftest.py:79: in leak_detector
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5523752Z     assert not leaks
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5524574Z E   AssertionError: assert not [<AppContext 3255475700848 of flask_test, GET 'http://localhost/?name=World'>]
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5526012Z _ ERROR at teardown of TestStreaming.test_streaming_with_context_and_custom_close _
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5526820Z tests/conftest.py:79: in leak_detector
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5527287Z     assert not leaks
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5528089Z E   AssertionError: assert not [<AppContext 3255475712688 of flask_test, GET 'http://localhost/?name=World'>]
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5529264Z _________ ERROR at teardown of TestStreaming.test_stream_keeps_session _________
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5530023Z tests/conftest.py:79: in leak_detector
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5530753Z     assert not leaks
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5531492Z E   AssertionError: assert not [<AppContext 3255475715888 of flask_test, GET 'http://localhost/'>]
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5532523Z ___________________ ERROR at teardown of test_simple_stream ____________________
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5533228Z tests/conftest.py:79: in leak_detector
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5533729Z     assert not leaks
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5534464Z E   AssertionError: assert not [<AppContext 3255475744208 of flask_test, GET 'http://localhost/'>]
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5535385Z =================================== FAILURES ===================================
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5536172Z _________ test_app_tearing_down_with_handled_exception_by_app_handler __________
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5537181Z tests/test_appctx.py:110: in test_app_tearing_down_with_handled_exception_by_app_handler
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5537977Z     client.get("/")
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5538573Z .tox/py3.14t/lib/python3.14t/site-packages/werkzeug/test.py:1162: in get
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5539260Z     return self.open(*args, **kw)
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5540527Z .tox/py3.14t/lib/python3.14t/site-packages/flask/testing.py:102: in open
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5541241Z     for cm in self._new_contexts:
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5541674Z               ^^^^^^^^^^^^^^^^^^
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5542807Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5543724Z ____________________________ test_context_refcounts ____________________________
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5544467Z tests/test_appctx.py:191: in test_context_refcounts
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5545027Z     res = client.get("/")
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5547943Z .tox/py3.14t/lib/python3.14t/site-packages/flask/testing.py:102: in open
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5548606Z     for cm in self._new_contexts:
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5549028Z               ^^^^^^^^^^^^^^^^^^
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5549634Z E   AttributeError: 'FlaskClient' object has no attribute '_new_contexts'
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.5550741Z _____________________________ test_robust_teardown _____________________________
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6550390Z FAILED tests/test_testing.py::test_client_pop_all_preserved - AttributeError:...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6550608Z FAILED tests/test_user_error_handler.py::test_error_handler_no_match - Attrib...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6550824Z FAILED tests/test_user_error_handler.py::test_error_handler_subclass - Attrib...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6551031Z FAILED tests/test_user_error_handler.py::test_error_handler_http_subclass - A...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6551243Z FAILED tests/test_user_error_handler.py::test_error_handler_blueprint - Attri...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6551447Z FAILED tests/test_user_error_handler.py::test_default_error_handler - Attribu...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6551778Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_class_or_code[InternalServerError]
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6552047Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_class_or_code[500]
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6552284Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_generic_http
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6552507Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_generic
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6552716Z FAILED tests/test_views.py::test_basic_view - AttributeError: 'FlaskClient' o...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6552929Z FAILED tests/test_views.py::test_method_based_view - AttributeError: 'FlaskCl...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6553142Z FAILED tests/test_views.py::test_view_patching - AttributeError: 'FlaskClient...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6553344Z FAILED tests/test_views.py::test_view_inheritance - AttributeError: 'FlaskCli...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6553553Z FAILED tests/test_views.py::test_view_decorators - AttributeError: 'FlaskClie...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6553763Z FAILED tests/test_views.py::test_view_provide_automatic_options_attr_disable
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6553968Z FAILED tests/test_views.py::test_view_provide_automatic_options_attr_enable
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6554181Z FAILED tests/test_views.py::test_provide_automatic_options_method_disable - I...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6554386Z FAILED tests/test_views.py::test_implicit_head - AttributeError: 'FlaskClient...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6554601Z FAILED tests/test_views.py::test_explicit_head - AttributeError: 'FlaskClient...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6554815Z FAILED tests/test_views.py::test_endpoint_override - AttributeError: 'FlaskCl...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6555020Z FAILED tests/test_views.py::test_methods_var_inheritance - AttributeError: 'F...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6555229Z FAILED tests/test_views.py::test_multiple_inheritance - AttributeError: 'Flas...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6555433Z FAILED tests/test_views.py::test_remove_method_from_parent - AttributeError: ...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6555644Z FAILED tests/test_views.py::test_init_once - AttributeError: 'FlaskClient' ob...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6555987Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context - Ass...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6556210Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context_as_decorator
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6556457Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context_and_custom_close
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6556664Z ERROR tests/test_helpers.py::TestStreaming::test_stream_keeps_session - Asser...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6556977Z ERROR tests/test_templating.py::test_simple_stream - AssertionError: assert n...
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6557144Z ================== 234 failed, 257 passed, 5 errors in 11.92s ==================
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6557587Z     |   File "/home/runner/work/flask/flask/.tox/py3.14t/lib/python3.14t/site-packages/flask/helpers.py", line 133, in generator
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6557669Z     |     with ctx:
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.6557753Z     |          ^^^
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.8135182Z   evaluation failed :( (14.04 seconds)
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.8622731Z ##[error]Process completed with exit code 1.
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.8746234Z Post job cleanup.
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.9634181Z [command]/usr/bin/git version
+3.14t	UNKNOWN STEP	2026-07-31T03:21:19.9679300Z git version 2.54.0
+3.14t	UNKNOWN STEP	2026-07-31T03:21:20.0697942Z Cleaning up orphan processes
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4597138Z ____________________ ERROR collecting tests/test_appctx.py _____________________
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4598002Z .tox/tests-dev/lib/python3.10/site-packages/_pytest/python.py:508: in importtestmodule
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4598704Z     mod = import_path(
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4599573Z .tox/tests-dev/lib/python3.10/site-packages/_pytest/pathlib.py:596: in import_path
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4605608Z     ???
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4605993Z <frozen importlib._bootstrap>:688: in _load_unlocked
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4606561Z     ???
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4607184Z .tox/tests-dev/lib/python3.10/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4607979Z     exec(co, module.__dict__)
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4608455Z tests/test_appctx.py:7: in <module>
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4608930Z     from flask.testing import FlaskClient
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4610042Z E     File "/home/runner/work/flask/flask/.tox/tests-dev/lib/python3.10/site-packages/flask/testing.py", line 78
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4610925Z E       f"/{app_root.lstrip("/")}"
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4611745Z E                            ^
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4613258Z _____________________ ERROR collecting tests/test_basic.py _____________________
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4614341Z .tox/tests-dev/lib/python3.10/site-packages/_pytest/python.py:508: in importtestmodule
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4642146Z     mod = import_path(
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4642849Z .tox/tests-dev/lib/python3.10/site-packages/_pytest/pathlib.py:596: in import_path
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4648260Z     ???
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4648628Z <frozen importlib._bootstrap>:688: in _load_unlocked
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4649611Z     ???
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4650189Z .tox/tests-dev/lib/python3.10/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4650943Z     exec(co, module.__dict__)
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4651362Z tests/test_basic.py:24: in <module>
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4651808Z     from flask.testing import FlaskClient
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4652628Z E     File "/home/runner/work/flask/flask/.tox/tests-dev/lib/python3.10/site-packages/flask/testing.py", line 78
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4653476Z E       f"/{app_root.lstrip("/")}"
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4653860Z E                            ^
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4654889Z __________________ ERROR collecting tests/test_blueprints.py ___________________
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4655533Z tests/test_blueprints.py:3: in <module>
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4656133Z     from werkzeug.http import parse_cache_control_header
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4656858Z .tox/tests-dev/lib/python3.10/site-packages/werkzeug/http.py:1535: in __getattr__
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4657601Z     warnings.warn(
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4658638Z E   DeprecationWarning: The 'parse_cache_control_header' function is deprecated and will be removed in Werkzeug 3.3. Use the 'CacheControl.from_header' method instead.
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4660123Z ____________________ ERROR collecting tests/test_reqctx.py _____________________
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4660972Z .tox/tests-dev/lib/python3.10/site-packages/_pytest/python.py:508: in importtestmodule
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4661666Z     mod = import_path(
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4662268Z .tox/tests-dev/lib/python3.10/site-packages/_pytest/pathlib.py:596: in import_path
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4667558Z     ???
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4667908Z <frozen importlib._bootstrap>:688: in _load_unlocked
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4668370Z     ???
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4668956Z .tox/tests-dev/lib/python3.10/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4669917Z     exec(co, module.__dict__)
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4670315Z tests/test_reqctx.py:12: in <module>
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4670759Z     from flask.testing import FlaskClient
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4671776Z E     File "/home/runner/work/flask/flask/.tox/tests-dev/lib/python3.10/site-packages/flask/testing.py", line 78
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4672587Z E       f"/{app_root.lstrip("/")}"
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4672974Z E                            ^
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4673888Z ____________________ ERROR collecting tests/test_request.py ____________________
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4674623Z .tox/tests-dev/lib/python3.10/site-packages/_pytest/python.py:508: in importtestmodule
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4675222Z     mod = import_path(
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4675741Z .tox/tests-dev/lib/python3.10/site-packages/_pytest/pathlib.py:596: in import_path
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4677746Z     return _bootstrap._gcd_import(name[level:], package, level)
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4678255Z <frozen importlib._bootstrap>:1050: in _gcd_import
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4678647Z     ???
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4679009Z <frozen importlib._bootstrap>:1027: in _find_and_load
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4681688Z     ???
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4682263Z .tox/tests-dev/lib/python3.10/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4682988Z     exec(co, module.__dict__)
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4683442Z tests/test_request.py:6: in <module>
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4683871Z     from flask.testing import FlaskClient
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4684668Z E     File "/home/runner/work/flask/flask/.tox/tests-dev/lib/python3.10/site-packages/flask/testing.py", line 78
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4685478Z E       f"/{app_root.lstrip("/")}"
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4685857Z E                            ^
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4686814Z ____________________ ERROR collecting tests/test_testing.py ____________________
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4687707Z .tox/tests-dev/lib/python3.10/site-packages/_pytest/python.py:508: in importtestmodule
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4688437Z     mod = import_path(
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4689036Z .tox/tests-dev/lib/python3.10/site-packages/_pytest/pathlib.py:596: in import_path
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4689940Z     importlib.import_module(module_name)
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4690714Z /opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4691624Z     return _bootstrap._gcd_import(name[level:], package, level)
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4692238Z <frozen importlib._bootstrap>:1050: in _gcd_import
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4692701Z     ???
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4693084Z <frozen importlib._bootstrap>:1027: in _find_and_load
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4695394Z     ???
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4696007Z .tox/tests-dev/lib/python3.10/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4696767Z     exec(co, module.__dict__)
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4697179Z tests/test_testing.py:11: in <module>
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4697655Z     from flask.testing import EnvironBuilder
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4698530Z E     File "/home/runner/work/flask/flask/.tox/tests-dev/lib/python3.10/site-packages/flask/testing.py", line 78
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4699591Z E       f"/{app_root.lstrip("/")}"
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4700007Z E                            ^
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4701043Z _____________________ ERROR collecting tests/test_views.py _____________________
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4701682Z tests/test_views.py:2: in <module>
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4702538Z     from werkzeug.http import parse_set_header
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4703274Z .tox/tests-dev/lib/python3.10/site-packages/werkzeug/http.py:1535: in __getattr__
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4703953Z     warnings.warn(
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4704970Z E   DeprecationWarning: The 'parse_set_header' function is deprecated and will be removed in Werkzeug 3.3. Use the 'HeaderSet.from_header' method instead.
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4706191Z =========================== short test summary info ============================
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4706764Z ERROR tests/test_appctx.py
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4707152Z ERROR tests/test_basic.py
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4707769Z ERROR tests/test_blueprints.py - DeprecationWarning: The 'parse_cache_control...
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4708463Z ERROR tests/test_reqctx.py
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4708845Z ERROR tests/test_request.py
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4709240Z ERROR tests/test_testing.py
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4710041Z ERROR tests/test_views.py - DeprecationWarning: The 'parse_set_header' functi...
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4710881Z !!!!!!!!!!!!!!!!!!! Interrupted: 7 errors during collection !!!!!!!!!!!!!!!!!!!!
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.4711545Z ============================== 7 errors in 1.24s ===============================
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.5002359Z tests-dev: exit 2 (2.28 seconds) /home/runner/work/flask/flask> pytest -v --tb=short --basetemp=/home/runner/work/flask/flask/.tox/tmp/tests-dev pid=2508
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.5006737Z   tests-dev: FAIL code 2 (6.51=setup[0.55]+cmd[3.68,2.28] seconds)
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.5007194Z   evaluation failed :( (6.61 seconds)
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.5347326Z ##[error]Process completed with exit code 2.
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.5470176Z Post job cleanup.
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.6306478Z [command]/usr/bin/git version
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.6348632Z git version 2.54.0
+Development Versions	UNKNOWN STEP	2026-07-31T03:21:08.7399172Z Cleaning up orphan processes
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4010270Z ________ ERROR at teardown of TestStreaming.test_streaming_with_context ________
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4011075Z tests/conftest.py:79: in leak_detector
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4011556Z     assert not leaks
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4012352Z E   AssertionError: assert not [<AppContext 140207507326608 of flask_test, GET 'http://localhost/?name=World'>]
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4013716Z _ ERROR at teardown of TestStreaming.test_streaming_with_context_as_decorator __
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4014428Z tests/conftest.py:79: in leak_detector
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4014865Z     assert not leaks
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4015854Z E   AssertionError: assert not [<AppContext 140207534764624 of flask_test, GET 'http://localhost/?name=World'>]
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4016663Z _ ERROR at teardown of TestStreaming.test_streaming_with_context_and_custom_close _
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4017113Z tests/conftest.py:79: in leak_detector
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4017386Z     assert not leaks
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4017859Z E   AssertionError: assert not [<AppContext 140207517698160 of flask_test, GET 'http://localhost/?name=World'>]
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4018501Z _________ ERROR at teardown of TestStreaming.test_stream_keeps_session _________
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4018917Z tests/conftest.py:79: in leak_detector
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4019182Z     assert not leaks
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4019602Z E   AssertionError: assert not [<AppContext 140207509173136 of flask_test, GET 'http://localhost/'>]
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4020193Z ______________ ERROR at teardown of TestStreaming.test_async_view ______________
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4020641Z   + Exception Group Traceback (most recent call last):
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4110307Z ___________________ ERROR at teardown of test_simple_stream ____________________
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4110687Z tests/conftest.py:79: in leak_detector
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4110951Z     assert not leaks
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4111355Z E   AssertionError: assert not [<AppContext 140207511908144 of flask_test, GET 'http://localhost/'>]
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4111913Z __________________ ERROR at teardown of test_standard_context __________________
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4112401Z .tox/py3.13/lib/python3.13/site-packages/flask/helpers.py:137: in generator
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4112783Z     yield from gen
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4113059Z E   GeneratorExit
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4113282Z 
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4113622Z During handling of the above exception, another exception occurred:
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4114493Z .tox/py3.13/lib/python3.13/site-packages/flask/helpers.py:133: in generator
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4115356Z     with ctx:
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4115891Z          ^^^
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4116670Z     self.pop(exc_value)
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4116983Z .tox/py3.13/lib/python3.13/site-packages/flask/ctx.py:466: in pop
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4117457Z     raise RuntimeError(f"Cannot pop this context ({self!r}), it is not pushed.")
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4118155Z E   RuntimeError: Cannot pop this context (<AppContext 140207511908144 of flask_test, GET 'http://localhost/'>), it is not pushed.
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4118630Z 
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4118814Z The above exception was the direct cause of the following exception:
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4119303Z .tox/py3.13/lib/python3.13/site-packages/_pytest/runner.py:361: in from_call
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4119697Z     result: TResult | None = func()
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4119951Z                              ^^^^^^
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4124820Z .tox/py3.13/lib/python3.13/site-packages/_pytest/capture.py:905: in pytest_runtest_teardown
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4125241Z     return (yield)
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4125673Z             ^^^^^
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4126183Z .tox/py3.13/lib/python3.13/site-packages/_pytest/unraisableexception.py:188: in pytest_runtest_teardown
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4126679Z     collect_unraisable(item.config)
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4808828Z FAILED tests/test_user_error_handler.py::test_error_handler_subclass - Attrib...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4809033Z FAILED tests/test_user_error_handler.py::test_error_handler_http_subclass - A...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4809243Z FAILED tests/test_user_error_handler.py::test_error_handler_blueprint - Attri...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4809444Z FAILED tests/test_user_error_handler.py::test_default_error_handler - Attribu...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4809774Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_class_or_code[InternalServerError]
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4810038Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_class_or_code[500]
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4810275Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_generic_http
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4810499Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_generic
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4810817Z FAILED tests/test_views.py::test_basic_view - AttributeError: 'FlaskClient' o...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4811026Z FAILED tests/test_views.py::test_method_based_view - AttributeError: 'FlaskCl...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4811235Z FAILED tests/test_views.py::test_view_patching - AttributeError: 'FlaskClient...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4811442Z FAILED tests/test_views.py::test_view_inheritance - AttributeError: 'FlaskCli...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4811655Z FAILED tests/test_views.py::test_view_decorators - AttributeError: 'FlaskClie...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4811860Z FAILED tests/test_views.py::test_view_provide_automatic_options_attr_disable
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4812062Z FAILED tests/test_views.py::test_view_provide_automatic_options_attr_enable
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4812273Z FAILED tests/test_views.py::test_provide_automatic_options_method_disable - I...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4812474Z FAILED tests/test_views.py::test_implicit_head - AttributeError: 'FlaskClient...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4812687Z FAILED tests/test_views.py::test_explicit_head - AttributeError: 'FlaskClient...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4812898Z FAILED tests/test_views.py::test_endpoint_override - AttributeError: 'FlaskCl...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4813100Z FAILED tests/test_views.py::test_methods_var_inheritance - AttributeError: 'F...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4813307Z FAILED tests/test_views.py::test_multiple_inheritance - AttributeError: 'Flas...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4813507Z FAILED tests/test_views.py::test_remove_method_from_parent - AttributeError: ...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4813713Z FAILED tests/test_views.py::test_init_once - AttributeError: 'FlaskClient' ob...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4813927Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context - Ass...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4814155Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context_as_decorator
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4814396Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context_and_custom_close
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4814600Z ERROR tests/test_helpers.py::TestStreaming::test_stream_keeps_session - Asser...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4814815Z ERROR tests/test_helpers.py::TestStreaming::test_async_view - ExceptionGroup:...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4815029Z ERROR tests/test_templating.py::test_simple_stream - AssertionError: assert n...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4815240Z ERROR tests/test_templating.py::test_standard_context - pytest.PytestUnraisab...
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.4815410Z ================== 234 failed, 257 passed, 7 errors in 9.16s ===================
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.5325991Z py3.13: exit 1 (10.70 seconds) /home/runner/work/flask/flask> pytest -v --tb=short --basetemp=/home/runner/work/flask/flask/.tox/tmp/py3.13 pid=2441
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.5330702Z   py3.13: FAIL code 1 (11.18=setup[0.48]+cmd[10.70] seconds)
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.5330945Z   evaluation failed :( (11.24 seconds)
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.5697366Z ##[error]Process completed with exit code 1.
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.5817417Z Post job cleanup.
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.6639872Z [command]/usr/bin/git version
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.6683720Z git version 2.54.0
+3.13	UNKNOWN STEP	2026-07-31T03:21:23.7637552Z Cleaning up orphan processes
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3875860Z ____________________ ERROR collecting tests/test_appctx.py _____________________
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3876644Z .tox/py3.11/lib/python3.11/site-packages/_pytest/python.py:508: in importtestmodule
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3877328Z     mod = import_path(
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3877870Z .tox/py3.11/lib/python3.11/site-packages/_pytest/pathlib.py:596: in import_path
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3883996Z     ???
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3884227Z <frozen importlib._bootstrap>:690: in _load_unlocked
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3884515Z     ???
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3884870Z .tox/py3.11/lib/python3.11/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3885303Z     exec(co, module.__dict__)
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3885575Z tests/test_appctx.py:7: in <module>
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3885861Z     from flask.testing import FlaskClient
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3886476Z E     File "/home/runner/work/flask/flask/.tox/py3.11/lib/python3.11/site-packages/flask/testing.py", line 78
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3886997Z E       f"/{app_root.lstrip("/")}"
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3887267Z E                            ^
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3887919Z _____________________ ERROR collecting tests/test_basic.py _____________________
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3888440Z .tox/py3.11/lib/python3.11/site-packages/_pytest/python.py:508: in importtestmodule
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3888875Z     mod = import_path(
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3889243Z .tox/py3.11/lib/python3.11/site-packages/_pytest/pathlib.py:596: in import_path
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3892945Z     ???
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3893184Z <frozen importlib._bootstrap>:690: in _load_unlocked
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3893610Z     ???
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3894026Z .tox/py3.11/lib/python3.11/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3894473Z     exec(co, module.__dict__)
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3894737Z tests/test_basic.py:24: in <module>
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3895029Z     from flask.testing import FlaskClient
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3895521Z E     File "/home/runner/work/flask/flask/.tox/py3.11/lib/python3.11/site-packages/flask/testing.py", line 78
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3896004Z E       f"/{app_root.lstrip("/")}"
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3896267Z E                            ^
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3897136Z ____________________ ERROR collecting tests/test_reqctx.py _____________________
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3897648Z .tox/py3.11/lib/python3.11/site-packages/_pytest/python.py:508: in importtestmodule
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3898065Z     mod = import_path(
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3898424Z .tox/py3.11/lib/python3.11/site-packages/_pytest/pathlib.py:596: in import_path
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3902210Z     ???
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3902514Z <frozen importlib._bootstrap>:690: in _load_unlocked
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3902806Z     ???
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3903322Z .tox/py3.11/lib/python3.11/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3926764Z     exec(co, module.__dict__)
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3927220Z tests/test_reqctx.py:12: in <module>
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3927645Z     from flask.testing import FlaskClient
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3928388Z E     File "/home/runner/work/flask/flask/.tox/py3.11/lib/python3.11/site-packages/flask/testing.py", line 78
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3929125Z E       f"/{app_root.lstrip("/")}"
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3929534Z E                            ^
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3930521Z ____________________ ERROR collecting tests/test_request.py ____________________
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3931302Z .tox/py3.11/lib/python3.11/site-packages/_pytest/python.py:508: in importtestmodule
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3931940Z     mod = import_path(
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3932528Z .tox/py3.11/lib/python3.11/site-packages/_pytest/pathlib.py:596: in import_path
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3938855Z     ???
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3939222Z <frozen importlib._bootstrap>:690: in _load_unlocked
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3939691Z     ???
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3940247Z .tox/py3.11/lib/python3.11/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3940936Z     exec(co, module.__dict__)
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3941361Z tests/test_request.py:6: in <module>
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3941798Z     from flask.testing import FlaskClient
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3942529Z E     File "/home/runner/work/flask/flask/.tox/py3.11/lib/python3.11/site-packages/flask/testing.py", line 78
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3943036Z E       f"/{app_root.lstrip("/")}"
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3943305Z E                            ^
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3943958Z ____________________ ERROR collecting tests/test_testing.py ____________________
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3944479Z .tox/py3.11/lib/python3.11/site-packages/_pytest/python.py:508: in importtestmodule
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3944909Z     mod = import_path(
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3945273Z .tox/py3.11/lib/python3.11/site-packages/_pytest/pathlib.py:596: in import_path
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3945702Z     importlib.import_module(module_name)
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3946179Z /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/importlib/__init__.py:126: in import_module
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3946999Z     return _bootstrap._gcd_import(name[level:], package, level)
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3947361Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3947683Z <frozen importlib._bootstrap>:1204: in _gcd_import
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3947982Z     ???
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3949613Z     ???
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3949950Z .tox/py3.11/lib/python3.11/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3950383Z     exec(co, module.__dict__)
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3950644Z tests/test_testing.py:11: in <module>
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3950941Z     from flask.testing import EnvironBuilder
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3951636Z E     File "/home/runner/work/flask/flask/.tox/py3.11/lib/python3.11/site-packages/flask/testing.py", line 78
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3952143Z E       f"/{app_root.lstrip("/")}"
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3952405Z E                            ^
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3953049Z _____________________ ERROR collecting tests/test_views.py _____________________
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3953556Z .tox/py3.11/lib/python3.11/site-packages/_pytest/python.py:508: in importtestmodule
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3953967Z     mod = import_path(
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3954318Z .tox/py3.11/lib/python3.11/site-packages/_pytest/pathlib.py:596: in import_path
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3954712Z     importlib.import_module(module_name)
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3955169Z /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/importlib/__init__.py:126: in import_module
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3955695Z     return _bootstrap._gcd_import(name[level:], package, level)
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3956143Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3956718Z <frozen importlib._bootstrap>:1204: in _gcd_import
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3957013Z     ???
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3958782Z     ???
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3959118Z .tox/py3.11/lib/python3.11/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3959543Z     exec(co, module.__dict__)
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3959796Z tests/test_views.py:5: in <module>
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3960080Z     from flask.testing import FlaskClient
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3960563Z E     File "/home/runner/work/flask/flask/.tox/py3.11/lib/python3.11/site-packages/flask/testing.py", line 78
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3961069Z E       f"/{app_root.lstrip("/")}"
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3961340Z E                            ^
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3961934Z =========================== short test summary info ============================
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3962294Z ERROR tests/test_appctx.py
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3962537Z ERROR tests/test_basic.py
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3962766Z ERROR tests/test_reqctx.py
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3962997Z ERROR tests/test_request.py
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3963235Z ERROR tests/test_testing.py
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3963464Z ERROR tests/test_views.py
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3963776Z !!!!!!!!!!!!!!!!!!! Interrupted: 6 errors during collection !!!!!!!!!!!!!!!!!!!!
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.3964167Z ============================== 6 errors in 1.15s ===============================
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.4360994Z py3.11: exit 2 (2.15 seconds) /home/runner/work/flask/flask> pytest -v --tb=short --basetemp=/home/runner/work/flask/flask/.tox/tmp/py3.11 pid=2453
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.4365235Z   py3.11: FAIL code 2 (2.45=setup[0.30]+cmd[2.15] seconds)
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.4365788Z   evaluation failed :( (2.50 seconds)
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.4817748Z ##[error]Process completed with exit code 2.
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.4941775Z Post job cleanup.
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.5816993Z [command]/usr/bin/git version
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.5855666Z git version 2.54.0
+3.11	UNKNOWN STEP	2026-07-31T03:21:00.6884858Z Cleaning up orphan processes
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5777750Z ____________________ ERROR collecting tests/test_appctx.py _____________________
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5778544Z .tox/py3.10/lib/python3.10/site-packages/_pytest/python.py:508: in importtestmodule
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5779169Z     mod = import_path(
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5779679Z .tox/py3.10/lib/python3.10/site-packages/_pytest/pathlib.py:596: in import_path
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5785081Z     ???
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5785405Z <frozen importlib._bootstrap>:688: in _load_unlocked
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5785828Z     ???
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5786547Z .tox/py3.10/lib/python3.10/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5787409Z     exec(co, module.__dict__)
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5787822Z tests/test_appctx.py:7: in <module>
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5788291Z     from flask.testing import FlaskClient
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5789079Z E     File "/home/runner/work/flask/flask/.tox/py3.10/lib/python3.10/site-packages/flask/testing.py", line 78
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5789961Z E       f"/{app_root.lstrip("/")}"
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5790389Z E                            ^
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5791418Z _____________________ ERROR collecting tests/test_basic.py _____________________
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5792264Z .tox/py3.10/lib/python3.10/site-packages/_pytest/python.py:508: in importtestmodule
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5792928Z     mod = import_path(
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5793440Z .tox/py3.10/lib/python3.10/site-packages/_pytest/pathlib.py:596: in import_path
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5798906Z     ???
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5799238Z <frozen importlib._bootstrap>:688: in _load_unlocked
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5799711Z     ???
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5800217Z .tox/py3.10/lib/python3.10/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5800907Z     exec(co, module.__dict__)
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5801312Z tests/test_basic.py:24: in <module>
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5801768Z     from flask.testing import FlaskClient
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5802557Z E     File "/home/runner/work/flask/flask/.tox/py3.10/lib/python3.10/site-packages/flask/testing.py", line 78
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5803356Z E       f"/{app_root.lstrip("/")}"
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5803762Z E                            ^
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5804768Z ____________________ ERROR collecting tests/test_reqctx.py _____________________
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5805560Z .tox/py3.10/lib/python3.10/site-packages/_pytest/python.py:508: in importtestmodule
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5806217Z     mod = import_path(
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5807199Z .tox/py3.10/lib/python3.10/site-packages/_pytest/pathlib.py:596: in import_path
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5811760Z     ???
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5812073Z <frozen importlib._bootstrap>:688: in _load_unlocked
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5812891Z     ???
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5813548Z .tox/py3.10/lib/python3.10/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5844526Z     exec(co, module.__dict__)
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5845033Z tests/test_reqctx.py:12: in <module>
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5845931Z     from flask.testing import FlaskClient
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5846849Z E     File "/home/runner/work/flask/flask/.tox/py3.10/lib/python3.10/site-packages/flask/testing.py", line 78
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5847558Z E       f"/{app_root.lstrip("/")}"
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5847931Z E                            ^
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5848845Z ____________________ ERROR collecting tests/test_request.py ____________________
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5849583Z .tox/py3.10/lib/python3.10/site-packages/_pytest/python.py:508: in importtestmodule
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5850187Z     mod = import_path(
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5850688Z .tox/py3.10/lib/python3.10/site-packages/_pytest/pathlib.py:596: in import_path
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5855486Z     ???
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5857080Z <frozen importlib._bootstrap>:688: in _load_unlocked
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5857495Z     ???
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5858032Z .tox/py3.10/lib/python3.10/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5858632Z     exec(co, module.__dict__)
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5858995Z tests/test_request.py:6: in <module>
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5859392Z     from flask.testing import FlaskClient
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5860091Z E     File "/home/runner/work/flask/flask/.tox/py3.10/lib/python3.10/site-packages/flask/testing.py", line 78
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5860803Z E       f"/{app_root.lstrip("/")}"
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5861158Z E                            ^
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5862051Z ____________________ ERROR collecting tests/test_testing.py ____________________
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5862768Z .tox/py3.10/lib/python3.10/site-packages/_pytest/python.py:508: in importtestmodule
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5863397Z     mod = import_path(
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5863901Z .tox/py3.10/lib/python3.10/site-packages/_pytest/pathlib.py:596: in import_path
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5864479Z     importlib.import_module(module_name)
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5865162Z /opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5865924Z     return _bootstrap._gcd_import(name[level:], package, level)
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5866601Z <frozen importlib._bootstrap>:1050: in _gcd_import
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5867027Z     ???
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5867367Z <frozen importlib._bootstrap>:1027: in _find_and_load
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5869392Z     ???
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5869876Z .tox/py3.10/lib/python3.10/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5870487Z     exec(co, module.__dict__)
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5870847Z tests/test_testing.py:11: in <module>
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5871237Z     from flask.testing import EnvironBuilder
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5871933Z E     File "/home/runner/work/flask/flask/.tox/py3.10/lib/python3.10/site-packages/flask/testing.py", line 78
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5872629Z E       f"/{app_root.lstrip("/")}"
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5872978Z E                            ^
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5874059Z _____________________ ERROR collecting tests/test_views.py _____________________
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5874776Z .tox/py3.10/lib/python3.10/site-packages/_pytest/python.py:508: in importtestmodule
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5875381Z     mod = import_path(
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5875868Z .tox/py3.10/lib/python3.10/site-packages/_pytest/pathlib.py:596: in import_path
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5876652Z     importlib.import_module(module_name)
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5877317Z /opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5878081Z     return _bootstrap._gcd_import(name[level:], package, level)
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5878617Z <frozen importlib._bootstrap>:1050: in _gcd_import
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5879003Z     ???
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5879338Z <frozen importlib._bootstrap>:1027: in _find_and_load
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5881227Z     ???
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5881702Z .tox/py3.10/lib/python3.10/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5882324Z     exec(co, module.__dict__)
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5882859Z tests/test_views.py:5: in <module>
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5883243Z     from flask.testing import FlaskClient
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5883927Z E     File "/home/runner/work/flask/flask/.tox/py3.10/lib/python3.10/site-packages/flask/testing.py", line 78
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5884633Z E       f"/{app_root.lstrip("/")}"
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5884985Z E                            ^
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5885808Z =========================== short test summary info ============================
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5886503Z ERROR tests/test_appctx.py
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5886841Z ERROR tests/test_basic.py
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5887165Z ERROR tests/test_reqctx.py
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5887498Z ERROR tests/test_request.py
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5887837Z ERROR tests/test_testing.py
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5888165Z ERROR tests/test_views.py
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5888624Z !!!!!!!!!!!!!!!!!!! Interrupted: 6 errors during collection !!!!!!!!!!!!!!!!!!!!
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.5889204Z ============================== 6 errors in 1.32s ===============================
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.6379559Z py3.10: exit 2 (2.46 seconds) /home/runner/work/flask/flask> pytest -v --tb=short --basetemp=/home/runner/work/flask/flask/.tox/tmp/py3.10 pid=2458
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.6383710Z   py3.10: FAIL code 2 (3.03=setup[0.57]+cmd[2.46] seconds)
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.6384249Z   evaluation failed :( (3.13 seconds)
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.6788050Z ##[error]Process completed with exit code 2.
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.6914064Z Post job cleanup.
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.7793807Z [command]/usr/bin/git version
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.7839321Z git version 2.54.0
+3.10	UNKNOWN STEP	2026-07-31T03:21:01.8884825Z Cleaning up orphan processes
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1735730Z ________ ERROR at teardown of TestStreaming.test_streaming_with_context ________
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1736340Z tests/conftest.py:79: in leak_detector
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1736600Z     assert not leaks
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1737110Z E   AssertionError: assert not [<AppContext 4436077104 of flask_test, GET 'http://localhost/?name=World'>]
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1737710Z _ ERROR at teardown of TestStreaming.test_streaming_with_context_as_decorator __
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1738120Z tests/conftest.py:79: in leak_detector
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1738360Z     assert not leaks
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1738730Z E   AssertionError: assert not [<AppContext 4436075984 of flask_test, GET 'http://localhost/?name=World'>]
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1739710Z _ ERROR at setup of TestStreaming.test_streaming_with_context_and_custom_close _
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1740630Z .tox/py3.14/lib/python3.14/site-packages/flask/helpers.py:137: in generator
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1741000Z     yield from gen
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1741190Z E   GeneratorExit
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1741310Z 
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1741480Z During handling of the above exception, another exception occurred:
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1741890Z .tox/py3.14/lib/python3.14/site-packages/flask/helpers.py:133: in generator
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1742250Z     with ctx:
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1742420Z          ^^^
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1742950Z     self.pop(exc_value)
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1743200Z .tox/py3.14/lib/python3.14/site-packages/flask/ctx.py:466: in pop
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1744410Z     raise RuntimeError(f"Cannot pop this context ({self!r}), it is not pushed.")
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1745110Z E   RuntimeError: Cannot pop this context (<AppContext 4436077104 of flask_test, GET 'http://localhost/?name=World'>), it is not pushed.
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1745540Z 
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1745690Z The above exception was the direct cause of the following exception:
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1746080Z .tox/py3.14/lib/python3.14/site-packages/_pytest/runner.py:361: in from_call
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1746450Z     result: TResult | None = func()
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1747300Z                              ^^^^^^
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1753050Z .tox/py3.14/lib/python3.14/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1753480Z     return (yield)
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1765680Z             ^^^^^
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1766060Z .tox/py3.14/lib/python3.14/site-packages/_pytest/unraisableexception.py:178: in pytest_runtest_setup
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1766450Z     collect_unraisable(item.config)
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1766810Z .tox/py3.14/lib/python3.14/site-packages/_pytest/unraisableexception.py:79: in collect_unraisable
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1767170Z     raise errors[0]
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1767490Z .tox/py3.14/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: in collect_unraisable
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1767950Z     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1768610Z E   pytest.PytestUnraisableExceptionWarning: Exception ignored while closing generator <generator object stream_with_context.<locals>.generator at 0x1087d6e40>: None
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1769280Z _________ ERROR at teardown of TestStreaming.test_stream_keeps_session _________
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.1769610Z tests/conftest.py:79: in leak_detector
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3120490Z FAILED tests/test_user_error_handler.py::test_error_handler_http_subclass - A...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3120800Z FAILED tests/test_user_error_handler.py::test_error_handler_blueprint - Attri...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3121020Z FAILED tests/test_user_error_handler.py::test_default_error_handler - Attribu...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3121350Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_class_or_code[InternalServerError]
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3121730Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_class_or_code[500]
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3122190Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_generic_http
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3122380Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_generic
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3123220Z FAILED tests/test_views.py::test_basic_view - AttributeError: 'FlaskClient' o...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3124330Z FAILED tests/test_views.py::test_method_based_view - AttributeError: 'FlaskCl...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3124870Z FAILED tests/test_views.py::test_view_patching - AttributeError: 'FlaskClient...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3125340Z FAILED tests/test_views.py::test_view_inheritance - AttributeError: 'FlaskCli...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3125800Z FAILED tests/test_views.py::test_view_decorators - AttributeError: 'FlaskClie...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3126250Z FAILED tests/test_views.py::test_view_provide_automatic_options_attr_disable
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3126710Z FAILED tests/test_views.py::test_view_provide_automatic_options_attr_enable
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3127170Z FAILED tests/test_views.py::test_provide_automatic_options_method_disable - I...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3127650Z FAILED tests/test_views.py::test_implicit_head - AttributeError: 'FlaskClient...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3128110Z FAILED tests/test_views.py::test_explicit_head - AttributeError: 'FlaskClient...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3128570Z FAILED tests/test_views.py::test_endpoint_override - AttributeError: 'FlaskCl...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3129050Z FAILED tests/test_views.py::test_methods_var_inheritance - AttributeError: 'F...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3129510Z FAILED tests/test_views.py::test_multiple_inheritance - AttributeError: 'Flas...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3129980Z FAILED tests/test_views.py::test_remove_method_from_parent - AttributeError: ...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3131080Z FAILED tests/test_views.py::test_init_once - AttributeError: 'FlaskClient' ob...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3131630Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context - Ass...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3131840Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context_as_decorator
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3132050Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context_and_custom_close
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3132230Z ERROR tests/test_helpers.py::TestStreaming::test_stream_keeps_session - Asser...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3132410Z ERROR tests/test_helpers.py::TestStreaming::test_async_view - pytest.PytestUn...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3132580Z ERROR tests/test_templating.py::test_simple_stream - AssertionError: assert n...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3132760Z ERROR tests/test_templating.py::test_template_filter_with_template - pytest.P...
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3132930Z ERROR tests/test_templating.py::test_add_template_filter_with_name_and_template
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3133080Z ================== 233 failed, 257 passed, 8 errors in 11.47s ==================
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.3989490Z py3.14: exit 1 (13.24 seconds) /Users/runner/work/flask/flask> pytest -v --tb=short --basetemp=/Users/runner/work/flask/flask/.tox/tmp/py3.14 pid=4418
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.4024730Z   py3.14: FAIL code 1 (14.27=setup[1.03]+cmd[13.24] seconds)
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.4025310Z   evaluation failed :( (14.38 seconds)
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.5018090Z ##[error]Process completed with exit code 1.
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.5278570Z Post job cleanup.
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.7143980Z [command]/opt/homebrew/bin/git version
+Mac	UNKNOWN STEP	2026-07-31T03:21:19.7249900Z git version 2.55.0
+Mac	UNKNOWN STEP	2026-07-31T03:21:20.1108820Z Cleaning up orphan processes
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6772389Z ________ ERROR at teardown of TestStreaming.test_streaming_with_context ________
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6773155Z tests/conftest.py:79: in leak_detector
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6773642Z     assert not leaks
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6774513Z E   AssertionError: assert not [<AppContext 140426432689680 of flask_test, GET 'http://localhost/?name=World'>]
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6775880Z _ ERROR at teardown of TestStreaming.test_streaming_with_context_as_decorator __
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6776575Z tests/conftest.py:79: in leak_detector
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6777066Z     assert not leaks
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6778103Z E   AssertionError: assert not [<AppContext 140426432683600 of flask_test, GET 'http://localhost/?name=World'>]
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6779641Z _ ERROR at teardown of TestStreaming.test_streaming_with_context_and_custom_close _
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6780445Z tests/conftest.py:79: in leak_detector
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6780895Z     assert not leaks
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6781647Z E   AssertionError: assert not [<AppContext 140426432677040 of flask_test, GET 'http://localhost/?name=World'>]
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6782717Z _________ ERROR at teardown of TestStreaming.test_stream_keeps_session _________
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6783304Z tests/conftest.py:79: in leak_detector
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6783580Z     assert not leaks
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6784000Z E   AssertionError: assert not [<AppContext 140426432682960 of flask_test, GET 'http://localhost/'>]
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6784604Z __________ ERROR at teardown of test_bad_request_debug_message[False] __________
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6785051Z   + Exception Group Traceback (most recent call last):
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6863024Z ___________________ ERROR at teardown of test_simple_stream ____________________
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6863406Z tests/conftest.py:79: in leak_detector
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6863668Z     assert not leaks
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6864074Z E   AssertionError: assert not [<AppContext 140426431722224 of flask_test, GET 'http://localhost/'>]
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6865498Z ___________ ERROR at teardown of test_template_filter_with_template ____________
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6866469Z .tox/py3.15/lib/python3.15/site-packages/flask/helpers.py:137: in generator
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6867010Z     yield from gen
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6867220Z E   GeneratorExit
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6867341Z 
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6867533Z During handling of the above exception, another exception occurred:
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6868011Z .tox/py3.15/lib/python3.15/site-packages/flask/helpers.py:133: in generator
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6868393Z     with ctx:
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6868589Z          ^^^
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6869240Z     self.pop(exc_value)
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6869545Z .tox/py3.15/lib/python3.15/site-packages/flask/ctx.py:466: in pop
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6870034Z     raise RuntimeError(f"Cannot pop this context ({self!r}), it is not pushed.")
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6870733Z E   RuntimeError: Cannot pop this context (<AppContext 140426431722224 of flask_test, GET 'http://localhost/'>), it is not pushed.
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6871213Z 
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6871401Z The above exception was the direct cause of the following exception:
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6871881Z .tox/py3.15/lib/python3.15/site-packages/_pytest/runner.py:361: in from_call
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6872274Z     result: TResult | None = func()
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6872528Z                              ^^^^^^
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6878115Z .tox/py3.15/lib/python3.15/site-packages/_pytest/capture.py:905: in pytest_runtest_teardown
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6878543Z     return (yield)
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6878742Z             ^^^^^
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6879161Z .tox/py3.15/lib/python3.15/site-packages/_pytest/unraisableexception.py:188: in pytest_runtest_teardown
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.6879654Z     collect_unraisable(item.config)
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7675567Z FAILED tests/test_user_error_handler.py::test_error_handler_http_subclass - A...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7675786Z FAILED tests/test_user_error_handler.py::test_error_handler_blueprint - Attri...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7675994Z FAILED tests/test_user_error_handler.py::test_default_error_handler - Attribu...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7676330Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_class_or_code[InternalServerError]
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7676590Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_class_or_code[500]
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7676830Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_generic_http
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7677054Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_generic
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7677261Z FAILED tests/test_views.py::test_basic_view - AttributeError: 'FlaskClient' o...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7677472Z FAILED tests/test_views.py::test_method_based_view - AttributeError: 'FlaskCl...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7677685Z FAILED tests/test_views.py::test_view_patching - AttributeError: 'FlaskClient...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7677893Z FAILED tests/test_views.py::test_view_inheritance - AttributeError: 'FlaskCli...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7678104Z FAILED tests/test_views.py::test_view_decorators - AttributeError: 'FlaskClie...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7678310Z FAILED tests/test_views.py::test_view_provide_automatic_options_attr_disable
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7678511Z FAILED tests/test_views.py::test_view_provide_automatic_options_attr_enable
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7678728Z FAILED tests/test_views.py::test_provide_automatic_options_method_disable - I...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7678933Z FAILED tests/test_views.py::test_implicit_head - AttributeError: 'FlaskClient...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7679145Z FAILED tests/test_views.py::test_explicit_head - AttributeError: 'FlaskClient...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7679354Z FAILED tests/test_views.py::test_endpoint_override - AttributeError: 'FlaskCl...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7679562Z FAILED tests/test_views.py::test_methods_var_inheritance - AttributeError: 'F...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7679770Z FAILED tests/test_views.py::test_multiple_inheritance - AttributeError: 'Flas...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7679976Z FAILED tests/test_views.py::test_remove_method_from_parent - AttributeError: ...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7680186Z FAILED tests/test_views.py::test_init_once - AttributeError: 'FlaskClient' ob...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7680400Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context - Ass...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7680754Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context_as_decorator
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7680996Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context_and_custom_close
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7681210Z ERROR tests/test_helpers.py::TestStreaming::test_stream_keeps_session - Asser...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7681424Z ERROR tests/test_json.py::test_bad_request_debug_message[False] - ExceptionGr...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7681747Z ERROR tests/test_templating.py::test_simple_stream - AssertionError: assert n...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7681974Z ERROR tests/test_templating.py::test_template_filter_with_template - pytest.P...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7682200Z ERROR tests/test_templating.py::test_iterable_loader - pytest.PytestUnraisabl...
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.7682366Z ================== 234 failed, 257 passed, 8 errors in 10.31s ==================
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.8116527Z py3.15: exit 1 (11.54 seconds) /home/runner/work/flask/flask> pytest -v --tb=short --basetemp=/home/runner/work/flask/flask/.tox/tmp/py3.15 pid=2616
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.8121349Z   py3.15: FAIL code 1 (12.07=setup[0.53]+cmd[11.54] seconds)
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.8121528Z   evaluation failed :( (12.15 seconds)
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.8665148Z ##[error]Process completed with exit code 1.
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.8786143Z Post job cleanup.
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.9647306Z [command]/usr/bin/git version
+3.15	UNKNOWN STEP	2026-07-31T03:21:22.9684229Z git version 2.54.0
+3.15	UNKNOWN STEP	2026-07-31T03:21:23.0659813Z Cleaning up orphan processes
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9286782Z ________ ERROR at teardown of TestStreaming.test_streaming_with_context ________
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9287299Z tests/conftest.py:79: in leak_detector
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9287648Z     assert not leaks
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9288178Z E   AssertionError: assert not [<AppContext 139797358934256 of flask_test, GET 'http://localhost/?name=World'>]
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9289135Z _ ERROR at teardown of TestStreaming.test_streaming_with_context_as_decorator __
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9289592Z tests/conftest.py:79: in leak_detector
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9289881Z     assert not leaks
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9290395Z E   AssertionError: assert not [<AppContext 139797359297264 of flask_test, GET 'http://localhost/?name=World'>]
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9290928Z _ ERROR at setup of TestStreaming.test_streaming_with_context_and_custom_close _
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9291339Z .tox/py3.12/lib/python3.12/site-packages/flask/helpers.py:137: in generator
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9291652Z     yield from gen
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9291833Z E   GeneratorExit
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9291937Z 
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9292098Z During handling of the above exception, another exception occurred:
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9292477Z .tox/py3.12/lib/python3.12/site-packages/flask/helpers.py:133: in generator
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9292778Z     with ctx:
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9292951Z          ^^^
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9293509Z     self.pop(exc_value)
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9293772Z .tox/py3.12/lib/python3.12/site-packages/flask/ctx.py:466: in pop
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9294328Z     raise RuntimeError(f"Cannot pop this context ({self!r}), it is not pushed.")
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9294902Z E   RuntimeError: Cannot pop this context (<AppContext 139797358934256 of flask_test, GET 'http://localhost/?name=World'>), it is not pushed.
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9295286Z 
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9295441Z The above exception was the direct cause of the following exception:
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9295834Z .tox/py3.12/lib/python3.12/site-packages/_pytest/runner.py:361: in from_call
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9296154Z     result: TResult | None = func()
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9296381Z                              ^^^^^^
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9300496Z .tox/py3.12/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9300829Z     return (yield)
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9301006Z             ^^^^^
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9301331Z .tox/py3.12/lib/python3.12/site-packages/_pytest/unraisableexception.py:178: in pytest_runtest_setup
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9301720Z     collect_unraisable(item.config)
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9302074Z .tox/py3.12/lib/python3.12/site-packages/_pytest/unraisableexception.py:79: in collect_unraisable
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9302639Z     raise errors[0]
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9303181Z .tox/py3.12/lib/python3.12/site-packages/_pytest/unraisableexception.py:67: in collect_unraisable
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9304009Z     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9304940Z E   pytest.PytestUnraisableExceptionWarning: Exception ignored in: <generator object stream_with_context.<locals>.generator at 0x7f251d7271f0>
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9305709Z E   Enable tracemalloc to get traceback where the object was allocated.
+3.12	UNKNOWN STEP	2026-07-31T03:21:10.9306176Z E   See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0198744Z FAILED tests/test_user_error_handler.py::test_error_handler_subclass - Attrib...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0198993Z FAILED tests/test_user_error_handler.py::test_error_handler_http_subclass - A...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0199238Z FAILED tests/test_user_error_handler.py::test_error_handler_blueprint - Attri...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0199497Z FAILED tests/test_user_error_handler.py::test_default_error_handler - Attribu...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0199877Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_class_or_code[InternalServerError]
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0200173Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_class_or_code[500]
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0200452Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_generic_http
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0200696Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_generic
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0200945Z FAILED tests/test_views.py::test_basic_view - AttributeError: 'FlaskClient' o...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0201186Z FAILED tests/test_views.py::test_method_based_view - AttributeError: 'FlaskCl...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0201572Z FAILED tests/test_views.py::test_view_patching - AttributeError: 'FlaskClient...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0201808Z FAILED tests/test_views.py::test_view_inheritance - AttributeError: 'FlaskCli...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0202057Z FAILED tests/test_views.py::test_view_decorators - AttributeError: 'FlaskClie...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0202295Z FAILED tests/test_views.py::test_view_provide_automatic_options_attr_disable
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0202527Z FAILED tests/test_views.py::test_view_provide_automatic_options_attr_enable
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0202768Z FAILED tests/test_views.py::test_provide_automatic_options_method_disable - I...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0203011Z FAILED tests/test_views.py::test_implicit_head - AttributeError: 'FlaskClient...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0203257Z FAILED tests/test_views.py::test_explicit_head - AttributeError: 'FlaskClient...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0203486Z FAILED tests/test_views.py::test_endpoint_override - AttributeError: 'FlaskCl...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0203737Z FAILED tests/test_views.py::test_methods_var_inheritance - AttributeError: 'F...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0204346Z FAILED tests/test_views.py::test_multiple_inheritance - AttributeError: 'Flas...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0204591Z FAILED tests/test_views.py::test_remove_method_from_parent - AttributeError: ...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0204990Z FAILED tests/test_views.py::test_init_once - AttributeError: 'FlaskClient' ob...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0205291Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context - Ass...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0205558Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context_as_decorator
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0205825Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context_and_custom_close
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0206068Z ERROR tests/test_helpers.py::TestStreaming::test_stream_keeps_session - Asser...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0206312Z ERROR tests/test_json.py::test_jsonify_basic_types[longer string] - Exception...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0206565Z ERROR tests/test_templating.py::test_simple_stream - AssertionError: assert n...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0206821Z ERROR tests/test_templating.py::test_standard_context - pytest.PytestUnraisab...
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0207003Z ================== 233 failed, 257 passed, 7 errors in 8.40s ===================
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0943277Z py3.12: exit 1 (9.40 seconds) /home/runner/work/flask/flask> pytest -v --tb=short --basetemp=/home/runner/work/flask/flask/.tox/tmp/py3.12 pid=2347
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0947126Z   py3.12: FAIL code 1 (9.82=setup[0.42]+cmd[9.40] seconds)
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.0947272Z   evaluation failed :( (9.86 seconds)
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.1299725Z ##[error]Process completed with exit code 1.
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.1397870Z Post job cleanup.
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.2109468Z [command]/usr/bin/git version
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.2147392Z git version 2.54.0
+3.12	UNKNOWN STEP	2026-07-31T03:21:11.3013144Z Cleaning up orphan processes
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8960096Z _______ ERROR at teardown of TestStreaming.test_streaming_with_context ________
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8960706Z tests\conftest.py:79: in leak_detector
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8961381Z     assert not leaks
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8962054Z E   AssertionError: assert not [<AppContext 2075516971888 of flask_test, GET 'http://localhost/?name=World'>]
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8962996Z _ ERROR at teardown of TestStreaming.test_streaming_with_context_as_decorator _
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8963572Z tests\conftest.py:79: in leak_detector
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8963915Z     assert not leaks
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8964566Z E   AssertionError: assert not [<AppContext 2075516537264 of flask_test, GET 'http://localhost/?name=World'>]
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8967021Z _ ERROR at teardown of TestStreaming.test_streaming_with_context_and_custom_close _
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8968082Z tests\conftest.py:79: in leak_detector
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8968597Z     assert not leaks
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8969414Z E   AssertionError: assert not [<AppContext 2075516538544 of flask_test, GET 'http://localhost/?name=World'>]
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8970792Z ________ ERROR at teardown of TestStreaming.test_stream_keeps_session _________
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8972073Z tests\conftest.py:79: in leak_detector
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8972962Z     assert not leaks
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8973604Z E   AssertionError: assert not [<AppContext 2075519075344 of flask_test, GET 'http://localhost/'>]
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8974487Z _________ ERROR at teardown of test_bad_request_debug_message[False] __________
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.8975167Z   + Exception Group Traceback (most recent call last):
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9052860Z ___________________ ERROR at teardown of test_simple_stream ___________________
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9053205Z tests\conftest.py:79: in leak_detector
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9053452Z     assert not leaks
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9053830Z E   AssertionError: assert not [<AppContext 2075509661264 of flask_test, GET 'http://localhost/'>]
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9054342Z ____________________ ERROR at teardown of test_no_escaping ____________________
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9054769Z .tox\py3.14\Lib\site-packages\flask\helpers.py:137: in generator
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9055082Z     yield from gen
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9055261Z E   GeneratorExit
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9055369Z 
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9055544Z During handling of the above exception, another exception occurred:
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9055943Z .tox\py3.14\Lib\site-packages\flask\helpers.py:133: in generator
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9056237Z     with ctx:
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9056407Z          ^^^
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9056945Z     self.pop(exc_value)
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9057194Z .tox\py3.14\Lib\site-packages\flask\ctx.py:466: in pop
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9057591Z     raise RuntimeError(f"Cannot pop this context ({self!r}), it is not pushed.")
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9058220Z E   RuntimeError: Cannot pop this context (<AppContext 2075509661264 of flask_test, GET 'http://localhost/'>), it is not pushed.
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9058655Z 
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9058829Z The above exception was the direct cause of the following exception:
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9059238Z .tox\py3.14\Lib\site-packages\_pytest\runner.py:361: in from_call
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9059933Z     result: TResult | None = func()
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9060172Z                              ^^^^^^
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9064491Z .tox\py3.14\Lib\site-packages\_pytest\capture.py:905: in pytest_runtest_teardown
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9064839Z     return (yield)
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9065016Z             ^^^^^
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9065361Z .tox\py3.14\Lib\site-packages\_pytest\unraisableexception.py:188: in pytest_runtest_teardown
+Windows	UNKNOWN STEP	2026-07-31T03:21:21.9065787Z     collect_unraisable(item.config)
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0222010Z FAILED tests/test_user_error_handler.py::test_error_handler_http_subclass - A...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0222486Z FAILED tests/test_user_error_handler.py::test_error_handler_blueprint - Attri...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0222694Z FAILED tests/test_user_error_handler.py::test_default_error_handler - Attribu...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0223099Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_class_or_code[InternalServerError]
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0223346Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_class_or_code[500]
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0223568Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_generic_http
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0223767Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_generic
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0223969Z FAILED tests/test_views.py::test_basic_view - AttributeError: 'FlaskClient' o...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0224164Z FAILED tests/test_views.py::test_method_based_view - AttributeError: 'FlaskCl...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0224345Z FAILED tests/test_views.py::test_view_patching - AttributeError: 'FlaskClient...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0224535Z FAILED tests/test_views.py::test_view_inheritance - AttributeError: 'FlaskCli...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0224720Z FAILED tests/test_views.py::test_view_decorators - AttributeError: 'FlaskClie...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0224916Z FAILED tests/test_views.py::test_view_provide_automatic_options_attr_disable
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0225106Z FAILED tests/test_views.py::test_view_provide_automatic_options_attr_enable
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0225288Z FAILED tests/test_views.py::test_provide_automatic_options_method_disable - I...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0225480Z FAILED tests/test_views.py::test_implicit_head - AttributeError: 'FlaskClient...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0225667Z FAILED tests/test_views.py::test_explicit_head - AttributeError: 'FlaskClient...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0225858Z FAILED tests/test_views.py::test_endpoint_override - AttributeError: 'FlaskCl...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0226053Z FAILED tests/test_views.py::test_methods_var_inheritance - AttributeError: 'F...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0226234Z FAILED tests/test_views.py::test_multiple_inheritance - AttributeError: 'Flas...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0226427Z FAILED tests/test_views.py::test_remove_method_from_parent - AttributeError: ...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0226609Z FAILED tests/test_views.py::test_init_once - AttributeError: 'FlaskClient' ob...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0226804Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context - Ass...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0227016Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context_as_decorator
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0227230Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context_and_custom_close
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0227526Z ERROR tests/test_helpers.py::TestStreaming::test_stream_keeps_session - Asser...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0227720Z ERROR tests/test_json.py::test_bad_request_debug_message[False] - ExceptionGr...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0227911Z ERROR tests/test_templating.py::test_simple_stream - AssertionError: assert n...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0228124Z ERROR tests/test_templating.py::test_no_escaping - pytest.PytestUnraisableExc...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0228316Z ERROR tests/test_templating.py::test_custom_template_loader - pytest.PytestUn...
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.0228476Z ================= 234 failed, 257 passed, 8 errors in 10.05s ==================
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.1173439Z py3.14: exit 1 (11.79 seconds) D:\a\flask\flask> pytest -v --tb=short --basetemp=D:\a\flask\flask\.tox\tmp\py3.14 pid=7528
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.1180958Z   py3.14: FAIL code 1 (12.48=setup[0.68]+cmd[11.79] seconds)
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.1181090Z   evaluation failed :( (12.56 seconds)
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.2885259Z ##[error]Process completed with exit code 1.
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.3117099Z Post job cleanup.
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.4958780Z [command]"C:\Program Files\Git\bin\git.exe" version
+Windows	UNKNOWN STEP	2026-07-31T03:21:22.5215218Z git version 2.55.0.windows.3
+Windows	UNKNOWN STEP	2026-07-31T03:21:24.1711939Z Cleaning up orphan processes
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7594523Z ____________________ ERROR collecting tests/test_appctx.py _____________________
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7595329Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/python.py:508: in importtestmodule
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7595942Z     mod = import_path(
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7596453Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/pathlib.py:596: in import_path
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7602661Z     ???
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7603030Z <frozen importlib._bootstrap>:690: in _load_unlocked
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7603667Z     ???
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7604221Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7604908Z     exec(co, module.__dict__)
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7605299Z tests/test_appctx.py:7: in <module>
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7605733Z     from flask.testing import FlaskClient
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7606495Z E     File "/home/runner/work/flask/flask/.tox/pypy3.11/lib/pypy3.11/site-packages/flask/testing.py", line 78
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7607192Z E       f"/{app_root.lstrip("/")}"
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7607548Z E       ^^^^^^^^^^^^^^^^^^^^^
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7608444Z _____________________ ERROR collecting tests/test_basic.py _____________________
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7609219Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/python.py:508: in importtestmodule
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7609837Z     mod = import_path(
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7610773Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/pathlib.py:596: in import_path
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7616733Z     ???
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7617084Z <frozen importlib._bootstrap>:690: in _load_unlocked
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7617550Z     ???
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7618112Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7618814Z     exec(co, module.__dict__)
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7619202Z tests/test_basic.py:24: in <module>
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7619636Z     from flask.testing import FlaskClient
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7620424Z E     File "/home/runner/work/flask/flask/.tox/pypy3.11/lib/pypy3.11/site-packages/flask/testing.py", line 78
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7621226Z E       f"/{app_root.lstrip("/")}"
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7621622Z E       ^^^^^^^^^^^^^^^^^^^^^
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7622616Z ____________________ ERROR collecting tests/test_reqctx.py _____________________
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7623596Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/python.py:508: in importtestmodule
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7624245Z     mod = import_path(
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7624791Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/pathlib.py:596: in import_path
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7661220Z     ???
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7661918Z <frozen importlib._bootstrap>:690: in _load_unlocked
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7662398Z     ???
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7662966Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7663836Z     exec(co, module.__dict__)
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7664249Z tests/test_reqctx.py:12: in <module>
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7664691Z     from flask.testing import FlaskClient
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7665486Z E     File "/home/runner/work/flask/flask/.tox/pypy3.11/lib/pypy3.11/site-packages/flask/testing.py", line 78
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7666288Z E       f"/{app_root.lstrip("/")}"
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7666697Z E       ^^^^^^^^^^^^^^^^^^^^^
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7667697Z ____________________ ERROR collecting tests/test_request.py ____________________
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7668633Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/python.py:508: in importtestmodule
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7669291Z     mod = import_path(
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7669847Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/pathlib.py:596: in import_path
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7675985Z     ???
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7676328Z <frozen importlib._bootstrap>:690: in _load_unlocked
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7676784Z     ???
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7677344Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7678041Z     exec(co, module.__dict__)
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7678435Z tests/test_request.py:6: in <module>
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7678865Z     from flask.testing import FlaskClient
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7679638Z E     File "/home/runner/work/flask/flask/.tox/pypy3.11/lib/pypy3.11/site-packages/flask/testing.py", line 78
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7680427Z E       f"/{app_root.lstrip("/")}"
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7680809Z E       ^^^^^^^^^^^^^^^^^^^^^
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7681762Z ____________________ ERROR collecting tests/test_testing.py ____________________
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7682532Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/python.py:508: in importtestmodule
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7683345Z     mod = import_path(
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7683875Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/pathlib.py:596: in import_path
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7684514Z     importlib.import_module(module_name)
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7684899Z               ^^^^^^^^^^^^^
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7685503Z /opt/hostedtoolcache/PyPy/3.11.15/x64/lib/pypy3.11/importlib/__init__.py:126: in import_module
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7686327Z     return _bootstrap._gcd_import(name[level:], package, level)
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7686824Z                       ^^^^^^^^^^^
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7687242Z <frozen importlib._bootstrap>:1204: in _gcd_import
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7687687Z     ???
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7690182Z     ???
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7690732Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7691646Z     exec(co, module.__dict__)
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7692049Z tests/test_testing.py:11: in <module>
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7692509Z     from flask.testing import EnvironBuilder
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7693466Z E     File "/home/runner/work/flask/flask/.tox/pypy3.11/lib/pypy3.11/site-packages/flask/testing.py", line 78
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7694282Z E       f"/{app_root.lstrip("/")}"
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7694689Z E       ^^^^^^^^^^^^^^^^^^^^^
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7695689Z _____________________ ERROR collecting tests/test_views.py _____________________
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7696518Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/python.py:508: in importtestmodule
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7697211Z     mod = import_path(
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7697917Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/pathlib.py:596: in import_path
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7698576Z     importlib.import_module(module_name)
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7699007Z               ^^^^^^^^^^^^^
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7699665Z /opt/hostedtoolcache/PyPy/3.11.15/x64/lib/pypy3.11/importlib/__init__.py:126: in import_module
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7700504Z     return _bootstrap._gcd_import(name[level:], package, level)
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7701041Z                       ^^^^^^^^^^^
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7701676Z <frozen importlib._bootstrap>:1204: in _gcd_import
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7702135Z     ???
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7704840Z     ???
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7705391Z .tox/pypy3.11/lib/pypy3.11/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7706041Z     exec(co, module.__dict__)
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7706420Z tests/test_views.py:5: in <module>
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7706860Z     from flask.testing import FlaskClient
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7707643Z E     File "/home/runner/work/flask/flask/.tox/pypy3.11/lib/pypy3.11/site-packages/flask/testing.py", line 78
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7708388Z E       f"/{app_root.lstrip("/")}"
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7708769Z E       ^^^^^^^^^^^^^^^^^^^^^
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7709684Z =========================== short test summary info ============================
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7710222Z ERROR tests/test_appctx.py
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7710603Z ERROR tests/test_basic.py
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7710966Z ERROR tests/test_reqctx.py
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7711329Z ERROR tests/test_request.py
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7711698Z ERROR tests/test_testing.py
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7712072Z ERROR tests/test_views.py
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7712580Z !!!!!!!!!!!!!!!!!!! Interrupted: 6 errors during collection !!!!!!!!!!!!!!!!!!!!
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7713355Z ============================== 6 errors in 4.54s ===============================
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7756888Z pypy3.11: exit 2 (6.79 seconds) /home/runner/work/flask/flask> pytest -v --tb=short --basetemp=/home/runner/work/flask/flask/.tox/tmp/pypy3.11 pid=2385
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7770798Z   pypy3.11: FAIL code 2 (7.93=setup[1.14]+cmd[6.79] seconds)
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.7771211Z   evaluation failed :( (8.03 seconds)
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.8038008Z ##[error]Process completed with exit code 2.
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.8161293Z Post job cleanup.
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.9059251Z [command]/usr/bin/git version
+PyPy	UNKNOWN STEP	2026-07-31T03:21:11.9100053Z git version 2.54.0
+PyPy	UNKNOWN STEP	2026-07-31T03:21:12.0215178Z Cleaning up orphan processes
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0268670Z ________ ERROR at teardown of TestStreaming.test_streaming_with_context ________
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0269636Z tests/conftest.py:79: in leak_detector
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0270387Z     assert not leaks
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0271483Z E   AssertionError: assert not [<AppContext 139860563203152 of flask_test, GET 'http://localhost/?name=World'>]
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0273263Z _ ERROR at teardown of TestStreaming.test_streaming_with_context_as_decorator __
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0274353Z tests/conftest.py:79: in leak_detector
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0275002Z     assert not leaks
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0276098Z E   AssertionError: assert not [<AppContext 139860563201392 of flask_test, GET 'http://localhost/?name=World'>]
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0277181Z _ ERROR at setup of TestStreaming.test_streaming_with_context_and_custom_close _
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0278047Z .tox/tests-min/lib/python3.14/site-packages/flask/helpers.py:137: in generator
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0278696Z     yield from gen
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0279010Z E   GeneratorExit
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0279232Z 
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0279588Z During handling of the above exception, another exception occurred:
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0280617Z .tox/tests-min/lib/python3.14/site-packages/flask/helpers.py:133: in generator
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0281533Z     with ctx:
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0281887Z          ^^^
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0283344Z     self.pop(exc_value)
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0283921Z .tox/tests-min/lib/python3.14/site-packages/flask/ctx.py:466: in pop
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0284789Z     raise RuntimeError(f"Cannot pop this context ({self!r}), it is not pushed.")
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0286032Z E   RuntimeError: Cannot pop this context (<AppContext 139860563203152 of flask_test, GET 'http://localhost/?name=World'>), it is not pushed.
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0286908Z 
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0287249Z The above exception was the direct cause of the following exception:
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0288120Z .tox/tests-min/lib/python3.14/site-packages/_pytest/runner.py:361: in from_call
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0289124Z     result: TResult | None = func()
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0289636Z                              ^^^^^^
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0298190Z .tox/tests-min/lib/python3.14/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0298623Z     return (yield)
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0298816Z             ^^^^^
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0299232Z .tox/tests-min/lib/python3.14/site-packages/_pytest/unraisableexception.py:178: in pytest_runtest_setup
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0299724Z     collect_unraisable(item.config)
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0300181Z .tox/tests-min/lib/python3.14/site-packages/_pytest/unraisableexception.py:79: in collect_unraisable
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0300648Z     raise errors[0]
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0301058Z .tox/tests-min/lib/python3.14/site-packages/_pytest/unraisableexception.py:67: in collect_unraisable
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0301638Z     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0302464Z E   pytest.PytestUnraisableExceptionWarning: Exception ignored while closing generator <generator object stream_with_context.<locals>.generator at 0x7f33d3243840>: None
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0303617Z _________ ERROR at teardown of TestStreaming.test_stream_keeps_session _________
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.0304017Z tests/conftest.py:79: in leak_detector
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1051566Z FAILED tests/test_user_error_handler.py::test_error_handler_http_subclass - A...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1051767Z FAILED tests/test_user_error_handler.py::test_error_handler_blueprint - Attri...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1051980Z FAILED tests/test_user_error_handler.py::test_default_error_handler - Attribu...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1052308Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_class_or_code[InternalServerError]
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1052565Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_class_or_code[500]
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1052810Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_generic_http
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1053175Z FAILED tests/test_user_error_handler.py::TestGenericHandlers::test_handle_generic
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1053395Z FAILED tests/test_views.py::test_basic_view - AttributeError: 'FlaskClient' o...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1053605Z FAILED tests/test_views.py::test_method_based_view - AttributeError: 'FlaskCl...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1053810Z FAILED tests/test_views.py::test_view_patching - AttributeError: 'FlaskClient...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1054016Z FAILED tests/test_views.py::test_view_inheritance - AttributeError: 'FlaskCli...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1054227Z FAILED tests/test_views.py::test_view_decorators - AttributeError: 'FlaskClie...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1054428Z FAILED tests/test_views.py::test_view_provide_automatic_options_attr_disable
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1054633Z FAILED tests/test_views.py::test_view_provide_automatic_options_attr_enable
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1054838Z FAILED tests/test_views.py::test_provide_automatic_options_method_disable - I...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1055043Z FAILED tests/test_views.py::test_implicit_head - AttributeError: 'FlaskClient...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1055248Z FAILED tests/test_views.py::test_explicit_head - AttributeError: 'FlaskClient...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1055448Z FAILED tests/test_views.py::test_endpoint_override - AttributeError: 'FlaskCl...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1055772Z FAILED tests/test_views.py::test_methods_var_inheritance - AttributeError: 'F...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1055978Z FAILED tests/test_views.py::test_multiple_inheritance - AttributeError: 'Flas...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1056182Z FAILED tests/test_views.py::test_remove_method_from_parent - AttributeError: ...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1056390Z FAILED tests/test_views.py::test_init_once - AttributeError: 'FlaskClient' ob...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1056602Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context - Ass...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1056825Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context_as_decorator
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1057060Z ERROR tests/test_helpers.py::TestStreaming::test_streaming_with_context_and_custom_close
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1057268Z ERROR tests/test_helpers.py::TestStreaming::test_stream_keeps_session - Asser...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1057482Z ERROR tests/test_helpers.py::TestStreaming::test_async_view - pytest.PytestUn...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1057691Z ERROR tests/test_templating.py::test_simple_stream - AssertionError: assert n...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1057915Z ERROR tests/test_templating.py::test_template_filter_with_template - pytest.P...
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1058125Z ERROR tests/test_templating.py::test_add_template_filter_with_name_and_template
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1058401Z ================== 233 failed, 257 passed, 8 errors in 10.87s ==================
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1600593Z tests-min: exit 1 (12.35 seconds) /home/runner/work/flask/flask> pytest -v --tb=short --basetemp=/home/runner/work/flask/flask/.tox/tmp/tests-min pid=2476
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1606357Z   tests-min: FAIL code 1 (15.52=setup[0.55]+cmd[2.62,12.35] seconds)
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.1607111Z   evaluation failed :( (15.61 seconds)
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.2054724Z ##[error]Process completed with exit code 1.
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.2175627Z Post job cleanup.
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.3017805Z [command]/usr/bin/git version
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.3055110Z git version 2.54.0
+Minimum Versions	UNKNOWN STEP	2026-07-31T03:21:20.4109921Z Cleaning up orphan processes

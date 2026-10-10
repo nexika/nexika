@@ -1,0 +1,183 @@
+test (3.15, windows-11-arm)	UNKNOWN STEP	﻿2026-09-16T00:26:06.9860337Z Current runner version: '2.337.0'
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:06.9889796Z ##[group]Runner Image Provisioner
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:06.9890594Z Hosted Compute Agent
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:06.9891057Z Version: 20260828.587
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:06.9897718Z ##[group]Runner Image
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:06.9898188Z Image: windows-11-arm64
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:06.9898663Z Version: 20260906.161.1
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:08.8365816Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:08.8367761Z with:
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:08.8368341Z   persist-credentials: false
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:21.6611117Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:21.6611602Z with:
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:21.6611782Z   python-version: 3.15
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:21.6615459Z   PIP_UPLOADED_PRIOR_TO: P2D
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:21.6615655Z ##[endgroup]
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:21.9029240Z ##[group]Installed versions
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:21.9140287Z Version ~3.15.0-0 was not found in the local cache
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:22.9228613Z Version ~3.15.0-0 is available for downloading
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:22.9230695Z Download from "https://github.com/actions/python-versions/releases/download/3.15.0-rc.2-33583724836/python-3.15.0-rc.2-win32-arm64.zip"
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:23.8494586Z Extract downloaded archive
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:23.9685732Z [command]"C:\Program Files\PowerShell\7\pwsh.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command "$ErrorActionPreference = 'Stop' ; try { Add-Type -AssemblyName System.IO.Compression.ZipFile } catch { } ; try { [System.IO.Compression.ZipFile]::ExtractToDirectory('C:\a\_temp\python-3.15.0-rc.2-win32-arm64.zip', 'C:\a\_temp\233efadb-ef74-4a2c-b0dc-7a6b7dd75f81', $true) } catch { if (($_.Exception.GetType().FullName -eq 'System.Management.Automation.MethodException') -or ($_.Exception.GetType().FullName -eq 'System.Management.Automation.RuntimeException') ){ Expand-Archive -LiteralPath 'C:\a\_temp\python-3.15.0-rc.2-win32-arm64.zip' -DestinationPath 'C:\a\_temp\233efadb-ef74-4a2c-b0dc-7a6b7dd75f81' -Force } else { throw $_ } } ;"
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:24.5114646Z Execute installation script
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:29.6131582Z Check if Python hostedtoolcache folder exist...
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:26:29.6131997Z 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:49.9341303Z ##[group]Run python -m pip install --group tox
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:49.9341793Z ^[[36;1mpython -m pip install --group tox^[[0m
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:49.9411007Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:49.9413198Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-rc.2\arm64
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:49.9413611Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-rc.2\arm64
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:49.9413931Z ##[endgroup]
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:51.2324511Z WARNING: Cache entry deserialization failed, entry ignored
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:51.7234790Z Collecting tox>=4.22
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:51.7716462Z   Downloading tox-4.61.4-py3-none-any.whl.metadata (3.8 kB)
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:51.8955503Z Collecting cachetools>=7.0.3 (from tox>=4.22)
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:57.1526783Z ##[group]Run tox -e ci-py$(echo 3.15 | tr -d '.') -- -v --color=yes
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:57.1527417Z ^[[36;1mtox -e ci-py$(echo 3.15 | tr -d '.') -- -v --color=yes^[[0m
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:57.1586481Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:57.1588926Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-rc.2\arm64
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:57.1589332Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-rc.2\arm64
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:57.1589662Z ##[endgroup]
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:27:59.6100436Z ci-py315: install_dependency-groups> python -I -m pip install coverage>=5.3 pytest-cov>=4.1.0 pytest-xdist>=3.0.2 pytest>=7
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:07.5945556Z ci-py315: freeze> python -m pip freeze --all
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:08.0081162Z ci-py315: colorama==0.4.6,coverage==7.16.1,execnet==2.1.2,iniconfig==2.3.0,packaging==26.3,pip==26.2.1,pluggy==1.6.0,Pygments==2.21.0,pytest==9.1.1,pytest-cov==7.1.0,pytest-xdist==3.8.0
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:08.0091653Z ci-py315: commands[0]> pip install -e .[d]
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:09.0392819Z Obtaining file:///C:/a/black/black
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:09.0906077Z   Installing build dependencies: started
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:15.0832421Z   Downloading click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:15.6378804Z Collecting mypy-extensions>=0.4.3 (from black==0.1.dev1+ged601b7bc)
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:15.6379297Z   Downloading mypy_extensions-1.1.0-py3-none-any.whl.metadata (1.1 kB)
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:15.6833138Z WARNING: Cache entry deserialization failed, entry ignored
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:15.6833555Z WARNING: Cache entry deserialization failed, entry ignored
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:15.6886916Z Requirement already satisfied: packaging>=22.0 in .\.tox\ci-py315\Lib\site-packages (from black==0.1.dev1+ged601b7bc) (26.3)
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:15.6887524Z Collecting pathspec>=1.0.0 (from black==0.1.dev1+ged601b7bc)
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:15.6887905Z   Using cached pathspec-1.1.1-py3-none-any.whl.metadata (14 kB)
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:38.5235840Z Installing collected packages: pytokens, propcache, platformdirs, pathspec, mypy-extensions, multidict, idna, frozenlist, click, attrs, aiohappyeyeballs, yarl, black, aiosignal, aiohttp
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:39.7802777Z 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:39.7807820Z Successfully installed aiohappyeyeballs-2.7.1 aiohttp-3.14.3 aiosignal-1.4.0 attrs-26.1.0 black-0.1.dev1+ged601b7bc click-8.5.0 frozenlist-1.8.0 idna-3.19 multidict-6.8.0 mypy-extensions-1.1.0 pathspec-1.1.1 platformdirs-4.11.8 propcache-0.5.2 pytokens-0.4.1 yarl-1.24.5
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:40.5885635Z ci-py315: commands[1]> coverage erase
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:40.8627801Z ci-py315: commands[2]> pytest tests --run-optional no_jupyter --numprocesses auto --cov -v --color=yes
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:43.8980701Z ^[[1m============================= test session starts =============================^[[0m
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:43.9029171Z platform win32 -- Python 3.15.0rc2, pytest-9.1.1, pluggy-1.6.0 -- C:\a\black\black\.tox\ci-py315\Scripts\python.EXE
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:44.3537997Z [gw1]^[[36m [  5%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_infer_target_version 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:44.3603887Z tests/test_black.py::BlackTestCase::test_invalid_black_num_workers 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:44.3643211Z [gw0]^[[36m [  5%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::test_invalid_input_error_includes_path_location 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:44.3670105Z tests/test_black.py::BlackTestCase::test_assertFormatEqual_print_full_tree 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:44.3722819Z [gw0]^[[36m [  5%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_assertFormatEqual_print_full_tree 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:44.3883614Z tests/test_black.py::BlackTestCase::test_assertFormatEqual_print_tree_diff 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:44.3937647Z [gw0]^[[36m [  5%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_assertFormatEqual_print_tree_diff 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:44.3997321Z tests/test_black.py::BlackTestCase::test_bpo_2142_workaround 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:44.3998316Z [gw1]^[[36m [  6%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_invalid_black_num_workers 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:44.4021038Z tests/test_black.py::BlackTestCase::test_invalid_cli_regex 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.5188728Z [gw1]^[[36m [ 18%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestCaching::test_filter_cached_hash 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.5189402Z tests/test_black.py::TestCaching::test_write_cache_creates_directory_if_needed 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.5190322Z [gw1]^[[36m [ 18%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestCaching::test_write_cache_creates_directory_if_needed 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.5834183Z tests/test_black.py::TestCaching::test_failed_formatting_does_not_get_cached 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.5990331Z [gw3]^[[36m [ 18%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestCaching::test_cache_broken_file 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.6202088Z tests/test_black.py::TestCaching::test_cache_empty_file 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.6416983Z [gw3]^[[36m [ 18%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestCaching::test_cache_empty_file 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.6606329Z tests/test_black.py::TestCaching::test_cache_single_file_already_cached 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.6796369Z [gw3]^[[36m [ 19%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestCaching::test_cache_single_file_already_cached 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.6962282Z tests/test_black.py::TestCaching::test_cache_multiple_files 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.7136954Z [gw0]^[[36m [ 19%] ^[[0m^[[31mFAILED^[[0m tests/test_black.py::BlackTestCase::test_expression_diff 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.7486212Z tests/test_black.py::BlackTestCase::test_expression_diff_with_color 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.7649203Z [gw2]^[[36m [ 19%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_piping_diff_with_color_respects_no_color 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.7687536Z tests/test_black.py::BlackTestCase::test_preserves_line_endings 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.9210800Z tests/test_black.py::BlackTestCase::test_reformat_one_with_stdin_filename_ipynb 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.9324420Z [gw2]^[[36m [ 22%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_reformat_one_with_stdin_filename_ipynb 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.9447592Z tests/test_black.py::BlackTestCase::test_reformat_one_with_stdin_filename_pyi 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.9547281Z [gw1]^[[36m [ 22%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestCaching::test_failed_formatting_does_not_get_cached 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.9636123Z tests/test_black.py::TestCaching::test_write_cache_write_fail 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.9763073Z [gw2]^[[36m [ 22%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_reformat_one_with_stdin_filename_pyi 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:45.9805566Z tests/test_black.py::BlackTestCase::test_report_normal 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:47.6127416Z [gw3]^[[36m [ 36%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestDeFactoAPI::test_format_str 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:47.6142188Z tests/test_black.py::TestDeFactoAPI::test_format_file_contents 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:47.6165635Z [gw3]^[[36m [ 36%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestDeFactoAPI::test_format_file_contents 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:47.6306246Z tests/test_black.py::TestASTSafety::test_assert_equivalent_basic 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:47.6307277Z [gw3]^[[36m [ 36%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_assert_equivalent_basic 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:47.6324249Z tests/test_black.py::TestASTSafety::test_assert_equivalent_del 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:47.6342793Z [gw3]^[[36m [ 37%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_assert_equivalent_del 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:47.6503585Z tests/test_black.py::TestASTSafety::test_assert_equivalent_fstring 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:47.6513972Z [gw3]^[[36m [ 37%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_assert_equivalent_fstring 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:47.6644537Z tests/test_black.py::TestASTSafety::test_assert_equivalent_strings 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:47.6653454Z [gw3]^[[36m [ 37%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_assert_equivalent_strings 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:47.6684682Z tests/test_black.py::TestASTSafety::test_equivalency_ast_parse_failure_includes_error 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:47.6709398Z [gw3]^[[36m [ 37%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_equivalency_ast_parse_failure_includes_error 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:47.6811062Z tests/test_black.py::TestASTSafety::test_mixed_target_versions_with_runtime_no_warning 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:47.6826200Z [gw3]^[[36m [ 38%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_mixed_target_versions_with_runtime_no_warning 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:47.6849772Z tests/test_black.py::TestASTSafety::test_target_version_at_runtime_no_warning 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:28:59.3046605Z tests/test_format.py::test_line_ranges_line_by_line[function_docstring] 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0842813Z [gw3]^[[36m [100%] ^[[0m^[[32mPASSED^[[0m tests/test_format.py::test_line_ranges_line_by_line[function_docstring] 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0843263Z 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0843386Z ================================== FAILURES ===================================
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0843884Z ^[[31m^[[1m_____________________ BlackTestCase.test_expression_diff ______________________^[[0m
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0844363Z [gw0] win32 -- Python 3.15.0 C:\a\black\black\.tox\ci-py315\Scripts\python.EXE
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0844634Z 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0856144Z             result = BlackRunner().invoke(^[[90m^[[39;49;00m
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0857054Z                 black.main, [^[[33m"^[[39;49;00m^[[33m--diff^[[39;49;00m^[[33m"^[[39;49;00m, ^[[96mstr^[[39;49;00m(tmp_file), ^[[33mf^[[39;49;00m^[[33m"^[[39;49;00m^[[33m--config=^[[39;49;00m^[[33m{^[[39;49;00mEMPTY_CONFIG^[[33m}^[[39;49;00m^[[33m"^[[39;49;00m]^[[90m^[[39;49;00m
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0857873Z             )^[[90m^[[39;49;00m
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0858283Z >           ^[[96mself^[[39;49;00m.assertEqual(result.exit_code, ^[[94m0^[[39;49;00m)^[[90m^[[39;49;00m
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0858731Z ^[[1m^[[31mE           AssertionError: 123 != 0^[[0m
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0859161Z 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0859373Z ^[[1m^[[31mtests\test_black.py^[[0m:358: AssertionError
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0859701Z =============================== tests coverage ================================
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0860089Z _____________ coverage: platform win32, python 3.15.0-candidate-2 _____________
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0860358Z 
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0860485Z Name                                         Stmts   Miss Branch BrPart  Cover
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0860842Z ------------------------------------------------------------------------------
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0861225Z src\_black_version.py                            1      0      0      0   100%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0861605Z src\black\__init__.py                          659     84    338     27    87%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0861989Z src\black\_width_table.py                        2      0      0      0   100%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0862389Z src\black\brackets.py                          183      3     86      1    99%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0868515Z src\black\cache.py                              85      6     16      1    93%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0868955Z src\black\comments.py                          407     17    250     24    93%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0869704Z src\black\concurrency.py                       119     17     50     12    80%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0870132Z src\black\const.py                               4      0      0      0   100%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0870502Z src\black\debug.py                              40      0     10      1    98%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0870880Z src\black\files.py                             215     16     82      6    91%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0871272Z src\black\handle_ipynb_magics.py               194    144     72      1    19%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0871883Z src\black\linegen.py                           942     26    552     31    96%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0872259Z src\black\lines.py                             806     58    504     47    91%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0872624Z src\black\mode.py                              102      2     10      2    96%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0872992Z src\black\nodes.py                             531     18    334     24    95%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0873374Z src\black\numerics.py                           35      0     14      0   100%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0873754Z src\black\output.py                             77      5     32      4    92%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0874138Z src\black\parsing.py                           144      6     48      0    97%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0874521Z src\black\ranges.py                            254     16    128     15    92%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0874895Z src\black\report.py                             66      0     24      0   100%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0875294Z src\black\resources\__init__.py                  0      0      0      0   100%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0875688Z src\black\rusty.py                              14      0      0      0   100%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0876057Z src\black\schema.py                             10      0      0      0   100%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0876434Z src\black\strings.py                           209     38     98      1    79%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0876813Z src\black\trans.py                             949     22    452     21    97%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0877185Z src\blackd\__init__.py                         167     13     34      3    92%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0877562Z src\blackd\client.py                            40      5     26      2    86%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0877956Z src\blackd\middlewares.py                       28      0     10      1    97%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0878340Z tests\__init__.py                                0      0      0      0   100%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0878706Z tests\conftest.py                               10      0      0      0   100%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0879311Z tests\optional.py                               68      9     20      8    81%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0879697Z tests\test_black.py                           1890     76    126     16    95%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0880086Z tests\test_blackd.py                           271      3     10      2    98%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0880503Z tests\test_concurrency_manager_shutdown.py      31      0      0      0   100%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0880917Z tests\test_docs.py                              40      6     18      6    79%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0881292Z tests\test_format.py                            41      0      4      0   100%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0881670Z tests\test_ipynb.py                            216    200      0      0     7%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0882050Z tests\test_no_ipynb.py                          22      0      0      0   100%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0882433Z tests\test_ranges.py                            39      0      0      0   100%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0882818Z tests\test_schema.py                             7      0      0      0   100%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0883208Z tests\test_tokenize.py                          27      5      2      1    79%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0883592Z tests\test_trans.py                             32      0      2      0   100%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0883954Z tests\util.py                                  176     15     36      1    92%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0884584Z ------------------------------------------------------------------------------
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0884973Z TOTAL                                         9153    810   3388    258    90%
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0885542Z ^[[36m^[[1m=========================== short test summary info ===========================^[[0m
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0886938Z ^[[31mFAILED^[[0m tests/test_black.py::^[[1mBlackTestCase::test_expression_diff^[[0m - AssertionError: 123 != 0
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.0887780Z ^[[31m======== ^[[31m^[[1m1 failed^[[0m, ^[[32m480 passed^[[0m, ^[[33m4 skipped^[[0m, ^[[32m8 subtests passed^[[0m^[[31m in 19.24s^[[0m^[[31m =========^[[0m
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.1561910Z ci-py315: exit 1 (20.29 seconds) C:\a\black\black> pytest tests --run-optional no_jupyter --numprocesses auto --cov -v --color=yes pid=8432
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.1575069Z   ci-py315: FAIL code 1 (62.97=setup[9.83]+cmd[32.58,0.27,20.29] seconds)
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.1575439Z   evaluation failed :( (63.00 seconds)
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.2786370Z ##[error]Process completed with exit code 1.
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.3269783Z Post job cleanup.
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.6325017Z [command]"C:\Program Files\Git\bin\git.exe" version
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:01.6813024Z git version 2.55.0.windows.5
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-09-16T00:29:05.7174011Z Cleaning up orphan processes

@@ -1,0 +1,94 @@
+test-types	UNKNOWN STEP	﻿2026-08-07T15:25:19.2037770Z Current runner version: '2.336.0'
+test-types	UNKNOWN STEP	2026-08-07T15:25:19.2063200Z ##[group]Runner Image Provisioner
+test-types	UNKNOWN STEP	2026-08-07T15:25:19.2064175Z Hosted Compute Agent
+test-types	UNKNOWN STEP	2026-08-07T15:25:19.2065136Z Version: 20260707.563
+test-types	UNKNOWN STEP	2026-08-07T15:25:19.2073217Z ##[group]Runner Image
+test-types	UNKNOWN STEP	2026-08-07T15:25:19.2073862Z Image: ubuntu-24.04
+test-types	UNKNOWN STEP	2026-08-07T15:25:19.2074418Z Version: 20260720.247.2
+test-types	UNKNOWN STEP	2026-08-07T15:25:20.5305750Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+test-types	UNKNOWN STEP	2026-08-07T15:25:20.5306990Z with:
+test-types	UNKNOWN STEP	2026-08-07T15:25:20.5307495Z   persist-credentials: false
+test-types	UNKNOWN STEP	2026-08-07T15:25:21.8955793Z ##[group]Run nodesource/setup-nsolid@1ca68d2589d3d56ecd3881dfe6ffa87eeda9c939
+test-types	UNKNOWN STEP	2026-08-07T15:25:21.8957510Z with:
+test-types	UNKNOWN STEP	2026-08-07T15:25:21.8958336Z   node-version: 24
+test-types	UNKNOWN STEP	2026-08-07T15:25:25.3380203Z ##[group]Run npm install --ignore-scripts
+test-types	UNKNOWN STEP	2026-08-07T15:25:25.3380679Z ^[[36;1mnpm install --ignore-scripts^[[0m
+test-types	UNKNOWN STEP	2026-08-07T15:25:25.3432389Z shell: /usr/bin/bash -e {0}
+test-types	UNKNOWN STEP	2026-08-07T15:25:50.9617368Z ##[group]Run npm run test:types
+test-types	UNKNOWN STEP	2026-08-07T15:25:50.9617711Z ^[[36;1mnpm run test:types^[[0m
+test-types	UNKNOWN STEP	2026-08-07T15:25:50.9662346Z shell: /usr/bin/bash -e {0}
+test-types	UNKNOWN STEP	2026-08-07T15:25:50.9662877Z   NODE_OPTIONS: no-network-family-autoselection
+test-types	UNKNOWN STEP	2026-08-07T15:25:50.9663188Z ##[endgroup]
+test-types	UNKNOWN STEP	2026-08-07T15:25:51.0784964Z 
+test-types	UNKNOWN STEP	2026-08-07T15:25:51.0785749Z > fastify@5.11.2 test:types
+test-types	UNKNOWN STEP	2026-08-07T15:25:51.0786288Z > tstyche
+test-types	UNKNOWN STEP	2026-08-07T15:25:51.0786504Z 
+test-types	UNKNOWN STEP	2026-08-07T15:25:51.3363246Z ^[[90m····^[[0m TSTyche 7.2.2^[[90m at /home/runner/work/fastify/fastify^[[0m
+test-types	UNKNOWN STEP	2026-08-07T15:25:51.3363741Z 
+test-types	UNKNOWN STEP	2026-08-07T15:25:53.9184189Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mdecorate-request-reply.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:25:53.9362376Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0merrors.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:25:55.4015433Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mfastify.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:25:57.3551383Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mhooks.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:25:58.6636420Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0minstance.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5091828Z ^[[31mfail^[[0m ^[[90m./test/types/^[[0mlogger.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5092347Z 
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5101140Z ^[[31mError: ^[[0mType 'Partial<FastifyReply<RouteGenericInterface, Server<typeof IncomingMessage, typeof ServerResponse>, IncomingMessage, ... 4 more ..., unknown>>' is not the same as type 'Partial<FastifyReply<RouteGenericInterface, RawServerDefault, IncomingMessage, ServerResponse<IncomingMessage>, unknown, FastifySchema, FastifyTypeProviderDefault, unknown>> & Pick<...>'.
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5103880Z 
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5104166Z ^[[90m  158^[[0m^[[90m | ^[[0m      },
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5105036Z ^[[90m  159^[[0m^[[90m | ^[[0m      res (reply) {
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5106213Z ^[[31m  160^[[0m^[[90m | ^[[0m        expect(reply).type.toBe<Partial<FastifyReply> & Pick<FastifyReply, 'statusCode'>>()
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5107527Z      ^[[90m | ^[[0m                                ^[[31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^[[0m
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5108525Z ^[[90m  161^[[0m^[[90m | ^[[0m        expect(reply).type.not.toBeAssignableTo<FastifyReply>()
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5109267Z ^[[90m  162^[[0m^[[90m | ^[[0m        return {
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5109869Z ^[[90m  163^[[0m^[[90m | ^[[0m          statusCode: 'statusCode'
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5110252Z 
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5110657Z        ^[[90m at ^[[0m^[[36m./test/types/logger.tst.ts^[[0m^[[90m:160:33^[[0m^[[90m^[[0m
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5111158Z 
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5112867Z ^[[31mError: ^[[0mType 'Partial<FastifyReply<RouteGenericInterface, Server<typeof IncomingMessage, typeof ServerResponse>, IncomingMessage, ... 4 more ..., unknown>>' is not the same as type 'Partial<FastifyReply<RouteGenericInterface, RawServerDefault, IncomingMessage, ServerResponse<IncomingMessage>, unknown, FastifySchema, FastifyTypeProviderDefault, unknown>> & Pick<...>'.
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5114391Z 
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5114543Z ^[[90m  193^[[0m^[[90m | ^[[0m    serializers: {
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5115137Z ^[[90m  194^[[0m^[[90m | ^[[0m      res (reply) {
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5115737Z ^[[31m  195^[[0m^[[90m | ^[[0m        expect(reply).type.toBe<Partial<FastifyReply> & Pick<FastifyReply, 'statusCode'>>()
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5116449Z      ^[[90m | ^[[0m                                ^[[31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^[[0m
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5117013Z ^[[90m  196^[[0m^[[90m | ^[[0m        expect(reply).type.not.toBeAssignableTo<FastifyReply>()
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5117452Z ^[[90m  197^[[0m^[[90m | ^[[0m        return {
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5117770Z ^[[90m  198^[[0m^[[90m | ^[[0m          status: '200'
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5117966Z 
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5118206Z        ^[[90m at ^[[0m^[[36m./test/types/logger.tst.ts^[[0m^[[90m:195:33^[[0m^[[90m^[[0m
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5118871Z 
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5120567Z ^[[31mError: ^[[0mType 'Partial<FastifyReply<RouteGenericInterface, Server<typeof IncomingMessage, typeof ServerResponse>, IncomingMessage, ... 4 more ..., unknown>>' is not the same as type 'Partial<FastifyReply<RouteGenericInterface, RawServerDefault, IncomingMessage, ServerResponse<IncomingMessage>, unknown, FastifySchema, FastifyTypeProviderDefault, unknown>> & Pick<...>'.
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5121954Z 
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5122076Z ^[[90m  221^[[0m^[[90m | ^[[0m      },
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5122376Z ^[[90m  222^[[0m^[[90m | ^[[0m      res (reply) {
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5122950Z ^[[31m  223^[[0m^[[90m | ^[[0m        expect(reply).type.toBe<Partial<FastifyReply> & Pick<FastifyReply, 'statusCode'>>()
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5123611Z      ^[[90m | ^[[0m                                ^[[31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^[[0m
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5124163Z ^[[90m  224^[[0m^[[90m | ^[[0m        expect(reply).type.not.toBeAssignableTo<FastifyReply>()
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5124586Z ^[[90m  225^[[0m^[[90m | ^[[0m        return {
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5125646Z ^[[90m  226^[[0m^[[90m | ^[[0m          statusCode: 'statusCode'
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5126020Z 
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5126412Z        ^[[90m at ^[[0m^[[36m./test/types/logger.tst.ts^[[0m^[[90m:223:33^[[0m^[[90m^[[0m
+test-types	UNKNOWN STEP	2026-08-07T15:25:59.5126850Z 
+test-types	UNKNOWN STEP	2026-08-07T15:26:00.1469417Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mplugin.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:26:00.8071222Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mregister.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:26:02.0460181Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mreply.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:26:02.8948074Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mrequest.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:26:03.6850262Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mroute.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:26:04.0550957Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mschema.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:26:04.0658604Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mserverFactory.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:26:05.5800066Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mtype-provider.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:26:05.8533209Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0musing.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:26:05.8533602Z 
+test-types	UNKNOWN STEP	2026-08-07T15:26:05.8539164Z Targets:    ^[[31m1 failed^[[0m, 1 total
+test-types	UNKNOWN STEP	2026-08-07T15:26:05.8539834Z Test files: ^[[31m1 failed^[[0m, ^[[32m15 passed^[[0m, 16 total
+test-types	UNKNOWN STEP	2026-08-07T15:26:05.8540324Z Tests:      ^[[32m2 passed^[[0m, 2 total
+test-types	UNKNOWN STEP	2026-08-07T15:26:05.8540827Z Assertions: ^[[31m3 failed^[[0m, ^[[32m1279 passed^[[0m, 1282 total
+test-types	UNKNOWN STEP	2026-08-07T15:26:05.8541338Z Suppressed: ^[[32m57 matched^[[0m, 57 total
+test-types	UNKNOWN STEP	2026-08-07T15:26:05.8541686Z Duration:   14.5s
+test-types	UNKNOWN STEP	2026-08-07T15:26:05.9892168Z ##[error]Process completed with exit code 1.
+test-types	UNKNOWN STEP	2026-08-07T15:26:06.0027099Z Post job cleanup.
+test-types	UNKNOWN STEP	2026-08-07T15:26:06.0877067Z [command]/usr/bin/git version
+test-types	UNKNOWN STEP	2026-08-07T15:26:06.0922400Z git version 2.54.0
+test-types	UNKNOWN STEP	2026-08-07T15:26:06.1523068Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test-types	UNKNOWN STEP	2026-08-07T15:26:06.1553923Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+test-types	UNKNOWN STEP	2026-08-07T15:26:06.1904119Z Cleaning up orphan processes
+test-types	UNKNOWN STEP	2026-08-07T15:26:06.2173493Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: nodesource/setup-nsolid@1ca68d2589d3d56ecd3881dfe6ffa87eeda9c939. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

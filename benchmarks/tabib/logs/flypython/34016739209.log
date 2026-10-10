@@ -1,0 +1,50 @@
+validate (3.12)	UNKNOWN STEP	﻿2026-09-06T06:32:09.7188085Z Current runner version: '2.337.0'
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:09.7227313Z ##[group]Runner Image Provisioner
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:09.7228846Z Hosted Compute Agent
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:09.7230499Z Version: 20260828.587
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:09.7244682Z ##[group]Runner Image
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:09.7245787Z Image: ubuntu-24.04
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:09.7246743Z Version: 20260831.293.1
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:10.5056281Z ##[group]Run actions/checkout@v4
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:10.5057021Z with:
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:10.5057476Z   repository: flypythoncom/python
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:11.1240488Z ##[group]Run astral-sh/setup-uv@v5
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:11.1241080Z with:
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:11.1241535Z   enable-cache: true
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:12.2801056Z ##[group]Run uv python install 3.12
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:12.2802499Z ^[[36;1muv python install 3.12^[[0m
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:12.2847272Z shell: /usr/bin/bash -e {0}
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.2446633Z ##[group]Run uv pip install --system -r requirements-dev.lock.txt ruff
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.2447210Z ^[[36;1muv pip install --system -r requirements-dev.lock.txt ruff^[[0m
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.2485942Z shell: /usr/bin/bash -e {0}
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.2486221Z env:
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.2486497Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.2486819Z ##[endgroup]
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4443005Z Using Python 3.12.3 environment at: /usr
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4450261Z error: The interpreter at /usr is externally managed, and indicates the following:
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4450849Z 
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4451458Z   To install Python packages system-wide, try apt install
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4451963Z   python3-xyz, where xyz is the package you are trying to
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4452371Z   install.
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4452498Z 
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4452710Z   If you wish to install a non-Debian-packaged Python package,
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4453610Z   create a virtual environment using python3 -m venv path/to/venv.
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4454175Z   Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4454626Z   sure you have python3-full installed.
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4454850Z 
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4455047Z   If you wish to install a non-Debian packaged Python application,
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4455524Z   it may be easiest to use pipx install xyz, which will manage a
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4456006Z   virtual environment for you. Make sure you have pipx installed.
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4456318Z 
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4456513Z   See /usr/share/doc/python3.12/README.venv for more information.
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4456869Z 
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4457232Z hint: Virtual environments were not considered due to the `--system` flag
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4471137Z ##[error]Process completed with exit code 2.
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4648794Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.4650354Z Post job cleanup.
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.5533566Z [command]/usr/bin/git version
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.5588682Z git version 2.55.0
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.6319111Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.6358623Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.6784861Z Cleaning up orphan processes
+validate (3.12)	UNKNOWN STEP	2026-09-06T06:32:13.7130441Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, astral-sh/setup-uv@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

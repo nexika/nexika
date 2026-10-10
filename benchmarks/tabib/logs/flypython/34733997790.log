@@ -1,0 +1,123 @@
+validate (3.12)	UNKNOWN STEP	﻿2026-09-13T02:49:51.8173508Z Current runner version: '2.337.0'
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:51.8208485Z ##[group]Runner Image Provisioner
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:51.8210037Z Hosted Compute Agent
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:51.8211012Z Version: 20260828.587
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:51.8224615Z ##[group]Runner Image
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:51.8225602Z Image: ubuntu-24.04
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:51.8226583Z Version: 20260907.300.1
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:52.5903975Z ##[group]Run actions/checkout@v4
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:52.5904710Z with:
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:52.5905158Z   repository: flypythoncom/python
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:53.2362248Z ##[group]Run astral-sh/setup-uv@v5
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:53.2362879Z with:
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:53.2363316Z   enable-cache: true
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:54.4454346Z ##[group]Run uv python install 3.12
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:54.4455717Z ^[[36;1muv python install 3.12^[[0m
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:54.4500942Z shell: /usr/bin/bash -e {0}
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:55.4567243Z ##[group]Run uv venv --python 3.12
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:55.4568214Z ^[[36;1muv venv --python 3.12^[[0m
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:55.4568595Z ^[[36;1muv pip install -r requirements-dev.lock.txt ruff^[[0m
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4648474Z ##[group]Run .venv/bin/ruff check .
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4648860Z ^[[36;1m.venv/bin/ruff check .^[[0m
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4687218Z shell: /usr/bin/bash -e {0}
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4687756Z env:
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4688025Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4688347Z ##[endgroup]
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4941947Z F401 [*] `json` imported but unused
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4942540Z   --> courses/da-eda/starter/eda.py:9:8
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4943003Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4943352Z  7 | from __future__ import annotations
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4943798Z  8 |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4944091Z  9 | import json
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4944415Z    |        ^^^^
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4944829Z 10 | from pathlib import Path
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4945222Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4945570Z help: Remove unused import: `json`
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4945989Z   |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4946269Z 8 |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4946562Z   - import json
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4947004Z 9 | from pathlib import Path
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4947599Z   |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4947771Z 
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4947965Z F401 [*] `pandas` imported but unused
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4948508Z   --> courses/da-eda/starter/eda.py:12:18
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4948964Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4949174Z 10 | from pathlib import Path
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4949407Z 11 |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4949845Z 12 | import pandas as pd
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4950090Z    |                  ^^
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4950316Z 13 |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4950761Z 14 | SCENARIO_DIR = Path(__file__).resolve().parent.parent / "scenario" / "shop-export"
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4951826Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4952172Z help: Remove unused import: `pandas`
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4952606Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4952792Z 11 |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4953021Z    - import pandas as pd
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4953248Z 12 |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4953411Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4953506Z 
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4953611Z F401 [*] `json` imported but unused
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4953932Z   --> courses/da-report/starter/report.py:9:8
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4954217Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4954414Z  7 | from __future__ import annotations
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4954670Z  8 |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4954843Z  9 | import json
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4955047Z    |        ^^^^
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4955262Z 10 | from pathlib import Path
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4955500Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4955697Z help: Remove unused import: `json`
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4955939Z   |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4956104Z 8 |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4956274Z   - import json
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4956488Z 9 | from pathlib import Path
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4956710Z   |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4956810Z 
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4956911Z F401 [*] `json` imported but unused
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4957229Z   --> courses/da-visualization/starter/charts.py:9:8
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4957811Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4958022Z  7 | from __future__ import annotations
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4958277Z  8 |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4958450Z  9 | import json
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4958648Z    |        ^^^^
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4958854Z 10 | from pathlib import Path
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4959081Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4959274Z help: Remove unused import: `json`
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4959515Z   |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4959679Z 8 |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4959849Z   - import json
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4960063Z 9 | from pathlib import Path
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4960303Z   |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4960410Z 
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4960518Z F401 [*] `pandas` imported but unused
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4960845Z   --> courses/da-visualization/starter/charts.py:12:18
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4961143Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4961336Z 10 | from pathlib import Path
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4961562Z 11 |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4961752Z 12 | import pandas as pd
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4961977Z    |                  ^^
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4962182Z 13 |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4962505Z 14 | SCENARIO_DIR = Path(__file__).resolve().parent.parent / "scenario" / "sales-clean"
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4962914Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4963324Z help: Remove unused import: `pandas`
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4963604Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4963773Z 11 |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4963961Z    - import pandas as pd
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4964173Z 12 |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4964338Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4964432Z 
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4964518Z Found 5 errors.
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4964746Z [*] 5 fixable with the `--fix` option.
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.4975849Z ##[error]Process completed with exit code 1.
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.5172431Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.5173742Z Post job cleanup.
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.6064717Z [command]/usr/bin/git version
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.6114205Z git version 2.55.0
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.6162730Z Temporarily overriding HOME='/home/runner/work/_temp/65706c76-2b19-4054-a4f0-5e142006d5b6' before making global git config changes
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.6164057Z Adding repository directory to the temporary git global config as a safe directory
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.6563917Z http.https://github.com/.extraheader
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.6584962Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.6613554Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.6935453Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.6991876Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.7442732Z Cleaning up orphan processes
+validate (3.12)	UNKNOWN STEP	2026-09-13T02:49:56.7734789Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, astral-sh/setup-uv@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

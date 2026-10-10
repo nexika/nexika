@@ -1,0 +1,48 @@
+validate-links	UNKNOWN STEP	﻿2026-10-01T00:35:00.1701477Z Current runner version: '2.337.0'
+validate-links	UNKNOWN STEP	2026-10-01T00:35:00.1732014Z ##[group]Runner Image Provisioner
+validate-links	UNKNOWN STEP	2026-10-01T00:35:00.1733134Z Hosted Compute Agent
+validate-links	UNKNOWN STEP	2026-10-01T00:35:00.1733901Z Version: 20260901.588
+validate-links	UNKNOWN STEP	2026-10-01T00:35:00.1743360Z ##[group]Runner Image
+validate-links	UNKNOWN STEP	2026-10-01T00:35:00.1744119Z Image: ubuntu-24.04
+validate-links	UNKNOWN STEP	2026-10-01T00:35:00.1744883Z Version: 20260927.320.1
+validate-links	UNKNOWN STEP	2026-10-01T00:35:00.8449129Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+validate-links	UNKNOWN STEP	2026-10-01T00:35:00.8450022Z with:
+validate-links	UNKNOWN STEP	2026-10-01T00:35:00.8450540Z   persist-credentials: false
+validate-links	UNKNOWN STEP	2026-10-01T00:35:01.6661776Z ##[group]Run actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+validate-links	UNKNOWN STEP	2026-10-01T00:35:01.6663059Z with:
+validate-links	UNKNOWN STEP	2026-10-01T00:35:01.6663766Z   node-version: 24
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.2718429Z ##[group]Run node scripts/validate-ecosystem-links.js
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.2718895Z ^[[36;1mnode scripts/validate-ecosystem-links.js^[[0m
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.2925174Z shell: /usr/bin/bash -e {0}
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.2925456Z env:
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.2927801Z   GITHUB_TOKEN: [secret]
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.2928030Z ##[endgroup]
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3246477Z node:internal/modules/cjs/loader:1568
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3246903Z   throw err;
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3247368Z   ^
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3247495Z 
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3247691Z Error: Cannot find module 'undici'
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3248084Z Require stack:
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3248689Z - /home/runner/work/fastify/fastify/scripts/validate-ecosystem-links.js
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3249595Z     at Module._resolveFilename (node:internal/modules/cjs/loader:1564:15)
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3250394Z     at wrapResolveFilename (node:internal/modules/cjs/loader:1118:27)
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3251268Z     at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1142:10)
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3252065Z     at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1169:12)
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3252750Z     at Module._load (node:internal/modules/cjs/loader:1341:5)
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3253385Z     at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3254042Z     at Module.require (node:internal/modules/cjs/loader:1674:12)
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3254649Z     at require (node:internal/modules/helpers:157:16)
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3255505Z     at Object.<anonymous> (/home/runner/work/fastify/fastify/scripts/validate-ecosystem-links.js:17:19)
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3256359Z     at Module._compile (node:internal/modules/cjs/loader:1929:14) {
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3256907Z   code: 'MODULE_NOT_FOUND',
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3257406Z   requireStack: [
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3258006Z     '/home/runner/work/fastify/fastify/scripts/validate-ecosystem-links.js'
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3258583Z   ]
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3258897Z }
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3259073Z 
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3259235Z Node.js v24.21.0
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3281536Z ##[error]Process completed with exit code 1.
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.3405556Z Post job cleanup.
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.4070649Z [command]/usr/bin/git version
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.4102688Z git version 2.55.0
+validate-links	UNKNOWN STEP	2026-10-01T00:35:02.4955290Z Cleaning up orphan processes

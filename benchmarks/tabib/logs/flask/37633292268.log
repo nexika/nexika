@@ -1,0 +1,62 @@
+typing	UNKNOWN STEP	﻿2026-10-07T14:01:54.0905111Z Current runner version: '2.337.0'
+typing	UNKNOWN STEP	2026-10-07T14:01:54.0934307Z ##[group]Runner Image Provisioner
+typing	UNKNOWN STEP	2026-10-07T14:01:54.0935284Z Hosted Compute Agent
+typing	UNKNOWN STEP	2026-10-07T14:01:54.0936028Z Version: 20260901.588
+typing	UNKNOWN STEP	2026-10-07T14:01:54.0944688Z ##[group]Runner Image
+typing	UNKNOWN STEP	2026-10-07T14:01:54.0945432Z Image: ubuntu-24.04
+typing	UNKNOWN STEP	2026-10-07T14:01:54.0946061Z Version: 20260927.320.1
+typing	UNKNOWN STEP	2026-10-07T14:01:55.7730304Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+typing	UNKNOWN STEP	2026-10-07T14:01:55.7731850Z with:
+typing	UNKNOWN STEP	2026-10-07T14:01:55.7732493Z   persist-credentials: false
+typing	UNKNOWN STEP	2026-10-07T14:01:56.9962995Z ##[group]Run astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+typing	UNKNOWN STEP	2026-10-07T14:01:56.9964611Z with:
+typing	UNKNOWN STEP	2026-10-07T14:01:56.9965470Z   enable-cache: true
+typing	UNKNOWN STEP	2026-10-07T14:02:00.0526186Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+typing	UNKNOWN STEP	2026-10-07T14:02:00.0526636Z with:
+typing	UNKNOWN STEP	2026-10-07T14:02:00.0526901Z   python-version-file: pyproject.toml
+typing	UNKNOWN STEP	2026-10-07T14:02:00.2694111Z ##[group]Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+typing	UNKNOWN STEP	2026-10-07T14:02:00.2694534Z with:
+typing	UNKNOWN STEP	2026-10-07T14:02:00.2694755Z   path: ./.mypy_cache
+typing	UNKNOWN STEP	2026-10-07T14:02:00.2695132Z   key: mypy|6219c17a87bef51f7cdb69f96a7dbe347a62ff011e5d7ce1dc032b93b0079c34
+typing	UNKNOWN STEP	2026-10-07T14:02:00.2695555Z   enableCrossOsArchive: false
+typing	UNKNOWN STEP	2026-10-07T14:02:00.2695835Z   fail-on-cache-miss: false
+typing	UNKNOWN STEP	2026-10-07T14:02:00.2696093Z   lookup-only: false
+typing	UNKNOWN STEP	2026-10-07T14:02:00.2696336Z   save-always: false
+typing	UNKNOWN STEP	2026-10-07T14:02:00.2696555Z env:
+typing	UNKNOWN STEP	2026-10-07T14:02:01.9863341Z ##[group]Run uv run --locked --no-default-groups --group dev tox run -e typing
+typing	UNKNOWN STEP	2026-10-07T14:02:01.9864022Z ^[[36;1muv run --locked --no-default-groups --group dev tox run -e typing^[[0m
+typing	UNKNOWN STEP	2026-10-07T14:02:02.0098382Z shell: /usr/bin/bash -e {0}
+typing	UNKNOWN STEP	2026-10-07T14:02:02.0099212Z env:
+typing	UNKNOWN STEP	2026-10-07T14:02:02.0099540Z   UV_PYTHON_INSTALL_DIR: /home/runner/work/_temp/uv-python-dir
+typing	UNKNOWN STEP	2026-10-07T14:02:02.0100200Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+typing	UNKNOWN STEP	2026-10-07T14:02:02.0100592Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.7/x64
+typing	UNKNOWN STEP	2026-10-07T14:02:02.0101028Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.7/x64/lib/pkgconfig
+typing	UNKNOWN STEP	2026-10-07T14:02:02.0101466Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+typing	UNKNOWN STEP	2026-10-07T14:02:02.0101852Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+typing	UNKNOWN STEP	2026-10-07T14:02:02.0102265Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+typing	UNKNOWN STEP	2026-10-07T14:02:02.0102660Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.7/x64/lib
+typing	UNKNOWN STEP	2026-10-07T14:02:02.0103036Z ##[endgroup]
+typing	UNKNOWN STEP	2026-10-07T14:02:03.3229192Z Using CPython 3.14.7 interpreter at: /opt/hostedtoolcache/Python/3.14.7/x64/bin/python3
+typing	UNKNOWN STEP	2026-10-07T14:02:03.3229739Z Creating virtual environment at: .venv
+typing	UNKNOWN STEP	2026-10-07T14:02:03.3286051Z    Building flask @ file:///home/runner/work/flask/flask
+typing	UNKNOWN STEP	2026-10-07T14:02:04.5423477Z       Built flask @ file:///home/runner/work/flask/flask
+typing	UNKNOWN STEP	2026-10-07T14:02:04.5517222Z Installed 23 packages in 8ms
+typing	UNKNOWN STEP	2026-10-07T14:02:06.6201275Z typing: venv> .venv/bin/uv venv -p /home/runner/work/flask/flask/.venv/bin/python --allow-existing '--prompt=flask[typing]' --python-preference system /home/runner/work/flask/flask/.tox/typing
+typing	UNKNOWN STEP	2026-10-07T14:02:06.6989105Z typing: uv-sync> .venv/bin/uv sync --locked --python-preference system --no-default-groups --no-editable --reinstall-package Flask --group typing -p /home/runner/work/flask/flask/.venv/bin/python
+typing	UNKNOWN STEP	2026-10-07T14:02:07.9858527Z typing: freeze> .venv/bin/uv --color never pip freeze
+typing	UNKNOWN STEP	2026-10-07T14:02:08.0010716Z typing: asgiref==3.12.1,ast-serialize==0.6.0,blinker==1.9.0,cffi==2.1.0,click==8.4.2,cryptography==49.0.0,flask @ file:///home/runner/work/flask/flask,iniconfig==2.3.0,itsdangerous==2.2.0,jinja2==3.1.6,librt==0.13.0,markupsafe==3.0.3,mypy==2.3.0,mypy-extensions==1.1.0,nodeenv==1.10.0,packaging==26.2,pathspec==1.1.1,pluggy==1.6.0,pycparser==3.0,pygments==2.20.0,pyright==1.1.411,pytest==9.1.1,python-dotenv==1.2.2,types-contextvars==2.4.7.3,types-dataclasses==0.6.6,typing-extensions==4.16.0,werkzeug==3.1.8
+typing	UNKNOWN STEP	2026-10-07T14:02:08.0013506Z typing: commands[0]> mypy
+typing	UNKNOWN STEP	2026-10-07T14:02:09.0770745Z src/flask/app.py:206: error: Incompatible types in assignment (expression has
+typing	UNKNOWN STEP	2026-10-07T14:02:09.0771705Z type "Mapping[str, Any]", base class "App" defined the type as "dict[str, Any]")
+typing	UNKNOWN STEP	2026-10-07T14:02:09.0772574Z  [assignment]
+typing	UNKNOWN STEP	2026-10-07T14:02:09.0772984Z         default_config: cabc.Mapping[str, t.Any] = {
+typing	UNKNOWN STEP	2026-10-07T14:02:09.0773500Z                                                    ^
+typing	UNKNOWN STEP	2026-10-07T14:02:09.1745382Z Found 1 error in 1 file (checked 27 source files)
+typing	UNKNOWN STEP	2026-10-07T14:02:09.1823366Z typing: exit 1 (1.18 seconds) /home/runner/work/flask/flask> mypy pid=2591
+typing	UNKNOWN STEP	2026-10-07T14:02:09.1828706Z   typing: FAIL code 1 (2.57=setup[1.39]+cmd[1.18] seconds)
+typing	UNKNOWN STEP	2026-10-07T14:02:09.1829303Z   evaluation failed :( (2.65 seconds)
+typing	UNKNOWN STEP	2026-10-07T14:02:09.2494196Z ##[error]Process completed with exit code 1.
+typing	UNKNOWN STEP	2026-10-07T14:02:09.2625685Z Post job cleanup.
+typing	UNKNOWN STEP	2026-10-07T14:02:09.3540425Z [command]/usr/bin/git version
+typing	UNKNOWN STEP	2026-10-07T14:02:09.3589022Z git version 2.55.0
+typing	UNKNOWN STEP	2026-10-07T14:02:09.4775260Z Cleaning up orphan processes

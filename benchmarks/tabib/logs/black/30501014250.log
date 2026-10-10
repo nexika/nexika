@@ -1,0 +1,58 @@
+docs (ubuntu-latest)	UNKNOWN STEP	﻿2026-07-29T23:54:39.4699492Z Current runner version: '2.336.0'
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:39.4725948Z ##[group]Runner Image Provisioner
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:39.4726844Z Hosted Compute Agent
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:39.4727559Z Version: 20260707.563
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:39.4735887Z ##[group]Runner Image
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:39.4736487Z Image: ubuntu-24.04
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:39.4737109Z Version: 20260720.247.2
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:40.3633874Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:40.3634987Z with:
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:40.3635439Z   persist-credentials: false
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:41.4222042Z ##[group]Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:41.4223933Z with:
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:41.4224884Z   python-version: 3.15
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:41.4225919Z   pip-version: 26.1
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:41.4227020Z   pip-install: -e .[d] --group docs
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:41.4228203Z   check-latest: false
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:41.4236070Z   token: [secret]
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:41.4237073Z   update-environment: true
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:41.4238197Z   allow-prereleases: false
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:41.4239291Z   freethreaded: false
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:41.4240319Z ##[endgroup]
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:41.5635372Z ##[group]Installed versions
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:41.5713738Z Version 3.15 was not found in the local cache
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:42.1431653Z ##[error]The version '3.15' with architecture 'x64' was not found for Ubuntu 24.04.
+docs (ubuntu-latest)	UNKNOWN STEP	The list of all available versions can be found here: https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:42.1712303Z Post job cleanup.
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:42.2559526Z [command]/usr/bin/git version
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:42.2606476Z git version 2.54.0
+docs (ubuntu-latest)	UNKNOWN STEP	2026-07-29T23:54:42.3752710Z Cleaning up orphan processes
+docs (windows-latest)	UNKNOWN STEP	﻿2026-07-29T23:54:39.5526638Z Current runner version: '2.336.0'
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:39.5561790Z ##[group]Runner Image Provisioner
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:39.5563076Z Hosted Compute Agent
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:39.5563912Z Version: 20260707.563
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:39.5573538Z ##[group]Runner Image
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:39.5574119Z Image: windows-2025-vs2026
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:39.5574687Z Version: 20260714.173.1
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:40.3976441Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:40.3977737Z with:
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:40.3978141Z   persist-credentials: false
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:47.3320019Z ##[group]Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:47.3320534Z with:
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:47.3320757Z   python-version: 3.15
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:47.3320967Z   pip-version: 26.1
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:47.3321212Z   pip-install: -e .[d] --group docs
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:47.3321459Z   check-latest: false
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:47.3323783Z   token: [secret]
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:47.3323983Z   update-environment: true
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:47.3324209Z   allow-prereleases: false
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:47.3324412Z   freethreaded: false
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:47.3324606Z ##[endgroup]
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:47.5005871Z ##[group]Installed versions
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:47.5278150Z Version 3.15 was not found in the local cache
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:50.8978224Z ##[error]The version '3.15' with architecture 'x64' was not found for Windows 2025.
+docs (windows-latest)	UNKNOWN STEP	The list of all available versions can be found here: https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:50.9367841Z Post job cleanup.
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:51.1107800Z [command]"C:\Program Files\Git\bin\git.exe" version
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:51.1401722Z git version 2.55.0.windows.2
+docs (windows-latest)	UNKNOWN STEP	2026-07-29T23:54:53.0020560Z Cleaning up orphan processes

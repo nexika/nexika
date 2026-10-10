@@ -1,0 +1,184 @@
+linkChecker	UNKNOWN STEP	﻿2026-07-30T22:39:18.3019526Z Current runner version: '2.336.0'
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:18.3044660Z ##[group]Runner Image Provisioner
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:18.3045557Z Hosted Compute Agent
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:18.3046169Z Version: 20260707.563
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:18.3054382Z ##[group]Runner Image
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:18.3055061Z Image: ubuntu-24.04
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:18.3055635Z Version: 20260720.247.2
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:20.0921842Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:20.0923601Z with:
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:20.0924386Z   persist-credentials: false
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2108136Z ##[endgroup]
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2434554Z ##[group]Run lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2435139Z with:
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2435435Z   fail: true
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2435881Z   args: --offline --verbose --no-progress --root-dir "$(pwd)" './**/*.md'
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2436427Z   debug: false
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2436732Z   failIfEmpty: true
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2555697Z ##[group]Run echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2556292Z ^[[36;1mecho "$HOME/.local/bin" >> "$GITHUB_PATH"^[[0m
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2556745Z ^[[36;1mmkdir -p "$HOME/.local/bin"^[[0m
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2610343Z ##[endgroup]
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2729971Z ##[end-action id=lychee.__run;outcome=success;conclusion=success;duration_ms=22]
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2733178Z ##[start-action display=Clean up existing lychee binary;id=lychee.__run_2]
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2782274Z ##[group]Run # Remove any existing lychee binary to prevent conflicts
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2782984Z ^[[36;1m# Remove any existing lychee binary to prevent conflicts^[[0m
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2783502Z ^[[36;1mrm -f "$HOME/.local/bin/lychee"^[[0m
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2829797Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2830306Z env:
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2958187Z ##[group]Run # Create a temporary directory for downloads and extraction
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2958842Z ^[[36;1m# Create a temporary directory for downloads and extraction^[[0m
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.2959376Z ^[[36;1mTEMP_DIR="${RUNNER_TEMP}/lychee-download"^[[0m
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.7222419Z ##[group]Run # Install lychee from the temporary directory
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.7222809Z ^[[36;1m# Install lychee from the temporary directory^[[0m
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.7223282Z ^[[36;1minstall -t "$HOME/.local/bin" -D "/home/runner/work/_temp/lychee-download/lychee"^[[0m
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.7471506Z ##[group]Run /home/runner/work/_actions/lycheeverse/lychee-action/8646ba30535128ac92d33dfc9133794bfdd9b411/entrypoint.sh
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.7472340Z ^[[36;1m/home/runner/work/_actions/lycheeverse/lychee-action/8646ba30535128ac92d33dfc9133794bfdd9b411/entrypoint.sh^[[0m
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:22.7518207Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0020394Z [EXCLUDED] https://github.com/fastify/fastify#ecosystem
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0021036Z [EXCLUDED] https://github.com/fastify/point-of-view
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0021687Z [EXCLUDED] https://github.com/fastify/fastify-multipart
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0022322Z [EXCLUDED] https://github.com/fastify/fastify-error
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0023011Z [EXCLUDED] https://en.wikipedia.org/wiki/Scalability#Horizontal
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0024229Z [EXCLUDED] https://web.archive.org/web/20190821102906/https://medium.com/intrinsic/why-should-i-use-a-reverse-proxy-if-node-js-is-production-ready-5a079408b2ca
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0024982Z [EXCLUDED] https://www.haproxy.org/
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0083567Z [EXCLUDED] https://github.com/fastify/fastify-helmet
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0084369Z [EXCLUDED] https://github.com/fastify/under-pressure
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0084973Z [EXCLUDED] https://github.com/gquittet/graceful-server
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0085626Z [EXCLUDED] https://github.com/hemerajs/fastify-error-page
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0086373Z [EXCLUDED] https://github.com/sinclairzx81/typebox
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0087334Z [EXCLUDED] https://github.com/Phara0h/fastify-good-sessions
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0087847Z [EXCLUDED] https://github.com/lolo32/fastify-http2https
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0159073Z [EXCLUDED] https://github.com/ShogunPanda/fastify-print-routes
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0159449Z [EXCLUDED] https://github.com/Coobaha/typed-fastify
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0160023Z [EXCLUDED] https://github.com/uNetworking/uWebSockets
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0160398Z [EXCLUDED] https://github.com/bhouston/fastify-http-exceptions
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0160775Z [EXCLUDED] https://github.com/alex-ppg/fastify-sentry
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0161107Z [EXCLUDED] https://github.com/niieani/hashids.js
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0161471Z [EXCLUDED] https://github.com/jeromemacias/fastify-rob-config
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0256687Z [EXCLUDED] https://github.com/expressjs/cors
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0257006Z [EXCLUDED] https://github.com/fastify/fastify-static
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0257346Z [EXCLUDED] https://github.com/expressjs/serve-static
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0257708Z [EXCLUDED] https://github.com/mcollina/avvio#error-handling
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0258052Z [EXCLUDED] https://nodejs.org/api/esm.html
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0258362Z [EXCLUDED] https://github.com/fastify/fastify-plugin
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0258721Z [EXCLUDED] https://github.com/fastify/fastify-bearer-auth
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0262884Z [EXCLUDED] https://github.com/fastify/fastify/issues/1864
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0263272Z [EXCLUDED] https://www.npmjs.com/package/fast-json-stringify
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0263804Z [EXCLUDED] https://nodejs.org/dist/latest-v20.x/docs/api/http.html#http_response_setheader_name_value
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0264451Z [EXCLUDED] https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0264965Z [EXCLUDED] https://github.com/fastify/fastify/pull/2023
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0265320Z [EXCLUDED] https://github.com/fastify/fastify/pull/3925
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0265708Z [EXCLUDED] https://nodejs.org/en/blog/community/domain-postmortem
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0267153Z [EXCLUDED] https://github.com/fastify/fastify/pull/2954
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0267507Z [EXCLUDED] https://github.com/fastify/fastify/pull/4750
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0267853Z [EXCLUDED] https://github.com/fastify/fastify/pull/4886
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0268324Z [EXCLUDED] https://nodejs.org/api/process.html#warning-using-uncaughtexception-correctly
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0268814Z [EXCLUDED] https://github.com/fastify/fastify/pull/5768
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0269161Z [EXCLUDED] https://github.com/fastify/fastify/pull/4264
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0269509Z [EXCLUDED] https://github.com/fastify/fastify/pull/2549
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0282227Z [EXCLUDED] https://github.com/pinojs/pino/blob/main/docs/api.md#level-string
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0282750Z [EXCLUDED] https://github.com/pinojs/pino/blob/main/docs/api.md#serializers-object
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0283302Z [EXCLUDED] https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Vary
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0283762Z [EXCLUDED] https://ajv.js.org/api.html#error-objects
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0284085Z [EXCLUDED] https://json-schema.org/
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0284360Z [EXCLUDED] https://semver.org/
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0284650Z [EXCLUDED] https://github.com/delvedor/find-my-way
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0289540Z [EXCLUDED] https://github.com/fastify/help/issues
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0290049Z [EXCLUDED] https://openjsf.org/
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0290337Z [EXCLUDED] https://github.com/fastify/fastify/issues
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0291040Z [ERROR] file:///home/runner/work/fastify/fastify/docs/latest/Reference/Server#factory | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0291714Z [EXCLUDED] https://getpino.io/
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0292007Z [EXCLUDED] https://github.com/mcollina/close-with-grace
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0292402Z [EXCLUDED] https://en.wikipedia.org/wiki/Factory_method_pattern
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0301629Z [EXCLUDED] https://github.com/fastify/ajv-compiler?tab=readme-ov-file#ajv-configuration
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0302075Z [EXCLUDED] https://www.postman.com/
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0302347Z [EXCLUDED] https://insomnia.rest/
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0303079Z [ERROR] file:///home/runner/work/fastify/fastify/docs/latest/Reference/Errors#fst_err_ctp_invalid_media_type | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0303853Z [EXCLUDED] https://github.com/delvedor/find-my-way
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0304590Z [ERROR] file:///home/runner/work/fastify/fastify/docs/latest/Reference/Routes#full-declaration | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0305332Z [EXCLUDED] https://en.wikipedia.org/wiki/Radix_tree
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0306040Z [ERROR] file:///home/runner/work/fastify/fastify/docs/latest/Reference/Routes#async-await | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0306781Z [EXCLUDED] https://github.com/fastify/fast-json-stringify
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0307113Z [EXCLUDED] https://ajv.js.org/
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0307369Z [EXCLUDED] https://json-schema.org/
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0308213Z [ERROR] file:///home/runner/work/fastify/fastify/docs/latest/Reference/Validation-and-Serialization#using-other-validation-libraries | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0309112Z [EXCLUDED] https://mathiasbynens.be/notes/shapes-ics
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0310156Z [ERROR] file:///home/runner/work/fastify/fastify/docs/latest/Reference/Lifecycle#lifecycle | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0311192Z [ERROR] file:///home/runner/work/fastify/fastify/docs/latest/Reference/Hooks | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0311894Z [EXCLUDED] https://github.com/ThomasAribart/json-schema-to-ts
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0312323Z [EXCLUDED] https://github.com/fastify/fastify-type-provider-typebox
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0312727Z [EXCLUDED] https://github.com/sinclairzx81/typebox
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0313893Z [EXCLUDED] https://github.com/fastify/fastify-type-provider-json-schema-to-ts
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0314518Z [EXCLUDED] https://sinclairzx81.github.io/typebox/
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0314894Z [EXCLUDED] https://mathiasbynens.be/notes/shapes-ics#shapes
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0315592Z [ERROR] file:///home/runner/work/fastify/fastify/docs/latest/Reference/Request | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0316587Z [ERROR] file:///home/runner/work/fastify/fastify/docs/latest/Reference/Reply | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0317255Z [EXCLUDED] https://github.com/fastify/fastify-error
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0317688Z [EXCLUDED] https://github.com/fastify/fastify/blob/main/types/request.d.ts#L15
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0318228Z [EXCLUDED] https://www.npmjs.com/package/npm-check
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0318641Z [EXCLUDED] https://github.com/fastify/fastify/blob/main/types/route.d.ts#12
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0378675Z [EXCLUDED] https://github.com/mcollina/hyperid
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0379017Z [EXCLUDED] https://nodejs.org/api/http.html#httpmethods
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0379401Z [EXCLUDED] https://github.com/mcollina/borp?tab=readme-ov-file
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0379993Z [EXCLUDED] https://github.com/fastify/light-my-request
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0380329Z [EXCLUDED] https://nodejs.org/api/test.html
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0380629Z [EXCLUDED] https://www.npmjs.com/package/c8
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0380921Z [EXCLUDED] https://github.com/fastify/avvio
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0381227Z [EXCLUDED] https://github.com/fastify/fastify-env
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0381563Z [EXCLUDED] https://docs.docker.com/engine/install/
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0381902Z [EXCLUDED] https://www.postgresql.org/download/
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0382018Z [EXCLUDED] https://docs.docker.com/desktop/
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0382159Z [EXCLUDED] https://github.com/fastify/fastify-postgres
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0382289Z [EXCLUDED] https://github.com/fastify/fastify-cors
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0382427Z [EXCLUDED] https://github.com/fastify/csrf-protection
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0382937Z [EXCLUDED] https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0383080Z [EXCLUDED] https://github.com/fastify/fastify-swagger
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0383224Z [EXCLUDED] https://github.com/fastify/fastify-swagger-ui
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0383306Z # Summary
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0383312Z 
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0383397Z | Status         | Count |
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0383486Z |----------------|-------|
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0383789Z | 🔍 Total       | 1688  |
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0383909Z | ✅ Successful  | 656   |
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0384020Z | ⏳ Timeouts    | 0     |
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0384135Z | 🔀 Redirected  | 0     |
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0384243Z | 👻 Excluded    | 1023  |
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0384472Z | ❓ Unknown     | 0     |
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0384578Z | 🚫 Errors      | 9     |
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0384695Z | ⛔ Unsupported | 0     |
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0384700Z 
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0384785Z ## Errors per input
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0384790Z 
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0384921Z ### Errors in docs/Tutorial/03-create-server.md
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0384926Z 
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0385452Z * [ERROR] <file:///home/runner/work/fastify/fastify/docs/latest/Reference/Server#factory> | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0385463Z 
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0385586Z ### Errors in docs/Tutorial/04-defining-routes.md
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0385591Z 
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0386166Z * [ERROR] <file:///home/runner/work/fastify/fastify/docs/latest/Reference/Errors#fst_err_ctp_invalid_media_type> | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0386667Z * [ERROR] <file:///home/runner/work/fastify/fastify/docs/latest/Reference/Routes#async-await> | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0387198Z * [ERROR] <file:///home/runner/work/fastify/fastify/docs/latest/Reference/Routes#full-declaration> | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0387208Z 
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0387313Z ### Errors in docs/Tutorial/05-decoration.md
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0387318Z 
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0387776Z * [ERROR] <file:///home/runner/work/fastify/fastify/docs/latest/Reference/Reply> | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0388237Z * [ERROR] <file:///home/runner/work/fastify/fastify/docs/latest/Reference/Request> | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0388241Z 
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0388396Z ### Errors in docs/Tutorial/06-validation-and-serialization.md
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0388400Z 
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0389091Z * [ERROR] <file:///home/runner/work/fastify/fastify/docs/latest/Reference/Validation-and-Serialization#using-other-validation-libraries> | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0389099Z 
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0389193Z ### Errors in docs/Tutorial/07-hooks.md
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0389197Z 
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0389910Z * [ERROR] <file:///home/runner/work/fastify/fastify/docs/latest/Reference/Hooks> | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0390440Z * [ERROR] <file:///home/runner/work/fastify/fastify/docs/latest/Reference/Lifecycle#lifecycle> | Cannot find file: File not found. Check if file exists and path is correct
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0390445Z 
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0390448Z 
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0408439Z ##[notice]Summary report available at: https://github.com/fastify/fastify/actions/runs/30587884207#summary-91023441402
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0410636Z ##[error]Process completed with exit code 2.
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0433091Z ##[end-action id=lychee.run-lychee;outcome=failure;conclusion=failure;duration_ms=299]
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.0616175Z Post job cleanup.
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.1468657Z [command]/usr/bin/git version
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.1505322Z git version 2.54.0
+linkChecker	UNKNOWN STEP	2026-07-30T22:39:23.2507273Z Cleaning up orphan processes

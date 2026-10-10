@@ -1,0 +1,185 @@
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.3833576Z 
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.3896029Z file:///home/runner/work/fastify/fastify/node_modules/tstyche/dist/api.js:4149
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.3896651Z         this.#service = new this.#compiler.server.ProjectService({
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.3897029Z                                                   ^
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.3897223Z 
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.3897539Z TypeError: Cannot read properties of undefined (reading 'ProjectService')
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.3898333Z     at new ProjectService (file:///home/runner/work/fastify/fastify/node_modules/tstyche/dist/api.js:4149:51)
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.3899391Z     at new FileRunner (file:///home/runner/work/fastify/fastify/node_modules/tstyche/dist/api.js:5866:32)
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.3900351Z     at #run (file:///home/runner/work/fastify/fastify/node_modules/tstyche/dist/api.js:6010:36)
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.3901081Z     at async Runner.run (file:///home/runner/work/fastify/fastify/node_modules/tstyche/dist/api.js:5992:9)
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.3901699Z     at async #run (file:///home/runner/work/fastify/fastify/node_modules/tstyche/dist/api.js:6137:13)
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.3902301Z     at async Cli.run (file:///home/runner/work/fastify/fastify/node_modules/tstyche/dist/api.js:6045:9)
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.3902878Z     at async file:///home/runner/work/fastify/fastify/node_modules/tstyche/dist/bin.js:7:20
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.3903211Z 
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.3903296Z Node.js v20.19.4
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.4033664Z ##[error]Process completed with exit code 1.
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.4174838Z Post job cleanup.
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.5049259Z [command]/usr/bin/git version
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.5088478Z git version 2.54.0
+test-types	UNKNOWN STEP	2026-07-16T14:24:33.5731029Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:05.3163770Z ✔ should be the same as package.json (1.461209ms)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:07.9997000Z ✖ check generated code syntax (2327.981792ms)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0028260Z   TypeError [Error]: Cannot read properties of undefined (reading 'Intrinsic')
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0088150Z       at Object.<anonymous> (/Users/runner/work/fastify/fastify/node_modules/ts-api-utils/lib/index.cjs:787:57)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0088710Z       at Module._compile (node:internal/modules/cjs/loader:1543:14)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0089180Z       at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0089530Z       at Module.load (node:internal/modules/cjs/loader:1289:32)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0089840Z       at Module._load (node:internal/modules/cjs/loader:1110:12)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0090150Z       at Module.require (node:internal/modules/cjs/loader:1312:19)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0090470Z       at require (node:internal/modules/helpers:182:18)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0091090Z       at Object.<anonymous> (/Users/runner/work/fastify/fastify/node_modules/neostandard/node_modules/@typescript-eslint/typescript-estree/dist/convert-comments.js:37:30)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0091730Z       at Module._compile (node:internal/modules/cjs/loader:1543:14)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0092080Z       at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0092310Z 
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0164940Z ##[error]TypeError [Error]: Cannot read properties of undefined (reading 'Intrinsic')
+test-unit (20, macos-latest)	UNKNOWN STEP	    at Object.<anonymous> ^[[90m(/Users/runner/work/fastify/fastify/^[[39mnode_modules/^[[4mts-api-utils^[[24m/lib/index.cjs:787:57^[[90m)^[[39m
+test-unit (20, macos-latest)	UNKNOWN STEP	^[[90m    at Module._compile (node:internal/modules/cjs/loader:1543:14)^[[39m
+test-unit (20, macos-latest)	UNKNOWN STEP	^[[90m    at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)^[[39m
+test-unit (20, macos-latest)	UNKNOWN STEP	^[[90m    at Module.load (node:internal/modules/cjs/loader:1289:32)^[[39m
+test-unit (20, macos-latest)	UNKNOWN STEP	^[[90m    at Module._load (node:internal/modules/cjs/loader:1110:12)^[[39m
+test-unit (20, macos-latest)	UNKNOWN STEP	^[[90m    at Module.require (node:internal/modules/cjs/loader:1312:19)^[[39m
+test-unit (20, macos-latest)	UNKNOWN STEP	^[[90m    at require (node:internal/modules/helpers:182:18)^[[39m
+test-unit (20, macos-latest)	UNKNOWN STEP	    at Object.<anonymous> ^[[90m(/Users/runner/work/fastify/fastify/^[[39mnode_modules/^[[4mneostandard^[[24m/node_modules/^[[4m@typescript-eslint^[[24m/typescript-estree/dist/convert-comments.js:37:30^[[90m)^[[39m
+test-unit (20, macos-latest)	UNKNOWN STEP	^[[90m    at Module._compile (node:internal/modules/cjs/loader:1543:14)^[[39m
+test-unit (20, macos-latest)	UNKNOWN STEP	^[[90m    at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)^[[39m
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0187890Z ﹣ ensure the current error serializer is latest (0.965209ms) # SKIP
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0346350Z ℹ tests 2296
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0346970Z ℹ suites 22
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0347400Z ℹ pass 2292
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0373460Z 
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0373670Z ✖ failing tests:
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0373920Z 
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0374190Z test at test/build/error-serializer.test.js:14:1
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0375000Z ✖ check generated code syntax (2327.981792ms)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0376000Z   TypeError [Error]: Cannot read properties of undefined (reading 'Intrinsic')
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0378490Z       at Object.<anonymous> (/Users/runner/work/fastify/fastify/node_modules/ts-api-utils/lib/index.cjs:787:57)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0379790Z       at Module._compile (node:internal/modules/cjs/loader:1543:14)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0380760Z       at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0381690Z       at Module.load (node:internal/modules/cjs/loader:1289:32)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0382520Z       at Module._load (node:internal/modules/cjs/loader:1110:12)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0383390Z       at Module.require (node:internal/modules/cjs/loader:1312:19)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0385020Z       at require (node:internal/modules/helpers:182:18)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0385800Z       at Object.<anonymous> (/Users/runner/work/fastify/fastify/node_modules/neostandard/node_modules/@typescript-eslint/typescript-estree/dist/convert-comments.js:37:30)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0386500Z       at Module._compile (node:internal/modules/cjs/loader:1543:14)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0386860Z       at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0418800Z ##[group]Test results (2292 passed, 1 failed)
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0423790Z ##[notice]Total Tests: 2296
+test-unit (20, macos-latest)	UNKNOWN STEP	Suites 📂: 22
+test-unit (20, macos-latest)	UNKNOWN STEP	Passed ✅: 2292
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0425030Z ##[endgroup]
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.0827940Z ##[error]Process completed with exit code 1.
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.1202060Z Post job cleanup.
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.7154880Z [command]/opt/homebrew/bin/git version
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:08.7465340Z git version 2.55.0
+test-unit (20, macos-latest)	UNKNOWN STEP	2026-07-16T14:26:09.1097760Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:24.6395354Z ✔ should be the same as package.json (2.431449ms)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.6821629Z ✖ check generated code syntax (884.717919ms)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.6822381Z   TypeError [Error]: Cannot read properties of undefined (reading 'Intrinsic')
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.6823440Z       at Object.<anonymous> (/home/runner/work/fastify/fastify/node_modules/ts-api-utils/lib/index.cjs:787:57)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.6850094Z       at Module._compile (node:internal/modules/cjs/loader:1543:14)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.6850844Z       at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.6851528Z       at Module.load (node:internal/modules/cjs/loader:1289:32)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.6852117Z       at Module._load (node:internal/modules/cjs/loader:1110:12)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.6852741Z       at Module.require (node:internal/modules/cjs/loader:1312:19)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.6853345Z       at require (node:internal/modules/helpers:182:18)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.6854532Z       at Object.<anonymous> (/home/runner/work/fastify/fastify/node_modules/neostandard/node_modules/@typescript-eslint/typescript-estree/dist/convert-comments.js:37:30)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.6855791Z       at Module._compile (node:internal/modules/cjs/loader:1543:14)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.6856482Z       at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.6856930Z 
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.6905427Z ##[error]TypeError [Error]: Cannot read properties of undefined (reading 'Intrinsic')
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	    at Object.<anonymous> ^[[90m(/home/runner/work/fastify/fastify/^[[39mnode_modules/^[[4mts-api-utils^[[24m/lib/index.cjs:787:57^[[90m)^[[39m
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	^[[90m    at Module._compile (node:internal/modules/cjs/loader:1543:14)^[[39m
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	^[[90m    at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)^[[39m
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	^[[90m    at Module.load (node:internal/modules/cjs/loader:1289:32)^[[39m
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	^[[90m    at Module._load (node:internal/modules/cjs/loader:1110:12)^[[39m
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	^[[90m    at Module.require (node:internal/modules/cjs/loader:1312:19)^[[39m
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	^[[90m    at require (node:internal/modules/helpers:182:18)^[[39m
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	    at Object.<anonymous> ^[[90m(/home/runner/work/fastify/fastify/^[[39mnode_modules/^[[4mneostandard^[[24m/node_modules/^[[4m@typescript-eslint^[[24m/typescript-estree/dist/convert-comments.js:37:30^[[90m)^[[39m
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	^[[90m    at Module._compile (node:internal/modules/cjs/loader:1543:14)^[[39m
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	^[[90m    at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)^[[39m
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.6952144Z ﹣ ensure the current error serializer is latest (1.311374ms) # SKIP
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7254286Z ℹ tests 2296
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7254727Z ℹ suites 22
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7255086Z ℹ pass 2292
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7271459Z 
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7271657Z ✖ failing tests:
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7271886Z 
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7272082Z test at test/build/error-serializer.test.js:14:1
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7272536Z ✖ check generated code syntax (884.717919ms)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7273039Z   TypeError [Error]: Cannot read properties of undefined (reading 'Intrinsic')
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7273806Z       at Object.<anonymous> (/home/runner/work/fastify/fastify/node_modules/ts-api-utils/lib/index.cjs:787:57)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7274529Z       at Module._compile (node:internal/modules/cjs/loader:1543:14)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7275074Z       at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7283261Z       at Module.load (node:internal/modules/cjs/loader:1289:32)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7283817Z       at Module._load (node:internal/modules/cjs/loader:1110:12)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7284353Z       at Module.require (node:internal/modules/cjs/loader:1312:19)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7284846Z       at require (node:internal/modules/helpers:182:18)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7285873Z       at Object.<anonymous> (/home/runner/work/fastify/fastify/node_modules/neostandard/node_modules/@typescript-eslint/typescript-estree/dist/convert-comments.js:37:30)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7287095Z       at Module._compile (node:internal/modules/cjs/loader:1543:14)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7287678Z       at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7400216Z ##[group]Test results (2292 passed, 1 failed)
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7407946Z ##[notice]Total Tests: 2296
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	Suites 📂: 22
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	Passed ✅: 2292
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7410385Z ##[endgroup]
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7635523Z ##[error]Process completed with exit code 1.
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.7783449Z Post job cleanup.
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.8629082Z [command]/usr/bin/git version
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.8667031Z git version 2.54.0
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-07-16T14:25:25.9317450Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:04.5056929Z ✔ should be the same as package.json (6.2076ms)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3284383Z ✖ check generated code syntax (2661.7298ms)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3285214Z   TypeError [Error]: Cannot read properties of undefined (reading 'Intrinsic')
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3285852Z       at Object.<anonymous> (D:\a\fastify\fastify\node_modules\ts-api-utils\lib\index.cjs:787:57)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3286389Z       at Module._compile (node:internal/modules/cjs/loader:1543:14)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3286813Z       at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3287259Z       at Module.load (node:internal/modules/cjs/loader:1289:32)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3287849Z       at Module._load (node:internal/modules/cjs/loader:1110:12)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3288269Z       at Module.require (node:internal/modules/cjs/loader:1312:19)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3289853Z       at require (node:internal/modules/helpers:182:18)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3292630Z       at Object.<anonymous> (D:\a\fastify\fastify\node_modules\neostandard\node_modules\@typescript-eslint\typescript-estree\dist\convert-comments.js:37:30)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3293985Z       at Module._compile (node:internal/modules/cjs/loader:1543:14)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3294727Z       at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3295539Z 
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3410113Z ##[error]TypeError [Error]: Cannot read properties of undefined (reading 'Intrinsic')
+test-unit (20, windows-latest)	UNKNOWN STEP	    at Object.<anonymous> ^[[90m(D:\a\fastify\fastify\^[[39mnode_modules\^[[4mts-api-utils^[[24m\lib\index.cjs:787:57^[[90m)^[[39m
+test-unit (20, windows-latest)	UNKNOWN STEP	^[[90m    at Module._compile (node:internal/modules/cjs/loader:1543:14)^[[39m
+test-unit (20, windows-latest)	UNKNOWN STEP	^[[90m    at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)^[[39m
+test-unit (20, windows-latest)	UNKNOWN STEP	^[[90m    at Module.load (node:internal/modules/cjs/loader:1289:32)^[[39m
+test-unit (20, windows-latest)	UNKNOWN STEP	^[[90m    at Module._load (node:internal/modules/cjs/loader:1110:12)^[[39m
+test-unit (20, windows-latest)	UNKNOWN STEP	^[[90m    at Module.require (node:internal/modules/cjs/loader:1312:19)^[[39m
+test-unit (20, windows-latest)	UNKNOWN STEP	^[[90m    at require (node:internal/modules/helpers:182:18)^[[39m
+test-unit (20, windows-latest)	UNKNOWN STEP	    at Object.<anonymous> ^[[90m(D:\a\fastify\fastify\^[[39mnode_modules\^[[4mneostandard^[[24m\node_modules\^[[4m@typescript-eslint^[[24m\typescript-estree\dist\convert-comments.js:37:30^[[90m)^[[39m
+test-unit (20, windows-latest)	UNKNOWN STEP	^[[90m    at Module._compile (node:internal/modules/cjs/loader:1543:14)^[[39m
+test-unit (20, windows-latest)	UNKNOWN STEP	^[[90m    at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)^[[39m
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3421656Z ﹣ ensure the current error serializer is latest (3.2068ms) # SKIP
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3757148Z ℹ tests 2296
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3759577Z ℹ suites 22
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3761031Z ℹ pass 2290
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3786253Z 
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3786431Z ✖ failing tests:
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3786628Z 
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3787041Z test at test\build\error-serializer.test.js:14:1
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3787752Z ✖ check generated code syntax (2661.7298ms)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3788429Z   TypeError [Error]: Cannot read properties of undefined (reading 'Intrinsic')
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3789373Z       at Object.<anonymous> (D:\a\fastify\fastify\node_modules\ts-api-utils\lib\index.cjs:787:57)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3790546Z       at Module._compile (node:internal/modules/cjs/loader:1543:14)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3791224Z       at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3791976Z       at Module.load (node:internal/modules/cjs/loader:1289:32)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3792652Z       at Module._load (node:internal/modules/cjs/loader:1110:12)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3793335Z       at Module.require (node:internal/modules/cjs/loader:1312:19)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3793982Z       at require (node:internal/modules/helpers:182:18)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3795255Z       at Object.<anonymous> (D:\a\fastify\fastify\node_modules\neostandard\node_modules\@typescript-eslint\typescript-estree\dist\convert-comments.js:37:30)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3796381Z       at Module._compile (node:internal/modules/cjs/loader:1543:14)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3797614Z       at Module._extensions..js (node:internal/modules/cjs/loader:1627:10)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3830506Z ##[group]Test results (2290 passed, 1 failed)
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3837209Z ##[notice]Total Tests: 2296
+test-unit (20, windows-latest)	UNKNOWN STEP	Suites 📂: 22
+test-unit (20, windows-latest)	UNKNOWN STEP	Passed ✅: 2290
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.3842315Z ##[endgroup]
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.5536201Z ##[error]Process completed with exit code 1.
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.5801069Z Post job cleanup.
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.7952530Z [command]"C:\Program Files\Git\bin\git.exe" version
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:07.8238418Z git version 2.55.0.windows.2
+test-unit (20, windows-latest)	UNKNOWN STEP	2026-07-16T14:27:09.3262166Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"

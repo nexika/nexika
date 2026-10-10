@@ -1,0 +1,24 @@
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	﻿2026-08-06T16:22:42.2040279Z Current runner version: '2.336.0'
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2063456Z ##[group]Runner Image Provisioner
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2064270Z Hosted Compute Agent
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2064953Z Version: 20260729.566
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2073334Z ##[group]Runner Image
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2074244Z Image: ubuntu-24.04
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2074936Z Version: 20260804.265.1
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2076200Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260804.265/images/ubuntu/Ubuntu2404-Readme.md
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2078112Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260804.265
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2079255Z ##[endgroup]
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2080335Z ##[group]GITHUB_TOKEN Permissions
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2082522Z Contents: read
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2083174Z Metadata: read
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2083722Z ##[endgroup]
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2085852Z Secret source: Actions
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2087378Z Prepare workflow directory
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2405031Z Prepare all required actions
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:22:42.2451518Z Getting action download info
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:23:47.4334323Z Failed to resolve action download info. Error: Service Unavailable
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:23:47.4413049Z Retrying in 15.531 seconds
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:24:49.5772447Z Failed to resolve action download info. Error: Service Unavailable
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:24:49.5776160Z Retrying in 11.578 seconds
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:25:43.5860489Z ##[error]Service Unavailable
+test-unit (20, ubuntu-latest)	UNKNOWN STEP	2026-08-06T16:25:43.5881857Z ##[error]Failed to resolve action download info.

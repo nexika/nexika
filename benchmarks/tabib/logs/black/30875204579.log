@@ -1,0 +1,118 @@
+comment	UNKNOWN STEP	﻿2026-08-04T03:35:50.1301280Z Current runner version: '2.336.0'
+comment	UNKNOWN STEP	2026-08-04T03:35:50.1336665Z ##[group]Runner Image Provisioner
+comment	UNKNOWN STEP	2026-08-04T03:35:50.1337967Z Hosted Compute Agent
+comment	UNKNOWN STEP	2026-08-04T03:35:50.1338846Z Version: 20260707.563
+comment	UNKNOWN STEP	2026-08-04T03:35:50.1352134Z ##[group]Runner Image
+comment	UNKNOWN STEP	2026-08-04T03:35:50.1353094Z Image: ubuntu-24.04
+comment	UNKNOWN STEP	2026-08-04T03:35:50.1354146Z Version: 20260720.247.2
+comment	UNKNOWN STEP	2026-08-04T03:35:51.3635702Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+comment	UNKNOWN STEP	2026-08-04T03:35:51.3636897Z with:
+comment	UNKNOWN STEP	2026-08-04T03:35:51.3637408Z   persist-credentials: false
+comment	UNKNOWN STEP	2026-08-04T03:35:52.1122231Z ##[group]Run actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+comment	UNKNOWN STEP	2026-08-04T03:35:52.1124405Z with:
+comment	UNKNOWN STEP	2026-08-04T03:35:52.1126073Z   merge-multiple: true
+comment	UNKNOWN STEP	2026-08-04T03:35:52.1140406Z   run-id: 30606800054
+comment	UNKNOWN STEP	2026-08-04T03:35:52.1141795Z   repository: psf/black
+comment	UNKNOWN STEP	2026-08-04T03:35:52.1143191Z   skip-decompress: false
+comment	UNKNOWN STEP	2026-08-04T03:35:52.1144582Z   digest-mismatch: error
+comment	UNKNOWN STEP	2026-08-04T03:35:52.1146247Z env:
+comment	UNKNOWN STEP	2026-08-04T03:35:52.1147518Z   PIP_UPLOADED_PRIOR_TO: P2D
+comment	UNKNOWN STEP	2026-08-04T03:35:52.1148947Z ##[endgroup]
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6124173Z ##[group]Run set -euo pipefail
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6125499Z ^[[36;1mset -euo pipefail^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6126285Z ^[[36;1m^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6129363Z ^[[36;1mstable_artifact="${artifact_dir}/.stable.pr-comment.md"^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6130311Z ^[[36;1m^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6131030Z ^[[36;1mif [ ! -d "$artifact_dir" ]; then^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6132081Z ^[[36;1m    echo "::error::Artifact directory does not exist: ${artifact_dir}"^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6133123Z ^[[36;1m    exit 1^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6133836Z ^[[36;1mfi^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6134509Z ^[[36;1m^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6135539Z ^[[36;1mwhile IFS= read -r -d '' entry; do^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6136520Z ^[[36;1m    if [ "$(dirname "$entry")" != "$artifact_dir" ]; then^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6137646Z ^[[36;1m        echo "::error::Unexpected nested artifact path: ${entry}"^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6138610Z ^[[36;1m        exit 1^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6139331Z ^[[36;1m    fi^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6140007Z ^[[36;1m^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6140705Z ^[[36;1m    case "$(basename "$entry")" in^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6141669Z ^[[36;1m        .preview.pr-comment.md|.stable.pr-comment.md) ;;^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6142605Z ^[[36;1m        *)^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6143442Z ^[[36;1m            echo "::error::Unexpected artifact path: ${entry}"^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6144371Z ^[[36;1m            exit 1^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6145430Z ^[[36;1m            ;;^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6146161Z ^[[36;1m    esac^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6146853Z ^[[36;1m^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6147604Z ^[[36;1m    if [ ! -f "$entry" ] || [ -L "$entry" ]; then^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6148645Z ^[[36;1m        echo "::error::Artifact must be a regular file: ${entry}"^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6149605Z ^[[36;1m        exit 1^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6150332Z ^[[36;1m    fi^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6151127Z ^[[36;1mdone < <(find "$artifact_dir" -mindepth 1 -print0)^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6152038Z ^[[36;1m^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6152863Z ^[[36;1mfor artifact in "$preview_artifact" "$stable_artifact"; do^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6153930Z ^[[36;1m    if [ ! -f "$artifact" ] || [ -L "$artifact" ]; then^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6155256Z ^[[36;1m        echo "::error::Missing expected artifact file: ${artifact}"^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6156254Z ^[[36;1m        exit 1^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6156968Z ^[[36;1m    fi^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6157649Z ^[[36;1mdone^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6522525Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6523622Z with:
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6524329Z   python-version: 3.15
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6533308Z   PIP_UPLOADED_PRIOR_TO: P2D
+comment	UNKNOWN STEP	2026-08-04T03:35:52.6534085Z ##[endgroup]
+comment	UNKNOWN STEP	2026-08-04T03:35:52.7699722Z ##[group]Installed versions
+comment	UNKNOWN STEP	2026-08-04T03:35:52.7783405Z Version ~3.15.0-0 was not found in the local cache
+comment	UNKNOWN STEP	2026-08-04T03:35:53.2722655Z Version ~3.15.0-0 is available for downloading
+comment	UNKNOWN STEP	2026-08-04T03:35:53.2725962Z Download from "https://github.com/actions/python-versions/releases/download/3.15.0-beta.4-29712574371/python-3.15.0-beta.4-linux-24.04-x64.tar.gz"
+comment	UNKNOWN STEP	2026-08-04T03:35:54.0811011Z Extract downloaded archive
+comment	UNKNOWN STEP	2026-08-04T03:36:00.6193895Z ##[group]Run python -m pip install --group diff-shades-comment
+comment	UNKNOWN STEP	2026-08-04T03:36:00.6194994Z ^[[36;1mpython -m pip install --group diff-shades-comment^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:36:00.6243964Z shell: /usr/bin/bash -e {0}
+comment	UNKNOWN STEP	2026-08-04T03:36:01.5922233Z ##[group]Run echo pr=$(gh pr list --search $sha --json number --jq ".[0].number") >> "$GITHUB_OUTPUT"
+comment	UNKNOWN STEP	2026-08-04T03:36:01.5922918Z ^[[36;1mecho pr=$(gh pr list --search $sha --json number --jq ".[0].number") >> "$GITHUB_OUTPUT"^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:36:01.5966666Z shell: /usr/bin/bash -e {0}
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2832386Z ##[group]Run python scripts/diff_shades_gha_helper.py comment-details \
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2832912Z ^[[36;1mpython scripts/diff_shades_gha_helper.py comment-details \^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2833341Z ^[[36;1m"$pr" "$run_id" "$preview_artifact" "$stable_artifact"^[[0m
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2876894Z shell: /usr/bin/bash -e {0}
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2877142Z env:
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2877339Z   PIP_UPLOADED_PRIOR_TO: P2D
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2877669Z   pythonLocation: /opt/hostedtoolcache/Python/3.15.0-beta.4/x64
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2878133Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.15.0-beta.4/x64/lib/pkgconfig
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2878585Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.15.0-beta.4/x64
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2878999Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.15.0-beta.4/x64
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2879405Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.15.0-beta.4/x64
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2879846Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.15.0-beta.4/x64/lib
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2882506Z   GITHUB_TOKEN: [secret]
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2882714Z   pr: 
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2882885Z   run_id: 30606800054
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2883264Z   preview_artifact: /home/runner/work/_temp/diff-shades-artifacts/.preview.pr-comment.md
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2883830Z   stable_artifact: /home/runner/work/_temp/diff-shades-artifacts/.stable.pr-comment.md
+comment	UNKNOWN STEP	2026-08-04T03:36:02.2884232Z ##[endgroup]
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4449382Z Traceback (most recent call last):
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4465250Z   File "/home/runner/work/black/black/scripts/diff_shades_gha_helper.py", line 231, in <module>
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4465790Z     main()
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4465976Z     ~~~~^^
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4466548Z   File "/opt/hostedtoolcache/Python/3.15.0-beta.4/x64/lib/python3.15/site-packages/click/core.py", line 1569, in __call__
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4467122Z     return self.main(*args, **kwargs)
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4467381Z            ~~~~~~~~~^^^^^^^^^^^^^^^^^
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4467947Z   File "/opt/hostedtoolcache/Python/3.15.0-beta.4/x64/lib/python3.15/site-packages/click/core.py", line 1490, in main
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4468472Z     rv = self.invoke(ctx)
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4468985Z   File "/opt/hostedtoolcache/Python/3.15.0-beta.4/x64/lib/python3.15/site-packages/click/core.py", line 1970, in invoke
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4469566Z     return _process_result(sub_ctx.command.invoke(sub_ctx))
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4469915Z                            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4470492Z   File "/opt/hostedtoolcache/Python/3.15.0-beta.4/x64/lib/python3.15/site-packages/click/core.py", line 1353, in invoke
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4471076Z     return ctx.invoke(self.callback, **ctx.params)
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4471383Z            ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4471915Z   File "/opt/hostedtoolcache/Python/3.15.0-beta.4/x64/lib/python3.15/site-packages/click/core.py", line 907, in invoke
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4472434Z     return callback(*args, **kwargs)
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4472942Z   File "/home/runner/work/black/black/scripts/diff_shades_gha_helper.py", line 203, in comment_details
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4473469Z     base, head, _ = get_pr_branches(pr)
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4474049Z                     ~~~~~~~~~~~~~~~^^^^
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4474528Z   File "/home/runner/work/black/black/scripts/diff_shades_gha_helper.py", line 98, in get_pr_branches
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4475173Z     pr = int(pr_ref[10:-6])
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4475457Z ValueError: invalid literal for int() with base 10: ''
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4674947Z ##[error]Process completed with exit code 1.
+comment	UNKNOWN STEP	2026-08-04T03:36:02.4819045Z Post job cleanup.
+comment	UNKNOWN STEP	2026-08-04T03:36:02.5687986Z [command]/usr/bin/git version
+comment	UNKNOWN STEP	2026-08-04T03:36:02.5736362Z git version 2.54.0
+comment	UNKNOWN STEP	2026-08-04T03:36:02.6758768Z Cleaning up orphan processes

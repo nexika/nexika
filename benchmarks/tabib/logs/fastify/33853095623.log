@@ -1,0 +1,90 @@
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:06.2515210Z ✔ diagnostics channel sync events fire in expected order (104.596902ms)
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:06.2587334Z ✖ should be the same as package.json (3.083742ms)
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:06.2628888Z ##[error]AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	+ actual - expected
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	+ '6.0.0-alpha.2'
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	- '6.0.0-alpha.3'
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	^[[90m    at assert.<computed> [as strictEqual] (node:internal/test_runner/test:346:18)^[[39m
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	    at TestContext.<anonymous> ^[[90m(/home/runner/work/fastify/fastify/^[[39mtest/build/version.test.js:13:12^[[90m)^[[39m
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	^[[90m    at Test.runInAsyncScope (node:async_hooks:227:14)^[[39m
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	^[[90m    at Test.run (node:internal/test_runner/test:1397:25)^[[39m
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	^[[90m    at Test.start (node:internal/test_runner/test:1257:17)^[[39m
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	^[[90m    at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)^[[39m {
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	  generatedMessage: ^[[33mtrue^[[39m,
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	  code: ^[[32m'ERR_ASSERTION'^[[39m,
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	  actual: ^[[32m'6.0.0-alpha.2'^[[39m,
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	  expected: ^[[32m'6.0.0-alpha.3'^[[39m,
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5877273Z 
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5877808Z ✖ failing tests:
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5878312Z 
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5878775Z test at test/build/version.test.js:8:1
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5879777Z ✖ should be the same as package.json (3.083742ms)
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5880773Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5881609Z   + actual - expected
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5882138Z   
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5882638Z   + '6.0.0-alpha.2'
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5883147Z   - '6.0.0-alpha.3'
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5884394Z   
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5885165Z       at assert.<computed> [as strictEqual] (node:internal/test_runner/test:346:18)
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5886464Z       at TestContext.<anonymous> (/home/runner/work/fastify/fastify/test/build/version.test.js:13:12)
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5887566Z       at Test.runInAsyncScope (node:async_hooks:227:14)
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5888377Z       at Test.run (node:internal/test_runner/test:1397:25)
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5889206Z       at Test.start (node:internal/test_runner/test:1257:17)
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5890217Z       at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5891123Z     generatedMessage: true,
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5891676Z     code: 'ERR_ASSERTION',
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5892242Z     actual: '6.0.0-alpha.2',
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.5892827Z     expected: '6.0.0-alpha.3',
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.6342817Z [ELIFECYCLE] Command failed with exit code 1.
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.6581063Z ##[error]Process completed with exit code 1.
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.6674870Z Post job cleanup.
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.8175014Z Pruning is unnecessary.
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.8340357Z Post job cleanup.
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-09-04T08:24:07.9168966Z [command]/usr/bin/git version
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:16.9013178Z ✔ diagnostics channel sync events fire in expected order (116.034019ms)
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:16.9114332Z ✖ should be the same as package.json (2.46875ms)
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:16.9155736Z ##[error]AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+yarn (24, ubuntu-latest)	UNKNOWN STEP	+ actual - expected
+yarn (24, ubuntu-latest)	UNKNOWN STEP	
+yarn (24, ubuntu-latest)	UNKNOWN STEP	+ '6.0.0-alpha.2'
+yarn (24, ubuntu-latest)	UNKNOWN STEP	- '6.0.0-alpha.3'
+yarn (24, ubuntu-latest)	UNKNOWN STEP	
+yarn (24, ubuntu-latest)	UNKNOWN STEP	^[[90m    at assert.<computed> [as strictEqual] (node:internal/test_runner/test:346:18)^[[39m
+yarn (24, ubuntu-latest)	UNKNOWN STEP	    at TestContext.<anonymous> ^[[90m(/home/runner/work/fastify/fastify/^[[39mtest/build/version.test.js:13:12^[[90m)^[[39m
+yarn (24, ubuntu-latest)	UNKNOWN STEP	^[[90m    at Test.runInAsyncScope (node:async_hooks:227:14)^[[39m
+yarn (24, ubuntu-latest)	UNKNOWN STEP	^[[90m    at Test.run (node:internal/test_runner/test:1397:25)^[[39m
+yarn (24, ubuntu-latest)	UNKNOWN STEP	^[[90m    at Test.start (node:internal/test_runner/test:1257:17)^[[39m
+yarn (24, ubuntu-latest)	UNKNOWN STEP	^[[90m    at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)^[[39m {
+yarn (24, ubuntu-latest)	UNKNOWN STEP	  generatedMessage: ^[[33mtrue^[[39m,
+yarn (24, ubuntu-latest)	UNKNOWN STEP	  code: ^[[32m'ERR_ASSERTION'^[[39m,
+yarn (24, ubuntu-latest)	UNKNOWN STEP	  actual: ^[[32m'6.0.0-alpha.2'^[[39m,
+yarn (24, ubuntu-latest)	UNKNOWN STEP	  expected: ^[[32m'6.0.0-alpha.3'^[[39m,
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1724642Z 
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1724971Z ✖ failing tests:
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1725237Z 
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1725554Z test at test/build/version.test.js:8:1
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1726375Z ✖ should be the same as package.json (2.46875ms)
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1727211Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1727993Z   + actual - expected
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1728396Z   
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1728730Z   + '6.0.0-alpha.2'
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1729109Z   - '6.0.0-alpha.3'
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1729838Z   
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1730891Z       at assert.<computed> [as strictEqual] (node:internal/test_runner/test:346:18)
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1732093Z       at TestContext.<anonymous> (/home/runner/work/fastify/fastify/test/build/version.test.js:13:12)
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1733182Z       at Test.runInAsyncScope (node:async_hooks:227:14)
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1733924Z       at Test.run (node:internal/test_runner/test:1397:25)
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1734680Z       at Test.start (node:internal/test_runner/test:1257:17)
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1735609Z       at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1736390Z     generatedMessage: true,
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1736846Z     code: 'ERR_ASSERTION',
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1737315Z     actual: '6.0.0-alpha.2',
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.1737821Z     expected: '6.0.0-alpha.3',
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.2058424Z info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.2143543Z ##[error]Process completed with exit code 1.
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.2294824Z Post job cleanup.
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.3132240Z [command]/usr/bin/git version
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.3175709Z git version 2.55.0
+yarn (24, ubuntu-latest)	UNKNOWN STEP	2026-09-04T08:23:18.4190574Z Cleaning up orphan processes

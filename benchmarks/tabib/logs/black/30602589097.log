@@ -1,0 +1,123 @@
+sdist + pure wheel	UNKNOWN STEP	﻿2026-07-31T03:50:34.7793676Z Current runner version: '2.336.0'
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:34.7830907Z ##[group]Runner Image Provisioner
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:34.7832264Z Hosted Compute Agent
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:34.7833298Z Version: 20260707.563
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:34.7846406Z ##[group]Runner Image
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:34.7847344Z Image: ubuntu-24.04
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:34.7848668Z Version: 20260720.247.2
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:35.6828553Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:35.6829688Z with:
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:35.6830132Z   persist-credentials: false
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:36.4343719Z ##[group]Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:36.4345256Z with:
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:36.4346076Z   python-version: 3.14
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:40.8275034Z ##[group]Run python -m pip install --group hatch
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:40.8275497Z ^[[36;1mpython -m pip install --group hatch^[[0m
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:40.8326833Z shell: /usr/bin/bash -e {0}
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:40.8330312Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:40.8330690Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.6/x64/lib
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:40.8331019Z ##[endgroup]
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:41.6691775Z WARNING: Cache entry deserialization failed, entry ignored
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:41.8434162Z Collecting hatch==1.15.1
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:41.8969497Z   Downloading hatch-1.15.1-py3-none-any.whl.metadata (5.6 kB)
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:41.9108832Z Collecting hatch-fancy-pypi-readme
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:48.9627026Z ##[group]Run python -m hatch build
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:48.9627357Z ^[[36;1mpython -m hatch build^[[0m
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:48.9673216Z shell: /usr/bin/bash -e {0}
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:48.9676749Z ##[endgroup]
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:49.6382657Z ──────────────────────────────────── sdist ─────────────────────────────────────
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:49.6575324Z Setting up build environment
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2555972Z fail
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2556423Z Traceback (most recent call last):
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2564364Z   File "/opt/hostedtoolcache/Python/3.14.6/x64/lib/python3.14/site-packages/virtualenv/seed/embed/via_app_data/via_app_data.py", line 86, in _get
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2565529Z     result = get_wheel(
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2566200Z         distribution=distribution,
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2569806Z   File "/opt/hostedtoolcache/Python/3.14.6/x64/lib/python3.14/site-packages/virtualenv/seed/wheels/acquire.py", line 78, in download_wheel
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2570527Z     raise CalledProcessError(process.returncode, cmd, **kwargs)
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2571832Z subprocess.CalledProcessError: Command '['/opt/hostedtoolcache/Python/3.14.6/x64/bin/python', '-m', 'pip', 'download', '--progress-bar', 'off', '--disable-pip-version-check', '--only-binary=:all:', '--no-deps', '--python-version', '3.14', '-d', '/home/runner/.cache/virtualenv/wheel/house', 'pip==26.1']' returned non-zero exit status 2.
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2573128Z failed to download pip version 26.1, pip download exit code 2
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2573383Z 
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2573483Z [optparse.groups]Usage:[/]   
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2574031Z   /opt/hostedtoolcache/Python/3.14.6/x64/bin/python -m pip download \[options] <requirement specifier> \[package-index-options] ...
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2576335Z   /opt/hostedtoolcache/Python/3.14.6/x64/bin/python -m pip download \[options] <local project path> ...
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2576989Z   /opt/hostedtoolcache/Python/3.14.6/x64/bin/python -m pip download \[options] <archive url/path> ...
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2577371Z 
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2577556Z --uploaded-prior-to error: invalid value: 'P2D': Invalid isoformat
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2578215Z string: 'P2D'. Expected an ISO 8601 datetime string, e.g '2023-01-01'
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2578582Z or '2023-01-01T00:00:00Z'
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.2578728Z 
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.3960704Z ╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.3962553Z │ /opt/hostedtoolcache/Python/3.14.6/x64/lib/python3.14/site-packages/hatch/cl │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.3963830Z │ i/__init__.py:221 in main                                                    │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.3964790Z │                                                                              │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.3966592Z │   219 def main():  # no cov                                                  │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.3967567Z │   220 │   try:                                                               │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.3968853Z │ ❱ 221 │   │   hatch(prog_name='hatch', windows_expand_args=False)            │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.3969847Z │   222 │   except Exception:  # noqa: BLE001                                  │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.3970436Z │   223 │   │   import sys                                                     │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.3970989Z │   224                                                                        │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.3971472Z │                                                                              │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4026096Z │    46                                                                        │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4026826Z │    47                                                                        │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4027282Z │                                                                              │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4027831Z │ /opt/hostedtoolcache/Python/3.14.6/x64/lib/python3.14/site-packages/virtuale │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4028800Z │ nv/run/session.py:71 in run                                                  │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4029248Z │                                                                              │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4029640Z │    68 │                                                                      │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4030095Z │    69 │   def run(self) -> None:                                             │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4030580Z │    70 │   │   self._create()                                                 │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4031023Z │ ❱  71 │   │   self._seed()                                                   │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4031473Z │    72 │   │   self._activate()                                               │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4031949Z │    73 │   │   self.creator.pyenv_cfg.write()                                 │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4032402Z │    74                                                                        │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4032797Z │                                                                              │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4033290Z │ /opt/hostedtoolcache/Python/3.14.6/x64/lib/python3.14/site-packages/virtuale │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4033818Z │ nv/run/session.py:84 in _seed                                                │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4034247Z │                                                                              │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4034682Z │    81 │   def _seed(self) -> None:                                           │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4035165Z │    82 │   │   if self.seeder is not None and self.seeder.enabled:            │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4035657Z │    83 │   │   │   LOGGER.info("add seed packages via %s", self.seeder)       │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4036137Z │ ❱  84 │   │   │   self.seeder.run(self.creator)                              │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4036567Z │    85 │                                                                      │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4037006Z │    86 │   def _activate(self) -> None:                                       │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4037474Z │    87 │   │   if self.activators:                                            │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4037891Z │                                                                              │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4038616Z │ /opt/hostedtoolcache/Python/3.14.6/x64/lib/python3.14/site-packages/virtuale │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4039189Z │ nv/seed/embed/via_app_data/via_app_data.py:44 in run                         │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4039640Z │                                                                              │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4040058Z │    41 │   def run(self, creator):                                            │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4040505Z │    42 │   │   if not self.enabled:                                           │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4040929Z │    43 │   │   │   return                                                     │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4041657Z │ ❱  44 │   │   with self._get_seed_wheels(creator) as name_to_whl:            │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4042181Z │    45 │   │   │   pip_version = name_to_whl["pip"].version_tuple if "pip" in │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4042673Z │    46 │   │   │   installer_class = self.installer_class(pip_version)        │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4043138Z │    47 │   │   │   exceptions = {}                                            │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4043544Z │                                                                              │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4044179Z │ /opt/hostedtoolcache/Python/3.14.6/x64/lib/python3.14/contextlib.py:141 in   │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4044687Z │ __enter__                                                                    │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4045083Z │                                                                              │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4045543Z │   138 │   │   # they are only needed for recreation, which is not possible a │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4046071Z │   139 │   │   del self.args, self.kwds, self.func                            │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4046524Z │   140 │   │   try:                                                           │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4046963Z │ ❱ 141 │   │   │   return next(self.gen)                                      │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4047428Z │   142 │   │   except StopIteration:                                          │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4048089Z │   143 │   │   │   raise RuntimeError("generator didn't yield") from None     │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4048595Z │   144                                                                        │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4048995Z │                                                                              │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4049486Z │ /opt/hostedtoolcache/Python/3.14.6/x64/lib/python3.14/site-packages/virtuale │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4050048Z │ nv/seed/embed/via_app_data/via_app_data.py:130 in _get_seed_wheels           │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4050525Z │                                                                              │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4050939Z │   127 │   │   │   thread.join()                                              │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4051374Z │   128 │   │   if fail:                                                       │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4051825Z │   129 │   │   │   msg = f"seed failed due to failing to download wheels {',  │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4052309Z │ ❱ 130 │   │   │   raise RuntimeError(msg)                                    │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4052786Z │   131 │   │   yield name_to_whl                                              │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4053208Z │   132 │                                                                      │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4053667Z │   133 │   def installer_class(self, pip_version_tuple):                      │
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4054197Z ╰──────────────────────────────────────────────────────────────────────────────╯
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4054616Z RuntimeError: seed failed due to failing to download wheels pip
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4527519Z ##[error]Process completed with exit code 1.
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.4675307Z Post job cleanup.
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.5505689Z [command]/usr/bin/git version
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.5552183Z git version 2.54.0
+sdist + pure wheel	UNKNOWN STEP	2026-07-31T03:50:51.6587002Z Cleaning up orphan processes

@@ -1,0 +1,94 @@
+main	UNKNOWN STEP	﻿2026-08-23T00:43:19.3364618Z Current runner version: '2.336.0'
+main	UNKNOWN STEP	2026-08-23T00:43:19.3388962Z ##[group]Runner Image Provisioner
+main	UNKNOWN STEP	2026-08-23T00:43:19.3390002Z Hosted Compute Agent
+main	UNKNOWN STEP	2026-08-23T00:43:19.3390596Z Version: 20260729.566
+main	UNKNOWN STEP	2026-08-23T00:43:19.3399073Z ##[group]Runner Image
+main	UNKNOWN STEP	2026-08-23T00:43:19.3399779Z Image: ubuntu-24.04
+main	UNKNOWN STEP	2026-08-23T00:43:19.3400379Z Version: 20260816.277.1
+main	UNKNOWN STEP	2026-08-23T00:43:20.9251223Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+main	UNKNOWN STEP	2026-08-23T00:43:20.9252851Z with:
+main	UNKNOWN STEP	2026-08-23T00:43:20.9253435Z   persist-credentials: false
+main	UNKNOWN STEP	2026-08-23T00:43:21.8812395Z ##[group]Run astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+main	UNKNOWN STEP	2026-08-23T00:43:21.8813162Z with:
+main	UNKNOWN STEP	2026-08-23T00:43:21.8813569Z   enable-cache: true
+main	UNKNOWN STEP	2026-08-23T00:43:25.1322066Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+main	UNKNOWN STEP	2026-08-23T00:43:25.1322533Z with:
+main	UNKNOWN STEP	2026-08-23T00:43:25.1322767Z   python-version-file: pyproject.toml
+main	UNKNOWN STEP	2026-08-23T00:43:25.3399024Z ##[group]Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+main	UNKNOWN STEP	2026-08-23T00:43:25.3399443Z with:
+main	UNKNOWN STEP	2026-08-23T00:43:25.3399671Z   path: ~/.cache/pre-commit
+main	UNKNOWN STEP	2026-08-23T00:43:25.3400081Z   key: pre-commit|435e87596c1688c32c58314f236e0065d0d37a8dab4db3b07e1c6ab08f359486
+main	UNKNOWN STEP	2026-08-23T00:43:25.3400539Z   enableCrossOsArchive: false
+main	UNKNOWN STEP	2026-08-23T00:43:25.3400804Z   fail-on-cache-miss: false
+main	UNKNOWN STEP	2026-08-23T00:43:25.3401055Z   lookup-only: false
+main	UNKNOWN STEP	2026-08-23T00:43:25.3401599Z   save-always: false
+main	UNKNOWN STEP	2026-08-23T00:43:25.3401882Z env:
+main	UNKNOWN STEP	2026-08-23T00:43:27.3770162Z [command]/usr/bin/tar -xf /home/runner/work/_temp/4059abe4-1938-48fa-8667-32cd0300a78f/cache.tzst -P -C /home/runner/work/flask/flask --use-compress-program unzstd
+main	UNKNOWN STEP	2026-08-23T00:43:27.6251085Z Cache restored successfully
+main	UNKNOWN STEP	2026-08-23T00:43:27.6347364Z Cache restored from key: pre-commit|435e87596c1688c32c58314f236e0065d0d37a8dab4db3b07e1c6ab08f359486
+main	UNKNOWN STEP	2026-08-23T00:43:27.6474665Z ##[group]Run uv run --locked --no-default-groups --group pre-commit pre-commit run --show-diff-on-failure --color=always --all-files
+main	UNKNOWN STEP	2026-08-23T00:43:27.6475774Z ^[[36;1muv run --locked --no-default-groups --group pre-commit pre-commit run --show-diff-on-failure --color=always --all-files^[[0m
+main	UNKNOWN STEP	2026-08-23T00:43:27.6576597Z shell: /usr/bin/bash -e {0}
+main	UNKNOWN STEP	2026-08-23T00:43:27.6576886Z env:
+main	UNKNOWN STEP	2026-08-23T00:43:27.6577187Z   UV_PYTHON_INSTALL_DIR: /home/runner/work/_temp/uv-python-dir
+main	UNKNOWN STEP	2026-08-23T00:43:27.6577632Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+main	UNKNOWN STEP	2026-08-23T00:43:27.6578025Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.7/x64
+main	UNKNOWN STEP	2026-08-23T00:43:27.6578473Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.7/x64/lib/pkgconfig
+main	UNKNOWN STEP	2026-08-23T00:43:27.6578926Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+main	UNKNOWN STEP	2026-08-23T00:43:27.6579323Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+main	UNKNOWN STEP	2026-08-23T00:43:27.6579757Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+main	UNKNOWN STEP	2026-08-23T00:43:27.6580173Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.7/x64/lib
+main	UNKNOWN STEP	2026-08-23T00:43:27.6580516Z ##[endgroup]
+main	UNKNOWN STEP	2026-08-23T00:43:28.3206480Z Using CPython 3.14.7 interpreter at: /opt/hostedtoolcache/Python/3.14.7/x64/bin/python3
+main	UNKNOWN STEP	2026-08-23T00:43:28.3207135Z Creating virtual environment at: .venv
+main	UNKNOWN STEP	2026-08-23T00:43:28.3295332Z    Building flask @ file:///home/runner/work/flask/flask
+main	UNKNOWN STEP	2026-08-23T00:43:29.0545711Z       Built flask @ file:///home/runner/work/flask/flask
+main	UNKNOWN STEP	2026-08-23T00:43:29.0647579Z Installed 19 packages in 8ms
+main	UNKNOWN STEP	2026-08-23T00:43:30.1267142Z [INFO]^[[m Installing environment for https://github.com/astral-sh/ruff-pre-commit.
+main	UNKNOWN STEP	2026-08-23T00:43:30.1268222Z [INFO]^[[m Once installed this environment will be reused.
+main	UNKNOWN STEP	2026-08-23T00:43:30.1268938Z [INFO]^[[m This may take a few minutes...
+main	UNKNOWN STEP	2026-08-23T00:43:30.1447426Z [INFO]^[[m Using pre-commit with uv 0.12.0 via pre-commit-uv 4.3.0
+main	UNKNOWN STEP	2026-08-23T00:43:31.9547901Z [INFO]^[[m Installing environment for https://github.com/astral-sh/uv-pre-commit.
+main	UNKNOWN STEP	2026-08-23T00:43:31.9548759Z [INFO]^[[m Once installed this environment will be reused.
+main	UNKNOWN STEP	2026-08-23T00:43:31.9549265Z [INFO]^[[m This may take a few minutes...
+main	UNKNOWN STEP	2026-08-23T00:43:31.9763017Z [INFO]^[[m Using pre-commit with uv 0.12.0 via pre-commit-uv 4.3.0
+main	UNKNOWN STEP	2026-08-23T00:43:32.9911650Z [INFO]^[[m Installing environment for https://github.com/codespell-project/codespell.
+main	UNKNOWN STEP	2026-08-23T00:43:32.9912843Z [INFO]^[[m Once installed this environment will be reused.
+main	UNKNOWN STEP	2026-08-23T00:43:32.9913645Z [INFO]^[[m This may take a few minutes...
+main	UNKNOWN STEP	2026-08-23T00:43:33.0036453Z [INFO]^[[m Using pre-commit with uv 0.12.0 via pre-commit-uv 4.3.0
+main	UNKNOWN STEP	2026-08-23T00:43:35.5615016Z [INFO]^[[m Installing environment for https://github.com/pre-commit/pre-commit-hooks.
+main	UNKNOWN STEP	2026-08-23T00:43:35.5615674Z [INFO]^[[m Once installed this environment will be reused.
+main	UNKNOWN STEP	2026-08-23T00:43:35.5616076Z [INFO]^[[m This may take a few minutes...
+main	UNKNOWN STEP	2026-08-23T00:43:35.5806355Z [INFO]^[[m Using pre-commit with uv 0.12.0 via pre-commit-uv 4.3.0
+main	UNKNOWN STEP	2026-08-23T00:43:36.7143565Z ruff check...............................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:36.7468291Z ruff format..............................................................^[[41mFailed^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:36.7469149Z ^[[2m- hook id: ruff-format^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:36.7469697Z ^[[2m- files were modified by this hook^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:36.7470050Z 
+main	UNKNOWN STEP	2026-08-23T00:43:36.7470272Z 1 file reformatted, 82 files left unchanged
+main	UNKNOWN STEP	2026-08-23T00:43:36.7470628Z 
+main	UNKNOWN STEP	2026-08-23T00:43:36.8320894Z uv-lock..................................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:37.2153291Z codespell................................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:37.3185037Z check for merge conflicts................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:37.5104602Z debug statements (python)................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:37.5955621Z fix utf-8 byte order marker..............................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:37.6905732Z trim trailing whitespace.................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:37.7835517Z fix end of files.........................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:37.7836088Z pre-commit hook(s) made changes.
+main	UNKNOWN STEP	2026-08-23T00:43:37.7836561Z If you are seeing this message in CI, reproduce locally with: `pre-commit run --all-files`.
+main	UNKNOWN STEP	2026-08-23T00:43:37.7837126Z To run `pre-commit` as part of git workflow, use `pre-commit install`.
+main	UNKNOWN STEP	2026-08-23T00:43:37.7837515Z All changes made by hooks:
+main	UNKNOWN STEP	2026-08-23T00:43:37.7918491Z ^[[1mdiff --git a/tests/test_json.py b/tests/test_json.py^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:37.7918985Z ^[[1mindex 932a0df..d20c6ec 100644^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:37.7919319Z ^[[1m--- a/tests/test_json.py^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:37.7919623Z ^[[1m+++ b/tests/test_json.py^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:37.7920037Z ^[[36m@@ -351,4 +351,3 @@^[[m ^[[mdef test_pathlike_serialization():^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:37.7920425Z  ^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:37.7920732Z      p = pathlib.PurePosixPath("/etc/passwd")^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:37.7921138Z      assert json.dumps(p) == '"/etc/passwd"'^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:37.7921739Z ^[[31m-^[[m
+main	UNKNOWN STEP	2026-08-23T00:43:37.8206233Z ##[error]Process completed with exit code 1.
+main	UNKNOWN STEP	2026-08-23T00:43:37.8353222Z Post job cleanup.
+main	UNKNOWN STEP	2026-08-23T00:43:37.9177383Z [command]/usr/bin/git version
+main	UNKNOWN STEP	2026-08-23T00:43:37.9222646Z git version 2.55.0
+main	UNKNOWN STEP	2026-08-23T00:43:38.0205426Z Cleaning up orphan processes

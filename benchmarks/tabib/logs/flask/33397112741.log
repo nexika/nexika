@@ -1,0 +1,100 @@
+main	UNKNOWN STEP	﻿2026-08-31T13:27:59.0035065Z Current runner version: '2.336.0'
+main	UNKNOWN STEP	2026-08-31T13:27:59.0075742Z ##[group]Runner Image Provisioner
+main	UNKNOWN STEP	2026-08-31T13:27:59.0077060Z Hosted Compute Agent
+main	UNKNOWN STEP	2026-08-31T13:27:59.0078423Z Version: 20260819.586
+main	UNKNOWN STEP	2026-08-31T13:27:59.0091930Z ##[group]Runner Image
+main	UNKNOWN STEP	2026-08-31T13:27:59.0093101Z Image: ubuntu-24.04
+main	UNKNOWN STEP	2026-08-31T13:27:59.0094013Z Version: 20260823.283.1
+main	UNKNOWN STEP	2026-08-31T13:28:00.1195946Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+main	UNKNOWN STEP	2026-08-31T13:28:00.1198253Z with:
+main	UNKNOWN STEP	2026-08-31T13:28:00.1199279Z   persist-credentials: false
+main	UNKNOWN STEP	2026-08-31T13:28:00.9385891Z ##[group]Run astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+main	UNKNOWN STEP	2026-08-31T13:28:00.9386964Z with:
+main	UNKNOWN STEP	2026-08-31T13:28:00.9387974Z   enable-cache: true
+main	UNKNOWN STEP	2026-08-31T13:28:02.6496657Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+main	UNKNOWN STEP	2026-08-31T13:28:02.6497115Z with:
+main	UNKNOWN STEP	2026-08-31T13:28:02.6497361Z   python-version-file: pyproject.toml
+main	UNKNOWN STEP	2026-08-31T13:28:02.8908614Z ##[group]Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+main	UNKNOWN STEP	2026-08-31T13:28:02.8909099Z with:
+main	UNKNOWN STEP	2026-08-31T13:28:02.8909330Z   path: ~/.cache/pre-commit
+main	UNKNOWN STEP	2026-08-31T13:28:02.8909759Z   key: pre-commit|435e87596c1688c32c58314f236e0065d0d37a8dab4db3b07e1c6ab08f359486
+main	UNKNOWN STEP	2026-08-31T13:28:02.8910206Z   enableCrossOsArchive: false
+main	UNKNOWN STEP	2026-08-31T13:28:02.8910471Z   fail-on-cache-miss: false
+main	UNKNOWN STEP	2026-08-31T13:28:02.8910727Z   lookup-only: false
+main	UNKNOWN STEP	2026-08-31T13:28:02.8910959Z   save-always: false
+main	UNKNOWN STEP	2026-08-31T13:28:02.8911204Z env:
+main	UNKNOWN STEP	2026-08-31T13:28:03.4690549Z [command]/usr/bin/tar -xf /home/runner/work/_temp/ceb42323-ad13-46bb-9bf4-54d3c8503217/cache.tzst -P -C /home/runner/work/flask/flask --use-compress-program unzstd
+main	UNKNOWN STEP	2026-08-31T13:28:03.7634353Z Cache restored successfully
+main	UNKNOWN STEP	2026-08-31T13:28:03.7736524Z Cache restored from key: pre-commit|435e87596c1688c32c58314f236e0065d0d37a8dab4db3b07e1c6ab08f359486
+main	UNKNOWN STEP	2026-08-31T13:28:03.7895670Z ##[group]Run uv run --locked --no-default-groups --group pre-commit pre-commit run --show-diff-on-failure --color=always --all-files
+main	UNKNOWN STEP	2026-08-31T13:28:03.7896752Z ^[[36;1muv run --locked --no-default-groups --group pre-commit pre-commit run --show-diff-on-failure --color=always --all-files^[[0m
+main	UNKNOWN STEP	2026-08-31T13:28:03.7940614Z shell: /usr/bin/bash -e {0}
+main	UNKNOWN STEP	2026-08-31T13:28:03.7940898Z env:
+main	UNKNOWN STEP	2026-08-31T13:28:03.7941200Z   UV_PYTHON_INSTALL_DIR: /home/runner/work/_temp/uv-python-dir
+main	UNKNOWN STEP	2026-08-31T13:28:10.7534532Z [INFO]^[[m Once installed this environment will be reused.
+main	UNKNOWN STEP	2026-08-31T13:28:10.7535097Z [INFO]^[[m This may take a few minutes...
+main	UNKNOWN STEP	2026-08-31T13:28:10.7732198Z [INFO]^[[m Using pre-commit with uv 0.12.0 via pre-commit-uv 4.3.0
+main	UNKNOWN STEP	2026-08-31T13:28:11.9295769Z ruff check...............................................................^[[41mFailed^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:11.9296909Z ^[[2m- hook id: ruff-check^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:11.9297465Z ^[[2m- files were modified by this hook^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:11.9298067Z 
+main	UNKNOWN STEP	2026-08-31T13:28:11.9298304Z ^[[1;32mFixed 1 error:^[[0m
+main	UNKNOWN STEP	2026-08-31T13:28:11.9298934Z ^[[36m-^[[0m ^[[1msrc/flask/json/provider.py^[[0m^[[36m:^[[0m
+main	UNKNOWN STEP	2026-08-31T13:28:11.9299633Z     1 × ^[[1;31mI001^[[0m (unsorted-imports)
+main	UNKNOWN STEP	2026-08-31T13:28:11.9299997Z 
+main	UNKNOWN STEP	2026-08-31T13:28:11.9300199Z Found 1 error (1 fixed, 0 remaining).
+main	UNKNOWN STEP	2026-08-31T13:28:11.9300517Z 
+main	UNKNOWN STEP	2026-08-31T13:28:11.9618491Z ruff format..............................................................^[[41mFailed^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:11.9619366Z ^[[2m- hook id: ruff-format^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:11.9619931Z ^[[2m- files were modified by this hook^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:11.9620271Z 
+main	UNKNOWN STEP	2026-08-31T13:28:11.9620488Z 2 files reformatted, 81 files left unchanged
+main	UNKNOWN STEP	2026-08-31T13:28:11.9620845Z 
+main	UNKNOWN STEP	2026-08-31T13:28:12.0469418Z uv-lock..................................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:12.4253747Z codespell................................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:12.5321168Z check for merge conflicts................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:12.7252458Z debug statements (python)................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:12.8148120Z fix utf-8 byte order marker..............................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:12.9129076Z trim trailing whitespace.................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0099262Z fix end of files.........................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0100017Z pre-commit hook(s) made changes.
+main	UNKNOWN STEP	2026-08-31T13:28:13.0100767Z If you are seeing this message in CI, reproduce locally with: `pre-commit run --all-files`.
+main	UNKNOWN STEP	2026-08-31T13:28:13.0101510Z To run `pre-commit` as part of git workflow, use `pre-commit install`.
+main	UNKNOWN STEP	2026-08-31T13:28:13.0101918Z All changes made by hooks:
+main	UNKNOWN STEP	2026-08-31T13:28:13.0186849Z ^[[1mdiff --git a/src/flask/json/provider.py b/src/flask/json/provider.py^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0187571Z ^[[1mindex 12e3066..b1019f4 100644^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0188226Z ^[[1m--- a/src/flask/json/provider.py^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0188840Z ^[[1m+++ b/src/flask/json/provider.py^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0189543Z ^[[36m@@ -3,9 +3,9 @@^[[m ^[[mfrom __future__ import annotations^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0190188Z  import dataclasses^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0190663Z  import decimal^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0191037Z  import json^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0191430Z ^[[32m+^[[m^[[32mimport os^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0191852Z  import typing as t^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0192223Z  import uuid^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0192583Z ^[[31m-import os^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0192932Z  import weakref^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0193318Z  from datetime import date^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0193709Z  ^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0194209Z ^[[36m@@ -122,7 +122,6 @@^[[m ^[[mdef _default(o: t.Any) -> t.Any:^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0195008Z      raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0195676Z  ^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0195962Z  ^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0196263Z ^[[31m-^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0196668Z  class DefaultJSONProvider(JSONProvider):^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0197323Z      """Provide JSON operations using Python's built-in :mod:`json`^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0198341Z      library. Serializes the following additional data types:^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0199055Z ^[[1mdiff --git a/tests/test_json.py b/tests/test_json.py^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0199639Z ^[[1mindex d240148..e9fa7fb 100644^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0200093Z ^[[1m--- a/tests/test_json.py^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0200532Z ^[[1m+++ b/tests/test_json.py^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0201175Z ^[[36m@@ -362,4 +362,3 @@^[[m ^[[mdef test_dataclass_class_raises_typeerror(app):^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0201745Z  ^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0202271Z      with pytest.raises(TypeError, match="is not JSON serializable"):^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0202937Z          app.json.dumps(DataClassType)^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0203804Z ^[[31m-^[[m
+main	UNKNOWN STEP	2026-08-31T13:28:13.0533410Z ##[error]Process completed with exit code 1.
+main	UNKNOWN STEP	2026-08-31T13:28:13.0659504Z Post job cleanup.
+main	UNKNOWN STEP	2026-08-31T13:28:13.1567346Z [command]/usr/bin/git version
+main	UNKNOWN STEP	2026-08-31T13:28:13.1614517Z git version 2.55.0
+main	UNKNOWN STEP	2026-08-31T13:28:13.2637000Z Cleaning up orphan processes

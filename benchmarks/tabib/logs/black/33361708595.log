@@ -1,0 +1,128 @@
+lint	UNKNOWN STEP	﻿2026-09-03T16:17:16.0687144Z Current runner version: '2.337.0'
+lint	UNKNOWN STEP	2026-09-03T16:17:16.0709836Z ##[group]Runner Image Provisioner
+lint	UNKNOWN STEP	2026-09-03T16:17:16.0710677Z Hosted Compute Agent
+lint	UNKNOWN STEP	2026-09-03T16:17:16.0711368Z Version: 20260819.586
+lint	UNKNOWN STEP	2026-09-03T16:17:16.0719546Z ##[group]Runner Image
+lint	UNKNOWN STEP	2026-09-03T16:17:16.0720179Z Image: ubuntu-24.04
+lint	UNKNOWN STEP	2026-09-03T16:17:16.0720819Z Version: 20260823.283.1
+lint	UNKNOWN STEP	2026-09-03T16:17:17.2552083Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+lint	UNKNOWN STEP	2026-09-03T16:17:17.2553132Z with:
+lint	UNKNOWN STEP	2026-09-03T16:17:17.2553584Z   persist-credentials: false
+lint	UNKNOWN STEP	2026-09-03T16:17:18.8048950Z ##[endgroup]
+lint	UNKNOWN STEP	2026-09-03T16:17:18.8276479Z ##[group]Run if [ "$GITHUB_BASE_REF" != "main" ]; then
+lint	UNKNOWN STEP	2026-09-03T16:17:18.8277163Z ^[[36;1mif [ "$GITHUB_BASE_REF" != "main" ]; then^[[0m
+lint	UNKNOWN STEP	2026-09-03T16:17:18.8277935Z ^[[36;1m    echo "::error::PR targeting '$GITHUB_BASE_REF', please refile targeting 'main'." && exit 1^[[0m
+lint	UNKNOWN STEP	2026-09-03T16:17:18.8278634Z ^[[36;1mfi^[[0m
+lint	UNKNOWN STEP	2026-09-03T16:17:18.8319094Z shell: /usr/bin/bash -e {0}
+lint	UNKNOWN STEP	2026-09-03T16:17:18.8319565Z env:
+lint	UNKNOWN STEP	2026-09-03T16:17:18.8501682Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+lint	UNKNOWN STEP	2026-09-03T16:17:18.8502358Z with:
+lint	UNKNOWN STEP	2026-09-03T16:17:18.8502764Z   python-version: 3.15
+lint	UNKNOWN STEP	2026-09-03T16:17:18.8508659Z   PIP_UPLOADED_PRIOR_TO: P2D
+lint	UNKNOWN STEP	2026-09-03T16:17:18.8509102Z ##[endgroup]
+lint	UNKNOWN STEP	2026-09-03T16:17:18.9639883Z ##[group]Installed versions
+lint	UNKNOWN STEP	2026-09-03T16:17:18.9718651Z Version ~3.15.0-0 was not found in the local cache
+lint	UNKNOWN STEP	2026-09-03T16:17:20.0723518Z Version ~3.15.0-0 is available for downloading
+lint	UNKNOWN STEP	2026-09-03T16:17:20.0724833Z Download from "https://github.com/actions/python-versions/releases/download/3.15.0-rc.2-33583724836/python-3.15.0-rc.2-linux-24.04-x64.tar.gz"
+lint	UNKNOWN STEP	2026-09-03T16:17:20.9376031Z Extract downloaded archive
+lint	UNKNOWN STEP	2026-09-03T16:17:27.6839122Z ##[group]Run python -m pip install -e . --group tox
+lint	UNKNOWN STEP	2026-09-03T16:17:27.6839569Z ^[[36;1mpython -m pip install -e . --group tox^[[0m
+lint	UNKNOWN STEP	2026-09-03T16:17:27.6882323Z shell: /usr/bin/bash -e {0}
+lint	UNKNOWN STEP	2026-09-03T16:17:34.8849989Z ##[group]Run pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd
+lint	UNKNOWN STEP	2026-09-03T16:17:34.8850732Z with:
+lint	UNKNOWN STEP	2026-09-03T16:17:34.8851134Z   extra_args: --all-files
+lint	UNKNOWN STEP	2026-09-03T16:17:34.8936030Z ##[group]Run python -m pip install pre-commit
+lint	UNKNOWN STEP	2026-09-03T16:17:34.8936382Z ^[[36;1mpython -m pip install pre-commit^[[0m
+lint	UNKNOWN STEP	2026-09-03T16:17:34.8975209Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+lint	UNKNOWN STEP	2026-09-03T16:17:46.5789233Z ##[group]Run python -m pip freeze --local
+lint	UNKNOWN STEP	2026-09-03T16:17:46.5789553Z ^[[36;1mpython -m pip freeze --local^[[0m
+lint	UNKNOWN STEP	2026-09-03T16:17:46.5826611Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+lint	UNKNOWN STEP	2026-09-03T16:17:47.0754731Z ##[group]Run actions/cache@v4
+lint	UNKNOWN STEP	2026-09-03T16:17:47.0755005Z with:
+lint	UNKNOWN STEP	2026-09-03T16:17:47.0755219Z   path: ~/.cache/pre-commit
+lint	UNKNOWN STEP	2026-09-03T16:17:47.0755785Z   key: pre-commit-3|/opt/hostedtoolcache/Python/3.15.0-rc.2/x64|ab721f0605c80e731252c7c4c7cb5f3ccace5dfc82f79290553ab289264d1055
+lint	UNKNOWN STEP	2026-09-03T16:17:47.0756397Z   enableCrossOsArchive: false
+lint	UNKNOWN STEP	2026-09-03T16:17:47.0756654Z   fail-on-cache-miss: false
+lint	UNKNOWN STEP	2026-09-03T16:17:47.0756884Z   lookup-only: false
+lint	UNKNOWN STEP	2026-09-03T16:17:47.0757092Z   save-always: false
+lint	UNKNOWN STEP	2026-09-03T16:17:47.0757287Z env:
+lint	UNKNOWN STEP	2026-09-03T16:17:49.3628389Z Cache restored successfully
+lint	UNKNOWN STEP	2026-09-03T16:17:49.3736732Z Cache restored from key: pre-commit-3|/opt/hostedtoolcache/Python/3.15.0-rc.2/x64|ab721f0605c80e731252c7c4c7cb5f3ccace5dfc82f79290553ab289264d1055
+lint	UNKNOWN STEP	2026-09-03T16:17:49.3823650Z ##[end-action id=__pre-commit_action.__actions_cache;outcome=success;conclusion=success;duration_ms=2370]
+lint	UNKNOWN STEP	2026-09-03T16:17:49.3847910Z ##[start-action display=Run pre-commit run --show-diff-on-failure --color=always --all-files;id=__pre-commit_action.__run_3]
+lint	UNKNOWN STEP	2026-09-03T16:17:49.3866274Z ##[group]Run pre-commit run --show-diff-on-failure --color=always --all-files
+lint	UNKNOWN STEP	2026-09-03T16:17:49.3866844Z ^[[36;1mpre-commit run --show-diff-on-failure --color=always --all-files^[[0m
+lint	UNKNOWN STEP	2026-09-03T16:17:49.3902957Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+lint	UNKNOWN STEP	2026-09-03T16:17:49.3903319Z env:
+lint	UNKNOWN STEP	2026-09-03T16:17:49.3903531Z   PIP_UPLOADED_PRIOR_TO: P2D
+lint	UNKNOWN STEP	2026-09-03T16:18:22.8551768Z ##[group]Run tox -e run_self
+lint	UNKNOWN STEP	2026-09-03T16:18:22.8552098Z ^[[36;1mtox -e run_self^[[0m
+lint	UNKNOWN STEP	2026-09-03T16:18:22.8588651Z shell: /usr/bin/bash -e {0}
+lint	UNKNOWN STEP	2026-09-03T16:18:22.8588917Z env:
+lint	UNKNOWN STEP	2026-09-03T16:18:22.8589131Z   PIP_UPLOADED_PRIOR_TO: P2D
+lint	UNKNOWN STEP	2026-09-03T16:18:22.8589484Z   pythonLocation: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64
+lint	UNKNOWN STEP	2026-09-03T16:18:22.8589971Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64/lib/pkgconfig
+lint	UNKNOWN STEP	2026-09-03T16:18:22.8590453Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64
+lint	UNKNOWN STEP	2026-09-03T16:18:22.8590872Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64
+lint	UNKNOWN STEP	2026-09-03T16:18:22.8591288Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64
+lint	UNKNOWN STEP	2026-09-03T16:18:22.8591706Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64/lib
+lint	UNKNOWN STEP	2026-09-03T16:18:22.8592052Z ##[endgroup]
+lint	UNKNOWN STEP	2026-09-03T16:18:23.3466720Z run_self: install_dependency-groups> python -I -m pip install 'coverage>=5.3' 'pytest-cov>=4.1.0' 'pytest-xdist>=3.0.2' 'pytest>=7'
+lint	UNKNOWN STEP	2026-09-03T16:18:27.2333298Z run_self: freeze> python -m pip freeze --all
+lint	UNKNOWN STEP	2026-09-03T16:18:27.4566446Z run_self: coverage==7.16.0,execnet==2.1.2,iniconfig==2.3.0,packaging==26.3,pip==26.2.1,pluggy==1.6.0,Pygments==2.21.0,pytest==9.1.1,pytest-cov==7.1.0,pytest-xdist==3.8.0
+lint	UNKNOWN STEP	2026-09-03T16:18:27.4570924Z run_self: commands[0]> pip install -e .
+lint	UNKNOWN STEP	2026-09-03T16:18:27.7660469Z Obtaining file:///home/runner/work/black/black
+lint	UNKNOWN STEP	2026-09-03T16:18:27.7700631Z   Installing build dependencies: started
+lint	UNKNOWN STEP	2026-09-03T16:18:28.5391255Z   Installing build dependencies: finished with status 'done'
+lint	UNKNOWN STEP	2026-09-03T16:18:28.5397346Z   Checking if build backend supports build_editable: started
+lint	UNKNOWN STEP	2026-09-03T16:18:28.5904822Z   Checking if build backend supports build_editable: finished with status 'done'
+lint	UNKNOWN STEP	2026-09-03T16:18:28.5910876Z   Getting requirements to build editable: started
+lint	UNKNOWN STEP	2026-09-03T16:18:28.7941531Z   Getting requirements to build editable: finished with status 'done'
+lint	UNKNOWN STEP	2026-09-03T16:18:28.7954189Z   Installing backend dependencies: started
+lint	UNKNOWN STEP	2026-09-03T16:18:29.1970249Z   Installing backend dependencies: finished with status 'done'
+lint	UNKNOWN STEP	2026-09-03T16:18:29.1977119Z   Preparing editable metadata (pyproject.toml): started
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5039419Z   Preparing editable metadata (pyproject.toml): finished with status 'done'
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5319812Z Collecting click>=8.0.0 (from black==0.1.dev1+gebe146f57)
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5349883Z   Using cached click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5380310Z Collecting mypy-extensions>=0.4.3 (from black==0.1.dev1+gebe146f57)
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5392301Z   Using cached mypy_extensions-1.1.0-py3-none-any.whl.metadata (1.1 kB)
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5408583Z Requirement already satisfied: packaging>=22.0 in ./.tox/run_self/lib/python3.15/site-packages (from black==0.1.dev1+gebe146f57) (26.3)
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5453335Z Collecting pathspec>=1.0.0 (from black==0.1.dev1+gebe146f57)
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5465649Z   Using cached pathspec-1.1.1-py3-none-any.whl.metadata (14 kB)
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5587650Z Collecting platformdirs>=2 (from black==0.1.dev1+gebe146f57)
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5599608Z   Using cached platformdirs-4.11.7-py3-none-any.whl.metadata (5.5 kB)
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5681950Z Collecting pytokens~=0.4.0 (from black==0.1.dev1+gebe146f57)
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5694914Z   Using cached pytokens-0.4.1-py3-none-any.whl.metadata (3.8 kB)
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5740554Z Using cached pytokens-0.4.1-py3-none-any.whl (13 kB)
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5751769Z Using cached click-8.5.0-py3-none-any.whl (125 kB)
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5763595Z Using cached mypy_extensions-1.1.0-py3-none-any.whl (5.0 kB)
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5774606Z Using cached pathspec-1.1.1-py3-none-any.whl (57 kB)
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5785995Z Using cached platformdirs-4.11.7-py3-none-any.whl (23 kB)
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5909775Z Building wheels for collected packages: black
+lint	UNKNOWN STEP	2026-09-03T16:18:29.5917673Z   Building editable for black (pyproject.toml): started
+lint	UNKNOWN STEP	2026-09-03T16:18:29.6385385Z   Building editable for black (pyproject.toml): finished with status 'done'
+lint	UNKNOWN STEP	2026-09-03T16:18:29.6391161Z   Created wheel for black: filename=black-0.1.dev1+gebe146f57-py3-none-any.whl size=37737 sha256=c72a1735c8d4e285fe3fd70c69a8d64e9a168a8f6f02d922dc63347a6b078e41
+lint	UNKNOWN STEP	2026-09-03T16:18:29.6394751Z   Stored in directory: /tmp/pip-ephem-wheel-cache-km8esokt/wheels/de/44/e1/a42a87661b8a1da986828ebcb6ce4d65fb0521e84dc74a5490
+lint	UNKNOWN STEP	2026-09-03T16:18:29.6469752Z Successfully built black
+lint	UNKNOWN STEP	2026-09-03T16:18:29.6786305Z Installing collected packages: pytokens, platformdirs, pathspec, mypy-extensions, click, black
+lint	UNKNOWN STEP	2026-09-03T16:18:29.8623355Z 
+lint	UNKNOWN STEP	2026-09-03T16:18:29.8639083Z Successfully installed black-0.1.dev1+gebe146f57 click-8.5.0 mypy-extensions-1.1.0 pathspec-1.1.1 platformdirs-4.11.7 pytokens-0.4.1
+lint	UNKNOWN STEP	2026-09-03T16:18:29.9397771Z run_self: commands[1]> black --check /home/runner/work/black/black
+lint	UNKNOWN STEP	2026-09-03T16:18:34.3004749Z would reformat /home/runner/work/black/black/src/black/linegen.py
+lint	UNKNOWN STEP	2026-09-03T16:18:34.5123266Z 
+lint	UNKNOWN STEP	2026-09-03T16:18:34.5125920Z Oh no! 💥 💔 💥
+lint	UNKNOWN STEP	2026-09-03T16:18:34.5126815Z 1 file would be reformatted, 67 files would be left unchanged.
+lint	UNKNOWN STEP	2026-09-03T16:18:34.5638341Z run_self: exit 1 (4.62 seconds) /home/runner/work/black/black> black --check /home/runner/work/black/black pid=2855
+lint	UNKNOWN STEP	2026-09-03T16:18:34.5644140Z   run_self: FAIL code 1 (11.44=setup[4.34]+cmd[2.48,4.62] seconds)
+lint	UNKNOWN STEP	2026-09-03T16:18:34.5644799Z   evaluation failed :( (11.48 seconds)
+lint	UNKNOWN STEP	2026-09-03T16:18:34.6047334Z ##[error]Process completed with exit code 1.
+lint	UNKNOWN STEP	2026-09-03T16:18:34.6145915Z Post job cleanup.
+lint	UNKNOWN STEP	2026-09-03T16:18:34.6149305Z ##[start-action display=Run actions/cache@v4;id=__64f1c416-37c1-4944-ae84-7ed6271261ce.__actions_cache]
+lint	UNKNOWN STEP	2026-09-03T16:18:34.6152595Z ##[end-action id=__64f1c416-37c1-4944-ae84-7ed6271261ce.__actions_cache;outcome=skipped;conclusion=skipped;duration_ms=0]
+lint	UNKNOWN STEP	2026-09-03T16:18:34.6219339Z Post job cleanup.
+lint	UNKNOWN STEP	2026-09-03T16:18:34.7016145Z [command]/usr/bin/git version
+lint	UNKNOWN STEP	2026-09-03T16:18:34.7052032Z git version 2.55.0
+lint	UNKNOWN STEP	2026-09-03T16:18:34.7639955Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+lint	UNKNOWN STEP	2026-09-03T16:18:34.7701358Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+lint	UNKNOWN STEP	2026-09-03T16:18:34.8048962Z Cleaning up orphan processes
+lint	UNKNOWN STEP	2026-09-03T16:18:34.8426652Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

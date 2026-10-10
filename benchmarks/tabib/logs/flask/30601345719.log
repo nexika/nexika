@@ -1,0 +1,152 @@
+main	UNKNOWN STEP	﻿2026-07-31T03:20:53.0344255Z Current runner version: '2.336.0'
+main	UNKNOWN STEP	2026-07-31T03:20:53.0364357Z ##[group]Runner Image Provisioner
+main	UNKNOWN STEP	2026-07-31T03:20:53.0365066Z Hosted Compute Agent
+main	UNKNOWN STEP	2026-07-31T03:20:53.0365607Z Version: 20260707.563
+main	UNKNOWN STEP	2026-07-31T03:20:53.0371760Z ##[group]Runner Image
+main	UNKNOWN STEP	2026-07-31T03:20:53.0372322Z Image: ubuntu-24.04
+main	UNKNOWN STEP	2026-07-31T03:20:53.0372795Z Version: 20260720.247.2
+main	UNKNOWN STEP	2026-07-31T03:20:56.7527009Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+main	UNKNOWN STEP	2026-07-31T03:20:56.7527655Z with:
+main	UNKNOWN STEP	2026-07-31T03:20:56.7527924Z   persist-credentials: false
+main	UNKNOWN STEP	2026-07-31T03:20:58.3557967Z ##[group]Run astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+main	UNKNOWN STEP	2026-07-31T03:20:58.3558391Z with:
+main	UNKNOWN STEP	2026-07-31T03:20:58.3558666Z   enable-cache: true
+main	UNKNOWN STEP	2026-07-31T03:21:01.7549220Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+main	UNKNOWN STEP	2026-07-31T03:21:01.7549817Z with:
+main	UNKNOWN STEP	2026-07-31T03:21:01.7550242Z   python-version-file: pyproject.toml
+main	UNKNOWN STEP	2026-07-31T03:21:01.8977765Z ##[endgroup]
+main	UNKNOWN STEP	2026-07-31T03:21:01.9593468Z ##[group]Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+main	UNKNOWN STEP	2026-07-31T03:21:01.9593830Z with:
+main	UNKNOWN STEP	2026-07-31T03:21:01.9594167Z   path: ~/.cache/pre-commit
+main	UNKNOWN STEP	2026-07-31T03:21:01.9594561Z   key: pre-commit|435e87596c1688c32c58314f236e0065d0d37a8dab4db3b07e1c6ab08f359486
+main	UNKNOWN STEP	2026-07-31T03:21:01.9594983Z   enableCrossOsArchive: false
+main	UNKNOWN STEP	2026-07-31T03:21:01.9595267Z   fail-on-cache-miss: false
+main	UNKNOWN STEP	2026-07-31T03:21:01.9595529Z   lookup-only: false
+main	UNKNOWN STEP	2026-07-31T03:21:01.9595833Z   save-always: false
+main	UNKNOWN STEP	2026-07-31T03:21:01.9596153Z env:
+main	UNKNOWN STEP	2026-07-31T03:21:01.9596464Z   UV_PYTHON_INSTALL_DIR: /home/runner/work/_temp/uv-python-dir
+main	UNKNOWN STEP	2026-07-31T03:21:01.9596853Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+main	UNKNOWN STEP	2026-07-31T03:21:01.9597219Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.6/x64
+main	UNKNOWN STEP	2026-07-31T03:21:03.5275077Z Received 30690633 of 34884937 (88.0%), 29.2 MBs/sec
+main	UNKNOWN STEP	2026-07-31T03:21:03.6109795Z Received 34884937 of 34884937 (100.0%), 30.7 MBs/sec
+main	UNKNOWN STEP	2026-07-31T03:21:03.6111350Z Cache Size: ~33 MB (34884937 B)
+main	UNKNOWN STEP	2026-07-31T03:21:03.6151114Z [command]/usr/bin/tar -xf /home/runner/work/_temp/48c7a38e-0747-40e6-92f4-81ac8dcd1f56/cache.tzst -P -C /home/runner/work/flask/flask --use-compress-program unzstd
+main	UNKNOWN STEP	2026-07-31T03:21:03.7710649Z Cache restored successfully
+main	UNKNOWN STEP	2026-07-31T03:21:03.7789021Z Cache restored from key: pre-commit|435e87596c1688c32c58314f236e0065d0d37a8dab4db3b07e1c6ab08f359486
+main	UNKNOWN STEP	2026-07-31T03:21:03.7876264Z ##[group]Run uv run --locked --no-default-groups --group pre-commit pre-commit run --show-diff-on-failure --color=always --all-files
+main	UNKNOWN STEP	2026-07-31T03:21:03.7877150Z ^[[36;1muv run --locked --no-default-groups --group pre-commit pre-commit run --show-diff-on-failure --color=always --all-files^[[0m
+main	UNKNOWN STEP	2026-07-31T03:21:03.7909382Z shell: /usr/bin/bash -e {0}
+main	UNKNOWN STEP	2026-07-31T03:21:03.7910012Z env:
+main	UNKNOWN STEP	2026-07-31T03:21:03.7910379Z   UV_PYTHON_INSTALL_DIR: /home/runner/work/_temp/uv-python-dir
+main	UNKNOWN STEP	2026-07-31T03:21:03.7910781Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+main	UNKNOWN STEP	2026-07-31T03:21:03.7911236Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.6/x64
+main	UNKNOWN STEP	2026-07-31T03:21:03.7911666Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.6/x64/lib/pkgconfig
+main	UNKNOWN STEP	2026-07-31T03:21:03.7912111Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+main	UNKNOWN STEP	2026-07-31T03:21:03.7912551Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+main	UNKNOWN STEP	2026-07-31T03:21:03.7913108Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+main	UNKNOWN STEP	2026-07-31T03:21:03.7913505Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.6/x64/lib
+main	UNKNOWN STEP	2026-07-31T03:21:03.7913863Z ##[endgroup]
+main	UNKNOWN STEP	2026-07-31T03:21:03.9652791Z Using CPython 3.14.6 interpreter at: /opt/hostedtoolcache/Python/3.14.6/x64/bin/python3
+main	UNKNOWN STEP	2026-07-31T03:21:03.9653533Z Creating virtual environment at: .venv
+main	UNKNOWN STEP	2026-07-31T03:21:04.0316155Z    Building flask @ file:///home/runner/work/flask/flask
+main	UNKNOWN STEP	2026-07-31T03:21:04.7444578Z       Built flask @ file:///home/runner/work/flask/flask
+main	UNKNOWN STEP	2026-07-31T03:21:04.9017502Z Installed 19 packages in 145ms
+main	UNKNOWN STEP	2026-07-31T03:21:05.7138050Z ruff check...............................................................^[[41mFailed^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:05.7138880Z ^[[2m- hook id: ruff-check^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:05.7139327Z ^[[2m- exit code: 1^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:05.7139985Z ^[[2m- files were modified by this hook^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:05.7140351Z 
+main	UNKNOWN STEP	2026-07-31T03:21:05.7141096Z ^[[1m^[[91minvalid-syntax: ^[[0m^[[1mCannot reuse outer quote character in f-strings on Python 3.10 (syntax was added in Python 3.12)^[[0m
+main	UNKNOWN STEP	2026-07-31T03:21:05.7142025Z   ^[[1m^[[94m-->^[[0m src/flask/testing.py:70:37
+main	UNKNOWN STEP	2026-07-31T03:21:05.7142521Z    ^[[1m^[[94m|^[[0m
+main	UNKNOWN STEP	2026-07-31T03:21:05.7143020Z ^[[1m^[[94m68 |^[[0m             base_url = (
+main	UNKNOWN STEP	2026-07-31T03:21:05.7144195Z ^[[1m^[[94m69 |^[[0m                 f"{parsed_url.scheme or url_scheme}://{parsed_url.netloc or http_host}"
+main	UNKNOWN STEP	2026-07-31T03:21:05.7145009Z ^[[1m^[[94m70 |^[[0m                 f"/{app_root.lstrip("/")}"
+main	UNKNOWN STEP	2026-07-31T03:21:05.7145533Z    ^[[1m^[[94m|^[[0m                                     ^[[1m^[[91m^^[[0m
+main	UNKNOWN STEP	2026-07-31T03:21:05.7145915Z ^[[1m^[[94m71 |^[[0m             )
+main	UNKNOWN STEP	2026-07-31T03:21:05.7146435Z ^[[1m^[[94m72 |^[[0m             path = parsed_url.path
+main	UNKNOWN STEP	2026-07-31T03:21:05.7146944Z    ^[[1m^[[94m|^[[0m
+main	UNKNOWN STEP	2026-07-31T03:21:05.7147086Z 
+main	UNKNOWN STEP	2026-07-31T03:21:05.7147408Z ^[[1m^[[91mB026 ^[[0m^[[1mStar-arg unpacking after a keyword argument is strongly discouraged^[[0m
+main	UNKNOWN STEP	2026-07-31T03:21:05.7147889Z   ^[[1m^[[94m-->^[[0m src/flask/testing.py:77:56
+main	UNKNOWN STEP	2026-07-31T03:21:05.7148507Z    ^[[1m^[[94m|^[[0m
+main	UNKNOWN STEP	2026-07-31T03:21:05.7148870Z ^[[1m^[[94m75 |^[[0m                 path = f"{path}?{parsed_url.query}"
+main	UNKNOWN STEP	2026-07-31T03:21:05.7149232Z ^[[1m^[[94m76 |^[[0m
+main	UNKNOWN STEP	2026-07-31T03:21:05.7149829Z ^[[1m^[[94m77 |^[[0m         super().__init__(base_url=base_url, path=path, *args, **kwargs)
+main	UNKNOWN STEP	2026-07-31T03:21:05.7150463Z    ^[[1m^[[94m|^[[0m                                                        ^[[1m^[[91m^^^^^^[[0m
+main	UNKNOWN STEP	2026-07-31T03:21:05.7150890Z    ^[[1m^[[94m|^[[0m
+main	UNKNOWN STEP	2026-07-31T03:21:05.7151049Z 
+main	UNKNOWN STEP	2026-07-31T03:21:05.7151054Z 
+main	UNKNOWN STEP	2026-07-31T03:21:05.7151221Z ^[[1;32mFixed 10 errors:^[[0m
+main	UNKNOWN STEP	2026-07-31T03:21:05.7151589Z ^[[36m-^[[0m ^[[1msrc/flask/testing.py^[[0m^[[36m:^[[0m
+main	UNKNOWN STEP	2026-07-31T03:21:05.7151972Z     9 × ^[[1;31mF401^[[0m (unused-import)
+main	UNKNOWN STEP	2026-07-31T03:21:05.7152393Z     1 × ^[[1;31mI001^[[0m (unsorted-imports)
+main	UNKNOWN STEP	2026-07-31T03:21:05.7152591Z 
+main	UNKNOWN STEP	2026-07-31T03:21:05.7152737Z Found 12 errors (10 fixed, 2 remaining).
+main	UNKNOWN STEP	2026-07-31T03:21:05.7152947Z 
+main	UNKNOWN STEP	2026-07-31T03:21:05.8032040Z ruff format..............................................................^[[41mFailed^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:05.8033166Z ^[[2m- hook id: ruff-format^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:05.8033543Z ^[[2m- files were modified by this hook^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:05.8033748Z 
+main	UNKNOWN STEP	2026-07-31T03:21:05.8033901Z 1 file reformatted, 82 files left unchanged
+main	UNKNOWN STEP	2026-07-31T03:21:05.8034132Z 
+main	UNKNOWN STEP	2026-07-31T03:21:05.8726894Z uv-lock..................................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.1908331Z codespell................................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.2693490Z check for merge conflicts................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.4171994Z debug statements (python)................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.4827628Z fix utf-8 byte order marker..............................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.5542847Z trim trailing whitespace.................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6258299Z fix end of files.........................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6258772Z pre-commit hook(s) made changes.
+main	UNKNOWN STEP	2026-07-31T03:21:06.6259296Z If you are seeing this message in CI, reproduce locally with: `pre-commit run --all-files`.
+main	UNKNOWN STEP	2026-07-31T03:21:06.6260024Z To run `pre-commit` as part of git workflow, use `pre-commit install`.
+main	UNKNOWN STEP	2026-07-31T03:21:06.6260521Z All changes made by hooks:
+main	UNKNOWN STEP	2026-07-31T03:21:06.6320998Z ^[[1mdiff --git a/src/flask/testing.py b/src/flask/testing.py^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6321644Z ^[[1mindex 2b8ebb0..39fc72c 100644^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6322146Z ^[[1m--- a/src/flask/testing.py^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6322579Z ^[[1m+++ b/src/flask/testing.py^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6323066Z ^[[36m@@ -1,26 +1,17 @@^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6323411Z  from __future__ import annotations^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6323723Z  ^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6324026Z ^[[31m-import importlib.metadata^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6324346Z  import typing as t^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6324677Z ^[[31m-from contextlib import contextmanager^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6325093Z ^[[31m-from contextlib import ExitStack^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6325458Z ^[[31m-from copy import copy^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6325776Z  from types import TracebackType^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6326149Z ^[[31m-from urllib.parse import urlsplit, urlparse^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6326585Z ^[[32m+^[[m^[[32mfrom urllib.parse import urlparse^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6326896Z  ^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6327176Z  import werkzeug.test^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6327524Z  from click.testing import CliRunner^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6327871Z  from click.testing import Result^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6328227Z  from werkzeug.test import Client^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6328653Z ^[[31m-from werkzeug.wrappers import Request as BaseRequest^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6329003Z  ^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6329261Z  from .cli import ScriptInfo^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6329607Z ^[[31m-from .sessions import SessionMixin^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6330181Z  ^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6330472Z  if t.TYPE_CHECKING:  # pragma: no cover^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6331128Z ^[[31m-    from _typeshed.wsgi import WSGIEnvironment^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6331554Z ^[[31m-    from werkzeug.test import TestResponse^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6331942Z ^[[31m-^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6332228Z      from .app import Flask^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6332519Z  ^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6332786Z  ^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6333169Z ^[[36m@@ -75,7 +66,7 @@^[[m ^[[mclass EnvironBuilder(werkzeug.test.EnvironBuilder):^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6333653Z              parsed_url = urlparse(path)^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6334011Z              base_url = (^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6334463Z                  f"{parsed_url.scheme or url_scheme}://{parsed_url.netloc or http_host}"^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6334906Z ^[[31m-                f"/{app_root.lstrip("/")}"^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6335347Z ^[[32m+^[[m^[[32m                f"/{app_root.lstrip('/')}"^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6335686Z              )^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6335968Z              path = parsed_url.path^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6336312Z  ^[[m
+main	UNKNOWN STEP	2026-07-31T03:21:06.6595920Z ##[error]Process completed with exit code 1.
+main	UNKNOWN STEP	2026-07-31T03:21:06.6708028Z Post job cleanup.
+main	UNKNOWN STEP	2026-07-31T03:21:06.7404721Z [command]/usr/bin/git version
+main	UNKNOWN STEP	2026-07-31T03:21:06.7440456Z git version 2.54.0
+main	UNKNOWN STEP	2026-07-31T03:21:06.7467303Z Temporarily overriding HOME='/home/runner/work/_temp/e7b29b69-a7a8-45aa-b11d-45ad948a1995' before making global git config changes
+main	UNKNOWN STEP	2026-07-31T03:21:06.7468373Z Adding repository directory to the temporary git global config as a safe directory
+main	UNKNOWN STEP	2026-07-31T03:21:06.7472234Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/flask/flask
+main	UNKNOWN STEP	2026-07-31T03:21:06.8147642Z Cleaning up orphan processes

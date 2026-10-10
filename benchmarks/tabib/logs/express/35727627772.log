@@ -1,0 +1,244 @@
+coverage	UNKNOWN STEP	﻿2026-10-06T21:19:00.7450991Z Current runner version: '2.337.0'
+coverage	UNKNOWN STEP	2026-10-06T21:19:00.7488613Z ##[group]Runner Image Provisioner
+coverage	UNKNOWN STEP	2026-10-06T21:19:00.7490492Z Hosted Compute Agent
+coverage	UNKNOWN STEP	2026-10-06T21:19:00.7491551Z Version: 20260901.588
+coverage	UNKNOWN STEP	2026-10-06T21:19:00.7506140Z ##[group]Runner Image
+coverage	UNKNOWN STEP	2026-10-06T21:19:00.7507287Z Image: ubuntu-24.04
+coverage	UNKNOWN STEP	2026-10-06T21:19:00.7508473Z Version: 20260927.320.1
+coverage	UNKNOWN STEP	2026-10-06T21:19:01.0431606Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+coverage	UNKNOWN STEP	2026-10-06T21:19:01.1361467Z Download action repository 'actions/download-artifact@v4' (SHA:d3f86a106a0bac45b974a628896c90dbdf5c8093)
+coverage	UNKNOWN STEP	2026-10-06T21:19:01.3807668Z Download action repository 'coverallsapp/github-action@v2' (SHA:8d6379e14d29928660c4ba802d8e85393440b329)
+coverage	UNKNOWN STEP	2026-10-06T21:19:01.6391048Z Complete job name: coverage
+coverage	UNKNOWN STEP	2026-10-06T21:19:01.7329383Z ##[group]Run actions/checkout@v4
+coverage	UNKNOWN STEP	2026-10-06T21:19:01.7330374Z with:
+coverage	UNKNOWN STEP	2026-10-06T21:19:01.7330825Z   repository: expressjs/express
+coverage	UNKNOWN STEP	2026-10-06T21:19:02.3196974Z ##[group]Run sudo apt-get -y install lcov
+coverage	UNKNOWN STEP	2026-10-06T21:19:02.3198464Z ^[[36;1msudo apt-get -y install lcov^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:02.3484989Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+coverage	UNKNOWN STEP	2026-10-06T21:19:03.7717968Z   libclass-xsaccessor-perl libdata-optlist-perl libdatetime-locale-perl
+coverage	UNKNOWN STEP	2026-10-06T21:19:03.7719929Z   libdatetime-perl libdatetime-timezone-perl libdevel-callchecker-perl
+coverage	UNKNOWN STEP	2026-10-06T21:19:03.7721351Z   libdevel-caller-perl libdevel-lexalias-perl libdevel-stacktrace-perl
+coverage	UNKNOWN STEP	2026-10-06T21:19:03.7722583Z   libdynaloader-functions-perl libeval-closure-perl libexception-class-perl
+coverage	UNKNOWN STEP	2026-10-06T21:19:03.7723776Z   libfile-sharedir-perl libgd-perl libmodule-implementation-perl
+coverage	UNKNOWN STEP	2026-10-06T21:19:03.7724933Z   libmodule-runtime-perl libmro-compat-perl libnamespace-autoclean-perl
+coverage	UNKNOWN STEP	2026-10-06T21:19:03.7726181Z   libnamespace-clean-perl libpackage-stash-perl libpackage-stash-xs-perl
+coverage	UNKNOWN STEP	2026-10-06T21:19:03.8011587Z   libclass-xsaccessor-perl libdata-optlist-perl libdatetime-locale-perl
+coverage	UNKNOWN STEP	2026-10-06T21:19:03.8013003Z   libdatetime-perl libdatetime-timezone-perl libdevel-callchecker-perl
+coverage	UNKNOWN STEP	2026-10-06T21:19:03.8014269Z   libdevel-caller-perl libdevel-lexalias-perl libdevel-stacktrace-perl
+coverage	UNKNOWN STEP	2026-10-06T21:19:03.8016677Z   libdynaloader-functions-perl libeval-closure-perl libexception-class-perl
+coverage	UNKNOWN STEP	2026-10-06T21:19:03.8017782Z   libfile-sharedir-perl libgd-perl libmodule-implementation-perl
+coverage	UNKNOWN STEP	2026-10-06T21:19:03.8018769Z   libmodule-runtime-perl libmro-compat-perl libnamespace-autoclean-perl
+coverage	UNKNOWN STEP	2026-10-06T21:19:03.8020607Z   libnamespace-clean-perl libpackage-stash-perl libpackage-stash-xs-perl
+coverage	UNKNOWN STEP	2026-10-06T21:19:04.2848600Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 libeval-closure-perl all 0.14-3 [10.1 kB]
+coverage	UNKNOWN STEP	2026-10-06T21:19:04.2996635Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libclass-data-inheritable-perl all 0.08-3 [8084 B]
+coverage	UNKNOWN STEP	2026-10-06T21:19:04.3145182Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libdevel-stacktrace-perl all 2.0500-1 [22.1 kB]
+coverage	UNKNOWN STEP	2026-10-06T21:19:04.3293919Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libexception-class-perl all 1.45-1 [28.6 kB]
+coverage	UNKNOWN STEP	2026-10-06T21:19:04.3444668Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 libparams-validationcompiler-perl all 0.31-1 [28.3 kB]
+coverage	UNKNOWN STEP	2026-10-06T21:19:04.3588686Z Get:29 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 libalgorithm-c3-perl all 0.11-2 [10.2 kB]
+coverage	UNKNOWN STEP	2026-10-06T21:19:04.3752610Z Get:30 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 libclass-c3-perl all 0.35-2 [18.4 kB]
+coverage	UNKNOWN STEP	2026-10-06T21:19:07.3551349Z Selecting previously unselected package libdevel-stacktrace-perl.
+coverage	UNKNOWN STEP	2026-10-06T21:19:07.3675359Z Preparing to unpack .../24-libdevel-stacktrace-perl_2.0500-1_all.deb ...
+coverage	UNKNOWN STEP	2026-10-06T21:19:07.3682171Z Unpacking libdevel-stacktrace-perl (2.0500-1) ...
+coverage	UNKNOWN STEP	2026-10-06T21:19:07.3871999Z Selecting previously unselected package libexception-class-perl.
+coverage	UNKNOWN STEP	2026-10-06T21:19:07.3996293Z Preparing to unpack .../25-libexception-class-perl_1.45-1_all.deb ...
+coverage	UNKNOWN STEP	2026-10-06T21:19:07.4003428Z Unpacking libexception-class-perl (1.45-1) ...
+coverage	UNKNOWN STEP	2026-10-06T21:19:07.4198618Z Selecting previously unselected package libparams-validationcompiler-perl.
+coverage	UNKNOWN STEP	2026-10-06T21:19:07.4322510Z Preparing to unpack .../26-libparams-validationcompiler-perl_0.31-1_all.deb ...
+coverage	UNKNOWN STEP	2026-10-06T21:19:07.4332212Z Unpacking libparams-validationcompiler-perl (0.31-1) ...
+coverage	UNKNOWN STEP	2026-10-06T21:19:08.8719393Z Setting up libdevel-stacktrace-perl (2.0500-1) ...
+coverage	UNKNOWN STEP	2026-10-06T21:19:08.8737224Z Setting up libclass-xsaccessor-perl (1.19-4build4) ...
+coverage	UNKNOWN STEP	2026-10-06T21:19:08.8754151Z Setting up libperlio-gzip-perl (0.20-1build4) ...
+coverage	UNKNOWN STEP	2026-10-06T21:19:08.8771425Z Setting up libexception-class-perl (1.45-1) ...
+coverage	UNKNOWN STEP	2026-10-06T21:19:08.8788385Z Setting up libclass-c3-perl (0.35-2) ...
+coverage	UNKNOWN STEP	2026-10-06T21:19:08.8806752Z Setting up libdevel-callchecker-perl:amd64 (0.008-2build3) ...
+coverage	UNKNOWN STEP	2026-10-06T21:19:08.8823958Z Setting up libdata-optlist-perl (0.114-1) ...
+coverage	UNKNOWN STEP	2026-10-06T21:19:09.6076397Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.4634664Z ##[group]Run actions/download-artifact@v4
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.4634987Z with:
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.4635189Z   path: ./coverage
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.4635419Z   pattern: coverage-node-*
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.4635661Z   merge-multiple: false
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.4635901Z   repository: expressjs/express
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.4636140Z   run-id: 35727627772
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.6295043Z (node:2869) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.6295909Z (Use `node --trace-deprecation ...` to show where the warning was created)
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.7250922Z Found 1 artifact(s)
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.7252166Z Filtering artifacts by pattern 'coverage-node-*'
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.7270304Z Preparing to download the following artifacts:
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.7282644Z - coverage-node-14-windows-latest (ID: 11444987824, Size: 9406, Expected Digest: sha256:f82d271f82b4ab5f1e3220c9bb966b2e65b9ee614db48251bf5ff5498f3ba3c3)
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.8738961Z Redirecting to blob download url: https://productionresultssa0.blob.core.windows.net/actions-results/8763f8c4-8bdd-86e2-bb38-bf6342e6b598/workflow-job-run-f812cf19-4c25-5bb3-ac11-05522d89519d/artifacts/546b70a8f59eb82f98461f0573e1a47ceb45fbb57004642888df053c714c6462.zip
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.8740677Z Starting download of artifact to: /home/runner/work/express/express/coverage/coverage-node-14-windows-latest
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.9038242Z (node:2869) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.9081750Z SHA256 digest of downloaded artifact is f82d271f82b4ab5f1e3220c9bb966b2e65b9ee614db48251bf5ff5498f3ba3c3
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.9082718Z Artifact download completed successfully.
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.9083342Z Total of 1 artifact(s) downloaded
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.9089536Z Download artifact has finished successfully
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.9261304Z ##[group]Run find ./coverage -name lcov.info -exec printf '-a %q\n' {} \; | xargs lcov -o ./lcov.info
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.9262546Z ^[[36;1mfind ./coverage -name lcov.info -exec printf '-a %q\n' {} \; | xargs lcov -o ./lcov.info^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.9350338Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+coverage	UNKNOWN STEP	2026-10-06T21:19:10.9350936Z ##[endgroup]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.2960110Z Combining tracefiles.
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.2960598Z .. found 1 files to aggregate.
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.2961225Z Merging ./coverage/coverage-node-14-windows-latest/lcov.info..0 remaining
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.2961908Z Writing data to ./lcov.info
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.2962282Z Summary coverage rate:
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.2962649Z   lines......: 100.0% (1267 of 1267 lines)
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.2963093Z   functions..: 100.0% (153 of 153 functions)
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.2963533Z   branches...: no data found
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3352642Z ##[group]Run coverallsapp/github-action@v2
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3352975Z with:
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3353185Z   file: ./lcov.info
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3356298Z   allow-empty: false
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3356518Z   debug: false
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3356716Z   measure: false
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3356919Z   fail-on-error: true
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3357165Z   coverage-reporter-version: latest
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3357463Z   coverage-reporter-platform: auto-detect
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3357756Z ##[endgroup]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3421406Z ##[start-action display=Report coverage-reporter-version exception for macOS;id=__coverallsapp_github-action.__run]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3441719Z ##[end-action id=__coverallsapp_github-action.__run;outcome=skipped;conclusion=skipped;duration_ms=0]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3444144Z ##[start-action display=Report coverage-reporter-platform exception for macOS;id=__coverallsapp_github-action.__run_2]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3448638Z ##[end-action id=__coverallsapp_github-action.__run_2;outcome=skipped;conclusion=skipped;duration_ms=0]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3451188Z ##[start-action display=Install coveralls reporter (macOS);id=__coverallsapp_github-action.__run_3]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3454901Z ##[end-action id=__coverallsapp_github-action.__run_3;outcome=skipped;conclusion=skipped;duration_ms=0]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3510639Z ##[group]Run # Enable debugging if 'debug' is true
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3511103Z ^[[36;1m# Enable debugging if 'debug' is true^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3511600Z ^[[36;1m[ "false" == "true" ] && set -x^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3512078Z ^[[36;1mmkdir -p ~/bin/^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3512313Z ^[[36;1mcd ~/bin/^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3512522Z ^[[36;1m^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3512845Z ^[[36;1m# Determine which version of coverage-reporter to download^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3513404Z ^[[36;1mif [ -z "$COVERAGE_REPORTER_VERSION" ] || [ "$COVERAGE_REPORTER_VERSION" == "latest" ]; then^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3513878Z ^[[36;1m  asset_path="latest/download"^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3514162Z ^[[36;1m  version_message="latest"^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3514412Z ^[[36;1melse^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3514685Z ^[[36;1m  asset_path="download/${COVERAGE_REPORTER_VERSION}"^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3515092Z ^[[36;1m  version_message="$COVERAGE_REPORTER_VERSION"^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3515398Z ^[[36;1mfi^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3515584Z ^[[36;1m^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3515799Z ^[[36;1m# Function to compare version numbers^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3517972Z ^[[36;1m# This logic is necessary due to the introduction of multiple platform support starting from v0.6.15.^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3518660Z ^[[36;1m# It selects the correct filename based on the specified platform and version, while ensuring^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3519488Z ^[[36;1m# backward compatibility with earlier versions that only supported a generic Linux binary for x86_64.^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3520187Z ^[[36;1mif [ -z "$COVERAGE_REPORTER_PLATFORM" ] || [ "$COVERAGE_REPORTER_PLATFORM" == "auto-detect" ]; then^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3520689Z ^[[36;1m  COVERAGE_REPORTER_PLATFORM="$(uname -m)"^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3520990Z ^[[36;1mfi^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3521218Z ^[[36;1mcase "$COVERAGE_REPORTER_PLATFORM" in^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3521507Z ^[[36;1m  x86_64|"")^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3521806Z ^[[36;1m    if version_ge "$COVERAGE_REPORTER_VERSION" "v0.6.15"; then^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3522409Z ^[[36;1m      platform_filename="coveralls-linux-x86_64.tar.gz"^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3522748Z ^[[36;1m    else^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3523006Z ^[[36;1m      platform_filename="coveralls-linux.tar.gz"^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3523310Z ^[[36;1m    fi^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3523507Z ^[[36;1m    ;;^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3523709Z ^[[36;1m  aarch64|arm64)^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3524044Z ^[[36;1m    if version_ge "$COVERAGE_REPORTER_VERSION" "v0.6.15"; then^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3524509Z ^[[36;1m      platform_filename="coveralls-linux-aarch64.tar.gz"^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3524840Z ^[[36;1m    else^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3525332Z ^[[36;1m      echo "Warning: The aarch64/arm64 platform is only supported from version v0.6.15 onwards. Proceeding with v0.6.15." >&2^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3526636Z ^[[36;1m    fi^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3526835Z ^[[36;1m    ;;^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3527024Z ^[[36;1m  *)^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3527567Z ^[[36;1m    echo "Warning: Unsupported platform: $COVERAGE_REPORTER_PLATFORM. The default x86_64 version ($version_message) will be used." >&2^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3528253Z ^[[36;1m    if version_ge "$COVERAGE_REPORTER_VERSION" "v0.6.15"; then^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3528673Z ^[[36;1m      platform_filename="coveralls-linux-x86_64.tar.gz"^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3528998Z ^[[36;1m    else^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3529394Z ^[[36;1m      platform_filename="coveralls-linux.tar.gz"^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3530433Z ^[[36;1m^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3530677Z ^[[36;1m# Checksum verification:^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3531126Z ^[[36;1m# The following code was chosen to replace the more simple `sha256sum -c` because it provides^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3531850Z ^[[36;1m# clearer debugging information around our new matrix of supported coverage-reporter versions and platforms.^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3532688Z ^[[36;1m# We may drop back to `${platform_filename}" coveralls-checksums.txt | sha256sum -c` when we're more confidently handling these.^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3533269Z ^[[36;1m^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3533510Z ^[[36;1m# Try to download the binary and checksum file^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3534120Z ^[[36;1mif ! curl -sLO "https://github.com/coverallsapp/coverage-reporter/releases/${asset_path}/${platform_filename}" ||^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3534960Z ^[[36;1m  ! curl -sLO "https://github.com/coverallsapp/coverage-reporter/releases/${asset_path}/coveralls-checksums.txt"; then^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3535633Z ^[[36;1m  echo "Failed to download coveralls binary or checksum (Linux)."^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3536031Z ^[[36;1m  [ "true" == "false" ] && exit 0^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3536297Z ^[[36;1m  exit 1^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3536495Z ^[[36;1mfi^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3538118Z ^[[36;1m# Extract expected checksum^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3538577Z ^[[36;1mexpected_checksum=$(grep "${platform_filename}" coveralls-checksums.txt | awk '{print $1}')^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3539189Z ^[[36;1mif [ -z "$expected_checksum" ]; then^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3539567Z ^[[36;1m  echo "Failed to extract checksum for ${platform_filename}"^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3539943Z ^[[36;1m  [ "true" == "false" ] && exit 0^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3540217Z ^[[36;1m  exit 1^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3540412Z ^[[36;1mfi^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3541688Z ^[[36;1m^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3541980Z ^[[36;1m# Perform verification by comparing expected and actual checksums^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3542432Z ^[[36;1mif [ "$expected_checksum" != "$actual_checksum" ]; then^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3542812Z ^[[36;1m  echo "Checksum verification failed (Linux)."^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3543149Z ^[[36;1m  echo "Expected: $expected_checksum"^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3543454Z ^[[36;1m  echo "Actual: $actual_checksum"^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3543740Z ^[[36;1m  [ "true" == "false" ] && exit 0^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3544842Z ^[[36;1m^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3545034Z ^[[36;1m# Check if the binary exists^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3545307Z ^[[36;1mif [ ! -f ~/bin/coveralls ]; then^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3545669Z ^[[36;1m  echo "Coveralls binary not found after extraction (Linux)."^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3546042Z ^[[36;1m  [ "true" == "false" ] && exit 0^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3546296Z ^[[36;1m  exit 1^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3546485Z ^[[36;1mfi^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3547342Z ^[[36;1mecho ~/bin >> $GITHUB_PATH^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3607821Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3608177Z env:
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3608382Z   COVERAGE_REPORTER_VERSION: latest
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3608672Z   COVERAGE_REPORTER_PLATFORM: auto-detect
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.3609240Z ##[endgroup]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.5346232Z Contents of coveralls-checksums.txt:
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.5357746Z 34fcaf347627307e505ec207acd617c3bfc6c3e2684b22e760be29eb339c36d5  coveralls-linux
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.5364947Z e94b3a29a0ee48d15c94257a9383746afa1169ca461358255085ab23d4a9b390  coveralls-windows.exe
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.5366044Z a33b99888cf5a7ffa79dce30d8800330ea75e8660ef5a73d4a2201f4728a4638  coveralls-windows.zip
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6134379Z ##[end-action id=__coverallsapp_github-action.__run_4;outcome=success;conclusion=success;duration_ms=266]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6137256Z ##[start-action display=Report coverage-reporter-platform exception for Windows;id=__coverallsapp_github-action.__run_5]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6145036Z ##[end-action id=__coverallsapp_github-action.__run_5;outcome=skipped;conclusion=skipped;duration_ms=0]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6148111Z ##[start-action display=Install coveralls reporter (Windows);id=__coverallsapp_github-action.__run_6]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6152855Z ##[end-action id=__coverallsapp_github-action.__run_6;outcome=skipped;conclusion=skipped;duration_ms=0]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6182536Z ##[end-action id=__coverallsapp_github-action.__run_7;outcome=skipped;conclusion=skipped;duration_ms=0]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6186924Z ##[start-action display=Done report (Windows);id=__coverallsapp_github-action.__run_8]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6195911Z ##[end-action id=__coverallsapp_github-action.__run_8;outcome=skipped;conclusion=skipped;duration_ms=0]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6221254Z ##[start-action display=Coverage report (Unix);id=__coverallsapp_github-action.__run_9]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6252833Z ##[group]Run # Check if coveralls binary exists
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6253211Z ^[[36;1m# Check if coveralls binary exists^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6253548Z ^[[36;1mif ! command -v coveralls &> /dev/null; then^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6253956Z ^[[36;1m  echo "Coveralls binary not found. Skipping coverage report."^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6254338Z ^[[36;1m  [ "true" == "false" ] && exit 0^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6254604Z ^[[36;1m  exit 1^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6254806Z ^[[36;1mfi^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6255026Z ^[[36;1mcoveralls report        ./lcov.info ^[[0m
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6317942Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6318297Z env:
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6318506Z   COVERALLS_DEBUG: false
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6318766Z   COVERALLS_CARRYFORWARD_FLAGS: 
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6319271Z   COVERALLS_FLAG_NAME: 
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6319536Z   COVERALLS_PARALLEL: 
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6319811Z   COVERALLS_ENDPOINT: https://coveralls.io
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6320115Z   COVERALLS_GIT_BRANCH: 
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6320351Z   COVERALLS_GIT_COMMIT: 
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6322968Z   COVERALLS_REPO_TOKEN: [secret]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6323230Z   COVERALLS_COMPARE_REF: 
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6323466Z   COVERALLS_COMPARE_SHA: 
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6323710Z   COVERALLS_SOURCE_HEADER: github-action
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6323994Z ##[endgroup]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6424602Z  
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6425220Z ⠀⠀⠀⠀⠀⠀⣿
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6425885Z ⠀⠀⠀⠀⠀⣼⣿⣧⠀⠀⠀⠀⠀⠀⠀ ⣠⣶⣾⣿⡇⢀⣴⣾⣿⣷⣆ ⣿⣿⠀⣰⣿⡟⢸⣿⣿⣿⡇ ⣿⣿⣿⣷⣦⠀⠀⢠⣿⣿⣿⠀⠀⣿⣿⠁⠀⣼⣿⡇⠀⢀⣴⣾⣿⡷
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6426760Z ⠶⣶⣶⣶⣾⣿⣿⣿⣷⣶⣶⣶⠶  ⣸⣿⡟ ⠀⢠⣿⣿⠃⠈⣿⣿⠀⣿⣿⢠⣿⡿⠀⣿⣿⣧⣤⠀⢸⣿⡇⣠⣿⡿⠀⢠⣿⡟⣿⣿⠀⢸⣿⡿⠀⠀⣿⣿⠃⠀⢸⣿⣧⣄
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6427619Z ⠀⠀⠙⢻⣿⣿⣿⣿⣿⡟⠋⠁⠀⠀ ⣿⣿⡇⠀ ⢸⣿⣿⠀⣸⣿⡟⠀⣿⣿⣾⡿⠁ ⣿⣿⠛⠛⠀⣿⣿⢿⣿⣏⠀⢀⣿⣿⣁⣿⣿⠀⣾⣿⡇⠀⢸⣿⡿⠀⠀⡀⠙⣿⣿⡆
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6428757Z ⠀⠀⢠⣿⣿⣿⠿⣿⣿⣿⡄⠀⠀⠀ ⠙⢿⣿⣿⠇⠈⠿⣿⣿⡿⠋⠀⠀⢿⣿⡿⠁⠀⢸⣿⣿⣿⡇⢸⣿⣿⠀⣿⣿⣄⣾⣿⠛⠛⣿⣿⢠⣿⣿⣿ ⣼⣿⣿⣿ ⣿⣿⡿⠋⠀
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6429644Z ⠀⢀⣾⠟⠋⠀⠀⠀⠙⠻⣷⡀⠀⠀
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6429964Z  
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6430249Z   v0.6.22
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6430426Z 
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6430669Z 📄 Using coverage file: ./lcov.info
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6448628Z 🚨 Nothing to report
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6463946Z ##[error]Process completed with exit code 1.
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6471312Z ##[end-action id=__coverallsapp_github-action.__run_9;outcome=failure;conclusion=failure;duration_ms=24]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6477211Z ##[start-action display=Coverage report (Windows);id=__coverallsapp_github-action.__run_10]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6480739Z ##[end-action id=__coverallsapp_github-action.__run_10;outcome=skipped;conclusion=skipped;duration_ms=0]
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.6599990Z Post job cleanup.
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.7439771Z [command]/usr/bin/git version
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.7476553Z git version 2.55.0
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.8102840Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.8135726Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.8539864Z Cleaning up orphan processes
+coverage	UNKNOWN STEP	2026-10-06T21:19:12.8867791Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/download-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

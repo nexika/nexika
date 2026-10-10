@@ -1,0 +1,871 @@
+typing	UNKNOWN STEP	2026-09-16T13:09:24.7029449Z typing: commands[0]> mypy
+typing	UNKNOWN STEP	2026-09-16T13:09:25.4887809Z src/click/types.py:727: error: Function is missing a type annotation 
+typing	UNKNOWN STEP	2026-09-16T13:09:25.4888793Z [no-untyped-def]
+typing	UNKNOWN STEP	2026-09-16T13:09:25.4889530Z         def convert(self, value, param, ctx):
+typing	UNKNOWN STEP	2026-09-16T13:09:25.4890757Z         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+typing	UNKNOWN STEP	2026-09-16T13:09:25.5589659Z Found 1 error in 1 file (checked 28 source files)
+typing	UNKNOWN STEP	2026-09-16T13:09:25.5655648Z   evaluation failed :( (2.19 seconds)
+typing	UNKNOWN STEP	2026-09-16T13:09:25.6064933Z ##[error]Process completed with exit code 1.
+typing	UNKNOWN STEP	2026-09-16T13:09:25.6191342Z Post job cleanup.
+typing	UNKNOWN STEP	2026-09-16T13:09:25.7002379Z [command]/usr/bin/git version
+typing	UNKNOWN STEP	2026-09-16T13:09:25.7038590Z git version 2.55.0
+typing	UNKNOWN STEP	2026-09-16T13:09:25.7076405Z Temporarily overriding HOME='/home/runner/work/_temp/857047a5-ecce-416a-ad33-25f95fc63205' before making global git config changes
+3.14t	UNKNOWN STEP	2026-09-16T13:09:02.9618625Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args3-No configuration file provided.-EnumSentinel.FALSY_SENTINEL] PASSED [ 57%]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:02.9636855Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args4-foo.conf-sentinel0] PASSED [ 57%]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:02.9655072Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args4-foo.conf-EnumSentinel.FALSY_SENTINEL] PASSED [ 57%]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:02.9675304Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args5-Usage: main \\[OPTIONS\\]\\nTry 'main --help' for help.\\n\\nError: Got unexpected extra argument (.+)\\n-sentinel0] PASSED [ 57%]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:02.9695359Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args5-Usage: main \\[OPTIONS\\]\\nTry 'main --help' for help.\\n\\nError: Got unexpected extra argument (.+)\\n-EnumSentinel.FALSY_SENTINEL] PASSED [ 57%]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:02.9714208Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args6-Usage: main \\[OPTIONS\\]\\nTry 'main --help' for help.\\n\\nError: Invalid value for '-c' / '--config': File 'random-file.conf' does not exist.\\n-sentinel0] PASSED [ 57%]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:02.9734626Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args6-Usage: main \\[OPTIONS\\]\\nTry 'main --help' for help.\\n\\nError: Invalid value for '-c' / '--config': File 'random-file.conf' does not exist.\\n-EnumSentinel.FALSY_SENTINEL] PASSED [ 57%]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:02.9753871Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args7-Usage: main \\[OPTIONS\\]\\nTry 'main --help' for help.\\n\\nError: Invalid value for '-c' / '--config': File '--no-config' does not exist.\\n-sentinel0] PASSED [ 58%]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:02.9773472Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args7-Usage: main \\[OPTIONS\\]\\nTry 'main --help' for help.\\n\\nError: Invalid value for '-c' / '--config': File '--no-config' does not exist.\\n-EnumSentinel.FALSY_SENTINEL] PASSED [ 58%]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:02.9793551Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args8-Usage: main \\[OPTIONS\\]\\nTry 'main --help' for help.\\n\\nError: Invalid value for '-c' / '--config': File '--no-config' does not exist.\\n-sentinel0] PASSED [ 58%]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:02.9813174Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args8-Usage: main \\[OPTIONS\\]\\nTry 'main --help' for help.\\n\\nError: Invalid value for '-c' / '--config': File '--no-config' does not exist.\\n-EnumSentinel.FALSY_SENTINEL] PASSED [ 58%]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:02.9830550Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args9-foo.conf-sentinel0] PASSED [ 58%]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:02.9852806Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args9-foo.conf-EnumSentinel.FALSY_SENTINEL] PASSED [ 58%]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5658585Z ________________________________ test_nargs_tup ________________________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5659204Z tests/test_arguments.py:33: in test_nargs_tup
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5659695Z     assert not result.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5660329Z E   assert not AttributeError("'IntParamType' object has no attribute '_number_class'")
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5661714Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5663036Z _______________________ test_nargs_tup_composite[opts0] ________________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5663696Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5664201Z     assert result.exception is None
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5665127Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5666524Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5667960Z _______________________ test_nargs_tup_composite[opts1] ________________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5668615Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5669206Z     assert result.exception is None
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5669932Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5671438Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5672696Z _______________________ test_nargs_tup_composite[opts2] ________________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5673198Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5673871Z     assert result.exception is None
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5674296Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5675433Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5676209Z _______________________ test_nargs_tup_composite[opts3] ________________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5676622Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5676947Z     assert result.exception is None
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5677366Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5678193Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5679007Z ________ test_good_defaults_for_nargs[argument_params0-args0-expected0] ________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5679642Z tests/test_arguments.py:530: in test_good_defaults_for_nargs
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5680016Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5680320Z E   AssertionError: assert '' == '(1, 2)'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5680586Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5680789Z E     - (1, 2)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5681131Z ________ test_good_defaults_for_nargs[argument_params1-args1-expected1] ________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5681575Z tests/test_arguments.py:530: in test_good_defaults_for_nargs
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5681921Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5682220Z E   AssertionError: assert '' == '(1, 2)'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5682506Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5682702Z E     - (1, 2)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5683040Z ________ test_good_defaults_for_nargs[argument_params2-args2-expected2] ________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5683513Z tests/test_arguments.py:530: in test_good_defaults_for_nargs
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5683879Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5684188Z E   AssertionError: assert '' == '(1, 2)'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5684455Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5684638Z E     - (1, 2)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5685161Z ________ test_good_defaults_for_nargs[argument_params4-args4-expected4] ________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5685626Z tests/test_arguments.py:530: in test_good_defaults_for_nargs
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5685977Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5686264Z E   AssertionError: assert '' == '(1, 2)'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5686539Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5686722Z E     - (1, 2)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5687037Z ________ test_good_defaults_for_nargs[argument_params5-args5-expected5] ________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5687469Z tests/test_arguments.py:530: in test_good_defaults_for_nargs
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5687801Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5688086Z E   AssertionError: assert '' == '(1, 2)'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5688341Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5688524Z E     - (1, 2)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5688839Z ________ test_good_defaults_for_nargs[argument_params6-args6-expected6] ________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5689272Z tests/test_arguments.py:530: in test_good_defaults_for_nargs
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5689595Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5689865Z E   AssertionError: assert '' == '(1, 2)'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5690116Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5690302Z E     - (1, 2)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5690600Z ________ test_good_defaults_for_nargs[argument_params7-args7-expected7] ________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5691026Z tests/test_arguments.py:530: in test_good_defaults_for_nargs
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5691357Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5691641Z E   AssertionError: assert '' == '(1, 2)'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5691897Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5692080Z E     - (1, 2)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5692382Z ________ test_good_defaults_for_nargs[argument_params9-args9-expected9] ________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5692816Z tests/test_arguments.py:530: in test_good_defaults_for_nargs
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5693309Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5693593Z E   AssertionError: assert '' == '(3, 4)'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5693848Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5694041Z E     - (3, 4)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5694354Z ______ test_good_defaults_for_nargs[argument_params10-args10-expected10] _______
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5694796Z tests/test_arguments.py:530: in test_good_defaults_for_nargs
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5695429Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5695730Z E   AssertionError: assert '' == '(42,)'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5695991Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5696175Z E     - (42,)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5696485Z ______ test_good_defaults_for_nargs[argument_params12-args12-expected12] _______
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5696919Z tests/test_arguments.py:530: in test_good_defaults_for_nargs
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5697254Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5697557Z E   AssertionError: assert '' == '(1, 2, 3, 4, 5)'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5697855Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5698081Z E     - (1, 2, 3, 4, 5)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5698571Z ________________________ test_int_option[args0-I:[84]] _________________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5698944Z tests/test_basic.py:231: in test_int_option
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5699247Z     assert expect in result.output
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5699522Z E   assert 'I:[84]' in ''
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5699959Z E    +  where '' = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.output
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5700499Z ________________________ test_int_option[args1-I:[46]] _________________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5700864Z tests/test_basic.py:231: in test_int_option
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5701162Z     assert expect in result.output
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5701418Z E   assert 'I:[46]' in ''
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5701821Z E    +  where '' = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.output
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5702413Z _ test_int_option[args2-Error: Invalid value for '--i': 'x' is not a valid integer.] _
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5702857Z tests/test_basic.py:231: in test_int_option
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5703139Z     assert expect in result.output
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5703506Z E   assert "Error: Invalid value for '--i': 'x' is not a valid integer." in ''
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5704090Z E    +  where '' = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.output
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5704643Z __________________________ test_other_command_forward __________________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5705243Z tests/test_commands.py:40: in test_other_command_forward
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5705582Z     assert not result.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5705979Z E   assert not AttributeError("'IntParamType' object has no attribute '_number_class'")
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5706825Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5707644Z ___________ test_other_command_invoke_with_defaults[opt_params0-42] ____________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5708129Z tests/test_commands.py:276: in test_other_command_invoke_with_defaults
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5708556Z     assert result.return_value == ("other", expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5708872Z E   assert None == ('other', 42)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5709356Z E    +  where None = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.return_value
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5709949Z ___________ test_other_command_invoke_with_defaults[opt_params1-15] ____________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5710423Z tests/test_commands.py:276: in test_other_command_invoke_with_defaults
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5710819Z     assert result.return_value == ("other", expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5711122Z E   assert None == ('other', 15)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5711569Z E    +  where None = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.return_value
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5712423Z ________ test_other_command_invoke_with_defaults[opt_params8-expected8] ________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5712902Z tests/test_commands.py:276: in test_other_command_invoke_with_defaults
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5713304Z     assert result.return_value == ("other", expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5713621Z E   assert None == ('other', (1, 2, 3))
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5714106Z E    +  where None = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.return_value
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5714683Z ___________ test_other_command_invoke_with_defaults[opt_params15-0] ____________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5715310Z tests/test_commands.py:276: in test_other_command_invoke_with_defaults
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5715707Z     assert result.return_value == ("other", expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5716009Z E   assert None == ('other', 0)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5716460Z E    +  where None = <Result AttributeError("'IntRange' object has no attribute '_number_class'")>.return_value
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5717011Z ___________________________ test_unprocessed_options ___________________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5717568Z tests/test_commands.py:550: in test_unprocessed_options
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5717910Z     assert not result.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5718295Z E   assert not AttributeError("'IntRange' object has no attribute '_number_class'")
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5719078Z E    +  where AttributeError("'IntRange' object has no attribute '_number_class'") = <Result AttributeError("'IntRange' object has no attribute '_number_class'")>.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5719817Z ________________________ test_parameter_source[default] ________________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5731129Z tests/test_context.py:774: in test_parameter_source
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5731441Z     assert rv.return_value == expect
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5731744Z E   assert None == <ParameterSource.ENVIRONMENT: 3>
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5732256Z E    +  where None = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.return_value
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5732820Z _____________________ test_basic_defaults[42-type1-42-int] _____________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5733211Z tests/test_defaults.py:35: in test_basic_defaults
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5733527Z     assert not result.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5733924Z E   assert not AttributeError("'IntParamType' object has no attribute '_number_class'")
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5734766Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5735746Z ___________________________ test_nargs_plus_multiple ___________________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5736156Z tests/test_defaults.py:85: in test_nargs_plus_multiple
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5736616Z     assert not result.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5737007Z E   assert not AttributeError("'IntParamType' object has no attribute '_number_class'")
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5737816Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5738567Z __________________________ test_multiple_flag_default __________________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5738985Z tests/test_defaults.py:107: in test_multiple_flag_default
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5739393Z     assert result.return_value == ((True, False), (True,), (1, -1))
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5739781Z E   assert None == ((True, False), (True,), (1, -1))
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5740289Z E    +  where None = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.return_value
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5740905Z ___ test_default_map_nargs[default_map0-option_kwargs0-cli_args0-expected0] ____
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5741342Z tests/test_defaults.py:547: in test_default_map_nargs
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5741656Z     assert result.exit_code == 0
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5741909Z E   assert 1 == 0
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5742327Z E    +  where 1 = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exit_code
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5742903Z ___ test_default_map_nargs[default_map3-option_kwargs3-cli_args3-expected3] ____
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5743322Z tests/test_defaults.py:547: in test_default_map_nargs
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5743624Z     assert result.exit_code == 0
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5743886Z E   assert 1 == 0
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5744295Z E    +  where 1 = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exit_code
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5745019Z ___ test_default_map_nargs[default_map4-option_kwargs4-cli_args4-expected4] ____
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5745455Z tests/test_defaults.py:547: in test_default_map_nargs
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5745780Z     assert result.exit_code == 0
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5746035Z E   assert 1 == 0
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5746430Z E    +  where 1 = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exit_code
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5746970Z __________________________ test_unset_in_default_map ___________________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5747372Z tests/test_defaults.py:566: in test_unset_in_default_map
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5747695Z     assert result.exit_code == 0
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5747937Z E   assert 1 == 0
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5748322Z E    +  where 1 = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exit_code
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5748873Z _________________ test_formatting_usage_error_metavar_bad_arg __________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5749354Z tests/test_formatting.py:192: in test_formatting_usage_error_metavar_bad_arg
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5749738Z     assert result.exit_code == 2
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5750131Z E   assert 1 == 2
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5750524Z E    +  where 1 = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exit_code
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5751057Z ________________________ test_nargs_tup_composite_mult _________________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5751475Z tests/test_options.py:148: in test_nargs_tup_composite_mult
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5751823Z     assert not result.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5752209Z E   assert not AttributeError("'IntParamType' object has no attribute '_number_class'")
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5753032Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5753814Z ________________________________ test_counting _________________________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5754190Z tests/test_options.py:159: in test_counting
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5754483Z     assert not result.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5755011Z E   assert not AttributeError("'IntRange' object has no attribute '_number_class'")
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5756229Z E    +  where AttributeError("'IntRange' object has no attribute '_number_class'") = <Result AttributeError("'IntRange' object has no attribute '_number_class'")>.exception
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5757003Z __________ test_good_defaults_for_multiple[True-1-default8-expected8] __________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5757472Z tests/test_options.py:282: in test_good_defaults_for_multiple
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5757834Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5758137Z E   AssertionError: assert '' == '(1,)'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5758404Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5758604Z E     - (1,)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5758927Z __________ test_good_defaults_for_multiple[True-1-default9-expected9] __________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5759381Z tests/test_options.py:282: in test_good_defaults_for_multiple
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5759731Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5760035Z E   AssertionError: assert '' == '(1, 2)'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5760305Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5760518Z E     - (1, 2)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5760852Z _________ test_good_defaults_for_multiple[True-1-default10-expected10] _________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5761311Z tests/test_options.py:282: in test_good_defaults_for_multiple
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5761665Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5761970Z E   AssertionError: assert '' == '(1, 2, 3)'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5762243Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5762433Z E     - (1, 2, 3)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5762757Z _________ test_good_defaults_for_multiple[True-2-default25-expected25] _________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5763203Z tests/test_options.py:282: in test_good_defaults_for_multiple
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5763561Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5763860Z E   AssertionError: assert '' == '((1, 2),)'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5764130Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5764320Z E     - ((1, 2),)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5764655Z _________ test_good_defaults_for_multiple[True-2-default26-expected26] _________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5765316Z tests/test_options.py:282: in test_good_defaults_for_multiple
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5765663Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5765974Z E   AssertionError: assert '' == '((1, 2), (3, 4))'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5766271Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5766468Z E     - ((1, 2), (3, 4))
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5766813Z _________ test_good_defaults_for_multiple[True-2-default27-expected27] _________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5767255Z tests/test_options.py:282: in test_good_defaults_for_multiple
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5767605Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5767937Z E   AssertionError: assert '' == '((1, 2), (3, 4), (5, 6))'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5768242Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5768437Z E     - ((1, 2), (3, 4), (5, 6))
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5768798Z _________ test_good_defaults_for_multiple[True-2-default31-expected31] _________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5769228Z tests/test_options.py:282: in test_good_defaults_for_multiple
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5769709Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5770027Z E   AssertionError: assert '' == '((1, 2.2), (3, None))'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5770328Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5770526Z E     - ((1, 2.2), (3, None))
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5781581Z _________ test_good_defaults_for_multiple[True-2-default32-expected32] _________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5782094Z tests/test_options.py:282: in test_good_defaults_for_multiple
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5782479Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5782957Z E   AssertionError: assert '' == '((1, 2.2), None)'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5783271Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5783484Z E     - ((1, 2.2), None)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5783853Z ________ test_good_defaults_for_multiple[False-2-default33-expected33] _________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5784330Z tests/test_options.py:282: in test_good_defaults_for_multiple
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5784696Z     assert result.output == repr(expected)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5785222Z E   AssertionError: assert '' == '(1, 2)'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5785489Z E     
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5785899Z E     - (1, 2)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5786412Z _ test_bad_defaults_for_multiple[True-2-default13-None-Error: Invalid value for '-a': 2 values are required, but 0 were given.] _
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5787031Z tests/test_options.py:430: in test_bad_defaults_for_multiple
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5787391Z     assert message in result.stderr
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5787807Z E   assert "Error: Invalid value for '-a': 2 values are required, but 0 were given." in ''
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5788419Z E    +  where '' = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.stderr
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5788987Z _____________________ test_multiple_default_composite_type _____________________
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5789444Z tests/test_options.py:673: in test_multiple_default_composite_type
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5789918Z     assert opt.type_cast_value(ctx, opt.get_default(ctx)) == ((1, "a"),)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5790315Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5790762Z .tox/py3.14t/lib/python3.14t/site-packages/click/core.py:2609: in type_cast_value
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5791231Z     return tuple(convert(x) for x in check_iter(value))
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5791543Z            ^^^^^
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5791883Z .tox/py3.14t/lib/python3.14t/site-packages/click/core.py:2609: in <genexpr>
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5792340Z     return tuple(convert(x) for x in check_iter(value))
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5792670Z                  ^^^^^^^^^^
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5793014Z .tox/py3.14t/lib/python3.14t/site-packages/click/core.py:2583: in convert
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5793431Z     return self.type(value, param=self, ctx=ctx)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5915416Z              ^^^^^^^^^^^^^^^^^
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5915752Z .tox/py3.14t/lib/python3.14t/site-packages/click/types.py:155: in __call__
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5916133Z     return self.convert(value, param, ctx)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5916405Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5916744Z .tox/py3.14t/lib/python3.14t/site-packages/click/types.py:660: in convert
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5917116Z     rv = super().convert(value, param, ctx)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5917392Z          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5917741Z .tox/py3.14t/lib/python3.14t/site-packages/click/types.py:728: in convert
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5918128Z     return super().convert(value, param, ctx) + 3
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5918423Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5918769Z .tox/py3.14t/lib/python3.14t/site-packages/click/types.py:591: in convert
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5919140Z     return self._number_class(value)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5919398Z            ^^^^^^^^^^^^^^^^^^
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5919730Z E   AttributeError: 'IntRange' object has no attribute '_number_class'
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5920187Z ----------------------------- Captured stdout call -----------------------------
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5920541Z value [100]: 
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5920797Z =========================== short test summary info ============================
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5921277Z FAILED tests/test_arguments.py::test_nargs_tup - assert not AttributeError("'...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5921781Z FAILED tests/test_arguments.py::test_nargs_tup_composite[opts0] - assert Attr...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5922279Z FAILED tests/test_arguments.py::test_nargs_tup_composite[opts1] - assert Attr...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5922763Z FAILED tests/test_arguments.py::test_nargs_tup_composite[opts2] - assert Attr...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5923249Z FAILED tests/test_arguments.py::test_nargs_tup_composite[opts3] - assert Attr...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5923804Z FAILED tests/test_arguments.py::test_good_defaults_for_nargs[argument_params0-args0-expected0]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5924410Z FAILED tests/test_arguments.py::test_good_defaults_for_nargs[argument_params1-args1-expected1]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5925274Z FAILED tests/test_arguments.py::test_good_defaults_for_nargs[argument_params2-args2-expected2]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5925846Z FAILED tests/test_arguments.py::test_good_defaults_for_nargs[argument_params4-args4-expected4]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5926423Z FAILED tests/test_arguments.py::test_good_defaults_for_nargs[argument_params5-args5-expected5]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5926989Z FAILED tests/test_arguments.py::test_good_defaults_for_nargs[argument_params6-args6-expected6]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5927556Z FAILED tests/test_arguments.py::test_good_defaults_for_nargs[argument_params7-args7-expected7]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5928129Z FAILED tests/test_arguments.py::test_good_defaults_for_nargs[argument_params9-args9-expected9]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5928734Z FAILED tests/test_arguments.py::test_good_defaults_for_nargs[argument_params10-args10-expected10]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5929348Z FAILED tests/test_arguments.py::test_good_defaults_for_nargs[argument_params12-args12-expected12]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5930015Z FAILED tests/test_basic.py::test_int_option[args0-I:[84]] - assert 'I:[84]' i...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5930520Z FAILED tests/test_basic.py::test_int_option[args1-I:[46]] - assert 'I:[46]' i...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5931106Z FAILED tests/test_basic.py::test_int_option[args2-Error: Invalid value for '--i': 'x' is not a valid integer.]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5931702Z FAILED tests/test_commands.py::test_other_command_forward - assert not Attrib...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5932225Z FAILED tests/test_commands.py::test_other_command_invoke_with_defaults[opt_params0-42]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5932799Z FAILED tests/test_commands.py::test_other_command_invoke_with_defaults[opt_params1-15]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5933369Z FAILED tests/test_commands.py::test_other_command_invoke_with_defaults[opt_params8-expected8]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5933921Z FAILED tests/test_commands.py::test_other_command_invoke_with_defaults[opt_params15-0]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5934447Z FAILED tests/test_commands.py::test_unprocessed_options - assert not Attribut...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5935081Z FAILED tests/test_context.py::test_parameter_source[default] - assert None ==...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5935576Z FAILED tests/test_context.py::test_parameter_source[default_map] - assert Non...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5936065Z FAILED tests/test_context.py::test_parameter_source[commandline short] - asse...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5936554Z FAILED tests/test_context.py::test_parameter_source[commandline long] - asser...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5937038Z FAILED tests/test_context.py::test_parameter_source[environment auto] - asser...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5937524Z FAILED tests/test_context.py::test_parameter_source[environment manual] - ass...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5938010Z FAILED tests/test_defaults.py::test_basic_defaults[42-type1-42-int] - assert ...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5938504Z FAILED tests/test_defaults.py::test_nargs_plus_multiple - assert not Attribut...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5938991Z FAILED tests/test_defaults.py::test_multiple_flag_default - assert None == ((...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5939577Z FAILED tests/test_defaults.py::test_default_map_nargs[default_map0-option_kwargs0-cli_args0-expected0]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5940216Z FAILED tests/test_defaults.py::test_default_map_nargs[default_map3-option_kwargs3-cli_args3-expected3]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5940843Z FAILED tests/test_defaults.py::test_default_map_nargs[default_map4-option_kwargs4-cli_args4-expected4]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5941387Z FAILED tests/test_defaults.py::test_unset_in_default_map - assert 1 == 0
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5941876Z FAILED tests/test_formatting.py::test_formatting_usage_error_metavar_bad_arg
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5942377Z FAILED tests/test_options.py::test_nargs_tup_composite_mult - assert not Attr...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5942873Z FAILED tests/test_options.py::test_counting - assert not AttributeError("'Int...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5943401Z FAILED tests/test_options.py::test_good_defaults_for_multiple[True-1-default8-expected8]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5944029Z FAILED tests/test_options.py::test_good_defaults_for_multiple[True-1-default9-expected9]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5944778Z FAILED tests/test_options.py::test_good_defaults_for_multiple[True-1-default10-expected10]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5945644Z FAILED tests/test_options.py::test_good_defaults_for_multiple[True-2-default25-expected25]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5946194Z FAILED tests/test_options.py::test_good_defaults_for_multiple[True-2-default26-expected26]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5946787Z FAILED tests/test_options.py::test_good_defaults_for_multiple[True-2-default27-expected27]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5947331Z FAILED tests/test_options.py::test_good_defaults_for_multiple[True-2-default31-expected31]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5947872Z FAILED tests/test_options.py::test_good_defaults_for_multiple[True-2-default32-expected32]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5948430Z FAILED tests/test_options.py::test_good_defaults_for_multiple[False-2-default33-expected33]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5949235Z FAILED tests/test_options.py::test_bad_defaults_for_multiple[True-2-default13-None-Error: Invalid value for '-a': 2 values are required, but 0 were given.]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5950116Z FAILED tests/test_options.py::test_multiple_default_composite_type - Attribut...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5950622Z FAILED tests/test_options.py::test_parse_multiple_default_composite_type - as...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5951122Z FAILED tests/test_options.py::test_custom_validation - assert "Invalid value ...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5951611Z FAILED tests/test_options.py::test_callback_validates_prompt - AssertionError...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5952168Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params24-args24-1]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5952792Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params25-args25-42]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5953438Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params26-args26-1]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5954039Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params27-args27-42]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5954641Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params28-args28-1]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5955342Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params29-args29-42]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5955996Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params15-opt2_params15-args15-1]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5956665Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params16-opt2_params16-args16-1]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5957278Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args3-0\n]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5957849Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args4-1\n]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5958395Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args5-2\n]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5958928Z FAILED tests/test_stream_lifecycle.py::test_sequential_threaded_invokes - ass...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5959480Z FAILED tests/test_termui.py::test_hide_input_error_message[builtin-int-masks-repr-value]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5960124Z FAILED tests/test_termui.py::test_hide_input_error_message[intrange-numeric-substring-falls-back-to-generic]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5960727Z FAILED tests/test_types/test_IntRange.py::test_range[type0-3-3] - AttributeEr...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5961219Z FAILED tests/test_types/test_IntRange.py::test_range[type1-5-5] - AttributeEr...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5961713Z FAILED tests/test_types/test_IntRange.py::test_range[type2-100-100] - Attribu...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5962197Z FAILED tests/test_types/test_IntRange.py::test_range[type3-5-5] - AttributeEr...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5962694Z FAILED tests/test_types/test_IntRange.py::test_range[type4--100--100] - Attri...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5963174Z FAILED tests/test_types/test_IntRange.py::test_range[type5--1-0] - AttributeE...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5963662Z FAILED tests/test_types/test_IntRange.py::test_range[type6-6-5] - AttributeEr...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5964298Z FAILED tests/test_types/test_IntRange.py::test_range[type7-0-1] - AttributeEr...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5964779Z FAILED tests/test_types/test_IntRange.py::test_range[type8-5-4] - AttributeEr...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5965444Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type0-6-6 is not in the range 0<=x<=5.]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5966059Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type1-4-4 is not in the range x>=5.]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5966634Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type2-6-6 is not in the range x<=5.]
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5967172Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type3-0-0<x<=5] - A...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5967672Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type4-5-0<=x<5] - A...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5968158Z FAILED tests/test_utils/test_prompt.py::test_prompt_cast_default - AttributeE...
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5968651Z FAILED tests/test_utils/test_prompt.py::test_prompt_default_validated_by_type
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.5969256Z === 84 failed, 1975 passed, 24 skipped, 31000 deselected, 1 xfailed in 9.59s ===
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.8963542Z py3.14t: exit 1 (11.03 seconds) /home/runner/work/click/click> pytest -v --tb=short --basetemp=/home/runner/work/click/click/.tox/py3.14t/tmp pid=2474
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.8987055Z   py3.14t: FAIL code 1 (11.76=setup[0.73]+cmd[11.03] seconds)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.8987633Z   evaluation failed :( (11.84 seconds)
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.9470327Z ##[error]Process completed with exit code 1.
+3.14t	UNKNOWN STEP	2026-09-16T13:09:06.9611718Z Post job cleanup.
+3.14t	UNKNOWN STEP	2026-09-16T13:09:07.0450184Z [command]/usr/bin/git version
+3.14t	UNKNOWN STEP	2026-09-16T13:09:07.0488705Z git version 2.55.0
+3.14t	UNKNOWN STEP	2026-09-16T13:09:07.0522255Z Temporarily overriding HOME='/home/runner/work/_temp/adf7468d-939f-4df6-9749-9e4be8fc5aa0' before making global git config changes
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8042930Z _______________________________ test_nargs_tup ________________________________
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8043515Z tests\test_arguments.py:33: in test_nargs_tup
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8043955Z     assert not result.exception
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8044407Z E   assert not AttributeError("'IntParamType' object has no attribute '_number_class'")
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8045921Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8047574Z _______________________ test_nargs_tup_composite[opts0] _______________________
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8048330Z tests\test_arguments.py:54: in test_nargs_tup_composite
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8049000Z     assert result.exception is None
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8049478Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8050933Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8053315Z _______________________ test_nargs_tup_composite[opts1] _______________________
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8054319Z tests\test_arguments.py:54: in test_nargs_tup_composite
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8054827Z     assert result.exception is None
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8055869Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8056931Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8057743Z _______________________ test_nargs_tup_composite[opts2] _______________________
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8058149Z tests\test_arguments.py:54: in test_nargs_tup_composite
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8058742Z     assert result.exception is None
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8059156Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8060037Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8060834Z _______________________ test_nargs_tup_composite[opts3] _______________________
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8327418Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params24-args24-1]
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8328062Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params25-args25-42]
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8328706Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params26-args26-1]
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8329345Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params27-args27-42]
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8329984Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params28-args28-1]
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8330627Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params29-args29-42]
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8331300Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params15-opt2_params15-args15-1]
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8332017Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params16-opt2_params16-args16-1]
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8332675Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args3-0\n]
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8333264Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args4-1\n]
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8333849Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args5-2\n]
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8334406Z FAILED tests/test_stream_lifecycle.py::test_sequential_threaded_invokes - ass...
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8334964Z FAILED tests/test_termui.py::test_hide_input_error_message[builtin-int-masks-repr-value]
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8336049Z FAILED tests/test_termui.py::test_hide_input_error_message[intrange-numeric-substring-falls-back-to-generic]
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8336759Z FAILED tests/test_types/test_IntRange.py::test_range[type0-3-3] - AttributeEr...
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8337277Z FAILED tests/test_types/test_IntRange.py::test_range[type1-5-5] - AttributeEr...
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8337782Z FAILED tests/test_types/test_IntRange.py::test_range[type2-100-100] - Attribu...
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8338290Z FAILED tests/test_types/test_IntRange.py::test_range[type3-5-5] - AttributeEr...
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8338798Z FAILED tests/test_types/test_IntRange.py::test_range[type4--100--100] - Attri...
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8339305Z FAILED tests/test_types/test_IntRange.py::test_range[type5--1-0] - AttributeE...
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8339812Z FAILED tests/test_types/test_IntRange.py::test_range[type6-6-5] - AttributeEr...
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8340326Z FAILED tests/test_types/test_IntRange.py::test_range[type7-0-1] - AttributeEr...
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8340925Z FAILED tests/test_types/test_IntRange.py::test_range[type8-5-4] - AttributeEr...
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8341495Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type0-6-6 is not in the range 0<=x<=5.]
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8342123Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type1-4-4 is not in the range x>=5.]
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8342724Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type2-6-6 is not in the range x<=5.]
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8343281Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type3-0-0<x<=5] - A...
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8343787Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type4-5-0<=x<5] - A...
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8344305Z FAILED tests/test_utils/test_prompt.py::test_prompt_cast_default - AttributeE...
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8344821Z FAILED tests/test_utils/test_prompt.py::test_prompt_default_validated_by_type
+Windows	UNKNOWN STEP	2026-09-16T13:09:12.8345317Z == 84 failed, 1898 passed, 101 skipped, 31000 deselected, 1 xfailed in 9.18s ==
+Windows	UNKNOWN STEP	2026-09-16T13:09:13.5623543Z py3.14: exit 1 (11.75 seconds) D:\a\click\click> pytest -v --tb=short --basetemp=D:\a\click\click\.tox\py3.14\tmp pid=840
+Windows	UNKNOWN STEP	2026-09-16T13:09:13.5631001Z   py3.14: FAIL code 1 (12.59=setup[0.84]+cmd[11.75] seconds)
+Windows	UNKNOWN STEP	2026-09-16T13:09:13.5631381Z   evaluation failed :( (12.72 seconds)
+Windows	UNKNOWN STEP	2026-09-16T13:09:13.7165218Z ##[error]Process completed with exit code 1.
+Windows	UNKNOWN STEP	2026-09-16T13:09:13.7407516Z Post job cleanup.
+Windows	UNKNOWN STEP	2026-09-16T13:09:13.9393958Z [command]"C:\Program Files\Git\bin\git.exe" version
+Windows	UNKNOWN STEP	2026-09-16T13:09:13.9679875Z git version 2.55.0.windows.5
+Windows	UNKNOWN STEP	2026-09-16T13:09:13.9745194Z Temporarily overriding HOME='D:\a\_temp\678145d3-71e0-4234-be7b-f93bb4f3bcec' before making global git config changes
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8910708Z ________________________________ test_nargs_tup ________________________________
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8911448Z tests/test_arguments.py:33: in test_nargs_tup
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8912260Z     assert not result.exception
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8912981Z E   assert not AttributeError("'IntParamType' object has no attribute '_number_class'")
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8914076Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8915069Z _______________________ test_nargs_tup_composite[opts0] ________________________
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8915593Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8916005Z     assert result.exception is None
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8916529Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8917622Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8918613Z _______________________ test_nargs_tup_composite[opts1] ________________________
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8919150Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8919548Z     assert result.exception is None
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8920067Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8921164Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8922688Z _______________________ test_nargs_tup_composite[opts2] ________________________
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8923431Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8923966Z     assert result.exception is None
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8924679Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8925900Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.8926735Z _______________________ test_nargs_tup_composite[opts3] ________________________
+3.13	UNKNOWN STEP	2026-09-16T13:09:01.9266748Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params24-args24-1]
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5742392Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params25-args25-42]
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5744620Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params26-args26-1]
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5746262Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params27-args27-42]
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5747669Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params28-args28-1]
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5749105Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params29-args29-42]
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5750622Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params15-opt2_params15-args15-1]
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5752251Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params16-opt2_params16-args16-1]
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5753564Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args3-0\n]
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5754913Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args4-1\n]
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5756245Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args5-2\n]
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5757454Z FAILED tests/test_stream_lifecycle.py::test_sequential_threaded_invokes - ass...
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5758660Z FAILED tests/test_termui.py::test_hide_input_error_message[builtin-int-masks-repr-value]
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5760042Z FAILED tests/test_termui.py::test_hide_input_error_message[intrange-numeric-substring-falls-back-to-generic]
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5761268Z FAILED tests/test_types/test_IntRange.py::test_range[type0-3-3] - AttributeEr...
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5762581Z FAILED tests/test_types/test_IntRange.py::test_range[type1-5-5] - AttributeEr...
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5763717Z FAILED tests/test_types/test_IntRange.py::test_range[type2-100-100] - Attribu...
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5764863Z FAILED tests/test_types/test_IntRange.py::test_range[type3-5-5] - AttributeEr...
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5765989Z FAILED tests/test_types/test_IntRange.py::test_range[type4--100--100] - Attri...
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5767128Z FAILED tests/test_types/test_IntRange.py::test_range[type5--1-0] - AttributeE...
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5768146Z FAILED tests/test_types/test_IntRange.py::test_range[type6-6-5] - AttributeEr...
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5768959Z FAILED tests/test_types/test_IntRange.py::test_range[type7-0-1] - AttributeEr...
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5769496Z FAILED tests/test_types/test_IntRange.py::test_range[type8-5-4] - AttributeEr...
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5770066Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type0-6-6 is not in the range 0<=x<=5.]
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5770686Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type1-4-4 is not in the range x>=5.]
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5771288Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type2-6-6 is not in the range x<=5.]
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5772006Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type3-0-0<x<=5] - A...
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5772517Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type4-5-0<=x<5] - A...
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5773031Z FAILED tests/test_utils/test_prompt.py::test_prompt_cast_default - AttributeE...
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5773547Z FAILED tests/test_utils/test_prompt.py::test_prompt_default_validated_by_type
+3.13	UNKNOWN STEP	2026-09-16T13:09:02.5774037Z === 84 failed, 1975 passed, 24 skipped, 31000 deselected, 1 xfailed in 8.50s ===
+3.13	UNKNOWN STEP	2026-09-16T13:09:03.0902090Z py3.13: exit 1 (10.45 seconds) /home/runner/work/click/click> pytest -v --tb=short --basetemp=/home/runner/work/click/click/.tox/py3.13/tmp pid=2525
+3.13	UNKNOWN STEP	2026-09-16T13:09:03.0906886Z   py3.13: FAIL code 1 (11.03=setup[0.59]+cmd[10.45] seconds)
+3.13	UNKNOWN STEP	2026-09-16T13:09:03.0907478Z   evaluation failed :( (11.10 seconds)
+3.13	UNKNOWN STEP	2026-09-16T13:09:03.1247018Z ##[error]Process completed with exit code 1.
+3.13	UNKNOWN STEP	2026-09-16T13:09:03.1367714Z Post job cleanup.
+3.13	UNKNOWN STEP	2026-09-16T13:09:03.2211274Z [command]/usr/bin/git version
+3.13	UNKNOWN STEP	2026-09-16T13:09:03.2249613Z git version 2.55.0
+3.13	UNKNOWN STEP	2026-09-16T13:09:03.2286881Z Temporarily overriding HOME='/home/runner/work/_temp/e8dd7999-dc97-49d7-9532-42c656c50f92' before making global git config changes
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4055271Z ________________________________ test_nargs_tup ________________________________
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4055957Z tests/test_arguments.py:33: in test_nargs_tup
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4056473Z     assert not result.exception
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4057170Z E   assert not AttributeError("'IntParamType' object has no attribute '_number_class'")
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4058698Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4060447Z _______________________ test_nargs_tup_composite[opts0] ________________________
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4061169Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4061772Z     assert result.exception is None
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4062509Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4064153Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4065609Z _______________________ test_nargs_tup_composite[opts1] ________________________
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4066358Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4066921Z     assert result.exception is None
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4067663Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4069483Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4070918Z _______________________ test_nargs_tup_composite[opts2] ________________________
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4071659Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4072217Z     assert result.exception is None
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4072967Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4074520Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.10	UNKNOWN STEP	2026-09-16T13:09:01.4075979Z _______________________ test_nargs_tup_composite[opts3] ________________________
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6426190Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params24-args24-1]
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6426849Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params25-args25-42]
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6427511Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params26-args26-1]
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6428174Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params27-args27-42]
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6428947Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params28-args28-1]
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6429966Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params29-args29-42]
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6430662Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params15-opt2_params15-args15-1]
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6431384Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params16-opt2_params16-args16-1]
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6432045Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args3-0\n]
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6432650Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args4-1\n]
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6433387Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args5-2\n]
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6433955Z FAILED tests/test_stream_lifecycle.py::test_sequential_threaded_invokes - ass...
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6434534Z FAILED tests/test_termui.py::test_hide_input_error_message[builtin-int-masks-repr-value]
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6435215Z FAILED tests/test_termui.py::test_hide_input_error_message[intrange-numeric-substring-falls-back-to-generic]
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6435859Z FAILED tests/test_types/test_IntRange.py::test_range[type0-3-3] - AttributeEr...
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6436378Z FAILED tests/test_types/test_IntRange.py::test_range[type1-5-5] - AttributeEr...
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6436900Z FAILED tests/test_types/test_IntRange.py::test_range[type2-100-100] - Attribu...
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6437418Z FAILED tests/test_types/test_IntRange.py::test_range[type3-5-5] - AttributeEr...
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6437932Z FAILED tests/test_types/test_IntRange.py::test_range[type4--100--100] - Attri...
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6438462Z FAILED tests/test_types/test_IntRange.py::test_range[type5--1-0] - AttributeE...
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6438981Z FAILED tests/test_types/test_IntRange.py::test_range[type6-6-5] - AttributeEr...
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6439654Z FAILED tests/test_types/test_IntRange.py::test_range[type7-0-1] - AttributeEr...
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6440187Z FAILED tests/test_types/test_IntRange.py::test_range[type8-5-4] - AttributeEr...
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6440773Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type0-6-6 is not in the range 0<=x<=5.]
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6441403Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type1-4-4 is not in the range x>=5.]
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6442018Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type2-6-6 is not in the range x<=5.]
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6442589Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type3-0-0<x<=5] - A...
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6443118Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type4-5-0<=x<5] - A...
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6443651Z FAILED tests/test_utils/test_prompt.py::test_prompt_cast_default - AttributeE...
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6444180Z FAILED tests/test_utils/test_prompt.py::test_prompt_default_validated_by_type
+3.10	UNKNOWN STEP	2026-09-16T13:09:02.6444692Z == 84 failed, 1975 passed, 24 skipped, 31000 deselected, 1 xfailed in 12.03s ===
+3.10	UNKNOWN STEP	2026-09-16T13:09:03.5020928Z py3.10: exit 1 (14.84 seconds) /home/runner/work/click/click> pytest -v --tb=short --basetemp=/home/runner/work/click/click/.tox/py3.10/tmp pid=2371
+3.10	UNKNOWN STEP	2026-09-16T13:09:03.5025616Z   py3.10: FAIL code 1 (15.52=setup[0.68]+cmd[14.84] seconds)
+3.10	UNKNOWN STEP	2026-09-16T13:09:03.5026241Z   evaluation failed :( (15.76 seconds)
+3.10	UNKNOWN STEP	2026-09-16T13:09:03.5453798Z ##[error]Process completed with exit code 1.
+3.10	UNKNOWN STEP	2026-09-16T13:09:03.5581906Z Post job cleanup.
+3.10	UNKNOWN STEP	2026-09-16T13:09:03.6484725Z [command]/usr/bin/git version
+3.10	UNKNOWN STEP	2026-09-16T13:09:03.6526217Z git version 2.55.0
+3.10	UNKNOWN STEP	2026-09-16T13:09:03.6571762Z Temporarily overriding HOME='/home/runner/work/_temp/7797e893-1f73-4526-9945-ae2d40688ca5' before making global git config changes
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6790676Z ________________________________ test_nargs_tup ________________________________
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6791357Z tests/test_arguments.py:33: in test_nargs_tup
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6791876Z     assert not result.exception
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6792568Z E   assert not AttributeError("'IntParamType' object has no attribute '_number_class'")
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6794112Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6795546Z _______________________ test_nargs_tup_composite[opts0] ________________________
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6796284Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6796983Z     assert result.exception is None
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6797761Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6799692Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6801137Z _______________________ test_nargs_tup_composite[opts1] ________________________
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6801860Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6802417Z     assert result.exception is None
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6803200Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6804767Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6806198Z _______________________ test_nargs_tup_composite[opts2] ________________________
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6806947Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6807551Z     assert result.exception is None
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6808285Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6810053Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.6811483Z _______________________ test_nargs_tup_composite[opts3] ________________________
+3.11	UNKNOWN STEP	2026-09-16T13:08:57.7498767Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params24-args24-1]
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3904342Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params25-args25-42]
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3905521Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params26-args26-1]
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3906620Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params27-args27-42]
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3908039Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params28-args28-1]
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3909324Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params29-args29-42]
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3910482Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params15-opt2_params15-args15-1]
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3911611Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params16-opt2_params16-args16-1]
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3912668Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args3-0\n]
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3913618Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args4-1\n]
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3914541Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args5-2\n]
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3915442Z FAILED tests/test_stream_lifecycle.py::test_sequential_threaded_invokes - ass...
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3916337Z FAILED tests/test_termui.py::test_hide_input_error_message[builtin-int-masks-repr-value]
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3917438Z FAILED tests/test_termui.py::test_hide_input_error_message[intrange-numeric-substring-falls-back-to-generic]
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3918473Z FAILED tests/test_types/test_IntRange.py::test_range[type0-3-3] - AttributeEr...
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3919634Z FAILED tests/test_types/test_IntRange.py::test_range[type1-5-5] - AttributeEr...
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3920518Z FAILED tests/test_types/test_IntRange.py::test_range[type2-100-100] - Attribu...
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3921329Z FAILED tests/test_types/test_IntRange.py::test_range[type3-5-5] - AttributeEr...
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3922143Z FAILED tests/test_types/test_IntRange.py::test_range[type4--100--100] - Attri...
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3922961Z FAILED tests/test_types/test_IntRange.py::test_range[type5--1-0] - AttributeE...
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3923947Z FAILED tests/test_types/test_IntRange.py::test_range[type6-6-5] - AttributeEr...
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3924890Z FAILED tests/test_types/test_IntRange.py::test_range[type7-0-1] - AttributeEr...
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3925868Z FAILED tests/test_types/test_IntRange.py::test_range[type8-5-4] - AttributeEr...
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3926874Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type0-6-6 is not in the range 0<=x<=5.]
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3928033Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type1-4-4 is not in the range x>=5.]
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3929204Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type2-6-6 is not in the range x<=5.]
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3930268Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type3-0-0<x<=5] - A...
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3931237Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type4-5-0<=x<5] - A...
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3932204Z FAILED tests/test_utils/test_prompt.py::test_prompt_cast_default - AttributeE...
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3933184Z FAILED tests/test_utils/test_prompt.py::test_prompt_default_validated_by_type
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.3934149Z === 84 failed, 1975 passed, 24 skipped, 31000 deselected, 1 xfailed in 8.88s ===
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.8735505Z py3.11: exit 1 (10.80 seconds) /home/runner/work/click/click> pytest -v --tb=short --basetemp=/home/runner/work/click/click/.tox/py3.11/tmp pid=2418
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.8740032Z   py3.11: FAIL code 1 (11.32=setup[0.52]+cmd[10.80] seconds)
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.8740572Z   evaluation failed :( (11.44 seconds)
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.9047160Z ##[error]Process completed with exit code 1.
+3.11	UNKNOWN STEP	2026-09-16T13:08:58.9170158Z Post job cleanup.
+3.11	UNKNOWN STEP	2026-09-16T13:08:59.0013249Z [command]/usr/bin/git version
+3.11	UNKNOWN STEP	2026-09-16T13:08:59.0050337Z git version 2.55.0
+3.11	UNKNOWN STEP	2026-09-16T13:08:59.0085066Z Temporarily overriding HOME='/home/runner/work/_temp/4bd315a5-065a-428e-b48c-6c61a911d381' before making global git config changes
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1577463Z ________________________________ test_nargs_tup ________________________________
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1578122Z tests/test_arguments.py:33: in test_nargs_tup
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1578647Z     assert not result.exception
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1579286Z E   assert not AttributeError("'IntParamType' object has no attribute '_number_class'")
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1580502Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1581611Z _______________________ test_nargs_tup_composite[opts0] ________________________
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1582213Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1582916Z     assert result.exception is None
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1583569Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1584704Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1585502Z _______________________ test_nargs_tup_composite[opts1] ________________________
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1585914Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1586233Z     assert result.exception is None
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1586650Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1587476Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1588262Z _______________________ test_nargs_tup_composite[opts2] ________________________
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1588674Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1589013Z     assert result.exception is None
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1589437Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1590270Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1591022Z _______________________ test_nargs_tup_composite[opts3] ________________________
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1868209Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params24-args24-1]
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1868850Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params25-args25-42]
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1869472Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params26-args26-1]
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1870085Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params27-args27-42]
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1870829Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params28-args28-1]
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1871447Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params29-args29-42]
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1872108Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params15-opt2_params15-args15-1]
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1872889Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params16-opt2_params16-args16-1]
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1873525Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args3-0\n]
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1874109Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args4-1\n]
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1874656Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args5-2\n]
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1875191Z FAILED tests/test_stream_lifecycle.py::test_sequential_threaded_invokes - ass...
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1875744Z FAILED tests/test_termui.py::test_hide_input_error_message[builtin-int-masks-repr-value]
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1876401Z FAILED tests/test_termui.py::test_hide_input_error_message[intrange-numeric-substring-falls-back-to-generic]
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1877008Z FAILED tests/test_types/test_IntRange.py::test_range[type0-3-3] - AttributeEr...
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1877507Z FAILED tests/test_types/test_IntRange.py::test_range[type1-5-5] - AttributeEr...
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1878001Z FAILED tests/test_types/test_IntRange.py::test_range[type2-100-100] - Attribu...
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1878495Z FAILED tests/test_types/test_IntRange.py::test_range[type3-5-5] - AttributeEr...
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1878990Z FAILED tests/test_types/test_IntRange.py::test_range[type4--100--100] - Attri...
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1879485Z FAILED tests/test_types/test_IntRange.py::test_range[type5--1-0] - AttributeE...
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1879973Z FAILED tests/test_types/test_IntRange.py::test_range[type6-6-5] - AttributeEr...
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1880459Z FAILED tests/test_types/test_IntRange.py::test_range[type7-0-1] - AttributeEr...
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1880953Z FAILED tests/test_types/test_IntRange.py::test_range[type8-5-4] - AttributeEr...
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1881507Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type0-6-6 is not in the range 0<=x<=5.]
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1882115Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type1-4-4 is not in the range x>=5.]
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1882796Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type2-6-6 is not in the range x<=5.]
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1883334Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type3-0-0<x<=5] - A...
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1883835Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type4-5-0<=x<5] - A...
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1884329Z FAILED tests/test_utils/test_prompt.py::test_prompt_cast_default - AttributeE...
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1884832Z FAILED tests/test_utils/test_prompt.py::test_prompt_default_validated_by_type
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.1885329Z === 84 failed, 1975 passed, 24 skipped, 31000 deselected, 1 xfailed in 9.23s ===
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.9554901Z py3.14: exit 1 (11.75 seconds) /home/runner/work/click/click> pytest -v --tb=short --basetemp=/home/runner/work/click/click/.tox/py3.14/tmp pid=2362
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.9559688Z   py3.14: FAIL code 1 (12.40=setup[0.66]+cmd[11.75] seconds)
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.9560107Z   evaluation failed :( (12.48 seconds)
+3.14	UNKNOWN STEP	2026-09-16T13:08:58.9989117Z ##[error]Process completed with exit code 1.
+3.14	UNKNOWN STEP	2026-09-16T13:08:59.0113867Z Post job cleanup.
+3.14	UNKNOWN STEP	2026-09-16T13:08:59.0999227Z [command]/usr/bin/git version
+3.14	UNKNOWN STEP	2026-09-16T13:08:59.1047041Z git version 2.55.0
+3.14	UNKNOWN STEP	2026-09-16T13:08:59.1081714Z Temporarily overriding HOME='/home/runner/work/_temp/7d85c64b-682a-4c1f-a248-09a2b778f84e' before making global git config changes
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2554482Z ________________________________ test_nargs_tup ________________________________
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2554912Z tests/test_arguments.py:33: in test_nargs_tup
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2555380Z     assert not result.exception
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2555849Z E   assert not AttributeError("'IntParamType' object has no attribute '_number_class'")
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2556753Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2557535Z _______________________ test_nargs_tup_composite[opts0] ________________________
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2558288Z tests/test_arguments.py:54: in test_nargs_tup_composite
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2558775Z     assert result.exception is None
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2559258Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2560104Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2560910Z _______________________ test_nargs_tup_composite[opts1] ________________________
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2561392Z tests/test_arguments.py:54: in test_nargs_tup_composite
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2561797Z     assert result.exception is None
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2562262Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2563135Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2563886Z _______________________ test_nargs_tup_composite[opts2] ________________________
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2564383Z tests/test_arguments.py:54: in test_nargs_tup_composite
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2564821Z     assert result.exception is None
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2565264Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2566162Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.2566982Z _______________________ test_nargs_tup_composite[opts3] ________________________
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.3088684Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params24-args24-1]
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.3089270Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params25-args25-42]
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.3089859Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params26-args26-1]
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.3090562Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params27-args27-42]
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.3091144Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params28-args28-1]
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.3091705Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params29-args29-42]
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.3092299Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params15-opt2_params15-args15-1]
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.3092921Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params16-opt2_params16-args16-1]
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7341918Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args3-0\n]
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7342946Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args4-1\n]
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7343844Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args5-2\n]
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7344778Z FAILED tests/test_stream_lifecycle.py::test_sequential_threaded_invokes - ass...
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7345648Z FAILED tests/test_termui.py::test_hide_input_error_message[builtin-int-masks-repr-value]
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7346757Z FAILED tests/test_termui.py::test_hide_input_error_message[intrange-numeric-substring-falls-back-to-generic]
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7348065Z FAILED tests/test_types/test_IntRange.py::test_range[type0-3-3] - AttributeEr...
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7348928Z FAILED tests/test_types/test_IntRange.py::test_range[type1-5-5] - AttributeEr...
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7349770Z FAILED tests/test_types/test_IntRange.py::test_range[type2-100-100] - Attribu...
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7350609Z FAILED tests/test_types/test_IntRange.py::test_range[type3-5-5] - AttributeEr...
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7351414Z FAILED tests/test_types/test_IntRange.py::test_range[type4--100--100] - Attri...
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7352222Z FAILED tests/test_types/test_IntRange.py::test_range[type5--1-0] - AttributeE...
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7353044Z FAILED tests/test_types/test_IntRange.py::test_range[type6-6-5] - AttributeEr...
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7353791Z FAILED tests/test_types/test_IntRange.py::test_range[type7-0-1] - AttributeEr...
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7354594Z FAILED tests/test_types/test_IntRange.py::test_range[type8-5-4] - AttributeEr...
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7355439Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type0-6-6 is not in the range 0<=x<=5.]
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7356359Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type1-4-4 is not in the range x>=5.]
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7357243Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type2-6-6 is not in the range x<=5.]
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7358212Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type3-0-0<x<=5] - A...
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7358789Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type4-5-0<=x<5] - A...
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7359529Z FAILED tests/test_utils/test_prompt.py::test_prompt_cast_default - AttributeE...
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7360236Z FAILED tests/test_utils/test_prompt.py::test_prompt_default_validated_by_type
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7360900Z == 84 failed, 1975 passed, 24 skipped, 31000 deselected, 1 xfailed in 19.11s ===
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7580407Z pypy3.11: exit 1 (20.82 seconds) /home/runner/work/click/click> pytest -v --tb=short --basetemp=/home/runner/work/click/click/.tox/pypy3.11/tmp pid=2499
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7595218Z   pypy3.11: FAIL code 1 (21.79=setup[0.97]+cmd[20.82] seconds)
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7595590Z   evaluation failed :( (21.94 seconds)
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7854208Z ##[error]Process completed with exit code 1.
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.7968524Z Post job cleanup.
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.8818928Z [command]/usr/bin/git version
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.8854015Z git version 2.55.0
+PyPy	UNKNOWN STEP	2026-09-16T13:09:28.8883771Z Temporarily overriding HOME='/home/runner/work/_temp/3ad5bc63-89ee-417a-9847-7b90d857b5bc' before making global git config changes
+Mac	UNKNOWN STEP	2026-09-16T13:08:59.9942680Z ________________________________ test_nargs_tup ________________________________
+Mac	UNKNOWN STEP	2026-09-16T13:08:59.9956110Z tests/test_arguments.py:33: in test_nargs_tup
+Mac	UNKNOWN STEP	2026-09-16T13:08:59.9966880Z     assert not result.exception
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.0075240Z E   assert not AttributeError("'IntParamType' object has no attribute '_number_class'")
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.0177180Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.0279030Z _______________________ test_nargs_tup_composite[opts0] ________________________
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.0381210Z tests/test_arguments.py:54: in test_nargs_tup_composite
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.0425140Z     assert result.exception is None
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.0526410Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.0629530Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.0732670Z _______________________ test_nargs_tup_composite[opts1] ________________________
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.0836800Z tests/test_arguments.py:54: in test_nargs_tup_composite
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.0938130Z     assert result.exception is None
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.1040280Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.1143050Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.1214330Z _______________________ test_nargs_tup_composite[opts2] ________________________
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.1286390Z tests/test_arguments.py:54: in test_nargs_tup_composite
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.1325450Z     assert result.exception is None
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.1427160Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.1503950Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.1574030Z _______________________ test_nargs_tup_composite[opts3] ________________________
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2830480Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params24-args24-1]
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2831140Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params25-args25-42]
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2831680Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params26-args26-1]
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2832270Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params27-args27-42]
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2832810Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params28-args28-1]
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2833360Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params29-args29-42]
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2834300Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params15-opt2_params15-args15-1]
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2834980Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params16-opt2_params16-args16-1]
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2835800Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args3-0\n]
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2836350Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args4-1\n]
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2836950Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args5-2\n]
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2845940Z FAILED tests/test_stream_lifecycle.py::test_sequential_threaded_invokes - ass...
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2846470Z FAILED tests/test_termui.py::test_hide_input_error_message[builtin-int-masks-repr-value]
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2847060Z FAILED tests/test_termui.py::test_hide_input_error_message[intrange-numeric-substring-falls-back-to-generic]
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2847610Z FAILED tests/test_types/test_IntRange.py::test_range[type0-3-3] - AttributeEr...
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2848110Z FAILED tests/test_types/test_IntRange.py::test_range[type1-5-5] - AttributeEr...
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2848540Z FAILED tests/test_types/test_IntRange.py::test_range[type2-100-100] - Attribu...
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2848980Z FAILED tests/test_types/test_IntRange.py::test_range[type3-5-5] - AttributeEr...
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2849410Z FAILED tests/test_types/test_IntRange.py::test_range[type4--100--100] - Attri...
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2849840Z FAILED tests/test_types/test_IntRange.py::test_range[type5--1-0] - AttributeE...
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2850260Z FAILED tests/test_types/test_IntRange.py::test_range[type6-6-5] - AttributeEr...
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2850680Z FAILED tests/test_types/test_IntRange.py::test_range[type7-0-1] - AttributeEr...
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2851110Z FAILED tests/test_types/test_IntRange.py::test_range[type8-5-4] - AttributeEr...
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2851580Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type0-6-6 is not in the range 0<=x<=5.]
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2852080Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type1-4-4 is not in the range x>=5.]
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2852590Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type2-6-6 is not in the range x<=5.]
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2853070Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type3-0-0<x<=5] - A...
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2853500Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type4-5-0<=x<5] - A...
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2853950Z FAILED tests/test_utils/test_prompt.py::test_prompt_cast_default - AttributeE...
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2854440Z FAILED tests/test_utils/test_prompt.py::test_prompt_default_validated_by_type
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.2854850Z === 84 failed, 1974 passed, 25 skipped, 31000 deselected, 1 xfailed in 5.08s ===
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.5144420Z py3.14: exit 1 (6.55 seconds) /Users/runner/work/click/click> pytest -v --tb=short --basetemp=/Users/runner/work/click/click/.tox/py3.14/tmp pid=1715
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.5153480Z   py3.14: FAIL code 1 (7.07=setup[0.53]+cmd[6.55] seconds)
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.5153930Z   evaluation failed :( (7.13 seconds)
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.5594290Z ##[error]Process completed with exit code 1.
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.5713950Z Post job cleanup.
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.6649230Z [command]/opt/homebrew/bin/git version
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.6724160Z git version 2.55.0
+Mac	UNKNOWN STEP	2026-09-16T13:09:00.6741260Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/3077e93e-f35b-4f76-8a8f-0f07435af2f3/.gitconfig'
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4358205Z ________________________________ test_nargs_tup ________________________________
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4358729Z tests/test_arguments.py:33: in test_nargs_tup
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4359119Z     assert not result.exception
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4359647Z E   assert not AttributeError("'IntParamType' object has no attribute '_number_class'")
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4360796Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4362006Z _______________________ test_nargs_tup_composite[opts0] ________________________
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4362542Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4362989Z     assert result.exception is None
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4363572Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4364735Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4365791Z _______________________ test_nargs_tup_composite[opts1] ________________________
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4366328Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4366739Z     assert result.exception is None
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4367275Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4368407Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4369441Z _______________________ test_nargs_tup_composite[opts2] ________________________
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4369973Z tests/test_arguments.py:54: in test_nargs_tup_composite
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4370370Z     assert result.exception is None
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4370889Z E   assert AttributeError("'IntParamType' object has no attribute '_number_class'") is None
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4372201Z E    +  where AttributeError("'IntParamType' object has no attribute '_number_class'") = <Result AttributeError("'IntParamType' object has no attribute '_number_class'")>.exception
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4373264Z _______________________ test_nargs_tup_composite[opts3] ________________________
+3.12	UNKNOWN STEP	2026-09-16T13:08:58.4739321Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params24-args24-1]
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.0997224Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params25-args25-42]
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.0997857Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params26-args26-1]
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.0998387Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params27-args27-42]
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.0999236Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params28-args28-1]
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.0999746Z FAILED tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params29-args29-42]
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1000286Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params15-opt2_params15-args15-1]
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1000853Z FAILED tests/test_options.py::test_custom_type_flag_value_dual_options[opt1_params16-opt2_params16-args16-1]
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1001607Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args3-0\n]
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1002171Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args4-1\n]
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1002634Z FAILED tests/test_options.py::test_flag_value_on_option_with_zero_or_one_args[int-args5-2\n]
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1003110Z FAILED tests/test_stream_lifecycle.py::test_sequential_threaded_invokes - ass...
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1003592Z FAILED tests/test_termui.py::test_hide_input_error_message[builtin-int-masks-repr-value]
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1004125Z FAILED tests/test_termui.py::test_hide_input_error_message[intrange-numeric-substring-falls-back-to-generic]
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1004633Z FAILED tests/test_types/test_IntRange.py::test_range[type0-3-3] - AttributeEr...
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1005048Z FAILED tests/test_types/test_IntRange.py::test_range[type1-5-5] - AttributeEr...
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1005480Z FAILED tests/test_types/test_IntRange.py::test_range[type2-100-100] - Attribu...
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1005874Z FAILED tests/test_types/test_IntRange.py::test_range[type3-5-5] - AttributeEr...
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1006266Z FAILED tests/test_types/test_IntRange.py::test_range[type4--100--100] - Attri...
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1006648Z FAILED tests/test_types/test_IntRange.py::test_range[type5--1-0] - AttributeE...
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1007041Z FAILED tests/test_types/test_IntRange.py::test_range[type6-6-5] - AttributeEr...
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1007447Z FAILED tests/test_types/test_IntRange.py::test_range[type7-0-1] - AttributeEr...
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1007838Z FAILED tests/test_types/test_IntRange.py::test_range[type8-5-4] - AttributeEr...
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1008284Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type0-6-6 is not in the range 0<=x<=5.]
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1008780Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type1-4-4 is not in the range x>=5.]
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1009251Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type2-6-6 is not in the range x<=5.]
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1009683Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type3-0-0<x<=5] - A...
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1010089Z FAILED tests/test_types/test_IntRange.py::test_range_fail[type4-5-0<=x<5] - A...
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1010491Z FAILED tests/test_utils/test_prompt.py::test_prompt_cast_default - AttributeE...
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1010891Z FAILED tests/test_utils/test_prompt.py::test_prompt_default_validated_by_type
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.1011385Z === 84 failed, 1975 passed, 24 skipped, 31000 deselected, 1 xfailed in 6.89s ===
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.6060299Z py3.12: exit 1 (8.59 seconds) /home/runner/work/click/click> pytest -v --tb=short --basetemp=/home/runner/work/click/click/.tox/py3.12/tmp pid=2207
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.6063724Z   py3.12: FAIL code 1 (9.07=setup[0.49]+cmd[8.59] seconds)
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.6064163Z   evaluation failed :( (9.13 seconds)
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.6361955Z ##[error]Process completed with exit code 1.
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.6457429Z Post job cleanup.
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.7087868Z [command]/usr/bin/git version
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.7122137Z git version 2.55.0
+3.12	UNKNOWN STEP	2026-09-16T13:08:59.7146641Z Temporarily overriding HOME='/home/runner/work/_temp/8f2322ac-527c-4e05-8524-32c1cea4a7b2' before making global git config changes

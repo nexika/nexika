@@ -1,0 +1,39 @@
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:01.1170323Z ✔ should throw error if invalid logger is returned (3.74486ms)
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:01.1172103Z ✖ request child loggers inherit the level without resetting it (17.548394ms)
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:01.1218102Z ##[error]AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+Test pino compatibility (^9)	UNKNOWN STEP	
+Test pino compatibility (^9)	UNKNOWN STEP	2 !== 1
+Test pino compatibility (^9)	UNKNOWN STEP	
+Test pino compatibility (^9)	UNKNOWN STEP	^[[90m    at assert.<computed> [as strictEqual] (node:internal/test_runner/test:347:18)^[[39m
+Test pino compatibility (^9)	UNKNOWN STEP	    at TestContext.<anonymous> ^[[90m(/home/runner/work/fastify/fastify/^[[39mtest/child-logger-factory.test.js:156:12^[[90m)^[[39m
+Test pino compatibility (^9)	UNKNOWN STEP	^[[90m    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)^[[39m
+Test pino compatibility (^9)	UNKNOWN STEP	^[[90m    at async Test.run (node:internal/test_runner/test:1409:7)^[[39m
+Test pino compatibility (^9)	UNKNOWN STEP	^[[90m    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)^[[39m {
+Test pino compatibility (^9)	UNKNOWN STEP	  generatedMessage: ^[[33mtrue^[[39m,
+Test pino compatibility (^9)	UNKNOWN STEP	  code: ^[[32m'ERR_ASSERTION'^[[39m,
+Test pino compatibility (^9)	UNKNOWN STEP	  actual: ^[[33m2^[[39m,
+Test pino compatibility (^9)	UNKNOWN STEP	  expected: ^[[33m1^[[39m,
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8101649Z 
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8102124Z ✖ failing tests:
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8102383Z 
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8102745Z test at test/child-logger-factory.test.js:130:1
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8103822Z ✖ request child loggers inherit the level without resetting it (17.548394ms)
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8104863Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8105825Z   
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8106159Z   2 !== 1
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8119649Z   
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8120380Z       at assert.<computed> [as strictEqual] (node:internal/test_runner/test:347:18)
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8121759Z       at TestContext.<anonymous> (/home/runner/work/fastify/fastify/test/child-logger-factory.test.js:156:12)
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8123136Z       at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8124126Z       at async Test.run (node:internal/test_runner/test:1409:7)
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8125102Z       at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8126321Z     generatedMessage: true,
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8126785Z     code: 'ERR_ASSERTION',
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8127210Z     actual: 2,
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8127569Z     expected: 1,
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8140214Z ##[endgroup]
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8376590Z ##[error]Process completed with exit code 1.
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.8541771Z Post job cleanup.
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.9380793Z [command]/usr/bin/git version
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:04.9418299Z git version 2.55.0
+Test pino compatibility (^9)	UNKNOWN STEP	2026-09-26T14:41:05.0472718Z Cleaning up orphan processes

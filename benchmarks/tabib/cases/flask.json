@@ -1,0 +1,2366 @@
+{
+ "project": "pallets/flask",
+ "license": "BSD-3-Clause",
+ "set": "trial",
+ "collected": "2026-10-08, failed runs from May to October 2026",
+ "source": "https://github.com/pallets/flask",
+ "runs": [
+  {
+   "id": 37633292268,
+   "workflow": "Tests",
+   "event": "push",
+   "branch": "main",
+   "sha": "329c32b916938d33fec41f40eb7ed854bf0b3e2b",
+   "created": "2026-10-07T14:01:50Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/37633292268.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "src/flask/app.py",
+      "line": 206
+     }
+    ]
+   },
+   "label": "mypy type errors from the change"
+  },
+  {
+   "id": 37632626982,
+   "workflow": "Tests",
+   "event": "push",
+   "branch": "main",
+   "sha": "41cb747cd5a9b43da43bf809ad974722542603db",
+   "created": "2026-10-07T13:57:03Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/37632626982.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/conftest.py",
+      "line": 6
+     }
+    ],
+    "cause": {
+     "fix": "329c32b9",
+     "points": [
+      "werkzeug"
+     ]
+    }
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates ImmutableDict and warnings are errors; main fails the same way, the PR did not cause it (fixed in 329c32b9 'fix dev')"
+  },
+  {
+   "id": 37632508911,
+   "workflow": "Tests",
+   "event": "push",
+   "branch": "main",
+   "sha": "728c5e440af704a786384159184f695cf04ecbe7",
+   "created": "2026-10-07T13:56:11Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/37632508911.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/conftest.py",
+      "line": 6
+     }
+    ],
+    "cause": {
+     "fix": "329c32b9",
+     "points": [
+      "werkzeug"
+     ]
+    }
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates ImmutableDict and warnings are errors; main fails the same way, the PR did not cause it (fixed in 329c32b9 'fix dev')"
+  },
+  {
+   "id": 37631414474,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "drop-eol-python",
+   "sha": "7689f98403e2c0b0bc8d1031e60f8cff2620e86a",
+   "created": "2026-10-07T13:48:09Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/37631414474.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/conftest.py",
+      "line": 6
+     }
+    ],
+    "cause": {
+     "fix": "329c32b9",
+     "points": [
+      "werkzeug"
+     ]
+    }
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates ImmutableDict and warnings are errors; main fails the same way, the PR did not cause it (fixed in 329c32b9 'fix dev')"
+  },
+  {
+   "id": 34727211010,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "test/json-response-header-invariants",
+   "sha": "afe8961b7cb16262aec39d141452918147ec3af7",
+   "created": "2026-09-13T00:08:39Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/34727211010.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/conftest.py",
+      "line": 6
+     }
+    ],
+    "cause": {
+     "fix": "329c32b9",
+     "points": [
+      "werkzeug"
+     ]
+    }
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates ImmutableDict and warnings are errors; main fails the same way, the PR did not cause it (fixed in 329c32b9 'fix dev')"
+  },
+  {
+   "id": 34561453561,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "fix/add-cloudflare-hosting-docs",
+   "sha": "b9c4d39ed7ded2a7f2ab2ad1aa9c33dd147c82cd",
+   "created": "2026-09-11T04:14:24Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/34561453561.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/conftest.py",
+      "line": 6
+     }
+    ],
+    "cause": {
+     "fix": "329c32b9",
+     "points": [
+      "werkzeug"
+     ]
+    }
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates ImmutableDict and warnings are errors; main fails the same way, the PR did not cause it (fixed in 329c32b9 'fix dev')"
+  },
+  {
+   "id": 34252544596,
+   "workflow": "Tests",
+   "event": "push",
+   "branch": "main",
+   "sha": "d73fa1cdcbd8b1465c151db8924ba58b1dd14e35",
+   "created": "2026-09-08T16:40:55Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/34252544596.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/conftest.py",
+      "line": 6
+     }
+    ],
+    "cause": {
+     "fix": "329c32b9",
+     "points": [
+      "werkzeug"
+     ]
+    }
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates ImmutableDict and warnings are errors; main fails the same way, the PR did not cause it (fixed in 329c32b9 'fix dev')"
+  },
+  {
+   "id": 34251262977,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "docs/session-g-rst-markup",
+   "sha": "baa684c39c5a27568fc202d681744e2c02d87ea8",
+   "created": "2026-09-08T16:28:29Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/34251262977.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/conftest.py",
+      "line": 6
+     }
+    ],
+    "cause": {
+     "fix": "329c32b9",
+     "points": [
+      "werkzeug"
+     ]
+    }
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates ImmutableDict and warnings are errors; main fails the same way, the PR did not cause it (fixed in 329c32b9 'fix dev')"
+  },
+  {
+   "id": 33397112701,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "fix/json-pathlike-and-dataclass-class-serialization",
+   "sha": "56f3db172de7f3e843a3ebf048f6f475ef700b40",
+   "created": "2026-08-31T13:27:55Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/33397112701.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "src/flask/json/provider.py",
+      "line": 117
+     }
+    ]
+   },
+   "label": "mypy type errors from the change"
+  },
+  {
+   "id": 31525906346,
+   "workflow": "Tests",
+   "event": "push",
+   "branch": "stable",
+   "sha": "81798b406f97ffe4795d2c9fc18db7db744a96dc",
+   "created": "2026-08-11T19:03:20Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.9",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/31525906346.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_blueprints.py",
+      "line": 3
+     },
+     {
+      "file": "tests/test_views.py",
+      "line": 2
+     }
+    ]
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates parse_set_header / parse_cache_control_header and warnings are errors; not caused by the PR"
+  },
+  {
+   "id": 31403109962,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "fix/parse-ipv6-server-name-and-host",
+   "sha": "d4b860086c3b398dd6522067ba622498e7a88301",
+   "created": "2026-08-10T15:21:11Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/31403109962.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_blueprints.py",
+      "line": 3
+     },
+     {
+      "file": "tests/test_views.py",
+      "line": 2
+     }
+    ]
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates parse_set_header / parse_cache_control_header and warnings are errors; not caused by the PR"
+  },
+  {
+   "id": 31401106272,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "fix/stream-with-context-cross-thread-6123",
+   "sha": "f6b0eb66ce2042cb05a4422e6066db29f7d46c48",
+   "created": "2026-08-10T14:58:53Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/31401106272.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_blueprints.py",
+      "line": 3
+     },
+     {
+      "file": "tests/test_views.py",
+      "line": 2
+     }
+    ]
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates parse_set_header / parse_cache_control_header and warnings are errors; not caused by the PR"
+  },
+  {
+   "id": 31335210264,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "codex/issue-6065",
+   "sha": "d5227024e132d9b06a1e299755a8c0ee9f49b0a8",
+   "created": "2026-08-09T20:48:52Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/31335210264.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_blueprints.py",
+      "line": 3
+     },
+     {
+      "file": "tests/test_views.py",
+      "line": 2
+     }
+    ]
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates parse_set_header / parse_cache_control_header and warnings are errors; not caused by the PR"
+  },
+  {
+   "id": 31306611756,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "codex/fix-ipv6-address-parsing",
+   "sha": "faff6713d44fffbd7504281eebb324e254c7ac7e",
+   "created": "2026-08-09T09:43:58Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/31306611756.log",
+   "expected": {
+    "kind": [
+     "code",
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "src/flask/testing.py",
+      "line": 182
+     },
+     {
+      "file": "src/flask/app.py",
+      "line": 751
+     },
+     {
+      "file": "tests/test_blueprints.py",
+      "line": 3
+     }
+    ]
+   },
+   "label": "mypy errors from the change, and the Werkzeug dev deprecation below"
+  },
+  {
+   "id": 31268139715,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "fix/stream-context-abandonment",
+   "sha": "6d5b099e8f36f357bfecee8b721a4323e411dc0d",
+   "created": "2026-08-08T16:55:23Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/31268139715.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_blueprints.py",
+      "line": 3
+     },
+     {
+      "file": "tests/test_views.py",
+      "line": 2
+     }
+    ]
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates parse_set_header / parse_cache_control_header and warnings are errors; not caused by the PR"
+  },
+  {
+   "id": 30755111766,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "perf/blueprints-single-fast-path",
+   "sha": "a962211f9e365fb4e1ce0e0e11c68677f13b9594",
+   "created": "2026-08-02T15:46:37Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/30755111766.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_blueprints.py",
+      "line": 3
+     },
+     {
+      "file": "tests/test_views.py",
+      "line": 2
+     }
+    ]
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates parse_set_header / parse_cache_control_header and warnings are errors; not caused by the PR"
+  },
+  {
+   "id": 30698864983,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "json-allow-nan",
+   "sha": "f01a29918ab9990ed1bc9b02d0bb8604e40d3d76",
+   "created": "2026-08-01T12:01:44Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/30698864983.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_blueprints.py",
+      "line": 3
+     },
+     {
+      "file": "tests/test_views.py",
+      "line": 2
+     }
+    ]
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates parse_set_header / parse_cache_control_header and warnings are errors; not caused by the PR"
+  },
+  {
+   "id": 30691043557,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "fix-ipv6-partition",
+   "sha": "9ff11f23a7cdcec6061658176a8e59d246b680a9",
+   "created": "2026-08-01T08:05:09Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/30691043557.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_blueprints.py",
+      "line": 3
+     },
+     {
+      "file": "tests/test_views.py",
+      "line": 2
+     }
+    ]
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates parse_set_header / parse_cache_control_header and warnings are errors; not caused by the PR"
+  },
+  {
+   "id": 30601345717,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "triage/fix-1785468039",
+   "sha": "f95f83b0c12a36c0ee125e316915bd738f11a680",
+   "created": "2026-07-31T03:20:49Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "failure"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/30601345717.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "src/flask/testing.py",
+      "line": 85
+     },
+     {
+      "test": "tests/test_appctx.py::test_context_refcounts",
+      "file": "tests/test_appctx.py"
+     }
+    ]
+   },
+   "label": "mypy type errors from the change"
+  },
+  {
+   "id": 30572408686,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "feature/json-pathlib-enum-support",
+   "sha": "57a8ff0d23138d87f816f6dc3536bb797239887a",
+   "created": "2026-07-30T18:53:24Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/30572408686.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_blueprints.py",
+      "line": 3
+     },
+     {
+      "file": "tests/test_views.py",
+      "line": 2
+     }
+    ]
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates parse_set_header / parse_cache_control_header and warnings are errors; not caused by the PR"
+  },
+  {
+   "id": 30566227095,
+   "workflow": "Tests",
+   "event": "push",
+   "branch": "main",
+   "sha": "6a2f545bfd8ed31e19066a299296917e034aca58",
+   "created": "2026-07-30T17:29:56Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/30566227095.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_blueprints.py",
+      "line": 3
+     },
+     {
+      "file": "tests/test_views.py",
+      "line": 2
+     }
+    ]
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates parse_set_header / parse_cache_control_header and warnings are errors; not caused by the PR"
+  },
+  {
+   "id": 30566088468,
+   "workflow": "Tests",
+   "event": "push",
+   "branch": "stable",
+   "sha": "30d1c5d6fcbd62d9e902209d7a207f7510e9f5dc",
+   "created": "2026-07-30T17:28:04Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.15",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.9",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/30566088468.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_blueprints.py",
+      "line": 3
+     },
+     {
+      "file": "tests/test_views.py",
+      "line": 2
+     }
+    ]
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates parse_set_header / parse_cache_control_header and warnings are errors; not caused by the PR"
+  },
+  {
+   "id": 30564404662,
+   "workflow": "Tests",
+   "event": "push",
+   "branch": "stable",
+   "sha": "548994ea0c61465574cbfdd636a894a692f54b94",
+   "created": "2026-07-30T17:05:08Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.9",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/30564404662.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_blueprints.py",
+      "line": 3
+     },
+     {
+      "file": "tests/test_views.py",
+      "line": 2
+     }
+    ]
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates parse_set_header / parse_cache_control_header and warnings are errors; not caused by the PR"
+  },
+  {
+   "id": 30564210136,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "flask-delenv",
+   "sha": "5ce121dd841e2dc2594d0ed3954278f4101d3521",
+   "created": "2026-07-30T17:02:33Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.9",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/30564210136.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_blueprints.py",
+      "line": 3
+     },
+     {
+      "file": "tests/test_views.py",
+      "line": 2
+     }
+    ]
+   },
+   "label": "only 'Development Versions' fails: Werkzeug main deprecates parse_set_header / parse_cache_control_header and warnings are errors; not caused by the PR"
+  },
+  {
+   "id": 30552601286,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "fix-issue-5200-1785422031",
+   "sha": "358688409fe9a57155120431679a22335b08fa8b",
+   "created": "2026-07-30T14:37:15Z",
+   "jobs": [
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    },
+    {
+     "name": "Minimum Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "Development Versions",
+     "conclusion": "failure"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flask/30552601286.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "tests/conftest.py",
+      "line": 7
+     }
+    ]
+   },
+   "label": "the change uses click.ParamType[t.Any], which click 8.1.3 (Minimum Versions) lacks",
+   "uncertain": "code: the change subscripts click.ParamType, which the oldest supported click (Minimum Versions) cannot do; the Werkzeug deprecation in Development Versions is unrelated"
+  },
+  {
+   "id": 34727211038,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "test/json-response-header-invariants",
+   "sha": "afe8961b7cb16262aec39d141452918147ec3af7",
+   "created": "2026-09-13T00:08:39Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/34727211038.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "ruff-check"
+     },
+     {
+      "test": "ruff-format"
+     }
+    ]
+   },
+   "label": "pre-commit hook (ruff-format, ruff-check, trailing-whitespace, end-of-file-fixer) modified files: formatting/lint"
+  },
+  {
+   "id": 33397112741,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "fix/json-pathlike-and-dataclass-class-serialization",
+   "sha": "56f3db172de7f3e843a3ebf048f6f475ef700b40",
+   "created": "2026-08-31T13:27:55Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/33397112741.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "ruff-check"
+     },
+     {
+      "test": "ruff-format"
+     }
+    ]
+   },
+   "label": "pre-commit hook (ruff-format, ruff-check, trailing-whitespace, end-of-file-fixer) modified files: formatting/lint"
+  },
+  {
+   "id": 33236247623,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "fix/rollback-route-on-endpoint-conflict-6143",
+   "sha": "c809c06d2f0f6a168dc3cf211dc60455059ebeb0",
+   "created": "2026-08-29T05:28:27Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/33236247623.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "ruff-format",
+      "file": "tests/test_basic.py"
+     }
+    ]
+   },
+   "label": "pre-commit hook (ruff-format, ruff-check, trailing-whitespace, end-of-file-fixer) modified files: formatting/lint"
+  },
+  {
+   "id": 32608575627,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "fix/app-endpoint-typing-and-doc",
+   "sha": "ac7ab71c0b63ce9723a1f86c8a5c75e8dd098436",
+   "created": "2026-08-23T00:43:14Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/32608575627.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "ruff-format",
+      "file": "tests/test_json.py"
+     }
+    ]
+   },
+   "label": "pre-commit hook (ruff-format, ruff-check, trailing-whitespace, end-of-file-fixer) modified files: formatting/lint"
+  },
+  {
+   "id": 30601345719,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "triage/fix-1785468039",
+   "sha": "f95f83b0c12a36c0ee125e316915bd738f11a680",
+   "created": "2026-07-31T03:20:49Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/30601345719.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "ruff-check"
+     },
+     {
+      "test": "ruff-format"
+     }
+    ]
+   },
+   "label": "pre-commit hook (ruff-format, ruff-check, trailing-whitespace, end-of-file-fixer) modified files: formatting/lint"
+  },
+  {
+   "id": 30552601414,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "fix-issue-5200-1785422031",
+   "sha": "358688409fe9a57155120431679a22335b08fa8b",
+   "created": "2026-07-30T14:37:15Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/30552601414.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "ruff-format",
+      "file": "src/flask/views.py"
+     }
+    ]
+   },
+   "label": "pre-commit hook (ruff-format, ruff-check, trailing-whitespace, end-of-file-fixer) modified files: formatting/lint"
+  },
+  {
+   "id": 30551913760,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "fix-issue-5200-1785421690",
+   "sha": "8058f14d4ad1cf4d0369cca426933b956b352818",
+   "created": "2026-07-30T14:29:03Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/30551913760.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "ruff-format",
+      "file": "src/flask/views.py"
+     }
+    ]
+   },
+   "label": "pre-commit hook (ruff-format, ruff-check, trailing-whitespace, end-of-file-fixer) modified files: formatting/lint"
+  },
+  {
+   "id": 30206977436,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "fix-docs-1785077509",
+   "sha": "4b31bde7ffb2092e88a445168ce08ce0f927d630",
+   "created": "2026-07-26T14:51:56Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/30206977436.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "end-of-file-fixer",
+      "file": "README.md"
+     }
+    ]
+   },
+   "label": "pre-commit hook (ruff-format, ruff-check, trailing-whitespace, end-of-file-fixer) modified files: formatting/lint"
+  },
+  {
+   "id": 30162208595,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "jenkins-test",
+   "sha": "8b4d75213cc47836101509b131eec29278bd13a4",
+   "created": "2026-07-25T14:43:51Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/30162208595.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "trailing-whitespace",
+      "file": "examples/celery/requirements.txt"
+     }
+    ]
+   },
+   "label": "pre-commit hook (ruff-format, ruff-check, trailing-whitespace, end-of-file-fixer) modified files: formatting/lint"
+  },
+  {
+   "id": 30086386101,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "patch-1",
+   "sha": "95e3175439a955afd3c9c9ad0a7a5864696122de",
+   "created": "2026-07-24T10:30:10Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/30086386101.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "ruff-format",
+      "file": "src/flask/app.py"
+     }
+    ]
+   },
+   "label": "pre-commit hook (ruff-format, ruff-check, trailing-whitespace, end-of-file-fixer) modified files: formatting/lint"
+  },
+  {
+   "id": 30502496738,
+   "workflow": "Lock inactive closed issues",
+   "event": "schedule",
+   "branch": "main",
+   "sha": "36e4a824f340fdee7ed50937ba8e7f6bc7d17f81",
+   "created": "2026-07-30T00:22:54Z",
+   "jobs": [
+    {
+     "name": "lock",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/30502496738.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "lock action rejects its input: \"github-token\" length must be <= 100 characters; a re-run fails again"
+  },
+  {
+   "id": 30410930838,
+   "workflow": "Lock inactive closed issues",
+   "event": "schedule",
+   "branch": "main",
+   "sha": "36e4a824f340fdee7ed50937ba8e7f6bc7d17f81",
+   "created": "2026-07-29T00:22:05Z",
+   "jobs": [
+    {
+     "name": "lock",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/30410930838.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "lock action rejects its input: \"github-token\" length must be <= 100 characters; a re-run fails again"
+  },
+  {
+   "id": 30317134069,
+   "workflow": "Lock inactive closed issues",
+   "event": "schedule",
+   "branch": "main",
+   "sha": "36e4a824f340fdee7ed50937ba8e7f6bc7d17f81",
+   "created": "2026-07-28T00:22:57Z",
+   "jobs": [
+    {
+     "name": "lock",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/30317134069.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "lock action rejects its input: \"github-token\" length must be <= 100 characters; a re-run fails again"
+  },
+  {
+   "id": 30227427224,
+   "workflow": "Lock inactive closed issues",
+   "event": "schedule",
+   "branch": "main",
+   "sha": "36e4a824f340fdee7ed50937ba8e7f6bc7d17f81",
+   "created": "2026-07-27T00:25:59Z",
+   "jobs": [
+    {
+     "name": "lock",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/30227427224.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "lock action rejects its input: \"github-token\" length must be <= 100 characters; a re-run fails again"
+  },
+  {
+   "id": 30181155902,
+   "workflow": "Lock inactive closed issues",
+   "event": "schedule",
+   "branch": "main",
+   "sha": "36e4a824f340fdee7ed50937ba8e7f6bc7d17f81",
+   "created": "2026-07-26T00:26:21Z",
+   "jobs": [
+    {
+     "name": "lock",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flask/30181155902.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "lock action rejects its input: \"github-token\" length must be <= 100 characters; a re-run fails again"
+  }
+ ]
+}

@@ -1,0 +1,33 @@
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:09.3826786Z ✔ should emit a warning when using async callback (5.955487ms)
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:38.5712273Z ✖ /home/runner/work/fastify/fastify/test/listen.5.test.js (30001.935644ms)
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:38.5758949Z ##[error]^[[32m'test timed out after 30000ms'^[[39m
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:38.5943436Z ✔ listen twice on the same port without callback rejects (79.730671ms)
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:38.6060691Z ✔ listen twice on the same port without callback rejects with (address) (6.447853ms)
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:38.6062212Z ✔ listen on invalid port without callback rejects (2.552581ms)
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:38.6063312Z ✔ listen logs the port as info (3.359621ms)
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:38.6122853Z ✖ /home/runner/work/fastify/fastify/test/listen.4.test.js (30001.567056ms)
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:38.6147729Z ##[error]^[[32m'test timed out after 30000ms'^[[39m
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:38.6180530Z ✔ listen on socket (53.943557ms)
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:38.6310585Z ✔ listen without callback with (address) (5.46872ms)
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:38.6410436Z ✔ double listen without callback rejects (3.071006ms)
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:38.6934773Z ✔ listen works with undefined host (3.199996ms)
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.4443883Z 
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.4444197Z ✖ failing tests:
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.4444415Z 
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.4444676Z test at test/listen.5.test.js:1:1
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.4445329Z ✖ /home/runner/work/fastify/fastify/test/listen.5.test.js (30001.935644ms)
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.4445797Z   'test timed out after 30000ms'
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.4445996Z 
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.4446165Z test at test/listen.4.test.js:1:1
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.4446718Z ✖ /home/runner/work/fastify/fastify/test/listen.4.test.js (30001.567056ms)
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.4447537Z   'test timed out after 30000ms'
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.4463630Z ##[group]Test results (2307 passed, 0 failed)
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.4467662Z ##[notice]Total Tests: 2312
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	Suites 📂: 22
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	Passed ✅: 2307
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.4469550Z ##[endgroup]
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.4680806Z ##[error]Process completed with exit code 1.
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.4821268Z Post job cleanup.
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.5648723Z [command]/usr/bin/git version
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.5687983Z git version 2.54.0
+test-unit (22, ubuntu-latest)	UNKNOWN STEP	2026-08-06T22:15:47.6761656Z Cleaning up orphan processes

@@ -1,0 +1,44 @@
+quality-check / Lint Code	UNKNOWN STEP	﻿2026-08-22T07:14:21.3766908Z Current runner version: '2.336.0'
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:21.3790828Z ##[group]Runner Image Provisioner
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:21.3791883Z Hosted Compute Agent
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:21.3792453Z Version: 20260729.566
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:21.3800438Z ##[group]Runner Image
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:21.3801069Z Image: ubuntu-24.04
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:21.3801898Z Version: 20260816.277.1
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:22.1356661Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:22.1357739Z with:
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:22.1358198Z   persist-credentials: false
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:23.0468852Z ##[group]Run actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:23.0470539Z with:
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:23.0471682Z   check-latest: true
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:24.1535773Z ##[group]Run npm i --ignore-scripts
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:24.1536162Z ^[[36;1mnpm i --ignore-scripts^[[0m
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:24.1584261Z shell: /usr/bin/bash -e {0}
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:43.8705512Z ##[group]Run npm run lint
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:43.8705826Z ^[[36;1mnpm run lint^[[0m
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:43.8744043Z shell: /usr/bin/bash -e {0}
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:43.8744313Z ##[endgroup]
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:43.9795518Z 
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:43.9796099Z > fastify@6.0.0-alpha.2 lint
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:43.9796581Z > npm run lint:eslint
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:43.9796751Z 
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:44.0831872Z 
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:44.0832306Z > fastify@6.0.0-alpha.2 lint:eslint
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:44.0832803Z > eslint
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:44.0832999Z 
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:51.9113034Z 
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:51.9113953Z /home/runner/work/fastify/fastify/fastify.d.ts
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:51.9140130Z ##[error]  100:80  error  Expected a semicolon  @stylistic/member-delimiter-style
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:51.9149014Z ##[error]  101:7   error  Expected a semicolon  @stylistic/member-delimiter-style
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:51.9149815Z 
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:51.9150031Z /home/runner/work/fastify/fastify/fastify.js
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:51.9150844Z ##[error]  865:1  error  Expected indentation of 4 spaces  @stylistic/indent-binary-ops
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:51.9151918Z 
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:51.9152324Z ✖ 3 problems (3 errors, 0 warnings)
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:51.9152766Z   3 errors and 0 warnings potentially fixable with the `--fix` option.
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:51.9153052Z 
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:52.1403423Z ##[error]Process completed with exit code 1.
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:52.1542916Z Post job cleanup.
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:52.2400321Z [command]/usr/bin/git version
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:52.2435422Z git version 2.55.0
+quality-check / Lint Code	UNKNOWN STEP	2026-08-22T07:14:52.3378544Z Cleaning up orphan processes

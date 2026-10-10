@@ -1,0 +1,174 @@
+validate (3.13)	UNKNOWN STEP	﻿2026-09-13T17:04:43.6659954Z Current runner version: '2.337.0'
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:43.6698212Z ##[group]Runner Image Provisioner
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:43.6699716Z Hosted Compute Agent
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:43.6700794Z Version: 20260828.587
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:43.6715630Z ##[group]Runner Image
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:43.6716948Z Image: ubuntu-24.04
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:43.6718106Z Version: 20260907.300.1
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:44.4385577Z ##[group]Run actions/checkout@v4
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:44.4386322Z with:
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:44.4386772Z   repository: flypythoncom/python
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:45.1037720Z ##[group]Run astral-sh/setup-uv@v5
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:45.1038365Z with:
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:45.1038802Z   enable-cache: true
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:46.3543391Z ##[group]Run uv python install 3.13
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:46.3543787Z ^[[36;1muv python install 3.13^[[0m
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:46.3587949Z shell: /usr/bin/bash -e {0}
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:47.4142269Z ##[group]Run uv venv --python 3.13
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:47.4142660Z ^[[36;1muv venv --python 3.13^[[0m
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:47.4143041Z ^[[36;1muv pip install -r requirements-dev.lock.txt ruff^[[0m
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4241260Z ##[group]Run .venv/bin/ruff check .
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4241598Z ^[[36;1m.venv/bin/ruff check .^[[0m
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4279907Z shell: /usr/bin/bash -e {0}
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4280169Z env:
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4280422Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4280740Z ##[endgroup]
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4575397Z UP017 [*] Use `datetime.UTC` alias
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4576037Z   --> tools/claim_receipt.py:88:36
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4576530Z    |
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4576854Z 86 |         "impl_sha256": impl_hash,
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4577513Z 87 |         "solution_match": (impl_hash == solution_hash) if solution_hash else False,
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4578570Z 88 |         "created_at": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4579415Z    |                                    ^^^^^^^^^^^^
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4579730Z 89 |         "nonce": secrets.token_hex(16),
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4580076Z 90 |     }
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4580252Z    |
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4580449Z help: Convert to `datetime.UTC` alias
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4580700Z    |
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4580869Z 19 | import secrets
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4581109Z    - from datetime import datetime, timezone
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4581435Z 20 + from datetime import datetime, timezone, UTC
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4582034Z 21 | from pathlib import Path
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4582398Z --------------------------------------------------------------------------------
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4583129Z 87 |         "solution_match": (impl_hash == solution_hash) if solution_hash else False,
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4583737Z    -         "created_at": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4584387Z 88 +         "created_at": datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4584855Z 89 |         "nonce": secrets.token_hex(16),
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4585108Z    |
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4585218Z 
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4585476Z B905 `zip()` without an explicit `strict=` parameter
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4586225Z    --> tools/verify_courses.py:350:32
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4586646Z     |
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4587036Z 348 |               if verify and not BLOCK_RE.search(verify):
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4587735Z 349 |                   problems.append(f"{member.name}: verify.py has no marked PER-COURSE BLOCK")
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4588179Z 350 |               shapes.append(list(zip(
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4588474Z     |  ________________________________^
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4588898Z 351 | |                 re.findall(r'"id":\s*"(l\d+|capstone)"', verify),
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4589294Z 352 | |                 re.findall(r'"gate":\s*"([a-z-]+)"', verify),
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4589608Z 353 | |             )))
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4589816Z     | |_____________^
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4590081Z 354 |           for member, shape in zip(members[1:], shapes[1:]):
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4590414Z 355 |               if shape != shapes[0]:
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4590665Z     |
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4590885Z help: Add explicit value for parameter `strict=`
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4591102Z 
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4591229Z B905 `zip()` without an explicit `strict=` parameter
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4591543Z    --> tools/verify_courses.py:354:30
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4592068Z     |
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4592314Z 352 |                 re.findall(r'"gate":\s*"([a-z-]+)"', verify),
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4592621Z 353 |             )))
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4592888Z 354 |         for member, shape in zip(members[1:], shapes[1:]):
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4593241Z     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4593539Z 355 |             if shape != shapes[0]:
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4593811Z 356 |                 problems.append(
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4594054Z     |
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4594274Z help: Add explicit value for parameter `strict=`
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4594490Z 
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4594574Z Found 3 errors.
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4595192Z [*] 1 fixable with the `--fix` option (2 hidden fixes can be enabled with the `--unsafe-fixes` option).
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4606575Z ##[error]Process completed with exit code 1.
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4804497Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.4805887Z Post job cleanup.
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.5678202Z [command]/usr/bin/git version
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.5732535Z git version 2.55.0
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.6629839Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.6685622Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.7167967Z Cleaning up orphan processes
+validate (3.13)	UNKNOWN STEP	2026-09-13T17:04:48.7469770Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, astral-sh/setup-uv@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+validate (3.12)	UNKNOWN STEP	﻿2026-09-13T17:04:44.0152174Z Current runner version: '2.337.0'
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:44.0177364Z ##[group]Runner Image Provisioner
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:44.0178341Z Hosted Compute Agent
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:44.0179007Z Version: 20260828.587
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:44.0188056Z ##[group]Runner Image
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:44.0188701Z Image: ubuntu-24.04
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:44.0189275Z Version: 20260907.300.1
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:44.7301393Z ##[group]Run actions/checkout@v4
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:44.7302139Z with:
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:44.7302597Z   repository: flypythoncom/python
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:45.3750170Z ##[group]Run astral-sh/setup-uv@v5
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:45.3751350Z with:
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:45.3752260Z   enable-cache: true
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:46.5954629Z ##[group]Run uv python install 3.12
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:46.5955060Z ^[[36;1muv python install 3.12^[[0m
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:46.5997829Z shell: /usr/bin/bash -e {0}
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:47.6288351Z ##[group]Run uv venv --python 3.12
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:47.6288701Z ^[[36;1muv venv --python 3.12^[[0m
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:47.6289061Z ^[[36;1muv pip install -r requirements-dev.lock.txt ruff^[[0m
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.6957865Z ##[group]Run .venv/bin/ruff check .
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.6958182Z ^[[36;1m.venv/bin/ruff check .^[[0m
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.6996959Z shell: /usr/bin/bash -e {0}
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.6997211Z env:
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.6997458Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.6997771Z ##[endgroup]
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7284679Z UP017 [*] Use `datetime.UTC` alias
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7285372Z   --> tools/claim_receipt.py:88:36
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7285937Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7286618Z 86 |         "impl_sha256": impl_hash,
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7287360Z 87 |         "solution_match": (impl_hash == solution_hash) if solution_hash else False,
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7288254Z 88 |         "created_at": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7288956Z    |                                    ^^^^^^^^^^^^
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7289517Z 89 |         "nonce": secrets.token_hex(16),
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7290073Z 90 |     }
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7290483Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7290953Z help: Convert to `datetime.UTC` alias
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7291440Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7291861Z 19 | import secrets
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7292387Z    - from datetime import datetime, timezone
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7293050Z 20 + from datetime import datetime, timezone, UTC
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7293413Z 21 | from pathlib import Path
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7293742Z --------------------------------------------------------------------------------
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7294480Z 87 |         "solution_match": (impl_hash == solution_hash) if solution_hash else False,
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7295089Z    -         "created_at": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7295740Z 88 +         "created_at": datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7296602Z 89 |         "nonce": secrets.token_hex(16),
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7297063Z    |
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7297266Z 
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7297507Z B905 `zip()` without an explicit `strict=` parameter
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7298148Z    --> tools/verify_courses.py:350:32
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7298594Z     |
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7299173Z 348 |               if verify and not BLOCK_RE.search(verify):
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7300040Z 349 |                   problems.append(f"{member.name}: verify.py has no marked PER-COURSE BLOCK")
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7301020Z 350 |               shapes.append(list(zip(
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7301580Z     |  ________________________________^
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7302212Z 351 | |                 re.findall(r'"id":\s*"(l\d+|capstone)"', verify),
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7302899Z 352 | |                 re.findall(r'"gate":\s*"([a-z-]+)"', verify),
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7303286Z 353 | |             )))
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7303513Z     | |_____________^
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7303834Z 354 |           for member, shape in zip(members[1:], shapes[1:]):
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7304227Z 355 |               if shape != shapes[0]:
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7304532Z     |
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7304807Z help: Add explicit value for parameter `strict=`
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7305039Z 
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7305174Z B905 `zip()` without an explicit `strict=` parameter
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7305838Z    --> tools/verify_courses.py:354:30
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7306743Z     |
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7307191Z 352 |                 re.findall(r'"gate":\s*"([a-z-]+)"', verify),
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7307714Z 353 |             )))
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7307992Z 354 |         for member, shape in zip(members[1:], shapes[1:]):
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7308352Z     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7308653Z 355 |             if shape != shapes[0]:
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7308934Z 356 |                 problems.append(
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7309181Z     |
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7309542Z help: Add explicit value for parameter `strict=`
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7309970Z 
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7310113Z Found 3 errors.
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7310993Z [*] 1 fixable with the `--fix` option (2 hidden fixes can be enabled with the `--unsafe-fixes` option).
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7322255Z ##[error]Process completed with exit code 1.
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7496792Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.7498078Z Post job cleanup.
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.8406921Z [command]/usr/bin/git version
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.8444153Z git version 2.55.0
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.9571253Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:48.9616437Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:49.0041660Z Cleaning up orphan processes
+validate (3.12)	UNKNOWN STEP	2026-09-13T17:04:49.0302799Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, astral-sh/setup-uv@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

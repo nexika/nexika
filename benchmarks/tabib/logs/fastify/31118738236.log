@@ -1,0 +1,72 @@
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	﻿2026-08-06T16:17:04.6411422Z Current runner version: '2.336.0'
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6435846Z ##[group]Runner Image Provisioner
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6436767Z Hosted Compute Agent
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6437381Z Version: 20260707.563
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6445547Z ##[group]Runner Image
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6446125Z Image: ubuntu-24.04
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6446751Z Version: 20260720.247.2
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6447943Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260720.247/images/ubuntu/Ubuntu2404-Readme.md
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6449905Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260720.247
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6450829Z ##[endgroup]
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6451942Z ##[group]GITHUB_TOKEN Permissions
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6453796Z Contents: read
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6454717Z Metadata: read
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6455317Z ##[endgroup]
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6457410Z Secret source: Actions
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6458468Z Prepare workflow directory
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6785144Z Prepare all required actions
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:04.6839442Z Getting action download info
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:50.8518860Z Failed to resolve action download info. Error: Service Unavailable
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:50.8595174Z Retrying in 10.708 seconds
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:18:44.5351348Z Failed to resolve action download info. Error: Service Unavailable
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:18:44.5354893Z Retrying in 11.491 seconds
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:19:38.2516889Z ##[error]Service Unavailable
+install-production (20, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:19:38.2537017Z ##[error]Failed to resolve action download info.
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	﻿2026-08-06T16:21:21.5499737Z Current runner version: '2.336.0'
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5524237Z ##[group]Runner Image Provisioner
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5525182Z Hosted Compute Agent
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5525785Z Version: 20260707.563
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5534430Z ##[group]Runner Image
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5535098Z Image: ubuntu-24.04
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5535625Z Version: 20260720.247.2
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5537277Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260720.247/images/ubuntu/Ubuntu2404-Readme.md
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5539283Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260720.247
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5540325Z ##[endgroup]
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5541476Z ##[group]GITHUB_TOKEN Permissions
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5543786Z Contents: read
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5544408Z Metadata: read
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5544963Z ##[endgroup]
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5547225Z Secret source: Actions
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5548964Z Prepare workflow directory
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5884286Z Prepare all required actions
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:21:21.5931902Z Getting action download info
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:22:10.4026945Z Failed to resolve action download info. Error: Service Unavailable
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:22:10.4105059Z Retrying in 24.918 seconds
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:23:19.4544023Z Failed to resolve action download info. Error: Service Unavailable
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:23:19.4546764Z Retrying in 14.792 seconds
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:24:15.1272182Z ##[error]Service Unavailable
+install-production (26, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:24:15.1293990Z ##[error]Failed to resolve action download info.
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	﻿2026-08-06T16:17:42.7238441Z Current runner version: '2.336.0'
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7263834Z ##[group]Runner Image Provisioner
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7264866Z Hosted Compute Agent
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7265454Z Version: 20260707.563
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7274354Z ##[group]Runner Image
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7274945Z Image: ubuntu-24.04
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7275561Z Version: 20260720.247.2
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7276823Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260720.247/images/ubuntu/Ubuntu2404-Readme.md
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7278440Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260720.247
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7279391Z ##[endgroup]
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7280499Z ##[group]GITHUB_TOKEN Permissions
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7282883Z Contents: read
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7283787Z Metadata: read
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7284400Z ##[endgroup]
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7286554Z Secret source: Actions
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7287838Z Prepare workflow directory
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7616695Z Prepare all required actions
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:17:42.7664794Z Getting action download info
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:18:25.0741461Z Failed to resolve action download info. Error: Service Unavailable
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:18:25.0820219Z Retrying in 24.744 seconds
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:19:37.8741583Z Failed to resolve action download info. Error: Service Unavailable
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:19:37.8744955Z Retrying in 19.009 seconds
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:20:56.7248431Z ##[error]Service Unavailable
+install-production (22, ubuntu-latest, 8)	UNKNOWN STEP	2026-08-06T16:20:56.7271190Z ##[error]Failed to resolve action download info.

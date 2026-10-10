@@ -1,0 +1,371 @@
+uvloop (macOS-latest)	UNKNOWN STEP	﻿2026-08-17T19:42:16.8881520Z Current runner version: '2.336.0'
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:16.8909250Z ##[group]Runner Image Provisioner
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:16.8910910Z Hosted Compute Agent
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:16.8915040Z Version: 20260707.563
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:16.8930940Z ##[group]Runner Image
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:16.8932160Z Image: macos-26-arm64
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:16.8932690Z Version: 20260728.0273.1
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:18.1378770Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:18.1379850Z with:
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:18.1380200Z   persist-credentials: false
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:21.2727250Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:21.2727650Z with:
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:21.2728430Z   python-version: 3.15
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:21.2732230Z   PIP_UPLOADED_PRIOR_TO: P2D
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:21.2732550Z ##[endgroup]
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:21.4665160Z ##[group]Installed versions
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:21.4776420Z Version ~3.15.0-0 was not found in the local cache
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:22.5883070Z Version ~3.15.0-0 is available for downloading
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:22.5883780Z Download from "https://github.com/actions/python-versions/releases/download/3.15.0-rc.1-30966273682/python-3.15.0-rc.1-darwin-arm64.tar.gz"
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:42:23.4959870Z Extract downloaded archive
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:43:06.1550580Z ##[group]Run python -m pip install -e ".[uvloop]"
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:43:06.1551850Z ^[[36;1mpython -m pip install -e ".[uvloop]"^[[0m
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:43:06.1880210Z shell: /bin/bash -e {0}
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:23.1136170Z ##[group]Run python -m black --check .
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:23.1136600Z ^[[36;1mpython -m black --check .^[[0m
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:23.1396320Z shell: /bin/bash -e {0}
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:23.1396650Z env:
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:23.1396900Z   PIP_UPLOADED_PRIOR_TO: P2D
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:23.1397360Z   pythonLocation: /Users/runner/hostedtoolcache/Python/3.15.0-rc.1/arm64
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:23.1397920Z   PKG_CONFIG_PATH: /Users/runner/hostedtoolcache/Python/3.15.0-rc.1/arm64/lib/pkgconfig
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:23.1398470Z   Python_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.15.0-rc.1/arm64
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:23.1399400Z   Python2_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.15.0-rc.1/arm64
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:23.1399930Z   Python3_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.15.0-rc.1/arm64
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:23.1400320Z ##[endgroup]
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:25.0235640Z would reformat /Users/runner/work/black/black/src/black/comments.py
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:26.8801550Z 
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:26.8905010Z Oh no! 💥 💔 💥
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:26.9003500Z 1 file would be reformatted, 68 files would be left unchanged.
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:26.9303440Z ##[error]Process completed with exit code 1.
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:26.9496430Z Post job cleanup.
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:27.3846040Z [command]/opt/homebrew/bin/git version
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:27.4388650Z git version 2.55.0
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-17T19:44:27.9245340Z Cleaning up orphan processes
+uvloop (ubuntu-latest)	UNKNOWN STEP	﻿2026-08-17T19:42:15.7126645Z Current runner version: '2.336.0'
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:15.7164835Z ##[group]Runner Image Provisioner
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:15.7166188Z Hosted Compute Agent
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:15.7167069Z Version: 20260729.566
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:15.7179516Z ##[group]Runner Image
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:15.7180422Z Image: ubuntu-24.04
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:15.7181327Z Version: 20260810.271.1
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:16.3551597Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:16.3552662Z with:
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:16.3553118Z   persist-credentials: false
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:17.1641661Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:17.1642612Z with:
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:17.1643043Z   python-version: 3.15
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:17.1650993Z   PIP_UPLOADED_PRIOR_TO: P2D
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:17.1651528Z ##[endgroup]
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:17.2856034Z ##[group]Installed versions
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:17.2922470Z Version ~3.15.0-0 was not found in the local cache
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:17.7510081Z Version ~3.15.0-0 is available for downloading
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:17.7512191Z Download from "https://github.com/actions/python-versions/releases/download/3.15.0-rc.1-30966273682/python-3.15.0-rc.1-linux-24.04-x64.tar.gz"
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:18.5999376Z Extract downloaded archive
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:26.0126797Z ##[group]Run python -m pip install -e ".[uvloop]"
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:26.0127506Z ^[[36;1mpython -m pip install -e ".[uvloop]"^[[0m
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:42:26.0173179Z shell: /usr/bin/bash -e {0}
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:47.0851132Z ##[group]Run python -m black --check .
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:47.0851492Z ^[[36;1mpython -m black --check .^[[0m
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:47.0894083Z shell: /usr/bin/bash -e {0}
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:47.0894344Z env:
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:47.0894556Z   PIP_UPLOADED_PRIOR_TO: P2D
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:47.0894910Z   pythonLocation: /opt/hostedtoolcache/Python/3.15.0-rc.1/x64
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:47.0895414Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.15.0-rc.1/x64/lib/pkgconfig
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:47.0895870Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.15.0-rc.1/x64
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:47.0896269Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.15.0-rc.1/x64
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:47.0896661Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.15.0-rc.1/x64
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:47.0897048Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.15.0-rc.1/x64/lib
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:47.0897380Z ##[endgroup]
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:49.1738987Z would reformat /home/runner/work/black/black/src/black/comments.py
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:51.2277720Z 
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:51.2278857Z Oh no! 💥 💔 💥
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:51.2279357Z 1 file would be reformatted, 68 files would be left unchanged.
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:51.2724958Z ##[error]Process completed with exit code 1.
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:51.2866933Z Post job cleanup.
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:51.3733787Z [command]/usr/bin/git version
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:51.3773577Z git version 2.54.0
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-17T19:43:51.4843284Z Cleaning up orphan processes
+uvloop (windows-latest)	UNKNOWN STEP	﻿2026-08-17T19:42:16.7389687Z Current runner version: '2.336.0'
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:16.7419798Z ##[group]Runner Image Provisioner
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:16.7420793Z Hosted Compute Agent
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:16.7421466Z Version: 20260729.566
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:16.7430375Z ##[group]Runner Image
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:16.7431068Z Image: windows-2025-vs2026
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:16.7431744Z Version: 20260810.198.2
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:17.9664207Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:17.9665307Z with:
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:17.9665680Z   persist-credentials: false
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:25.7487192Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:25.7487636Z with:
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:25.7487838Z   python-version: 3.15
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:25.7491313Z   PIP_UPLOADED_PRIOR_TO: P2D
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:25.7491505Z ##[endgroup]
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:25.8725950Z ##[group]Installed versions
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:25.9758328Z Version ~3.15.0-0 was not found in the local cache
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:26.9091505Z Version ~3.15.0-0 is available for downloading
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:26.9092391Z Download from "https://github.com/actions/python-versions/releases/download/3.15.0-rc.1-30966273682/python-3.15.0-rc.1-win32-x64.zip"
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:27.3624956Z Extract downloaded archive
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:27.5979110Z [command]"C:\Program Files\PowerShell\7\pwsh.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command "$ErrorActionPreference = 'Stop' ; try { Add-Type -AssemblyName System.IO.Compression.ZipFile } catch { } ; try { [System.IO.Compression.ZipFile]::ExtractToDirectory('D:\a\_temp\python-3.15.0-rc.1-win32-x64.zip', 'D:\a\_temp\ba6c2321-7f33-4fce-973f-3f8b9a88b0f2', $true) } catch { if (($_.Exception.GetType().FullName -eq 'System.Management.Automation.MethodException') -or ($_.Exception.GetType().FullName -eq 'System.Management.Automation.RuntimeException') ){ Expand-Archive -LiteralPath 'D:\a\_temp\python-3.15.0-rc.1-win32-x64.zip' -DestinationPath 'D:\a\_temp\ba6c2321-7f33-4fce-973f-3f8b9a88b0f2' -Force } else { throw $_ } } ;"
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:27.9809389Z Execute installation script
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:30.5620606Z Check if Python hostedtoolcache folder exist...
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:42:30.5622590Z 
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:43:03.0062759Z ##[group]Run python -m pip install -e ".[uvloop]"
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:43:03.0063176Z ^[[36;1mpython -m pip install -e ".[uvloop]"^[[0m
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:43:03.0178127Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:43:58.9499587Z ##[group]Run python -m black --check .
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:43:58.9499908Z ^[[36;1mpython -m black --check .^[[0m
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:43:58.9556477Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:43:58.9556771Z env:
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:43:58.9556938Z   PIP_UPLOADED_PRIOR_TO: P2D
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:43:58.9557209Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.15.0-rc.1\x64
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:43:58.9557592Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.15.0-rc.1\x64/lib/pkgconfig
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:43:58.9558173Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-rc.1\x64
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:43:58.9558509Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-rc.1\x64
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:43:58.9558833Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-rc.1\x64
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:43:58.9559088Z ##[endgroup]
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:44:01.1360259Z would reformat D:\a\black\black\src\black\comments.py
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:44:02.7732957Z 
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:44:02.7734303Z Oh no! 💥 💔 💥
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:44:02.7734700Z 1 file would be reformatted, 68 files would be left unchanged.
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:44:02.8893568Z ##[error]Process completed with exit code 1.
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:44:02.9100691Z Post job cleanup.
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:44:03.0606061Z [command]"C:\Program Files\Git\bin\git.exe" version
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:44:03.0860535Z git version 2.55.0.windows.3
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:44:04.6063111Z Cleaning up orphan processes
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-17T19:44:04.6284643Z Terminate orphan process: pid (8184) (vctip)
+uvloop (windows-11-arm)	UNKNOWN STEP	﻿2026-08-17T19:42:16.3682335Z Current runner version: '2.336.0'
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:16.3714891Z ##[group]Runner Image Provisioner
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:16.3715910Z Hosted Compute Agent
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:16.3716927Z Version: 20260729.566
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:16.3724918Z ##[group]Runner Image
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:16.3725479Z Image: windows-11-arm64
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:16.3726081Z Version: 20260809.134.1
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:17.5465419Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:17.5467353Z with:
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:17.5468046Z   persist-credentials: false
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:30.4437816Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:30.4438496Z with:
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:30.4438743Z   python-version: 3.15
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:30.4442865Z   PIP_UPLOADED_PRIOR_TO: P2D
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:30.4443123Z ##[endgroup]
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:30.6750370Z ##[group]Installed versions
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:30.6959029Z Version ~3.15.0-0 was not found in the local cache
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:31.8209230Z Version ~3.15.0-0 is available for downloading
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:31.8209973Z Download from "https://github.com/actions/python-versions/releases/download/3.15.0-rc.1-30966273682/python-3.15.0-rc.1-win32-arm64.zip"
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:32.8231796Z Extract downloaded archive
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:32.9365739Z [command]"C:\Program Files\PowerShell\7\pwsh.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command "$ErrorActionPreference = 'Stop' ; try { Add-Type -AssemblyName System.IO.Compression.ZipFile } catch { } ; try { [System.IO.Compression.ZipFile]::ExtractToDirectory('C:\a\_temp\python-3.15.0-rc.1-win32-arm64.zip', 'C:\a\_temp\e8602d60-6528-413f-8352-38b48169353f', $true) } catch { if (($_.Exception.GetType().FullName -eq 'System.Management.Automation.MethodException') -or ($_.Exception.GetType().FullName -eq 'System.Management.Automation.RuntimeException') ){ Expand-Archive -LiteralPath 'C:\a\_temp\python-3.15.0-rc.1-win32-arm64.zip' -DestinationPath 'C:\a\_temp\e8602d60-6528-413f-8352-38b48169353f' -Force } else { throw $_ } } ;"
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:33.4167037Z Execute installation script
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:38.0474688Z Check if Python hostedtoolcache folder exist...
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:38.0476878Z 
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.7173311Z ##[group]Run python -m pip install -e ".[uvloop]"
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.7174007Z ^[[36;1mpython -m pip install -e ".[uvloop]"^[[0m
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.7267841Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:44.5528515Z ##[group]Run python -m black --check .
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:44.5529166Z ^[[36;1mpython -m black --check .^[[0m
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:44.5583679Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:44.5584073Z env:
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:44.5584295Z   PIP_UPLOADED_PRIOR_TO: P2D
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:44.5584980Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.15.0-rc.1\arm64
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:44.5585518Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.15.0-rc.1\arm64/lib/pkgconfig
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:44.5586408Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-rc.1\arm64
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:44.5586882Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-rc.1\arm64
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:44.5587346Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-rc.1\arm64
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:44.5587749Z ##[endgroup]
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:46.5586261Z would reformat C:\a\black\black\src\black\comments.py
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:47.9757859Z 
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:47.9759365Z Oh no! 💥 💔 💥
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:47.9759817Z 1 file would be reformatted, 68 files would be left unchanged.
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:48.1267812Z ##[error]Process completed with exit code 1.
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:48.1636651Z Post job cleanup.
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:48.4728043Z [command]"C:\Program Files\Git\bin\git.exe" version
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:48.5214820Z git version 2.55.0.windows.3
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:52.6643816Z Cleaning up orphan processes
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-17T19:44:52.7541209Z Terminate orphan process: pid (10404) (vctip)
+test (3.14, windows-11-arm)	UNKNOWN STEP	﻿2026-08-17T19:42:16.0809410Z Current runner version: '2.336.0'
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:16.0844188Z ##[group]Runner Image Provisioner
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:16.0845316Z Hosted Compute Agent
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:16.0845949Z Version: 20260729.566
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:16.0854301Z ##[group]Runner Image
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:16.0854937Z Image: windows-11-arm64
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:16.0855525Z Version: 20260809.134.1
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:17.6891553Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:17.6893590Z with:
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:17.6894380Z   persist-credentials: false
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:30.8519307Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:30.8520016Z with:
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:30.8520318Z   python-version: 3.14
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:38.9131907Z ##[group]Run python -m pip install --group tox
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:38.9132854Z ^[[36;1mpython -m pip install --group tox^[[0m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:38.9208820Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:38.9211440Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.14.7\arm64
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:38.9211973Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.14.7\arm64
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:38.9212898Z ##[endgroup]
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:40.3165787Z WARNING: Cache entry deserialization failed, entry ignored
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:41.0609565Z Collecting tox>=4.22
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:41.1059592Z   Downloading tox-4.60.0-py3-none-any.whl.metadata (3.8 kB)
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:41.1640014Z Collecting cachetools>=7.0.3 (from tox>=4.22)
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:44.5130506Z ##[group]Run tox -e ci-py$(echo 3.14 | tr -d '.') -- -v --color=yes
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:44.5132348Z ^[[36;1mtox -e ci-py$(echo 3.14 | tr -d '.') -- -v --color=yes^[[0m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:44.5193082Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:44.5195589Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.14.7\arm64
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:44.5196030Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.14.7\arm64
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:44.5196381Z ##[endgroup]
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:47.3512213Z ci-py314: install_dependency-groups> python -I -m pip install coverage>=5.3 pytest-cov>=4.1.0 pytest-xdist>=3.0.2 pytest>=7
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:55.2819940Z ci-py314: freeze> python -m pip freeze --all
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:55.6455357Z ci-py314: colorama==0.4.6,coverage==7.15.4,execnet==2.1.2,iniconfig==2.3.0,packaging==26.3,pip==26.2.1,pluggy==1.6.0,Pygments==2.20.0,pytest==9.1.1,pytest-cov==7.1.0,pytest-xdist==3.8.0
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:55.6464627Z ci-py314: commands[0]> pip install -e .[d]
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:56.6731326Z Obtaining file:///C:/a/black/black
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:42:56.6731771Z   Installing build dependencies: started
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:02.7199280Z Requirement already satisfied: packaging>=22.0 in .\.tox\ci-py314\Lib\site-packages (from black==0.1.dev1+g6634aec4a) (26.3)
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:02.7199902Z Collecting pathspec>=1.0.0 (from black==0.1.dev1+g6634aec4a)
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:02.7200397Z   Using cached pathspec-1.1.1-py3-none-any.whl.metadata (14 kB)
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:02.7679582Z WARNING: Cache entry deserialization failed, entry ignored
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:02.7680150Z WARNING: Cache entry deserialization failed, entry ignored
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:02.7705582Z Collecting platformdirs>=2 (from black==0.1.dev1+g6634aec4a)
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:02.8218693Z   Using cached platformdirs-4.11.3-py3-none-any.whl.metadata (5.5 kB)
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:02.8219346Z Collecting pytokens~=0.4.0 (from black==0.1.dev1+g6634aec4a)
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:05.0539588Z Installing collected packages: pytokens, propcache, platformdirs, pathspec, mypy-extensions, multidict, idna, frozenlist, click, attrs, aiohappyeyeballs, yarl, black, aiosignal, aiohttp
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:06.2620779Z 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:06.2625652Z Successfully installed aiohappyeyeballs-2.7.1 aiohttp-3.14.3 aiosignal-1.4.0 attrs-26.1.0 black-0.1.dev1+g6634aec4a click-8.4.2 frozenlist-1.8.0 idna-3.18 multidict-6.7.1 mypy-extensions-1.1.0 pathspec-1.1.1 platformdirs-4.11.3 propcache-0.5.2 pytokens-0.4.1 yarl-1.24.5
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:06.5665693Z ci-py314: commands[1]> coverage erase
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:06.8360641Z ci-py314: commands[2]> pytest tests --run-optional no_jupyter --numprocesses auto --cov -v --color=yes
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:10.0665082Z ^[[1m============================= test session starts =============================^[[0m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:10.0673448Z platform win32 -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- C:\a\black\black\.tox\ci-py314\Scripts\python.EXE
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:10.8910072Z [gw1]^[[36m [  7%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_line_ranges_in_pyproject_toml 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:10.8914557Z tests/test_black.py::BlackTestCase::test_line_ranges_with_code_option 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:10.9251783Z [gw0]^[[36m [  7%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::test_invalid_input_error_includes_path_location 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:10.9373667Z tests/test_black.py::BlackTestCase::test_assertFormatEqual_print_full_tree 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:10.9586457Z [gw1]^[[36m [  8%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_line_ranges_with_code_option 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:10.9604896Z tests/test_black.py::BlackTestCase::test_line_ranges_with_ipynb 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:10.9671884Z [gw0]^[[36m [  8%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_assertFormatEqual_print_full_tree 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:10.9680829Z tests/test_black.py::BlackTestCase::test_assertFormatEqual_print_tree_diff 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:10.9733182Z [gw1]^[[36m [  8%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_line_ranges_with_ipynb 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:10.9735127Z tests/test_black.py::BlackTestCase::test_line_ranges_with_multiple_sources 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:10.9736445Z [gw0]^[[36m [  8%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_assertFormatEqual_print_tree_diff 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:10.9750423Z tests/test_black.py::BlackTestCase::test_bpo_2142_workaround 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:10.9752136Z [gw1]^[[36m [  8%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_line_ranges_with_multiple_sources 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:10.9753263Z tests/test_black.py::BlackTestCase::test_line_ranges_with_source 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:12.9113115Z [gw2]^[[36m [ 27%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestCaching::test_filter_cached_hash 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:12.9148035Z tests/test_black.py::TestCaching::test_write_cache_creates_directory_if_needed 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:12.9201895Z [gw2]^[[36m [ 27%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestCaching::test_write_cache_creates_directory_if_needed 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:12.9326794Z tests/test_black.py::TestCaching::test_failed_formatting_does_not_get_cached 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:12.9398718Z [gw1]^[[36m [ 27%] ^[[0m^[[32mPASSED^[[0m tests/test_blackd.py::BlackDTestCase::test_blackd_python_variant 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:12.9508299Z tests/test_blackd.py::BlackDTestCase::test_blackd_request_needs_formatting 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:12.9526602Z [gw1]^[[36m [ 28%] ^[[0m^[[32mPASSED^[[0m tests/test_blackd.py::BlackDTestCase::test_blackd_request_needs_formatting 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.3460015Z tests/test_blackd.py::BlackDTestCase::test_blackd_response_black_version_header 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.3960646Z [gw1]^[[36m [ 29%] ^[[0m^[[32mPASSED^[[0m tests/test_blackd.py::BlackDTestCase::test_blackd_response_black_version_header 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.3995713Z tests/test_blackd.py::BlackDTestCase::test_blackd_skip_first_source_line 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.4085526Z [gw2]^[[36m [ 29%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestCaching::test_failed_formatting_does_not_get_cached 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.4184783Z tests/test_black.py::TestCaching::test_write_cache_write_fail 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.4271625Z [gw2]^[[36m [ 29%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestCaching::test_write_cache_write_fail 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.4352756Z tests/test_black.py::TestCaching::test_read_cache_line_lengths 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7138039Z [gw3]^[[36m [ 36%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestDeFactoAPI::test_format_str 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7184588Z tests/test_black.py::TestDeFactoAPI::test_format_file_contents 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7212595Z [gw3]^[[36m [ 36%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestDeFactoAPI::test_format_file_contents 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7305279Z tests/test_black.py::TestASTSafety::test_assert_equivalent_basic 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7356509Z [gw3]^[[36m [ 36%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_assert_equivalent_basic 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7389529Z tests/test_black.py::TestASTSafety::test_assert_equivalent_del 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7429656Z [gw3]^[[36m [ 37%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_assert_equivalent_del 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7466292Z tests/test_black.py::TestASTSafety::test_assert_equivalent_fstring 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7517419Z [gw3]^[[36m [ 37%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_assert_equivalent_fstring 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7559097Z tests/test_black.py::TestASTSafety::test_assert_equivalent_strings 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7608158Z [gw3]^[[36m [ 37%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_assert_equivalent_strings 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7629625Z [gw1]^[[36m [ 37%] ^[[0m^[[32mPASSED^[[0m tests/test_blackd.py::BlackDTestCase::test_cors_preflight 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7686017Z tests/test_blackd.py::BlackDTestCase::test_cors_requests_rejected_by_default 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7729735Z tests/test_black.py::TestASTSafety::test_equivalency_ast_parse_failure_includes_error 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7808412Z [gw3]^[[36m [ 37%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_equivalency_ast_parse_failure_includes_error 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7849042Z tests/test_black.py::TestASTSafety::test_mixed_target_versions_with_runtime_no_warning 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7914446Z [gw3]^[[36m [ 38%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_mixed_target_versions_with_runtime_no_warning 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:13.7980339Z tests/test_format.py::test_simple_format[context_managers_autodetect_39] 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:26.5469554Z tests/test_format.py::test_simple_format[preview_remove_multiline_lone_list_item_parens] 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:28.3358317Z [gw0]^[[36m [100%] ^[[0m^[[32mPASSED^[[0m tests/test_format.py::test_simple_format[preview_remove_multiline_lone_list_item_parens] 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:28.3358848Z 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:28.3358985Z =============================== tests coverage ================================
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:28.3359389Z _______________ coverage: platform win32, python 3.14.7-final-0 _______________
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:28.3359654Z 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:28.3359781Z Name                                         Stmts   Miss Branch BrPart  Cover
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:28.3360175Z ------------------------------------------------------------------------------
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:48.5136517Z tests/test_ipynb.py::test_unable_to_replace_magics 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:48.5137105Z [gw3]^[[36m [ 97%] ^[[0m^[[32mPASSED^[[0m tests/test_ipynb.py::test_unable_to_replace_magics 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:48.5290055Z [gw2]^[[36m [ 98%] ^[[0m^[[32mPASSED^[[0m tests/test_ipynb.py::test_ipynb_flag 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3174918Z [gw0]^[[36m [100%] ^[[0m^[[31mFAILED^[[0m tests/test_ipynb.py::test_cache_isnt_written_if_no_jupyter_deps_single 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3175334Z 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3175464Z ================================== FAILURES ===================================
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3175979Z ^[[31m^[[1m______________ test_cache_isnt_written_if_no_jupyter_deps_single ______________^[[0m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3176485Z [gw0] win32 -- Python 3.14.7 C:\a\black\black\.tox\ci-py314\Scripts\python.EXE
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3176757Z 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3184601Z         result = runner.invoke(^[[90m^[[39;49;00m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3185495Z             main, [^[[96mstr^[[39;49;00m(tmp_path / ^[[33m"^[[39;49;00m^[[33mnotebook.ipynb^[[39;49;00m^[[33m"^[[39;49;00m), ^[[33mf^[[39;49;00m^[[33m"^[[39;49;00m^[[33m--config=^[[39;49;00m^[[33m{^[[39;49;00mEMPTY_CONFIG^[[33m}^[[39;49;00m^[[33m"^[[39;49;00m]^[[90m^[[39;49;00m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3186289Z         )^[[90m^[[39;49;00m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3186954Z         ^[[94massert^[[39;49;00m ^[[33m"^[[39;49;00m^[[33mNo Python files are present to be formatted. Nothing to do^[[39;49;00m^[[33m"^[[39;49;00m ^[[95min^[[39;49;00m result.output^[[90m^[[39;49;00m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3187694Z         jupyter_dependencies_are_installed.cache_clear()^[[90m^[[39;49;00m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3188745Z         monkeypatch.setattr(^[[33m"^[[39;49;00m^[[33mblack.jupyter_dependencies_are_installed^[[39;49;00m^[[33m"^[[39;49;00m, ^[[94mlambda^[[39;49;00m warn: ^[[94mTrue^[[39;49;00m)^[[90m^[[39;49;00m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3189497Z         result = runner.invoke(^[[90m^[[39;49;00m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3190380Z             main, [^[[96mstr^[[39;49;00m(tmp_path / ^[[33m"^[[39;49;00m^[[33mnotebook.ipynb^[[39;49;00m^[[33m"^[[39;49;00m), ^[[33mf^[[39;49;00m^[[33m"^[[39;49;00m^[[33m--config=^[[39;49;00m^[[33m{^[[39;49;00mEMPTY_CONFIG^[[33m}^[[39;49;00m^[[33m"^[[39;49;00m]^[[90m^[[39;49;00m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3191142Z         )^[[90m^[[39;49;00m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3192192Z >       ^[[94massert^[[39;49;00m ^[[33m"^[[39;49;00m^[[33mreformatted^[[39;49;00m^[[33m"^[[39;49;00m ^[[95min^[[39;49;00m result.output^[[90m^[[39;49;00m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3194630Z ^[[1m^[[31mE       assert 'reformatted' in "error: cannot format C:\\Users\\runneradmin\\AppData\\Local\\Temp\\pytest-of-unknown\\pytest-1\\popen-gw0\\test_cache_isnt_written_if_no_0\\notebook.ipynb: [Errno 13] Permission denied: 'C:\\\\Users\\\\runneradmin\\\\AppData\\\\Local\\\\black\\\\black\\\\Cache\\\\0.1.dev1+g6634aec4a\\\\cache.-.88.1.0.0.0.1.0.0.c3641f8544d7c02f3580b07c0f9887f0.pickle'\n\nOh no! 💥 💔 💥\n1 file failed to reformat.\n"^[[0m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3197631Z ^[[1m^[[31mE        +  where "error: cannot format C:\\Users\\runneradmin\\AppData\\Local\\Temp\\pytest-of-unknown\\pytest-1\\popen-gw0\\test_cache_isnt_written_if_no_0\\notebook.ipynb: [Errno 13] Permission denied: 'C:\\\\Users\\\\runneradmin\\\\AppData\\\\Local\\\\black\\\\black\\\\Cache\\\\0.1.dev1+g6634aec4a\\\\cache.-.88.1.0.0.0.1.0.0.c3641f8544d7c02f3580b07c0f9887f0.pickle'\n\nOh no! 💥 💔 💥\n1 file failed to reformat.\n" = <Result SystemExit(123)>.output^[[0m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3199064Z 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3199258Z ^[[1m^[[31mtests\test_ipynb.py^[[0m:501: AssertionError
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3199571Z =============================== tests coverage ================================
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3199945Z _______________ coverage: platform win32, python 3.14.7-final-0 _______________
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3200206Z 
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3200330Z Name                                         Stmts   Miss Branch BrPart  Cover
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3200686Z ------------------------------------------------------------------------------
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3201110Z src\_black_version.py                            1      0      0      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3201483Z src\black\__init__.py                          659     33    338     23    94%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3201861Z src\black\_width_table.py                        2      0      0      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3202250Z src\black\brackets.py                          183      3     86      1    99%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3202619Z src\black\cache.py                              85      6     16      1    93%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3202992Z src\black\comments.py                          413     19    256     27    93%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3203384Z src\black\concurrency.py                       119     17     50     12    80%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3203762Z src\black\const.py                               4      0      0      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3204121Z src\black\debug.py                              40      0     10      1    98%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3204481Z src\black\files.py                             216     16     82      6    91%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3204868Z src\black\handle_ipynb_magics.py               193      2     72      2    98%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3205266Z src\black\linegen.py                           912     25    528     30    96%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3205632Z src\black\lines.py                             804     57    502     46    91%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3205994Z src\black\mode.py                              101      2     10      2    96%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3206360Z src\black\nodes.py                             531     18    334     24    95%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3206732Z src\black\numerics.py                           35      0     14      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3207108Z src\black\output.py                             77      1     32      3    96%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3207480Z src\black\parsing.py                           144      6     48      0    97%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3207848Z src\black\ranges.py                            254     16    128     15    92%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3208216Z src\black\report.py                             66      0     24      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3208831Z src\black\resources\__init__.py                  0      0      0      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3209236Z src\black\rusty.py                              14      0      0      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3209941Z src\black\schema.py                             10      0      0      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3210475Z src\black\strings.py                           209     38     98      1    79%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3210842Z src\black\trans.py                             949     22    452     21    97%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3211208Z src\blackd\__init__.py                         167     13     34      3    92%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3211577Z src\blackd\client.py                            40      5     26      2    86%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3211962Z src\blackd\middlewares.py                       28      0     10      1    97%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3212337Z tests\__init__.py                                0      0      0      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3212695Z tests\conftest.py                               10      0      0      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3213058Z tests\optional.py                               68      5     20      7    86%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3213430Z tests\test_black.py                           1890     59    126     17    96%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3213799Z tests\test_blackd.py                           271      3     10      2    98%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3214212Z tests\test_concurrency_manager_shutdown.py      31      0      0      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3214616Z tests\test_docs.py                              40      6     18      6    79%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3214980Z tests\test_format.py                            41      0      4      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3215349Z tests\test_ipynb.py                            216      0      0      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3215719Z tests\test_no_ipynb.py                          22      0      0      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3216094Z tests\test_ranges.py                            39      0      0      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3216463Z tests\test_schema.py                             7      0      0      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3216842Z tests\test_tokenize.py                          27      5      2      1    79%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3217222Z tests\test_trans.py                             32      0      2      0   100%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3217582Z tests\util.py                                  176     11     36      1    94%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3217940Z ------------------------------------------------------------------------------
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3218285Z TOTAL                                         9126    388   3368    255    94%
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3218878Z ^[[36m^[[1m=========================== short test summary info ===========================^[[0m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3220437Z ^[[31mFAILED^[[0m tests/test_ipynb.py::^[[1mtest_cache_isnt_written_if_no_jupyter_deps_single^[[0m - assert 'reformatted' in "error: cannot format C:\\Users\\runneradmin\\AppDa...
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3221372Z ^[[31m======================== ^[[31m^[[1m1 failed^[[0m, ^[[32m72 passed^[[0m^[[31m in 4.20s^[[0m^[[31m =========================^[[0m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3850445Z ci-py314: exit 1 (4.87 seconds) C:\a\black\black> pytest tests --run-optional jupyter -m jupyter --numprocesses auto --cov --cov-append -v --color=yes pid=5332
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3861425Z   ci-py314: FAIL code 1 (64.68=setup[9.95]+cmd[10.92,0.27,21.55,17.12,4.87] seconds)
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.3861835Z   evaluation failed :( (64.71 seconds)
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.5005038Z ##[error]Process completed with exit code 1.
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.5373609Z Post job cleanup.
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.8408110Z [command]"C:\Program Files\Git\bin\git.exe" version
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:50.8888030Z git version 2.55.0.windows.3
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-17T19:43:55.0013328Z Cleaning up orphan processes

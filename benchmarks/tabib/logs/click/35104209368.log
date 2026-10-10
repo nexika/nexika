@@ -1,0 +1,100 @@
+main	UNKNOWN STEP	﻿2026-09-16T13:47:43.8339470Z Current runner version: '2.337.0'
+main	UNKNOWN STEP	2026-09-16T13:47:43.8365896Z ##[group]Runner Image Provisioner
+main	UNKNOWN STEP	2026-09-16T13:47:43.8366747Z Hosted Compute Agent
+main	UNKNOWN STEP	2026-09-16T13:47:43.8367409Z Version: 20260828.587
+main	UNKNOWN STEP	2026-09-16T13:47:43.8376510Z ##[group]Runner Image
+main	UNKNOWN STEP	2026-09-16T13:47:43.8377128Z Image: ubuntu-24.04
+main	UNKNOWN STEP	2026-09-16T13:47:43.8377777Z Version: 20260907.300.1
+main	UNKNOWN STEP	2026-09-16T13:47:45.2683070Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+main	UNKNOWN STEP	2026-09-16T13:47:45.2684437Z with:
+main	UNKNOWN STEP	2026-09-16T13:47:45.2685183Z   persist-credentials: false
+main	UNKNOWN STEP	2026-09-16T13:47:46.5504679Z ##[group]Run astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+main	UNKNOWN STEP	2026-09-16T13:47:46.5506263Z with:
+main	UNKNOWN STEP	2026-09-16T13:47:46.5507080Z   enable-cache: true
+main	UNKNOWN STEP	2026-09-16T13:47:49.7993143Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+main	UNKNOWN STEP	2026-09-16T13:47:49.7993609Z with:
+main	UNKNOWN STEP	2026-09-16T13:47:49.7993860Z   python-version-file: pyproject.toml
+main	UNKNOWN STEP	2026-09-16T13:47:50.0060530Z ##[group]Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+main	UNKNOWN STEP	2026-09-16T13:47:50.0060953Z with:
+main	UNKNOWN STEP	2026-09-16T13:47:50.0061184Z   path: ~/.cache/pre-commit
+main	UNKNOWN STEP	2026-09-16T13:47:50.0061933Z   key: pre-commit|cf690451bf17c6ce9d4065d0f7d42144efaa6fb1b5f2a3a28ead820689f2cf84
+main	UNKNOWN STEP	2026-09-16T13:47:50.0062500Z   enableCrossOsArchive: false
+main	UNKNOWN STEP	2026-09-16T13:47:50.0062984Z   fail-on-cache-miss: false
+main	UNKNOWN STEP	2026-09-16T13:47:50.0063259Z   lookup-only: false
+main	UNKNOWN STEP	2026-09-16T13:47:50.0063524Z   save-always: false
+main	UNKNOWN STEP	2026-09-16T13:47:50.0063732Z env:
+main	UNKNOWN STEP	2026-09-16T13:47:52.0975281Z [command]/usr/bin/tar -xf /home/runner/work/_temp/425b5da2-0959-40ec-b489-1d3d88462a3f/cache.tzst -P -C /home/runner/work/click/click --use-compress-program unzstd
+main	UNKNOWN STEP	2026-09-16T13:47:52.3273782Z Cache restored successfully
+main	UNKNOWN STEP	2026-09-16T13:47:52.3373447Z Cache restored from key: pre-commit|cf690451bf17c6ce9d4065d0f7d42144efaa6fb1b5f2a3a28ead820689f2cf84
+main	UNKNOWN STEP	2026-09-16T13:47:52.3493204Z ##[group]Run uv run --locked --no-default-groups --group pre-commit pre-commit run --show-diff-on-failure --color=always --all-files
+main	UNKNOWN STEP	2026-09-16T13:47:52.3494275Z ^[[36;1muv run --locked --no-default-groups --group pre-commit pre-commit run --show-diff-on-failure --color=always --all-files^[[0m
+main	UNKNOWN STEP	2026-09-16T13:47:52.3535543Z shell: /usr/bin/bash -e {0}
+main	UNKNOWN STEP	2026-09-16T13:47:52.3535839Z env:
+main	UNKNOWN STEP	2026-09-16T13:47:52.3536133Z   UV_PYTHON_INSTALL_DIR: /home/runner/work/_temp/uv-python-dir
+main	UNKNOWN STEP	2026-09-16T13:47:52.8848305Z       Built click @ file:///home/runner/work/click/click
+main	UNKNOWN STEP	2026-09-16T13:47:52.8912030Z Installed 13 packages in 5ms
+main	UNKNOWN STEP	2026-09-16T13:47:53.5424877Z ruff check...............................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:53.5874109Z ruff format..............................................................^[[41mFailed^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:53.5875081Z ^[[2m- hook id: ruff-format^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:53.5875626Z ^[[2m- files were modified by this hook^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:53.5875977Z 
+main	UNKNOWN STEP	2026-09-16T13:47:53.5876244Z 1 file reformatted, 75 files left unchanged
+main	UNKNOWN STEP	2026-09-16T13:47:53.5876595Z 
+main	UNKNOWN STEP	2026-09-16T13:47:53.6605306Z uv-lock..................................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.0178057Z codespell................................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.1165468Z check for merge conflicts................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.3687179Z debug statements (python)................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.4530959Z fix utf-8 byte order marker..............................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.5494686Z trim trailing whitespace.................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6564185Z fix end of files.........................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6565160Z pre-commit hook(s) made changes.
+main	UNKNOWN STEP	2026-09-16T13:47:54.6566051Z If you are seeing this message in CI, reproduce locally with: `pre-commit run --all-files`.
+main	UNKNOWN STEP	2026-09-16T13:47:54.6567023Z To run `pre-commit` as part of git workflow, use `pre-commit install`.
+main	UNKNOWN STEP	2026-09-16T13:47:54.6567704Z All changes made by hooks:
+main	UNKNOWN STEP	2026-09-16T13:47:54.6643184Z ^[[1mdiff --git a/tests/test_termui.py b/tests/test_termui.py^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6644007Z ^[[1mindex 02ec220..3964d1a 100644^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6644614Z ^[[1m--- a/tests/test_termui.py^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6645186Z ^[[1m+++ b/tests/test_termui.py^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6652994Z ^[[36m@@ -558,8 +558,9 @@^[[m ^[[mdef test_edit_pathlib(runner, tmp_path, use_iterable):^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6654149Z  def test_editor_path_normalization(editor_cmd, filenames, expected_args):^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6655249Z      # Patch shutil.which so path resolution is a no-op; this test focuses on^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6656296Z      # argument splitting, not the which() behaviour tested separately below.^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6657319Z ^[[31m-    with patch("subprocess.Popen") as mock_popen, patch(^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6658437Z ^[[31m-        "shutil.which", return_value=None^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6659113Z ^[[32m+^[[m^[[32m    with (^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6659811Z ^[[32m+^[[m^[[32m        patch("subprocess.Popen") as mock_popen,^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6660697Z ^[[32m+^[[m^[[32m        patch("shutil.which", return_value=None),^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6661362Z      ):^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6662232Z          mock_popen.return_value.wait.return_value = 0^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6663273Z          Editor(editor=editor_cmd).edit_files(filenames)^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6664362Z ^[[36m@@ -578,9 +579,10 @@^[[m ^[[mdef test_editor_resolves_command_via_which():^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6665268Z  ^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6666184Z      Regression test for https://github.com/pallets/click/issues/3840.^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6667104Z      """^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6667883Z ^[[31m-    with patch("subprocess.Popen") as mock_popen, patch(^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6668923Z ^[[31m-        "shutil.which", return_value="/usr/bin/myeditor"^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6669781Z ^[[31m-    ) as mock_which:^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6670426Z ^[[32m+^[[m^[[32m    with (^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6671215Z ^[[32m+^[[m^[[32m        patch("subprocess.Popen") as mock_popen,^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6672731Z ^[[32m+^[[m^[[32m        patch("shutil.which", return_value="/usr/bin/myeditor") as mock_which,^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6673485Z ^[[32m+^[[m^[[32m    ):^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6674184Z          mock_popen.return_value.wait.return_value = 0^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6674921Z          Editor(editor="myeditor --wait").edit_files(["f.txt"])^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6675463Z  ^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6675991Z ^[[36m@@ -593,8 +595,9 @@^[[m ^[[mdef test_editor_resolves_command_via_which():^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6676563Z  ^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6677034Z  def test_editor_keeps_command_when_which_returns_none():^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6677888Z      """When shutil.which() cannot resolve the editor, the original token is [secret]
+main	UNKNOWN STEP	2026-09-16T13:47:54.6678725Z ^[[31m-    with patch("subprocess.Popen") as mock_popen, patch(^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6679373Z ^[[31m-        "shutil.which", return_value=None^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6679886Z ^[[32m+^[[m^[[32m    with (^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6680433Z ^[[32m+^[[m^[[32m        patch("subprocess.Popen") as mock_popen,^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6681126Z ^[[32m+^[[m^[[32m        patch("shutil.which", return_value=None),^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6681894Z      ):^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6682355Z          mock_popen.return_value.wait.return_value = 0^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6683393Z          Editor(editor="myeditor").edit_files(["f.txt"])^[[m
+main	UNKNOWN STEP	2026-09-16T13:47:54.6986195Z ##[error]Process completed with exit code 1.
+main	UNKNOWN STEP	2026-09-16T13:47:54.7160891Z Post job cleanup.
+main	UNKNOWN STEP	2026-09-16T13:47:54.8036583Z [command]/usr/bin/git version
+main	UNKNOWN STEP	2026-09-16T13:47:54.8079004Z git version 2.55.0
+main	UNKNOWN STEP	2026-09-16T13:47:54.9112489Z Cleaning up orphan processes

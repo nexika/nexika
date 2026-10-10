@@ -1,0 +1,42 @@
+validate (3.11)	UNKNOWN STEP	﻿2026-09-13T12:53:00.9671731Z Current runner version: '2.337.0'
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:00.9697320Z ##[group]Runner Image Provisioner
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:00.9698263Z Hosted Compute Agent
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:00.9698916Z Version: 20260828.587
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:00.9707836Z ##[group]Runner Image
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:00.9708485Z Image: ubuntu-24.04
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:00.9709148Z Version: 20260907.300.1
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:01.9825600Z ##[group]Run actions/checkout@v4
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:01.9826382Z with:
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:01.9826846Z   repository: flypythoncom/python
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:02.7882257Z ##[group]Run astral-sh/setup-uv@v5
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:02.7883676Z with:
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:02.7884603Z   enable-cache: true
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:04.4360356Z ##[group]Run uv python install 3.11
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:04.4360786Z ^[[36;1muv python install 3.11^[[0m
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:04.4403838Z shell: /usr/bin/bash -e {0}
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:05.5034042Z ##[group]Run uv venv --python 3.11
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:05.5034427Z ^[[36;1muv venv --python 3.11^[[0m
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:05.5034786Z ^[[36;1muv pip install -r requirements-dev.lock.txt ruff^[[0m
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:05.5074433Z shell: /usr/bin/bash -e {0}
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:05.5074727Z env:
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:05.5074989Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:05.5075319Z ##[endgroup]
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:05.6444036Z Using CPython 3.11.16
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:05.6445011Z Creating virtual environment at: .venv
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:05.6454025Z Activate with: .venv/bin/activate
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:06.1226353Z   × No solution found when resolving dependencies:
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:06.1227444Z   ╰─▶ Because the current Python version (3.11.16) does not satisfy
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:06.1228377Z       Python>=3.12 and contourpy==1.4.0 depends on Python>=3.12, we can
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:06.1229192Z       conclude that contourpy==1.4.0 cannot be used.
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:06.1230048Z       And because only contourpy<=1.4.0 is available and you require
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:06.1230941Z       contourpy==1.4.0, we can conclude that your requirements are
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:06.1231765Z       unsatisfiable.
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:06.1277890Z ##[error]Process completed with exit code 1.
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:06.1458743Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:06.1460105Z Post job cleanup.
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:06.2336753Z [command]/usr/bin/git version
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:06.2364712Z git version 2.55.0
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:06.3108936Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:06.3161832Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:06.3548455Z Cleaning up orphan processes
+validate (3.11)	UNKNOWN STEP	2026-09-13T12:53:06.3834464Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, astral-sh/setup-uv@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

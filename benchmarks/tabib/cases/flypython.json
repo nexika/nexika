@@ -1,0 +1,1070 @@
+{
+ "project": "flypythoncom/python",
+ "license": "MIT (code), CC BY 4.0 (prose)",
+ "set": "trial",
+ "collected": "2026-10-08, failed runs of the Validate workflow, September to October 2026",
+ "source": "https://github.com/flypythoncom/python",
+ "runs": [
+  {
+   "id": 37185433843,
+   "workflow": "",
+   "event": "pull_request",
+   "branch": "fix/ci-ruff-pin",
+   "sha": "0e07748bf1fd45926b18018498d4a4f4e50173c8",
+   "created": "2026-10-04T07:19:31Z",
+   "jobs": [
+    {
+     "name": "validate (3.11)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "success"
+    },
+    {
+     "name": "validate (3.13)",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/flypython/37185433843.log",
+   "expected": {
+    "kind": [
+     "dependency",
+     "matrix"
+    ],
+    "failures": []
+   },
+   "label": "contourpy==1.4.0 needs Python>=3.12; only the 3.11 job fails, fail-fast cancels the others"
+  },
+  {
+   "id": 36365122507,
+   "workflow": "",
+   "event": "pull_request",
+   "branch": "dependabot/pip/python-dependencies-dab9eab54a",
+   "sha": "abdd3224578100c78cf3f5dd9fc7357b9b4400d8",
+   "created": "2026-09-28T01:12:51Z",
+   "jobs": [
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/36365122507.log",
+   "expected": {
+    "kind": [
+     "dependency",
+     "matrix"
+    ],
+    "failures": []
+   },
+   "label": "contourpy==1.4.0 needs Python>=3.12; only the 3.11 job fails, fail-fast cancels the others"
+  },
+  {
+   "id": 35550426010,
+   "workflow": "",
+   "event": "pull_request",
+   "branch": "dependabot/github_actions/actions-60602294e2",
+   "sha": "9755a5e7edf450aa1f3573ef50d01e9039da312d",
+   "created": "2026-09-21T01:17:30Z",
+   "jobs": [
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.13)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/35550426010.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "UP017",
+      "file": "tools/claim_receipt.py",
+      "line": 88
+     },
+     {
+      "test": "B905",
+      "file": "tools/verify_courses.py",
+      "line": 376
+     }
+    ]
+   },
+   "label": "ruff lint errors"
+  },
+  {
+   "id": 35550219195,
+   "workflow": "",
+   "event": "pull_request",
+   "branch": "dependabot/pip/python-dependencies-98bdd8c198",
+   "sha": "86fa57d151f489762573e11e44e609a0bc1348d4",
+   "created": "2026-09-21T01:13:53Z",
+   "jobs": [
+    {
+     "name": "validate (3.11)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/35550219195.log",
+   "expected": {
+    "kind": [
+     "dependency",
+     "matrix"
+    ],
+    "failures": []
+   },
+   "label": "contourpy==1.4.0 needs Python>=3.12; only the 3.11 job fails, fail-fast cancels the others"
+  },
+  {
+   "id": 35428537437,
+   "workflow": "",
+   "event": "push",
+   "branch": "master",
+   "sha": "c0b14dfc05a77a50ba7ff29c15b10751b96f052b",
+   "created": "2026-09-19T07:09:11Z",
+   "jobs": [
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flypython/35428537437.log",
+   "expected": {
+    "kind": [
+     "dependency",
+     "matrix"
+    ],
+    "failures": []
+   },
+   "label": "contourpy==1.4.0 needs Python>=3.12; only the 3.11 job fails, fail-fast cancels the others"
+  },
+  {
+   "id": 35088267734,
+   "workflow": "",
+   "event": "push",
+   "branch": "master",
+   "sha": "39a3e79be939f491ac3c779494bf5c655c5588a0",
+   "created": "2026-09-16T11:03:25Z",
+   "jobs": [
+    {
+     "name": "validate (3.11)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/35088267734.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "UP017",
+      "file": "tools/claim_receipt.py",
+      "line": 88
+     },
+     {
+      "test": "B905",
+      "file": "tools/verify_courses.py",
+      "line": 376
+     }
+    ]
+   },
+   "label": "ruff lint errors"
+  },
+  {
+   "id": 34795467913,
+   "workflow": "",
+   "event": "pull_request",
+   "branch": "dependabot/github_actions/actions-60602294e2",
+   "sha": "931c4e6ae7cd5cf88084a0ba13ea15e831165eaf",
+   "created": "2026-09-14T01:17:57Z",
+   "jobs": [
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.13)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/34795467913.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "UP017",
+      "file": "tools/claim_receipt.py",
+      "line": 88
+     },
+     {
+      "test": "B905",
+      "file": "tools/verify_courses.py",
+      "line": 350
+     }
+    ]
+   },
+   "label": "ruff lint errors"
+  },
+  {
+   "id": 34771011977,
+   "workflow": "",
+   "event": "pull_request",
+   "branch": "dependabot/pip/python-dependencies-3559f3d28d",
+   "sha": "ef80957b1576cc071fc778785ff4c32d7ad798c9",
+   "created": "2026-09-13T17:14:56Z",
+   "jobs": [
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flypython/34771011977.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "UP017",
+      "file": "tools/claim_receipt.py",
+      "line": 88
+     },
+     {
+      "test": "B905",
+      "file": "tools/verify_courses.py",
+      "line": 350
+     }
+    ]
+   },
+   "label": "ruff lint errors"
+  },
+  {
+   "id": 34770825409,
+   "workflow": "",
+   "event": "push",
+   "branch": "main",
+   "sha": "db85cdd32ba108a562365de80186c12a8deaf13b",
+   "created": "2026-09-13T17:11:17Z",
+   "jobs": [
+    {
+     "name": "validate (3.11)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.13)",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flypython/34770825409.log",
+   "expected": {
+    "kind": [
+     "dependency",
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "UP017",
+      "file": "tools/claim_receipt.py",
+      "line": 88
+     },
+     {
+      "test": "B905",
+      "file": "tools/verify_courses.py",
+      "line": 350
+     }
+    ]
+   },
+   "label": "contourpy==1.4.0 needs Python>=3.12; only the 3.11 job fails, fail-fast cancels the others",
+   "uncertain": "the trial's label said only 3.11 fails; the 3.13 job also fails on ruff errors, so code is accepted too"
+  },
+  {
+   "id": 34770823566,
+   "workflow": "",
+   "event": "push",
+   "branch": "master",
+   "sha": "db85cdd32ba108a562365de80186c12a8deaf13b",
+   "created": "2026-09-13T17:11:14Z",
+   "jobs": [
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flypython/34770823566.log",
+   "expected": {
+    "kind": [
+     "dependency",
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "UP017",
+      "file": "tools/claim_receipt.py",
+      "line": 88
+     },
+     {
+      "test": "B905",
+      "file": "tools/verify_courses.py",
+      "line": 350
+     }
+    ]
+   },
+   "label": "contourpy==1.4.0 needs Python>=3.12; only the 3.11 job fails, fail-fast cancels the others",
+   "uncertain": "the trial's label said only 3.11 fails; the 3.12 job also fails on ruff errors, so code is accepted too"
+  },
+  {
+   "id": 34770487498,
+   "workflow": "",
+   "event": "push",
+   "branch": "main",
+   "sha": "d19ae88537053c6603f1981105d2e1dc874d6dec",
+   "created": "2026-09-13T17:04:39Z",
+   "jobs": [
+    {
+     "name": "validate (3.13)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/34770487498.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "UP017",
+      "file": "tools/claim_receipt.py",
+      "line": 88
+     },
+     {
+      "test": "B905",
+      "file": "tools/verify_courses.py",
+      "line": 350
+     }
+    ]
+   },
+   "label": "ruff lint errors"
+  },
+  {
+   "id": 34770485810,
+   "workflow": "",
+   "event": "push",
+   "branch": "master",
+   "sha": "d19ae88537053c6603f1981105d2e1dc874d6dec",
+   "created": "2026-09-13T17:04:38Z",
+   "jobs": [
+    {
+     "name": "validate (3.11)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/34770485810.log",
+   "expected": {
+    "kind": [
+     "dependency",
+     "matrix"
+    ],
+    "failures": []
+   },
+   "label": "contourpy==1.4.0 needs Python>=3.12; only the 3.11 job fails, fail-fast cancels the others"
+  },
+  {
+   "id": 34765446685,
+   "workflow": "",
+   "event": "push",
+   "branch": "main",
+   "sha": "61bccae3f1f2ff548381a6808fdb76ed9cb7c35b",
+   "created": "2026-09-13T15:23:19Z",
+   "jobs": [
+    {
+     "name": "validate (3.13)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/34765446685.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "UP017",
+      "file": "tools/claim_receipt.py",
+      "line": 88
+     },
+     {
+      "test": "B905",
+      "file": "tools/verify_courses.py",
+      "line": 350
+     }
+    ]
+   },
+   "label": "ruff lint errors"
+  },
+  {
+   "id": 34765443395,
+   "workflow": "",
+   "event": "push",
+   "branch": "master",
+   "sha": "61bccae3f1f2ff548381a6808fdb76ed9cb7c35b",
+   "created": "2026-09-13T15:23:15Z",
+   "jobs": [
+    {
+     "name": "validate (3.12)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flypython/34765443395.log",
+   "expected": {
+    "kind": [
+     "dependency",
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "UP017",
+      "file": "tools/claim_receipt.py",
+      "line": 88
+     },
+     {
+      "test": "B905",
+      "file": "tools/verify_courses.py",
+      "line": 350
+     }
+    ]
+   },
+   "label": "3.11 dependency failure and 3.12 lint failure in one run"
+  },
+  {
+   "id": 34758302495,
+   "workflow": "",
+   "event": "push",
+   "branch": "master",
+   "sha": "b762a88b6023b9276aa9a31ea9a9c5392f0c8640",
+   "created": "2026-09-13T12:52:57Z",
+   "jobs": [
+    {
+     "name": "validate (3.11)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/34758302495.log",
+   "expected": {
+    "kind": [
+     "dependency",
+     "matrix"
+    ],
+    "failures": []
+   },
+   "label": "contourpy==1.4.0 needs Python>=3.12; only the 3.11 job fails, fail-fast cancels the others"
+  },
+  {
+   "id": 34748392575,
+   "workflow": "",
+   "event": "push",
+   "branch": "main",
+   "sha": "c87db55a6954c2c42bea241fc473713bc8ffb0b5",
+   "created": "2026-09-13T08:43:19Z",
+   "jobs": [
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/34748392575.log",
+   "expected": {
+    "kind": [
+     "dependency",
+     "matrix"
+    ],
+    "failures": []
+   },
+   "label": "contourpy==1.4.0 needs Python>=3.12; only the 3.11 job fails, fail-fast cancels the others"
+  },
+  {
+   "id": 34748392510,
+   "workflow": "",
+   "event": "push",
+   "branch": "master",
+   "sha": "c87db55a6954c2c42bea241fc473713bc8ffb0b5",
+   "created": "2026-09-13T08:43:19Z",
+   "jobs": [
+    {
+     "name": "validate (3.13)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/34748392510.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "UP017",
+      "file": "tools/claim_receipt.py",
+      "line": 88
+     },
+     {
+      "test": "B905",
+      "file": "tools/verify_courses.py",
+      "line": 247
+     }
+    ]
+   },
+   "label": "ruff lint errors"
+  },
+  {
+   "id": 34733997790,
+   "workflow": "",
+   "event": "push",
+   "branch": "main",
+   "sha": "0c3c44f026eb953fa2bd3a74883abc7b47dbe71d",
+   "created": "2026-09-13T02:49:48Z",
+   "jobs": [
+    {
+     "name": "validate (3.12)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/34733997790.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "F401",
+      "file": "courses/da-eda/starter/eda.py",
+      "line": 9
+     },
+     {
+      "test": "F401",
+      "file": "courses/da-visualization/starter/charts.py",
+      "line": 12
+     }
+    ]
+   },
+   "label": "ruff lint errors"
+  },
+  {
+   "id": 34733916088,
+   "workflow": "",
+   "event": "push",
+   "branch": "master",
+   "sha": "e5d4ba80157c7b117581c87c18c81d9c4a9abb3c",
+   "created": "2026-09-13T02:47:45Z",
+   "jobs": [
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.13)",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flypython/34733916088.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "F401",
+      "file": "courses/da-eda/starter/eda.py",
+      "line": 9
+     },
+     {
+      "test": "F401",
+      "file": "courses/da-visualization/starter/charts.py",
+      "line": 12
+     }
+    ]
+   },
+   "label": "ruff lint errors"
+  },
+  {
+   "id": 34678409432,
+   "workflow": "",
+   "event": "pull_request",
+   "branch": "dependabot/pip/python-dependencies-3559f3d28d",
+   "sha": "61d8162aecebf07aa890432120cd69c0155510ed",
+   "created": "2026-09-12T06:32:48Z",
+   "jobs": [
+    {
+     "name": "validate (3.11)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/34678409432.log",
+   "expected": {
+    "kind": [
+     "dependency",
+     "matrix"
+    ],
+    "failures": []
+   },
+   "label": "contourpy==1.4.0 needs Python>=3.12; only the 3.11 job fails, fail-fast cancels the others"
+  },
+  {
+   "id": 34678244391,
+   "workflow": "",
+   "event": "push",
+   "branch": "main",
+   "sha": "09c3b4bd3dcfcbe81bb6392cc4b146bca4249c8b",
+   "created": "2026-09-12T06:29:10Z",
+   "jobs": [
+    {
+     "name": "validate (3.13)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/34678244391.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "F401",
+      "file": "courses/da-eda/starter/eda.py",
+      "line": 9
+     },
+     {
+      "test": "F401",
+      "file": "courses/da-visualization/starter/charts.py",
+      "line": 12
+     }
+    ]
+   },
+   "label": "ruff lint errors"
+  },
+  {
+   "id": 34678241978,
+   "workflow": "",
+   "event": "push",
+   "branch": "master",
+   "sha": "b9bf17e4dfd4445f4296a9e9544a11915c535615",
+   "created": "2026-09-12T06:29:07Z",
+   "jobs": [
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/34678241978.log",
+   "expected": {
+    "kind": [
+     "dependency",
+     "matrix"
+    ],
+    "failures": []
+   },
+   "label": "contourpy==1.4.0 needs Python>=3.12; only the 3.11 job fails, fail-fast cancels the others"
+  },
+  {
+   "id": 34665683363,
+   "workflow": "",
+   "event": "push",
+   "branch": "master",
+   "sha": "ac75a3632abb30b925b24c79c63119e6945dd0e1",
+   "created": "2026-09-12T01:44:06Z",
+   "jobs": [
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/34665683363.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "CI setup error (uv --system on an externally managed Python, or ruff not installed); a rerun fails again"
+  },
+  {
+   "id": 34665583359,
+   "workflow": "",
+   "event": "push",
+   "branch": "master",
+   "sha": "e420fcac5aa4a49da0686c24fecd4500c77809e2",
+   "created": "2026-09-12T01:41:59Z",
+   "jobs": [
+    {
+     "name": "validate (3.13)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/34665583359.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "CI setup error (uv --system on an externally managed Python, or ruff not installed); a rerun fails again"
+  },
+  {
+   "id": 34072558076,
+   "workflow": "",
+   "event": "pull_request",
+   "branch": "dependabot/github_actions/actions-60602294e2",
+   "sha": "61eb01172f8630437537677658c077251f9e5042",
+   "created": "2026-09-07T01:17:41Z",
+   "jobs": [
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.13)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/34072558076.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "CI setup error (uv --system on an externally managed Python, or ruff not installed); a rerun fails again"
+  },
+  {
+   "id": 34072313999,
+   "workflow": "",
+   "event": "pull_request",
+   "branch": "dependabot/pip/python-dependencies-0c98c8b487",
+   "sha": "23d224a82f1e9176b21c90c91728148df6dc9096",
+   "created": "2026-09-07T01:13:16Z",
+   "jobs": [
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flypython/34072313999.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "CI setup error (uv --system on an externally managed Python, or ruff not installed); a rerun fails again"
+  },
+  {
+   "id": 34016739209,
+   "workflow": "",
+   "event": "push",
+   "branch": "master",
+   "sha": "a97d490b5f2fe76d44a19a477fe787d75d183629",
+   "created": "2026-09-06T06:32:06Z",
+   "jobs": [
+    {
+     "name": "validate (3.11)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flypython/34016739209.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "CI setup error (uv --system on an externally managed Python, or ruff not installed); a rerun fails again"
+  },
+  {
+   "id": 34004132950,
+   "workflow": "",
+   "event": "push",
+   "branch": "master",
+   "sha": "6a109b0d22174e3b39836e5d28e3600c4af478ee",
+   "created": "2026-09-06T01:31:47Z",
+   "jobs": [
+    {
+     "name": "validate (3.13)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "validate (3.11)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "validate (3.12)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/flypython/34004132950.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "CI setup error (uv --system on an externally managed Python, or ruff not installed); a rerun fails again"
+  },
+  {
+   "id": 33639256023,
+   "workflow": "",
+   "event": "push",
+   "branch": "master",
+   "sha": "7084bf77e4044a493e44f122da691c31d24c84ff",
+   "created": "2026-09-02T14:00:29Z",
+   "jobs": [
+    {
+     "name": "validate",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flypython/33639256023.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_content_manifest.py"
+     }
+    ],
+    "cause": {
+     "fix": "6a109b0",
+     "points": [
+      "jsonschema"
+     ]
+    }
+   },
+   "label": "jsonschema missing from requirements; fixed in 6a109b0 by adding it"
+  },
+  {
+   "id": 33637551144,
+   "workflow": "",
+   "event": "push",
+   "branch": "master",
+   "sha": "ce5ce34ef129685ffb67213c672af4330f226d9c",
+   "created": "2026-09-02T13:44:09Z",
+   "jobs": [
+    {
+     "name": "validate",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/flypython/33637551144.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_content_manifest.py"
+     }
+    ],
+    "cause": {
+     "fix": "6a109b0",
+     "points": [
+      "jsonschema"
+     ]
+    }
+   },
+   "label": "jsonschema missing from requirements; fixed in 6a109b0 by adding it"
+  }
+ ]
+}

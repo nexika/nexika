@@ -1,0 +1,17 @@
+pull-request-title-check	UNKNOWN STEP	﻿2026-08-13T15:33:40.5209251Z Current runner version: '2.336.0'
+pull-request-title-check	UNKNOWN STEP	2026-08-13T15:33:40.5244904Z ##[group]Runner Image Provisioner
+pull-request-title-check	UNKNOWN STEP	2026-08-13T15:33:40.5246478Z Hosted Compute Agent
+pull-request-title-check	UNKNOWN STEP	2026-08-13T15:33:40.5247341Z Version: 20260707.563
+pull-request-title-check	UNKNOWN STEP	2026-08-13T15:33:40.5260154Z ##[group]Runner Image
+pull-request-title-check	UNKNOWN STEP	2026-08-13T15:33:40.5261106Z Image: ubuntu-24.04
+pull-request-title-check	UNKNOWN STEP	2026-08-13T15:33:40.5261921Z Version: 20260720.247.2
+pull-request-title-check	UNKNOWN STEP	2026-08-13T15:33:41.1499710Z ##[group]Run fastify/action-pr-title@e8f2ff244ca28c4a1a00edbf2df39b082002e8aa
+pull-request-title-check	UNKNOWN STEP	2026-08-13T15:33:41.1500753Z with:
+pull-request-title-check	UNKNOWN STEP	2026-08-13T15:33:41.1501439Z   regex: /^(build|chore|ci|docs|feat|types|fix|perf|refactor|style|test)(?:\([^\):]*\))?!?:\s/
+pull-request-title-check	UNKNOWN STEP	2026-08-13T15:33:41.1506199Z   github-token: [secret]
+pull-request-title-check	UNKNOWN STEP	2026-08-13T15:33:41.1506676Z   min-length: 1
+pull-request-title-check	UNKNOWN STEP	2026-08-13T15:33:41.1507145Z   max-length: -1
+pull-request-title-check	UNKNOWN STEP	2026-08-13T15:33:41.1507783Z ##[endgroup]
+pull-request-title-check	UNKNOWN STEP	2026-08-13T15:33:41.7205535Z Checking pull-request title: "[Backport 5.x] test: use process-warning spyWarning for testing"
+pull-request-title-check	UNKNOWN STEP	2026-08-13T15:33:41.7250850Z ##[error]Pull Request title "[Backport 5.x] test: use process-warning spyWarning for testing" failed to pass match regex - /^(build|chore|ci|docs|feat|types|fix|perf|refactor|style|test)(?:\([^\):]*\))?!?:\s/
+pull-request-title-check	UNKNOWN STEP	2026-08-13T15:33:41.7622937Z Cleaning up orphan processes

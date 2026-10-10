@@ -1,0 +1,110 @@
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2392721Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args1-Error:\\ Option\\ '\\-\\-config'\\ requires\\ an\\ argument\\.\\\n-sentinel0] PASSED [ 57%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2869666Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args1-Error:\\ Option\\ '\\-\\-config'\\ requires\\ an\\ argument\\.\\\n-EnumSentinel.FALSY_SENTINEL] PASSED [ 57%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2871056Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args2-Error:\\ Option\\ '\\-\\-config'\\ requires\\ an\\ argument\\.\\\n-sentinel0] PASSED [ 57%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2872131Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args2-Error:\\ Option\\ '\\-\\-config'\\ requires\\ an\\ argument\\.\\\n-EnumSentinel.FALSY_SENTINEL] PASSED [ 57%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2873167Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args3-No configuration file provided.-sentinel0] PASSED [ 57%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2874098Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args3-No configuration file provided.-EnumSentinel.FALSY_SENTINEL] PASSED [ 57%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2874933Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args4-foo.conf-sentinel0] PASSED [ 57%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2875706Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args4-foo.conf-EnumSentinel.FALSY_SENTINEL] PASSED [ 57%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2876761Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args5-Usage: main \\[OPTIONS\\]\\nTry 'main --help' for help.\\n\\nError: Got unexpected extra argument (.+)\\n-sentinel0] PASSED [ 57%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2878047Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args5-Usage: main \\[OPTIONS\\]\\nTry 'main --help' for help.\\n\\nError: Got unexpected extra argument (.+)\\n-EnumSentinel.FALSY_SENTINEL] PASSED [ 57%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2879494Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args6-Usage: main \\[OPTIONS\\]\\nTry 'main --help' for help.\\n\\nError: Invalid value for '-c' / '--config': File 'random-file.conf' does not exist.\\n-sentinel0] PASSED [ 57%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2880984Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args6-Usage: main \\[OPTIONS\\]\\nTry 'main --help' for help.\\n\\nError: Invalid value for '-c' / '--config': File 'random-file.conf' does not exist.\\n-EnumSentinel.FALSY_SENTINEL] PASSED [ 57%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2882448Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args7-Usage: main \\[OPTIONS\\]\\nTry 'main --help' for help.\\n\\nError: Invalid value for '-c' / '--config': File '--no-config' does not exist.\\n-sentinel0] PASSED [ 57%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2884372Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args7-Usage: main \\[OPTIONS\\]\\nTry 'main --help' for help.\\n\\nError: Invalid value for '-c' / '--config': File '--no-config' does not exist.\\n-EnumSentinel.FALSY_SENTINEL] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2885878Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args8-Usage: main \\[OPTIONS\\]\\nTry 'main --help' for help.\\n\\nError: Invalid value for '-c' / '--config': File '--no-config' does not exist.\\n-sentinel0] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2887373Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args8-Usage: main \\[OPTIONS\\]\\nTry 'main --help' for help.\\n\\nError: Invalid value for '-c' / '--config': File '--no-config' does not exist.\\n-EnumSentinel.FALSY_SENTINEL] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2888479Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args9-foo.conf-sentinel0] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2889241Z tests/test_options.py::test_dual_options_custom_type_sentinel_flag_value[args9-foo.conf-EnumSentinel.FALSY_SENTINEL] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2890134Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params0-args0-None] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2890981Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params1-args1-None] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2891675Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params2-args2-EngineType.OSS] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2892393Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params3-args3-EngineType.OSS] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2893099Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params4-args4-EngineType.OSS] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2893763Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params5-args5-None] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2894396Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params6-args6-None] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2895044Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params7-args7-None] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2895673Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params8-args8-None] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2896329Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params9-args9-EngineType.OSS] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2897195Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params10-args10-Error:\\ Option\\ '\\-\\-pro'\\ requires\\ an\\ argument\\.\\\n] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2898067Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params11-args11-EngineType.OSS] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2898798Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params12-args12-EngineType.OSS] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.2899516Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params13-args13-EngineType.OSS] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.3378957Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params14-args14-1] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.3380242Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params15-args15-42] PASSED [ 58%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.3381476Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params16-args16-EngineType.OSS] PASSED [ 59%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.3382703Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params17-args17-42] PASSED [ 59%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.3383559Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params18-args18-1] PASSED [ 59%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.3384219Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params19-args19-42] PASSED [ 59%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.3385211Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params20-args20-1] PASSED [ 59%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.3386149Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params21-args21-42] PASSED [ 59%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.3386850Z tests/test_options.py::test_custom_type_flag_value_standalone_option[opt_params22-args22-EngineType.OSS] PASSED [ 59%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.4946267Z tests/test_shell_completion.py::test_nested_group[args1--expect1] PASSED [ 66%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.4947105Z tests/test_shell_completion.py::test_nested_group[args2--expect2] PASSED [ 66%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.4947937Z tests/test_shell_completion.py::test_nested_group[args3---expect3] PASSED [ 66%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.4948743Z tests/test_shell_completion.py::test_nested_group[args4--expect4] PASSED [ 66%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.4949559Z tests/test_shell_completion.py::test_nested_group[args5---expect5] PASSED [ 66%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.4950741Z tests/test_shell_completion.py::test_group_command_same_option PASSED    [ 66%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.4951544Z tests/test_shell_completion.py::test_chained PASSED                      [ 66%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.4952331Z tests/test_shell_completion.py::test_help_option PASSED                  [ 66%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.4953124Z tests/test_shell_completion.py::test_argument_order PASSED               [ 66%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.4954174Z tests/test_shell_completion.py::test_argument_default PASSED             [ 66%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.4954968Z tests/test_shell_completion.py::test_type_choice PASSED                  [ 66%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.4955772Z tests/test_shell_completion.py::test_choice_special_characters PASSED    [ 66%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.4956575Z tests/test_shell_completion.py::test_choice_conflicting_prefix PASSED    [ 66%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:18.4957389Z tests/test_shell_completion.py::test_option_count PASSED                 [ 66%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9713042Z tests/test_utils/test_style.py::test_styling_invalid_color[value10-fg] PASSED [ 98%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9714057Z tests/test_utils/test_style.py::test_styling_invalid_color[value10-bg] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9715013Z tests/test_utils/test_style.py::test_styling_invalid_color[value11-fg] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9716508Z tests/test_utils/test_style.py::test_styling_invalid_color[value11-bg] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9717477Z tests/test_utils/test_style.py::test_styling_invalid_color[value12-fg] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9718427Z tests/test_utils/test_style.py::test_styling_invalid_color[value12-bg] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9719362Z tests/test_utils/test_style.py::test_styling_invalid_color[value13-fg] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9720567Z tests/test_utils/test_style.py::test_styling_invalid_color[value13-bg] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9721518Z tests/test_utils/test_style.py::test_styling_invalid_color[value14-fg] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9722465Z tests/test_utils/test_style.py::test_styling_invalid_color[value14-bg] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9723380Z tests/test_utils/test_style.py::test_styling_invalid_color[value15-fg] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9724315Z tests/test_utils/test_style.py::test_styling_invalid_color[value15-bg] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9725267Z tests/test_utils/test_style.py::test_styling_invalid_color[value16-fg] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9726208Z tests/test_utils/test_style.py::test_styling_invalid_color[value16-bg] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9727143Z tests/test_utils/test_style.py::test_styling_invalid_color[value17-fg] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9728119Z tests/test_utils/test_style.py::test_styling_invalid_color[value17-bg] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9729152Z tests/test_utils/test_style.py::test_unstyle_other_ansi[\x1b[?25lx y\x1b[?25h-x y] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9730287Z tests/test_utils/test_style.py::test_unstyle_other_ansi[\x1b[38:2:255:0:0mx y\x1b[0m-x y] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9731432Z tests/test_utils/test_style.py::test_unstyle_other_ansi[\x1b[38:5:200mx y\x1b[0m-x y] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9732600Z tests/test_utils/test_style.py::test_unstyle_other_ansi[\x1b[<0;1;1Mx y\x1b[<0;1;1m-x y] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:19.9733702Z tests/test_utils/test_style.py::test_unstyle_other_ansi[\x1b[0 qx y-x y] PASSED [ 99%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6259450Z tests/test_utils/test_style.py::test_unstyle_other_ansi[x\x1b[3~y-xy] PASSED [100%]
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6259980Z 
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6260194Z ================================== FAILURES ===================================
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6260833Z ____________ test_editor_windows_path_normalization[plain notepad] ____________
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6261508Z tests\test_termui.py:630: in test_editor_windows_path_normalization
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6262014Z     assert args == expected_cmd + ["f.txt"]
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6262572Z E   AssertionError: assert ['C:\\Windows...EXE', 'f.txt'] == ['notepad', 'f.txt']
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6263162Z E     
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6263523Z E     At index 0 diff: 'C:\\Windows\\system32\\notepad.EXE' != 'notepad'
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6263972Z E     
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6264181Z E     Full diff:
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6264449Z E       [
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6264710Z E     -     'notepad',
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6265524Z E     +     'C:\\Windows\\system32\\notepad.EXE',
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6265910Z E           'f.txt',
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6266174Z E       ]
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6266506Z =========================== short test summary info ===========================
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6267175Z FAILED tests/test_termui.py::test_editor_windows_path_normalization[plain notepad]
+Windows	UNKNOWN STEP	2026-09-16T13:48:20.6267891Z == 1 failed, 1983 passed, 101 skipped, 31000 deselected, 1 xfailed in 6.03s ===
+Windows	UNKNOWN STEP	2026-09-16T13:48:21.3324493Z py3.14: exit 1 (8.56 seconds) D:\a\click\click> pytest -v --tb=short --basetemp=D:\a\click\click\.tox\py3.14\tmp pid=10144
+Windows	UNKNOWN STEP	2026-09-16T13:48:21.3331443Z   py3.14: FAIL code 1 (9.40=setup[0.84]+cmd[8.56] seconds)
+Windows	UNKNOWN STEP	2026-09-16T13:48:21.3331997Z   evaluation failed :( (9.53 seconds)
+Windows	UNKNOWN STEP	2026-09-16T13:48:21.4828364Z ##[error]Process completed with exit code 1.
+Windows	UNKNOWN STEP	2026-09-16T13:48:21.5056619Z Post job cleanup.
+Windows	UNKNOWN STEP	2026-09-16T13:48:21.6764280Z [command]"C:\Program Files\Git\bin\git.exe" version
+Windows	UNKNOWN STEP	2026-09-16T13:48:21.7032362Z git version 2.55.0.windows.5
+Windows	UNKNOWN STEP	2026-09-16T13:48:21.7098687Z Temporarily overriding HOME='D:\a\_temp\cca6007d-372d-446c-9e7d-e624bcd20ade' before making global git config changes
+Windows	UNKNOWN STEP	2026-09-16T13:48:21.7099941Z Adding repository directory to the temporary git global config as a safe directory
+Windows	UNKNOWN STEP	2026-09-16T13:48:21.7110745Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\click\click
+Windows	UNKNOWN STEP	2026-09-16T13:48:21.7408332Z Removing SSH command configuration
+Windows	UNKNOWN STEP	2026-09-16T13:48:21.7419647Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+Windows	UNKNOWN STEP	2026-09-16T13:48:21.7739320Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+Windows	UNKNOWN STEP	2026-09-16T13:48:22.3187177Z Removing HTTP extra header
+Windows	UNKNOWN STEP	2026-09-16T13:48:22.3198657Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
