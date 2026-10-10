@@ -338,6 +338,81 @@ def test_lines_that_are_not_a_service_error(line):
     assert "network" not in [s["kind"] for s in parse.signals([line])]
 
 
+@pytest.mark.parametrize("line", [
+    "npm error notarget No matching version found for proxy-addr@^2.0.8.",
+    "npm ERR! notarget No matching version found for left-pad@9.9.9",
+    "npm error 404 Not Found - GET https://registry.npmjs.org/left-pad-nope - Not found",
+    "npm error 404  'left-pad-nope@*' is not in this registry.",
+])
+def test_npm_install_errors_old_and_new_are_dependency_signals(line):
+    """npm 10 prints 'npm error', older npm 'npm ERR!' (#361)."""
+    assert "dependency" in [s["kind"] for s in parse.signals([line])]
+    assert parse.errors([line]) == [" ".join(line.split())]
+
+
+def test_npm_says_which_version_it_could_not_find():
+    lines = ["npm error code ETARGET",
+             "npm error notarget No matching version found for proxy-addr@^2.0.8.",
+             "npm error notarget In most cases you or one of your dependencies are requesting"]
+    found = {s["kind"]: s["line"] for s in parse.signals(lines)}
+    assert found["dependency"] == lines[1]
+
+
+@pytest.mark.parametrize("line", [
+    "Error: Failed to download metadata for repo 'epel': Yum repo downloading error: Downloading error(s)",
+    "E: Failed to fetch http://azure.archive.ubuntu.com/ubuntu/pool/main/c/curl/curl_8.5.0.deb  404  Not Found",
+    "Error: Cannot download repomd.xml: Cannot download repodata/repomd.xml: All mirrors were tried",
+    "##[error]Action failed to get metadata with error SyntaxError: Unexpected token '<', \"<html>",
+])
+def test_a_mirror_or_download_site_that_fails_is_a_download_signal(line):
+    assert [s["kind"] for s in parse.signals([line])] == ["download"]
+
+
+@pytest.mark.parametrize("line", [
+    # A test that parses an HTML page is the code's business, not a download site's.
+    "    SyntaxError: Unexpected token '<', \"<html>\" is not valid JSON",
+    "  ✖ returns JSON (12ms) Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+    "##[error]Action failed to download the metadata. Status code: 403",
+])
+def test_lines_that_are_not_a_download_failure(line):
+    assert "download" not in [s["kind"] for s in parse.signals([line])]
+
+
+LINK_403 = "##[error][403] https://medium.com/better-programming/string-case-styles - HTTP 403"
+
+
+@pytest.mark.parametrize("lines,refused", [
+    ([LINK_403, "##[error]Detected 1 broken links."], True),
+    (["##[error][429] https://www.linkedin.com/in/someone - HTTP 429", "##[error]Detected 1 broken links."], True),
+    # a real broken link next to it: the 404 must not be hidden
+    ([LINK_403, "##[error][404] https://github.com/fastify/fastify/tree/5.x - HTTP 404"], False),
+    # a 403 from a site not known to refuse checkers may be a real problem
+    (["##[error][403] https://docs.example.org/private - HTTP 403"], False),
+    # a host that only ends like a known one
+    (["##[error][403] https://notmedium.com/a - HTTP 403"], False),
+    (["##[error][0] https://medium.com/a - HTTP 0"], False),
+])
+def test_a_link_checker_refused_by_known_sites_only(lines, refused):
+    """#361: only when every broken link is a 403 or 429 from a site known to refuse link checkers."""
+    kinds = [s["kind"] for s in parse.signals(lines)]
+    assert ("refused" in kinds) is refused
+    verdict = classify.classify({"failures": parse.failures(lines), "signals": parse.signals(lines),
+                                 "jobs": [{"name": "linkChecker", "conclusion": "failure"}]})
+    assert (verdict["kind"] == "setup") is refused
+
+
+def test_an_unknown_action_input_is_quoted_but_does_not_make_a_failure_setup():
+    warning = ("##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', "
+               "'cache']")
+    lines = [warning, "FAILED tests/test_a.py::test_b - assert 1 == 2"]
+    verdict = classify.classify({"failures": parse.failures(lines), "signals": parse.signals(lines),
+                                 "jobs": [{"name": "test", "conclusion": "failure"}]})
+    assert verdict["kind"] == "code"
+    alone = classify.classify({"failures": [], "signals": parse.signals([warning]),
+                               "jobs": [{"name": "test", "conclusion": "failure"}]})
+    assert alone["kind"] == "unknown"
+
+
 def test_signals_are_named_by_the_most_specific_line():
     # GitHub prints "The operation was canceled." under a runner shutdown too: not a time limit.
     shutdown = ["##[error]The runner has received a shutdown signal.", "##[error]The operation was canceled."]
