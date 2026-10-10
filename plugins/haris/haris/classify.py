@@ -121,7 +121,13 @@ def node(n, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         return Stage()
     if isinstance(n, shell.Group):
         inner = ctx.child() if n.subshell else ctx
-        walk(n.body, inner)
+        if n.each and ctx.unroll_budget[0] >= len(n.each):
+            ctx.unroll_budget[0] -= len(n.each)
+            walk(n.body[:1], inner)  # the list itself
+            for body in n.each:
+                walk(body, inner)
+        else:
+            walk(n.body, inner)
         for r in n.redirects:
             redirect(r, ctx, [])
         return Stage(secret="secret" in inner.marks)
@@ -1800,6 +1806,25 @@ def code_matches(pattern: re.Pattern, text: str, data: list[tuple[int, int]]) ->
     return [m for m in pattern.finditer(text) if not any(a <= m.start() < b for a, b in data)]
 
 
+def exec_calls(text: str, data: list[tuple[int, int]]) -> list[re.Match]:
+    """What CODE_EXEC finds, less the names that run nothing: a keyword argument or a setting
+    (`sympy.test(subprocess=False)`), an attribute read but never called (`opts.spawn`) and a plain
+    `import subprocess` (#342). `import subprocess as sp` and `from subprocess import run` still count:
+    they hand the call to a name haris does not follow."""
+    out = []
+    for m in code_matches(CODE_EXEC, text, data):
+        after = text[m.end():]
+        if re.match(r"\s*=(?!=)", after):
+            continue
+        if text[m.start() - 1:m.start()] == "." and not re.match(r"\s*[.(]", after):
+            continue
+        if (m.group() == "subprocess" and re.search(r"\bimport\s+(?:[\w.]+\s*,\s*)*$", text[:m.start()])
+                and re.match(r"\s*(?:$|[;,\n])", after)):
+            continue  # `import subprocess` alone: a later `subprocess.run(...)` is what runs
+        out.append(m)
+    return out
+
+
 def code_targets(text: str, pattern: re.Pattern, data: list[tuple[int, int]] = ()) -> list[Arg]:
     """What the calls `pattern` finds act on: the path each one names, or UNKNOWN for a call whose path is
     only known when it runs (a variable set elsewhere, a computed string). Never a stray string from
@@ -1928,7 +1953,7 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
         ctx.add("remote-shell", f"`{via}` connects a shell to the network: whoever is on the other side can "
                                 "run commands here.")
     network = bool(CODE_NET.search(text))
-    executes = bool(code_matches(CODE_EXEC, text, data) or (not NO_BACKTICK_EXEC.search(lang or via)
+    executes = bool(exec_calls(text, data) or (not NO_BACKTICK_EXEC.search(lang or via)
                                                             and BACKTICK_EXEC.search(text)))
     paths: list[Arg] = []
     for i, lit in enumerate(literals):

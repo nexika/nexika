@@ -757,3 +757,29 @@ deny	@PowerShell	Add-Content $PROFILE 'x'
 pass	for id in $(cat list.txt); do echo x > build/$id.log; done
 ask	for id in $(cat list.txt); do echo x > $id/../../.bashrc; done
 ask	for f in $(ls); do echo x > ~/$f; done
+
+# ---------------------------------------------------------------- false alarms from the agent benchmark (#342)
+pass	python -c "import sympy; sympy.test('sympy/printing', subprocess=False)"
+pass	python -W ignore -c "from sympy.utilities import runtests; runtests.test('sympy/core', subprocess=False, rerun=0)"
+pass	python - <<'EOF'↵import subprocess↵EOF
+pass	python3 -c "import os, subprocess, sys; print(sys.version)"
+pass	for f in src/app.py README.md scripts/build.sh; do sed -i 's/a/b/' "$f"; done
+pass	for f in src/app.py README.md; do sed -i 's/a/b/' $f; done; git diff --stat
+ask	python3 -c "import subprocess; subprocess.run(['make'])"
+ask	python3 -c "import os; os.system('make')"
+ask	python3 -c "from subprocess import run; run(['make'])"
+ask	python3 -c "import subprocess as sp; sp.call(['make'], subprocess=False)"
+ask	python3 -c "import pty; pty.spawn('/bin/sh')"
+ask	python3 -c "import subprocess↵subprocess.check_output('make', shell=True)"
+ask	python3 -c "import os, subprocess; os.popen('make')"
+ask	node -e "require('child_process').execSync('make')"
+ask	for f in $(git ls-files); do sed -i 's/a/b/' "$f"; done
+ask	for f in $FILES; do sed -i 's/a/b/' "$f"; done
+ask	for f in src/*.py ~/*.py; do sed -i 's/a/b/' "$f"; done
+deny	for f in src/app.py /etc/hosts; do echo x >> "$f"; done
+ask	for f in src/app.py ../other/app.py; do sed -i 's/a/b/' "$f"; done
+deny	for f in src/app.py ~/.bashrc; do sed -i 's/a/b/' "$f"; done
+deny	for d in build ~; do rm -rf "$d"; done
+deny	for d in build /; do rm -rf "$d"; done
+ask	for f in src/app.py; do read -r f; sed -i 's/a/b/' "$f"; done
+ask	for f in src/app.py .env; do cat "$f"; done

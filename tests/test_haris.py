@@ -191,6 +191,31 @@ def test_parser_limits_nesting_and_length():
         shell.parse("echo " + "x" * (shell.MAX_LENGTH + 1))
 
 
+def test_for_list_written_out_is_judged_word_by_word(world):
+    home, project = world
+    few = " ".join(["src/app.py"] * shell.MAX_UNROLLED)
+    assert decide(project, "Bash", f"for f in {few}; do sed -i s/a/b/ $f; done").verdict == "pass"
+    # a longer list stays unknown: haris never judges only the first words of it
+    many = few + " ~/.bashrc"
+    assert decide(project, "Bash", f"for f in {many}; do sed -i s/a/b/ $f; done").verdict == "ask"
+    # a word that is only known when it runs keeps the whole list unknown
+    for word in ("$HOME/x", "src/*.py", "$(ls)", "{a,b}"):
+        cmd = f"for f in src/app.py {word}; do sed -i s/a/b/ $f; done"
+        assert decide(project, "Bash", cmd).verdict == "ask", word
+
+
+def test_nested_written_out_loops_stay_fast_and_safe(world):
+    """Judging every word of nested loops multiplies the work; past a budget the rest stays unknown."""
+    home, project = world
+    words = " ".join(f"w{i}" for i in range(shell.MAX_UNROLLED))
+    last = " ".join(f"build/{i}" for i in range(shell.MAX_UNROLLED - 1)) + " ~"
+    cmd = f"for a in {words}; do for b in {words}; do for c in {last}; do rm -rf $c; done; done; done"
+    start = time.perf_counter()
+    d = decide(project, "Bash", cmd)
+    assert time.perf_counter() - start < 0.5
+    assert d.verdict in DANGEROUS
+
+
 def test_parser_finds_commands_in_heredoc_substitutions():
     script = shell.parse("cat <<EOF\n$(rm -rf /)\nEOF")
     body = script[0].stages[0].redirects[0].body

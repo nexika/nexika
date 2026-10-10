@@ -226,6 +226,9 @@ class Ctx:
         self.written: dict[str, str] = {}  # files this command wrote with known text (scripts it may run)
         self.git_aliases: dict[str, str] = {}
         self.cautious = False  # the session read text that tried to give orders: computed paths ask
+        # loop bodies one command may judge word by word, shared with every child: nested loops would
+        # multiply the work, and a slow check is no check (#342)
+        self.unroll_budget = [64]
 
     def child(self, marks: bool = False, findings: list | None = None) -> Ctx:
         c = copy.copy(self)
