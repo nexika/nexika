@@ -85,6 +85,8 @@ allow	python3 -m json.tool package.json
 allow	gh pr view 12
 allow	gh pr list
 allow	gh run list
+pass	gh workflow run ci.yml
+pass	gh workflow run "Lint Docs" --ref feat/x
 allow	gh pr checks
 allow	gh issue view 5
 allow	gh release view v1.0
@@ -541,6 +543,9 @@ ask	git branch -D feat/old
 ask	git stash clear
 ask	git filter-branch --tree-filter x HEAD
 ask	git commit --no-verify -m x
+ask	gh workflow run deploy-website.yml -R fastify/website
+ask	gh workflow run release.yml -f version=5.6.1
+ask	gh workflow run "Publish Package"
 pass	git -c core.hooksPath=/dev/null commit -m x
 pass	git config core.hooksPath /dev/null
 pass	HUSKY=0 git commit -m x
