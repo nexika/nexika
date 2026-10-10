@@ -7,8 +7,9 @@ tstyche and tsd), lint (ruff, eslint, also behind GitHub's problem matcher, pre-
 checks), documentation checks (markdownlint, lychee, linkinator), coverage thresholds, a conftest pytest
 could not import, merge conflicts, out-of-date generated files, a step's or an action's own message, and
 crashes (a segmentation fault). Signals cover time limits (not a test's own timeout), running out of memory,
-crashes, the network and GitHub's own service errors, rate limits, the runner, credentials, a CI setup that
-cannot work and dependency resolution.
+crashes, the network and GitHub's own service errors, package mirrors and download sites, rate limits, the
+runner, credentials, a CI setup that cannot work (including a link checker refused by a site) and dependency
+resolution.
 """
 from __future__ import annotations
 
@@ -39,6 +40,11 @@ SIGNALS = [
                            r"^##\[error\](?:Service Unavailable|Internal Server Error|Bad Gateway|"
                            r"Gateway Time-?out)\s*$|"
                            r"failed to download .{0,60}Status code: 5\d\d\b")),
+    # A package mirror (yum, dnf, apt) that will not download, or a setup action's download site that answers
+    # with an HTML page where it expected data (#361). The 403 alone is not one: it may never lift (#254).
+    ("download", re.compile(r"(?i)Failed to download metadata for repo\b|Cannot download repomd\.xml|"
+                            r"^E: (?:Failed to fetch|Unable to fetch some archives)\b|"
+                            r"^##\[error\].{0,120}Unexpected token '<',\s*\"<(?:html|!DOCTYPE)")),
     ("rate_limit", re.compile(r"(?i)rate limit exceeded|429 Too Many Requests|secondary rate limit")),
     ("runner", re.compile(r"(?i)runner has received a shutdown signal|lost communication with the server|"
                           r"was not acquired by runner|"
@@ -60,7 +66,11 @@ SIGNALS = [
     # GitHub prints this after a timeout, a shutdown and a cancel alike: the weakest sign.
     ("cancelled", re.compile(r"(?i)the operation was canceled")),
     ("dependency", re.compile(r"(?i)could not find a version that satisfies|no matching distribution|"
-                              r"\bERESOLVE\b|npm ERR! code ETARGET|version solving failed|"
+                              r"\bERESOLVE\b|version solving failed|"
+                              # npm 6 to 9 print 'npm ERR!', npm 10 'npm error' (#361); the line that names
+                              # the package, not the 'code ETARGET' / 'code E404' before it.
+                              r"npm (?:ERR!|error) (?:notarget No matching version|404 Not Found - GET|"
+                              r"404 .{0,120}is not in (?:this|the npm) registry)|"
                               r"unable to resolve dependency|no solution found when resolving")),
 ]
 
@@ -113,7 +123,7 @@ FAULT_HEADER = re.compile(r"Fatal Python error: Segmentation fault")
 FAULT_FRAME = re.compile(r'^\s*File "([^"]+)", line (\d+) in (test\w*)')
 # GitHub's problem matchers print "##[error]" before a linter's own line (#256).
 MATCHER = re.compile(r"^##\[(?:error|warning)\]")
-ERROR_LINE = re.compile(r"(?i)^(?:##\[error\]|error(?:\[\w+\])?:|fatal:|npm ERR!|E\s{3})"
+ERROR_LINE = re.compile(r"(?i)^(?:##\[error\]|error(?:\[\w+\])?:|fatal:|npm ERR!|npm error |E\s{3})"
                         r"|\b\w+(?:Error|Exception): ")
 
 
@@ -874,7 +884,44 @@ def signals(lines: list[str]) -> list[dict]:
             hit = helper_crash(lines) or None
         if hit is not None:
             found.append({"kind": kind, "line": _short(hit, 200)})
+    if hit := refused_links(lines):
+        found.append({"kind": "refused", "line": _short(hit, 200)})
+    # Not a cause on its own (many workflows pass with it): the evidence for a setup failure (#361).
+    if hit := next((line for line in lines if UNKNOWN_INPUT.search(line)), None):
+        found.append({"kind": "input", "line": _short(hit, 200)})
     return found
+
+
+# GitHub's warning when a workflow passes an action an input it does not have (an input a new major
+# version dropped): "##[warning]Unexpected input(s) 'pip-install', valid inputs are [...]".
+UNKNOWN_INPUT = re.compile(r"^##\[warning\]Unexpected input\(s\) '[^']+'")
+# A link checker's result line: linkinator's "[403] <url> - HTTP 403", lychee's "* [403] <url> | ...".
+LINK_RESULT = re.compile(r"^(?:##\[error\])?\s*(?:[*✗] )?\[(\d{1,3}|ERROR|TIMEOUT)\] <?(https?://[^\s>]+)>?")
+# Sites that answer link checkers with 403 or 429 while the page works in a browser (#361).
+REFUSING_HOSTS = ("medium.com", "linkedin.com", "twitter.com", "x.com", "stackoverflow.com", "reddit.com",
+                  "npmjs.com", "facebook.com", "instagram.com", "quora.com")
+
+
+def _refusing_host(url: str) -> bool:
+    host = re.sub(r"^https?://", "", url).split("/", 1)[0].split(":", 1)[0].lower()
+    return any(host == h or host.endswith("." + h) for h in REFUSING_HOSTS)
+
+
+def refused_links(lines: list[str]) -> str:
+    """The first broken link, when every broken link a link checker reports is a 403 or a 429 from a site
+    known to refuse link checkers (#361): the checker's settings, not the docs. Any other broken link (a
+    404, a timeout, a 403 from another site) may be real, so then nothing: ''."""
+    first = ""
+    for line in lines:
+        if not (m := LINK_RESULT.match(line.strip())):
+            continue
+        status = m.group(1)
+        if status.isdigit() and 200 <= int(status) < 400:
+            continue
+        if status not in ("403", "429") or not _refusing_host(m.group(2)):
+            return ""
+        first = first or line.strip()
+    return first
 
 
 def errors(lines: list[str], limit: int = 12) -> list[str]:
