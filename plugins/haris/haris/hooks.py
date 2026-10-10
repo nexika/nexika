@@ -5,6 +5,7 @@
     PreToolUse        every tool call, subagents included: allow, ask or deny with a reason
     PostToolUse       tool output that tries to give orders: Claude is told it is data, and the
                       session is tainted for a few of your messages
+    Stop              in an unattended session: what passed without a question, and what was refused
 """
 from __future__ import annotations
 
@@ -13,7 +14,7 @@ import os
 import re
 import shlex
 
-from . import config, state
+from . import config, state, unattended
 
 # The classifier (classify, policy) is most of a hook's start-up time, so it is imported only
 # where a call is actually checked (#50).
@@ -53,22 +54,61 @@ def on_pre_tool_use(event: dict) -> str:
     from . import policy
     from . import targets as c
     data = state.load_session(session)
+    cfg = {**cfg, "unattended_why": unattended.detect(os.environ, root, cfg["unattended"])}
     try:
         decision = policy.decide(event, cfg, data, state.approvals(session, root))
     except Exception as exc:  # haris must never wave a call through because it failed
         decision = policy.Decision(c.ASK, "error", f"haris hit an internal error ({type(exc).__name__}) "
                                                    f"and could "
                                                    "not check this, so it asks you instead.")
-    if decision.verdict in (c.ASK, c.DENY):
-        state.log({"session": session[:8], "project": os.path.basename(root), "tool": event.get("tool_name"),
-                   "decision": decision.verdict, "class": decision.cls, "reason": decision.reason,
-                   "detail": _detail(event), "watch": cfg["mode"] == "watch", "tainted": decision.tainted})
-        if policy.remember_ask(data, decision):
+    if decision.verdict in (c.ASK, c.DENY) or decision.unattended:
+        entry = {"session": session[:8], "project": os.path.basename(root), "tool": event.get("tool_name"),
+                 "decision": "unattended" if decision.unattended == "passed" else decision.verdict,
+                 "class": decision.cls, "reason": decision.reason, "detail": _detail(event),
+                 "watch": cfg["mode"] == "watch", "tainted": decision.tainted}
+        if decision.unattended:
+            entry["unattended"] = cfg["unattended_why"]
+        state.log(entry)
+        changed = policy.remember_ask(data, decision)
+        if decision.unattended:
+            changed = remember_unattended(data, decision.unattended, _detail(event))
+        if changed:
             state.save_session(session, {**data, "project": data.get("project") or root})
     if cfg["mode"] == "watch" or decision.verdict == c.PASS:
         return ""
     return _out("PreToolUse", permissionDecision=decision.verdict,
                 permissionDecisionReason=f"haris: {decision.reason}")
+
+
+UNATTENDED_KEPT = 50
+
+
+def remember_unattended(data: dict, how: str, detail: str) -> bool:
+    """Count an ask settled because nobody could answer, for the end-of-run summary."""
+    from . import secrets
+    if how == "passed":
+        earlier = [d for d in data.get("unattended_passed") or [] if isinstance(d, str)]
+        data["unattended_passed"] = (earlier + [secrets.redact(detail)[:120]])[-UNATTENDED_KEPT:]
+    else:
+        data["unattended_refused"] = int(data.get("unattended_refused") or 0) + 1
+    data["unattended_told"] = False
+    return True
+
+
+def on_stop(event: dict) -> str:
+    """At the end of an unattended run: what passed without a question, and how many were refused
+    (#343). Quiet in every other session, and when nothing changed since the last note."""
+    session = state.safe_session(str(event.get("session_id") or ""))
+    if not session:
+        return ""
+    data = state.load_session(session)
+    passed = [d for d in data.get("unattended_passed") or [] if isinstance(d, str)]
+    refused = int(data.get("unattended_refused") or 0)
+    if data.get("unattended_told", True) or not (passed or refused):
+        return ""
+    data["unattended_told"] = True
+    state.save_session(session, data)
+    return json.dumps({"systemMessage": unattended.summary(passed, refused)}, ensure_ascii=False)
 
 
 def _tracked_file(tool: str, event: dict, root: str) -> bool:

@@ -97,13 +97,14 @@ def cmd_why(args) -> int:
     from . import policy
 
     entries = [e for e in _entries(_root(), every_project=args.all) if e.get("decision") in ("ask", "deny",
-                                                                                             "taint")]
+                                                                                             "taint",
+                                                                                             "unattended")]
     if not entries:
         print("haris has not asked about or refused anything here yet.")
         return 0
     for e in entries[-args.n:]:
-        verdict = {"ask": "asked", "deny": "refused", "taint": "marked the session"}.get(e.get("decision"),
-                                                                                         "")
+        verdict = {"ask": "asked", "deny": "refused", "taint": "marked the session",
+                   "unattended": "let pass unattended"}.get(e.get("decision"), "")
         print(f"{e.get('ts', '')}  {verdict} ({e.get('class')}): {policy.readable(str(e.get('detail', '')))}")
         print(f"  why: {policy.readable(str(e.get('reason', '')))}")
         if e.get("class") in CLASS_HELP:
@@ -127,9 +128,12 @@ def cmd_status(args) -> int:
     for a in _approvals(root):
         print(f"  approved ({a.get('scope', 'session')}): {a.get('kind')} {a.get('value')}")
     week = _entries(root, days=7)
-    counts = {k: sum(1 for e in week if e.get("decision") == k) for k in ("ask", "deny", "taint")}
+    counts = {k: sum(1 for e in week if e.get("decision") == k)
+              for k in ("ask", "deny", "taint", "unattended")}
     print(f"  last 7 days here: {counts['deny']} refused, {counts['ask']} asked, {counts['taint']} injection "
-          "warnings")
+          f"warnings, {counts['unattended']} let pass in unattended sessions")
+    if cfg["unattended"] == "off":
+        print("  unattended sessions: never detected (unattended: off)")
     print(f"  data: {state.home()} (owner-only)")
     return 0
 
@@ -158,6 +162,8 @@ def cmd_check(args) -> int:
     cfg = config.effective_config(_root())
     if args.profile:
         cfg["profile"] = args.profile
+    if args.unattended:
+        cfg["unattended_why"] = "haris check --unattended"
     approvals = [dict(a, scope="project") for a in state.project_approvals(_root())]
     decision = policy.decide(event, cfg, None, approvals)
     if args.json:
@@ -218,6 +224,7 @@ def run_hook(name: str) -> int:
         "post-tool-use": hooks.on_post_tool_use,
         "user-prompt-submit": hooks.on_user_prompt_submit,
         "session-start": lambda e: hooks.on_session_start(e, helper_command()),
+        "stop": hooks.on_stop,
     }
     try:
         out = handlers[name](event)
@@ -234,7 +241,7 @@ def run_hook(name: str) -> int:
     return 0
 
 
-HOOKS = ("pre-tool-use", "post-tool-use", "user-prompt-submit", "session-start")
+HOOKS = ("pre-tool-use", "post-tool-use", "user-prompt-submit", "session-start", "stop")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -253,13 +260,14 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("status")
     p = sub.add_parser("audit")
     p.add_argument("--days", type=int, default=7)
-    p.add_argument("--decision", choices=["ask", "deny", "taint", "approval"])
+    p.add_argument("--decision", choices=["ask", "deny", "taint", "approval", "unattended"])
     p.add_argument("--limit", type=int, default=30)
     p.add_argument("--all", action="store_true")
     p.add_argument("--json", action="store_true")
     p = sub.add_parser("check")
     p.add_argument("--tool", default="Bash")
     p.add_argument("--profile", choices=["relaxed", "standard", "strict"])
+    p.add_argument("--unattended", action="store_true", help="decide as in a session nobody attends")
     p.add_argument("--json", action="store_true")
     p.add_argument("command", nargs="+")
     p = sub.add_parser("approvals")

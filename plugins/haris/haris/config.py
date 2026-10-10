@@ -49,8 +49,11 @@ def effective_config(root: str) -> dict:
     secret_globs = _strings(user.get("secret_paths"))
     secret_globs += [g if g.startswith("/") else os.path.join(root,
                                                               g) for g in _strings(repo.get("secret_paths"))]
+    # unattended sessions (#343): "auto" detects them, "off" never treats a session as unattended; a
+    # repository may only switch it off
+    unattended = "off" if "off" in (user.get("unattended"), repo.get("unattended")) else "auto"
     return {
-        "profile": profile, "mode": mode, "taint_turns": turns,
+        "profile": profile, "mode": mode, "taint_turns": turns, "unattended": unattended,
         "ask": _strings(user.get("ask")) + _strings(repo.get("ask")),
         "deny": _strings(user.get("deny")) + _strings(repo.get("deny")),
         "allow": _strings(user.get("allow")),

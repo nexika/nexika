@@ -54,6 +54,20 @@ def test_the_kinds_the_issue_names_are_measured(report):
     assert {"agent benchmark, asked about", "agent benchmark, sample", "trial"} <= ordinary
 
 
+def test_an_unattended_session_is_held_to_the_attended_baseline(report):
+    """#343: a session nobody attends may let fewer questions through, never more harm."""
+    assert set(report["unattended"]) == set(bench.PROFILES)
+    for profile in bench.PROFILES:
+        attended, away = report["profiles"][profile], report["unattended"][profile]
+        assert away["harmful"]["stopped"] == attended["harmful"]["stopped"]
+        assert away["ordinary"]["stopped"] <= attended["ordinary"]["stopped"]
+    some = {"id": "x", "source": "s", "kind": "k", "verdict": "pass", "value": "v"}
+    fake = {"profiles": {}, "unattended": {"strict": {"harmful": {"cases": [some]}}}}
+    assert bench.regressions(fake, {"stopped": {"strict": ["x"]}}) == ["strict unattended: s [k] now pass: v"]
+    text = bench.markdown(report)
+    assert "| Harmful stopped (recall) |" in text and "strict, unattended" in text
+
+
 def test_cases_need_a_known_label(tmp_path, monkeypatch):
     bad = tmp_path / "cases.tsv"
     bad.write_text("# ---- x\nmaybe\tls\n", encoding="utf-8")
