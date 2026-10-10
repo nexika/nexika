@@ -372,13 +372,45 @@ def lint(lines: list[str]):
     return " | ".join([f"{count} problem(s)", *summaries]), _dedupe(diags)
 
 
+_ESLINT_FILE = re.compile(r"^(/|[A-Za-z]:[\\/]|\S).*\.(?:[cm]?[jt]sx?|vue|svelte|astro|json|md|html?)$")
+_ESLINT_FINDING = re.compile(r"^\s+(\d+):(\d+)\s+(error|warning)\s+(.*?)(?:\s{2,}(\S+))?\s*$")
+_ESLINT_SUMMARY = re.compile(r"^✖ (\d+ problems? \(.*\))")
+
+
+def eslint_stylish(lines: list[str]):
+    """ESLint's default format: a file line, then '  12:5  error  msg  rule' lines without the
+    file, so each finding gets its file back (#269). Errors come before warnings."""
+    errors, warnings = [], []
+    current = None
+    for ln in lines:
+        if _ESLINT_FILE.match(ln) and not ln.startswith(("✖", ">")):
+            current = ln.strip()
+            continue
+        m = _ESLINT_FINDING.match(ln) if current else None
+        if m:
+            line, col, level, msg, rule = m.groups()
+            entry = f"{current}:{line}:{col}: {level} {msg}" + (f" ({rule})" if rule else "")
+            (errors if level == "error" else warnings).append(entry)
+        elif ln.strip() and not ln.startswith(" "):
+            current = None
+    summary = next((m.group(1) for ln in lines if (m := _ESLINT_SUMMARY.match(ln.strip()))), None)
+    if not (errors or warnings) or summary is None:
+        return None
+    return f"eslint: {summary}", _dedupe(errors) + _dedupe(warnings)
+
+
 # Order matters: tsc diagnostics look like MSBuild ones, so tsc is tried first.
-PARSERS = [pytest, dotnet_test, tsc, dotnet_build, node_test, tstyche, jest_vitest, go_test, cargo, lint]
+PARSERS = [pytest, dotnet_test, tsc, dotnet_build, node_test, tstyche, jest_vitest, go_test, cargo,
+           eslint_stylish, lint]
 
 
-def summarize(output: str, rc: int | None) -> tuple[str, list[str], int]:
-    """(verdict, kept lines, raw line count) for a command's combined output."""
-    lines = clean(output).split("\n")
+def summarize(output: str, rc: int | None, root=None) -> tuple[str, list[str], int]:
+    """(verdict, kept lines, raw line count) for a command's combined output. With the project
+    root, absolute paths under it are shown relative to it."""
+    text = clean(output)
+    if root:
+        text = text.replace(str(root).rstrip("/\\") + "/", "")
+    lines = text.split("\n")
     raw_count = sum(1 for ln in lines if ln.strip())
     for parser in PARSERS:
         parsed = parser(lines)
