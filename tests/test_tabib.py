@@ -147,6 +147,51 @@ def test_go_verbose_location_before_the_fail_line():
     assert found == {"TestTotal": ("cart_test.go", 17), "TestTax": ("tax_test.go", 9)}
 
 
+# fastify run 31192510459 (#258): tstyche's type tests, coloured as GitHub keeps them ("^[[31m").
+TSTYCHE_LOG = [
+    "^[[32mpass^[[0m ^[[90m./test/types/^[[0minstance.tst.ts",
+    "^[[31mfail^[[0m ^[[90m./test/types/^[[0mlogger.tst.ts",
+    "",
+    "^[[31mError: ^[[0mType 'Partial<FastifyReply<RouteGenericInterface>>' is not the same as type "
+    "'Partial<FastifyReply> & Pick<FastifyReply, \"statusCode\">'.",
+    "",
+    "  160 |         expect(reply).type.toBe<Partial<FastifyReply> & Pick<FastifyReply, 'statusCode'>>()",
+    "      |                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+    "",
+    "       ^[[90m at ^[[0m^[[36m./test/types/logger.tst.ts^[[0m^[[90m:160:33^[[0m^[[90m^[[0m",
+    "",
+    "^[[31mError: ^[[0mType 'Partial<FastifyReply<RouteGenericInterface>>' is not the same as type 'X'.",
+    "       ^[[90m at ^[[0m^[[36m./test/types/logger.tst.ts^[[0m^[[90m:195:33^[[0m^[[90m^[[0m",
+    "^[[31mError: ^[[0mType 'Partial<FastifyReply<RouteGenericInterface>>' is not the same as type 'Y'.",
+    "       ^[[90m at ^[[0m^[[36m./test/types/logger.tst.ts^[[0m^[[90m:223:33^[[0m^[[90m^[[0m",
+    "^[[32mpass^[[0m ^[[90m./test/types/^[[0mplugin.tst.ts",
+    "Assertions: ^[[31m3 failed^[[0m, ^[[32m1279 passed^[[0m, 1282 total",
+    "##[error]Process completed with exit code 1.",
+]
+
+
+def test_tstyche_type_test_failures_are_read():
+    failures = parse.read_log(gh_log("test-types", TSTYCHE_LOG))["test-types"]["failures"]
+    assert [(f["framework"], f["kind"], f["file"], f["line"]) for f in failures] == [
+        ("tstyche", "tests", "test/types/logger.tst.ts", 160), ("tstyche", "tests", "test/types/logger.tst.ts", 195),
+        ("tstyche", "tests", "test/types/logger.tst.ts", 223)]
+    assert failures[0]["message"].startswith("Type 'Partial<FastifyReply<RouteGenericInterface>>' is not the same")
+    verdict = classify.classify({"failures": failures})
+    assert (verdict["kind"], verdict["detail"]["count"]) == ("code", 3)
+
+
+def test_tsd_type_test_failures_are_read():
+    lines = ["  test-d/index.test-d.ts", "  ✖  12:3  Expected type number but got string.",
+             "  ✖  20:1  Argument of type string is not assignable.", "", "  2 errors"]
+    assert [(f["framework"], f["file"], f["line"], f["message"]) for f in parse.failures(lines)] == [
+        ("tsd", "test-d/index.test-d.ts", 12, "Expected type number but got string."),
+        ("tsd", "test-d/index.test-d.ts", 20, "Argument of type string is not assignable.")]
+
+
+def test_an_error_line_without_a_type_test_is_not_tstyche():
+    assert parse.failures(["Error: Type 'a' is not the same as type 'b'", "    at ./src/a.ts:3:4"]) == []
+
+
 # fastify run 36249120349 (#251): node:test's spec reporter, then its "✖ failing tests:" block.
 NODE_TEST_LOG = [
     "✔ should throw error if invalid logger is returned (3.74486ms)",
