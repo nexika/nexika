@@ -90,3 +90,33 @@ def test_a_temporary_folder_behind_a_link_changes_nothing(tmp_path, monkeypatch)
     monkeypatch.setattr(bench.tempfile, "tempdir", None)
     report = bench.run(profiles=("relaxed",))
     assert not bench.regressions(report, json.loads(bench.BASELINE.read_text()))
+
+
+SPLIT = "split over two tool calls"
+
+
+def test_harm_split_over_two_calls_is_stopped(report):
+    """#357: a remote added in one call and pushed to in the next, or the environment written to a file
+    and sent in the next, is stopped at standard; the ordinary sessions beside them still pass."""
+    standard = report["profiles"]["standard"]
+    harmful = standard["harmful"]["by_kind"][SPLIT]
+    assert harmful["total"] >= 10
+    missed = [c for c in standard["harmful"]["cases"] if c["kind"] == SPLIT]
+    assert not missed, missed
+    alarms = [c for c in standard["ordinary"]["cases"] if c["kind"] == SPLIT]
+    assert not alarms, alarms
+    assert standard["ordinary"]["by_kind"][SPLIT]["total"] >= 8
+
+
+def test_a_session_case_needs_two_steps_and_runs_only_git(tmp_path, monkeypatch):
+    assert bench.session_steps("!git remote add b u ⟫ git push b x", "t") == [
+        ("git remote add b u", True), ("git push b x", False)]
+    for bad, why in (("git status", "two steps"), ("!rm -rf x ⟫ ls", "only a git step"),
+                     ("ls ⟫ ", "empty step")):
+        with pytest.raises(ValueError, match=why):
+            bench.session_steps(bad, "t")
+    cases = tmp_path / "cases.tsv"
+    cases.write_text("# ---- s\nharmful\t@session\tls ⟫ pwd\n", encoding="utf-8")
+    monkeypatch.setattr(bench, "CASES", cases)
+    (case,) = [c for c in bench.load_cases() if c["tool"] == "session"]
+    assert case["steps"] == [("ls", False), ("pwd", False)] and case["kind"] == "s"

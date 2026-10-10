@@ -268,6 +268,7 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         for w in cmd.words:
             expand(w, ctx)
         return None
+    start = len(ctx.findings)
     argv: list[Arg] = []
     for w in cmd.words:
         argv += expand(w, ctx)
@@ -313,6 +314,10 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
     finally:
         ctx.prefix = {}
     downloads = (stage is not None and stage.downloads) or program in DOWNLOADERS
+    # what this command prints holds the whole environment or a secret: a file it goes to is staged (#357)
+    secret_out = (any(s is not None and (s.environ or s.secret) for s in (stage, stdin))
+                  or "secret" in joined_marks(argv)
+                  or any(f.cls in ("secret-read", "egress-secret") for f in ctx.findings[start:]))
     for r in cmd.redirects:
         if r.body is None and r.target and r.op in (">", ">>", ">|", "&>", "&>>"):
             values_ = expand(r.target, ctx)
@@ -332,7 +337,14 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
                 ctx.written[path] = before + stage.text + "\n"
             else:
                 ctx.written.pop(path, None)
+    if secret_out:  # `env > f`, `cp ~/.aws/credentials f`, `tar czf f ~/.ssh`, `env | tee f`
+        for f in ctx.findings[start:]:
+            if f.cls in WRITES and f.target:
+                ctx.stage(f.target)
     return stage
+
+
+WRITES = {"write", "write-temp", "write-outside", "write-memory", "secret-write"}
 
 
 def printed_into(cmd: shell.Simple, ctx: Ctx) -> str:
@@ -680,7 +692,7 @@ def delete_paths(values_: list[Arg], ctx: Ctx, verb: str = "deletes") -> None:
                 cls, text = WRITE_REASONS[held]
                 ctx.add(cls, text.format(verb=verb.capitalize(), path=shown), path)
                 continue
-            place = where.place(path)
+            place = where.place(path, writing=True)
             if place == "git" and path in (where.root + "/.git", where.root + "/.git/objects",
                                            where.root + "/.git/refs"):
                 ctx.add("discard", f"{verb.capitalize()} {shown}: the project's git history.", path)
@@ -1483,6 +1495,10 @@ def h_mv(argv, ctx, stdin):
     else:
         ctx.add("unparsed", f"`{argv[0]}` is missing a source or a target.")
         return Stage()
+    # a file moved from a secret, or from a file staged with one, holds it too (#357); a copy reads it,
+    # which stages the copy
+    secret = [s for s in sources if argv[0] == "mv"
+              and ctx.where.place(ctx.where.resolve(s, ctx.cwd)) == "secret"]
     if argv[0] == "mv":
         delete_paths(sources, ctx, "moves away")
     else:
@@ -1491,19 +1507,32 @@ def h_mv(argv, ctx, stdin):
     if tpath and os.path.isdir(tpath) and not has(opts, "-T", "--no-target-directory"):
         inside = [arg(tpath + "/" + os.path.basename(s.rstrip("/"))) for s in sources if UNKNOWN not in s]
         write_paths(inside or [target], ctx, "puts a file at")
+        for s in secret:
+            ctx.stage(tpath + "/" + os.path.basename(s.rstrip("/")))
     else:
         write_paths([target], ctx, "puts a file at")
+        if secret:
+            ctx.stage(tpath)
     return Stage()
 
 
 def h_ln(argv, ctx, stdin):
     opts, pos = options(argv[1:], {"-t", "--target-directory", "-S", "--suffix"})
-    if values(opts, "-t", "--target-directory"):
-        write_paths(values(opts, "-t", "--target-directory"), ctx, "creates links in")
+    # a link to a secret, or to a file staged with one, points at that secret too (#357)
+    secret = [s for s in pos if ctx.where.place(ctx.where.resolve(s, ctx.cwd)) == "secret"]
+    dest = values(opts, "-t", "--target-directory")
+    if dest:
+        write_paths(dest, ctx, "creates links in")
+        for s in secret:
+            ctx.stage(ctx.where.resolve(dest[0], ctx.cwd).rstrip("/") + "/" + os.path.basename(s.rstrip("/")))
     elif len(pos) >= 2:
         write_paths([pos[-1]], ctx, "creates a link at")
+        if secret and pos[-1] not in secret:
+            ctx.stage(ctx.where.resolve(pos[-1], ctx.cwd))
     elif pos:
         write_paths([arg(os.path.basename(pos[0]))], ctx, "creates a link at")
+        if secret:
+            ctx.stage(ctx.where.resolve(os.path.basename(pos[0]), ctx.cwd))
     return Stage()
 
 
@@ -1708,7 +1737,8 @@ CODE_WRITE = re.compile(r"\bopen\s*\([^)]*['\"][wax]b?\+?['\"]|write_text|write_
                         r"shutil\.(?:copy|move)|os\.rename|os\.replace|\.rename\s*\(|\bchmod\s*\(|symlink")
 CODE_NET = re.compile(r"\b(?:requests\.|urllib|http\.client|httpx|aiohttp|socket\b|fetch\s*\(|axios|"
                       r"https?\.request|https?\.get|Net::HTTP|LWP::|curl_exec|smtplib|ftplib|paramiko|"
-                      r"XMLHttpRequest|WebSocket|net\.connect|IO::Socket|TCPSocket|fsockopen)")
+                      r"XMLHttpRequest|WebSocket|net\.connect|IO::Socket|TCPSocket|fsockopen|"
+                      r"(?:file_get_contents|fopen)\s*\(\s*['\"](?:https?|ftp)://|stream_socket_client)")
 CODE_SHELL_SOCKET = re.compile(r"(?s)socket.*(?:dup2|pty\.spawn|/bin/(?:ba|z)?sh|subprocess|cmd\.exe|"
                                r"child_process)|(?:dup2|pty\.spawn).*socket|net\.Socket.*(?:spawn|/bin/sh)|"
                                r"(?:spawn|/bin/sh).*net\.Socket|TCPSocket.*(?:exec|spawn|/bin/sh)|"
@@ -1721,6 +1751,64 @@ CODE_WHOLE_ENV = re.compile(r"(?<![\w.])(?<!env=)(?<!env\s=\s)os\.environ\b"
                             r"(?!\s*\[|\.(?:get|setdefault|pop|update|__setitem__)\b)"
                             r"|(?<![\w$])(?<![\w$]\.)(?<!env:\s)(?<!env:)process\.env\b(?!\s*[.\[])"
                             r"|\bENV\.(?:to_h|to_a|inspect|each|map)\b|%ENV\b")
+# The same in forms that regex misses (#358). Python's environ is one variable when indexed or read with get;
+# a JavaScript env when a property is read.
+PY_ONE = r"(?!\s*\[|\s*\.\s*(?:get|setdefault|pop|update|__setitem__)\b)"
+JS_ONE = r"(?!\s*(?:\?\.|[.\[]))"
+CODE_WHOLE_ENV_MORE = re.compile(
+    r"(?<![\w.])(?<!env=)(?<!env\s=\s)os\.environb\b" + PY_ONE
+    + r"|__import__\s*\(\s*['\"]os['\"]\s*\)\s*\.\s*environb?\b" + PY_ONE
+    + r"|(?<![\w$])(?<![\w$]\.)(?<!env:\s)(?<!env:)(?:globalThis\s*\.\s*)?process"
+      r"\s*(?:\.\s*env\b|\[\s*['\"`]env['\"`]\s*\])" + JS_ONE
+    + r"|require\s*\(\s*['\"](?:node:)?process['\"]\s*\)\s*\.\s*env\b" + JS_ONE
+    + r"|\b(?:Deno\s*\.\s*env\s*\.\s*toObject\s*\(|Bun\s*\.\s*env\b" + JS_ONE + r")"
+    + r"|\bgetenv\s*\(\s*\)|\$_(?:ENV|SERVER)\b(?!\s*\[)")
+# Ruby's ENV used whole: not one variable (ENV["X"], ENV.fetch) or its names alone (ENV.keys).
+RUBY_WHOLE_ENV = re.compile(r"(?<![\w$%:])ENV\b(?!\s*\[|\s*=(?!=)|\s*\.\s*(?:(?:fetch|delete|store|keys|size|"
+                            r"length)\b|(?:key|has_key|include|member|empty)\?))")
+# Names the environment is bound to: from os import environ [as e]; import os as o; const {env[: e]} = process
+PY_FROM_OS = re.compile(r"\bfrom\s+os\s+import\s+\(?([\w \t,]+)")
+PY_OS_AS = re.compile(r"\bimport\s+[\w \t,.]*?\bos\s+as\s+(\w+)")
+JS_FROM_PROCESS = re.compile(r"\{([^{}]*)\}\s*=\s*(?:(?:globalThis\s*\.\s*)?process\b(?!\s*[.\[])"
+                             r"|require\s*\(\s*['\"](?:node:)?process['\"]\s*\))"
+                             r"|\bimport\s*\{([^{}]*)\}\s*from\s*['\"](?:node:)?process['\"]")
+
+
+def whole_env(text: str, lang: str) -> bool:
+    """Inline code that reads the whole environment, where every token lives (#350, #358)."""
+    if CODE_WHOLE_ENV.search(text) or CODE_WHOLE_ENV_MORE.search(text):
+        return True
+    if (not lang or "ruby" in lang) and RUBY_WHOLE_ENV.search(text):
+        return True
+    if "os" not in text and "process" not in text:
+        return False
+    # Bindings are read from the code (a module name such as 'process' is a string); a name is counted
+    # as used only where it is code, not inside a string, so usage is searched in `bare`, which blanks
+    # each string's content but keeps its length so the two line up.
+    bare = STRING_LITERAL.sub(lambda m: m.group(0)[0] + " " * (len(m.group(0)) - 2) + m.group(0)[-1], text)
+    uses = []
+    for m in PY_FROM_OS.finditer(text):
+        for item in m.group(1).split(","):
+            words = item.split()
+            if words[:1] in (["environ"], ["environb"]):
+                uses.append((words[2] if len(words) == 3 and words[1] == "as" else words[0], PY_ONE, m))
+    for m in PY_OS_AS.finditer(text):
+        if re.search(rf"(?<![\w.]){m.group(1)}\s*\.\s*environb?\b" + PY_ONE, bare):
+            return True
+    for m in JS_FROM_PROCESS.finditer(text):
+        for item in (m.group(1) or m.group(2) or "").split(","):
+            parts = re.split(r"\s*(?::|\bas\b)\s*", item.strip())
+            if parts[0] == "env":
+                uses.append((parts[-1], JS_ONE, m))
+    for name, one, m in uses:
+        rest = bare[:m.start()] + " " * (m.end() - m.start()) + bare[m.end():]
+        # the name used whole: not a key (`env:`), an assignment, or a copy handed to a child (env=, env:)
+        used = rf"(?<![\w.$])(?<!env=)(?<!env:)(?<!env:\s){re.escape(name)}(?![\w$])(?!\s*(?::|=(?!=)))"
+        if re.fullmatch(r"[\w$]+", name) and re.search(used + one, rest):
+            return True
+    return False
+
+
 STRING_LITERAL = re.compile(r"'''(.*?)'''|\"\"\"(.*?)\"\"\"|'((?:\\.|[^'\\\n])*)'|\"((?:\\.|[^\"\\\n])*)\"",
                             re.S)
 SED_EXEC = re.compile(r"(?:^|[;\n{}])\s*(?:\d+|\$|/[^/]*/)?\s*e(?:\s|$|;)|/e\s*$"
@@ -1988,7 +2076,12 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
     if deletes:
         delete_paths(code_targets(text, CODE_DELETE, data), ctx)
     if writes:
+        before = len(ctx.findings)
         write_paths(code_write_targets(text, literals, ctx, data), ctx)
+        if whole_env(text, lang):  # the whole environment written to a file (#357)
+            for f in ctx.findings[before:]:
+                if f.target:
+                    ctx.stage(f.target)
     secret_hit = False
     for p in paths:
         path = ctx.where.resolve(p, ctx.cwd)
@@ -1999,7 +2092,7 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
     if network:
         if secret_hit:
             ctx.add("egress-secret", f"`{via}` reads a secret file and talks to the network.")
-        elif CODE_WHOLE_ENV.search(text):
+        elif whole_env(text, lang):
             ctx.add("egress-secret", f"`{via}` reads the whole environment, where tokens live, and talks to "
                                      "the network.")
         elif any(secrets.has_secret(lit) for lit in literals):
@@ -2610,14 +2703,24 @@ def push_stranger(dest: str | None, everything: bool, ctx: Ctx) -> str:
     if not ctx.in_project():
         return ("Pushes from a repository outside the project, whose remotes haris does not know: the "
                 "commits can reach a repository anyone may own.")
+    earlier = ctx.session_remotes
     if dest is None:
         if repointed:
             return ("Pushes after this command changed where pushes go (a remote's address or a "
                     "rewrite rule): the commits can reach a repository anyone may own.")
+        if earlier and ("*" in earlier or push_remote(ctx) in earlier):
+            return ("Pushes to a remote added or pointed at a new address earlier in this session: it can "
+                    "belong to anyone. Push to a remote the repository already had, or ask the user first.")
         return ""
     if "*" in repointed or dest in repointed:
         return (f"Pushes to {dest}, a remote this command added or pointed at a new address: it can belong "
                 "to anyone. Push to a remote the repository already had, or ask the user first.")
+    if dest in earlier:
+        return (f"Pushes to {dest}, a remote added or pointed at a new address earlier in this session: it "
+                "can belong to anyone. Push to a remote the repository already had, or ask the user first.")
+    if "*" in earlier:
+        return (f"Pushes to {dest} after an earlier command in this session set a rule that rewrites remote "
+                "addresses: the commits can reach a repository anyone may own.")
     if UNKNOWN in dest or "://" in dest or HOST_ARG.match(dest) or dest.startswith(("/", ".", "~")) or \
             dest not in ctx.git.remotes() | {"origin"}:
         return (f"Pushes to {dest}, which is not one of the repository's remotes: it can belong to "
@@ -2625,6 +2728,16 @@ def push_stranger(dest: str | None, everything: bool, ctx: Ctx) -> str:
     if everything and dest != "origin":
         return f"Pushes every branch to {dest}, not to origin."
     return ""
+
+
+def push_remote(ctx: Ctx) -> str:
+    """The remote a plain `git push` sends the current branch to (pushRemote, pushDefault, the branch's
+    remote, else origin); git runs only when the session moved a remote."""
+    branch = (ctx.git.try_run("symbolic-ref", "-q", "HEAD") or "").strip()
+    if not branch:
+        return "?"
+    name = ctx.git.try_run("for-each-ref", "--format=%(push:remotename)", "--", branch)
+    return (name or "").strip() or "origin"
 
 
 def git_commit(sub, rest, ctx, stdin):
@@ -2749,10 +2862,15 @@ GIT_LIST_READS = {"tag": {"", "-l", "--list", "-n", "--contains", "--points-at",
 
 def git_listing(sub, rest, ctx, stdin):
     """tag, stash, remote, worktree, reflog, notes: listing is a read, the rest changes the repo."""
+    if sub == "remote":  # git accepts -v/--verbose before the subcommand (git remote -v add ...)
+        while rest and rest[0] in ("-v", "--verbose"):
+            rest = rest[1:]
     first = rest[0] if rest else ""
     if sub == "remote" and first in ("add", "set-url", "rename"):
         _, names = options(rest[1:], {"-t", "-m"})
-        ctx.repointed |= {str(n) for n in names[:2 if first == "rename" else 1]}
+        moved = {str(n) for n in names[:2 if first == "rename" else 1]}
+        ctx.repointed |= moved
+        ctx.moved_remotes |= moved
     if first in GIT_LIST_READS.get(sub, set()):
         ctx.add("read", f"Only shows information (git {sub} {first}).")
     elif sub == "stash" and first in ("drop", "clear"):
@@ -2783,7 +2901,7 @@ def git_config(sub, rest, ctx, stdin):
         return Stage()
     key = pos[0] if pos else ""
     value = pos[1] if len(pos) > 1 else ""
-    repoint(key, ctx)
+    repoint(key, ctx, lasting=True)
     is_alias = key.lower().startswith("alias.")
     if is_alias and value:  # a later `git <alias>` in the same command runs it (#351)
         ctx.git_aliases = {**ctx.git_aliases, key[6:].lower(): value}
@@ -2801,13 +2919,23 @@ PUSH_TARGET_KEY = re.compile(r"(?i)^(?:url\..+\.(?:insteadof|pushinsteadof)|remo
                              r"|branch\..+\.(?:remote|pushremote))$")
 
 
-def repoint(key: str, ctx: Ctx) -> None:
-    """Note a git setting that changes where a later push in the same command goes (#351)."""
+REWRITE_KEY = re.compile(r"(?i)^url\..+\.(?:insteadof|pushinsteadof)$")
+
+
+def repoint(key: str, ctx: Ctx, lasting: bool = False) -> None:
+    """Note a git setting that changes where a later push in the same command goes (#351). A `lasting`
+    one (git config, not git -c) is remembered for the rest of the session too (#357): a remote's
+    address, or a rewrite rule, which can move every remote. Which remote a branch pushes to needs no
+    note: a later push is judged by the remote it names."""
     m = REPOINT_KEY.match(key)
     if m:
         ctx.repointed.add(m.group(1))
+        if lasting:
+            ctx.moved_remotes.add(m.group(1))
     elif PUSH_TARGET_KEY.match(key):
         ctx.repointed.add("*")
+        if lasting and REWRITE_KEY.match(key):
+            ctx.moved_remotes.add("*")
 
 
 def runs_program(key: str, value: str) -> bool:

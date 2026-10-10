@@ -152,9 +152,13 @@ def guarded_homes() -> tuple[str, ...]:
 class Where:
     """Places paths for one project: its root, the home folder and any extra secret globs."""
 
-    def __init__(self, root: str, secret_globs: list[str] | None = None, memory: str = ""):
+    def __init__(self, root: str, secret_globs: list[str] | None = None, memory: str = "",
+                 staged=()):
         self.root = norm(os.path.realpath(root))
         self.memory = memory
+        # files filled with the whole environment or a secret, earlier in the session or in this
+        # command: reading or sending one is reading or sending a secret; writing one again is not (#357)
+        self.staged = set(staged)
         self._trees: tuple[str, ...] | None = None
         self.home = norm(os.path.realpath(os.path.expanduser("~")))
         self.secret_globs = list(secret_globs or [])
@@ -249,7 +253,9 @@ class Where:
             return False
         return any(under(path, d) for d in SYSTEM_DIRS)
 
-    def place(self, path: str | None) -> str:
+    def place(self, path: str | None, writing: bool = False) -> str:
+        """Where `path` is. A file staged with a secret is "secret" to read, and its own place to write
+        or delete (`writing`)."""
         if path is None:
             return "unknown"
         if path in NULL_DEVICES or path.startswith(NULL_PREFIXES):
@@ -258,7 +264,7 @@ class Where:
             return "self"
         if self.is_persistence(path):
             return "persistence"
-        if self.is_secret(path):
+        if self.is_secret(path) or (not writing and any(under(path, s) for s in self.staged)):
             return "secret"
         if self.is_system(path):
             return "system"

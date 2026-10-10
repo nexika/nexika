@@ -9,8 +9,9 @@
     python3 benchmarks/haris/bench.py --save-baseline  record today's results as the baseline
 
 The cases are tests/haris_corpus.tsv (labelled by its expected verdict; the kind is the section it sits
-in) and cases.tsv here (real commands from the agent benchmark and the trial, and prompt-injected ones).
-Every case is only parsed and judged, in a throwaway home and project, never run.
+in) and cases.tsv here (real commands from the agent benchmark and the trial, prompt-injected ones, and
+sessions: several commands judged in order, one verdict for the last). Every case is only parsed and
+judged, in a throwaway home and project, never run; a session step marked ! (git only) also runs there.
 """
 from __future__ import annotations
 
@@ -18,7 +19,9 @@ import argparse
 import hashlib
 import json
 import os
+import shlex
 import statistics
+import subprocess
 import sys
 import tempfile
 import time
@@ -31,6 +34,7 @@ CASES = HERE / "cases.tsv"
 BASELINE = HERE / "baseline.json"
 PROFILES = ("relaxed", "standard", "strict")
 STOPPED, LET_THROUGH = {"ask", "deny"}, {"allow", "pass"}
+STEP = " ⟫ "  # between the steps of a session case
 sys.path.insert(0, str(REPO / "tests"))
 
 import haris_world  # noqa: E402  (puts haris on sys.path)
@@ -63,10 +67,53 @@ def load_cases() -> list[dict]:
         if rest.startswith("@"):
             tool, _, value = rest[1:].partition("\t")
         value = value.replace("↵", "\n").replace("{PLUGIN}", str(haris_world.HARIS_ROOT))
-        out.append({"set": label, "kind": kind, "source": f"benchmarks/haris/cases.tsv:{n}", "tool": tool,
-                    "value": value})
+        case = {"set": label, "kind": kind, "source": f"benchmarks/haris/cases.tsv:{n}", "tool": tool,
+                "value": value}
+        if tool == "session":
+            case["steps"] = session_steps(value, f"cases.tsv:{n}")
+        out.append(case)
     for c in out:
         c["id"] = case_id(c["tool"], c["value"])
+    return out
+
+
+def session_steps(value: str, where: str) -> list[tuple[str, bool]]:
+    """(command, run it after judging?) for each step of a session case. Only git may run, so a case
+    can add a remote but never do harm."""
+    steps = []
+    for step in value.split(STEP):
+        run_it = step.startswith("!")
+        command = step[1:] if run_it else step
+        if not command.strip():
+            raise ValueError(f"{where}: a session has an empty step")
+        if run_it and shlex.split(command)[:1] != ["git"]:
+            raise ValueError(f"{where}: only a git step may run (!git ...), not {command!r}")
+        steps.append((command, run_it))
+    if len(steps) < 2:
+        raise ValueError(f"{where}: a session needs two steps or more, with {STEP.strip()} between them")
+    return steps
+
+
+def judge_sessions(cases: list[dict], runs: list[tuple], base: Path) -> dict:
+    """{(run, case id): (decision, seconds)} for every session case: the steps are judged in order, each
+    run with its own session data, in a project of the case's own (a step may change it); the decision
+    is the last step's. haris remembers what a step did the way its hook does (policy.remember)."""
+    remember = getattr(policy, "remember", None)  # absent in a haris from before #357
+    out = {}
+    for n, c in enumerate(x for x in cases if "steps" in x):
+        _, project = haris_world.build_world(base, f"session-{n}")
+        sessions = {name: {} for name, _ in runs}
+        for i, (command, run_it) in enumerate(c["steps"]):
+            for name, cfg in runs:
+                start = time.perf_counter()
+                d = haris_world.decide(project, "Bash", command, cfg, sessions[name])
+                spent = time.perf_counter() - start
+                if remember:
+                    remember(sessions[name], d)
+                if i == len(c["steps"]) - 1:
+                    out[name, c["id"]] = (d, spent)
+            if run_it:
+                subprocess.run(shlex.split(command), cwd=project, check=True, capture_output=True)
     return out
 
 
@@ -85,7 +132,7 @@ def throwaway_world():
         try:
             home, project = haris_world.build_world(base)
             os.chdir(project)
-            yield home, project
+            yield home, project, base
         finally:
             os.chdir(cwd)
             for k, v in saved.items():
@@ -100,19 +147,27 @@ def run(profiles=PROFILES, unattended: bool = True) -> dict:
     `unattended`, each profile again as in a session nobody attends (#343), under "unattended"."""
     cases = load_cases()
     report = {"cases": len(cases), "profiles": {}, "unattended": {}}
-    with throwaway_world() as (home, project):
+    with throwaway_world() as (home, project, base):
         base_cfg = policy.effective_config(str(project))
         runs = [(p, False) for p in profiles] + ([(p, True) for p in profiles] if unattended else [])
+        configs = {(p, away): dict(base_cfg, profile=p, unattended_why="the benchmark" if away else "")
+                   for p, away in runs}
+        sessions = judge_sessions(cases, list(configs.items()), base)
         for profile, away in runs:
-            cfg = dict(base_cfg, profile=profile, unattended_why="the benchmark" if away else "")
+            cfg = configs[profile, away]
             sets = {s: {"total": 0, "stopped": 0, "by_kind": {}, "cases": []}
                     for s in ("harmful", "ordinary")}
             times = []
             for c in cases:
-                value = haris_world.home_path(c["tool"], c["value"].replace("{PROJECT}", str(project)), home)
-                start = time.perf_counter()
-                d = haris_world.decide(project, c["tool"], value, cfg)
-                times.append(time.perf_counter() - start)
+                if "steps" in c:
+                    d, spent = sessions[(profile, away), c["id"]]
+                else:
+                    value = haris_world.home_path(c["tool"], c["value"].replace("{PROJECT}", str(project)),
+                                                  home)
+                    start = time.perf_counter()
+                    d = haris_world.decide(project, c["tool"], value, cfg)
+                    spent = time.perf_counter() - start
+                times.append(spent)
                 stopped = d.verdict in STOPPED
                 s = sets[c["set"]]
                 kind = s["by_kind"].setdefault(c["kind"], {"total": 0, "stopped": 0})

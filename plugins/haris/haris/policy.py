@@ -40,15 +40,18 @@ CLASS_RANK = {cls: n for n, cls in enumerate(c.TABLE)}  # TABLE lists the classe
 
 class Decision:
     """allow, pass, ask or deny, with the class and reason behind it (a plain class, like Finding).
-    `unattended` is "passed" or "refused" when an ask was settled because nobody could answer it (#343)."""
-    __slots__ = ("verdict", "cls", "reason", "findings", "tainted", "unattended")
+    `unattended` is "passed" or "refused" when an ask was settled because nobody could answer it (#343).
+    `learned` is what the call leaves behind for the rest of the session (#357): {"root", "remotes",
+    "files"}, or {} when nothing."""
+    __slots__ = ("verdict", "cls", "reason", "findings", "tainted", "unattended", "learned")
 
     def __init__(self, verdict: str, cls: str, reason: str, findings: list | None = None,
-                 tainted: bool = False, unattended: str = ""):
+                 tainted: bool = False, unattended: str = "", learned: dict | None = None):
         self.verdict, self.cls, self.reason = verdict, cls, reason
         self.findings = [] if findings is None else findings
         self.tainted = tainted
         self.unattended = unattended
+        self.learned = learned or {}
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Decision):
@@ -211,14 +214,35 @@ def approved(finding: c.Finding, command: str, approvals: list[dict]) -> bool:
 
 def decide(event: dict, cfg: dict, session: dict | None = None,
            approvals: list[dict] | None = None) -> Decision:
-    tool = str(event.get("tool_name") or "")
-    tool_input = event.get("tool_input") if isinstance(event.get("tool_input"), dict) else {}
+    """The verdict on one tool call, with what it leaves behind for the session (Decision.learned)."""
+    session = session or {}
     cwd = os.path.realpath(str(event.get("cwd") or os.getcwd()))
     root = project_root(cwd)
-    memory = memory_folder(str(event.get("transcript_path") or ""))
-    session = session or {}
+    ctx = c.Ctx(Where(root, cfg.get("secret_paths"), memory_folder(str(event.get("transcript_path") or "")),
+                      staged_files(session)), cwd, cfg)
+    repo = repo_key(ctx, root)
+    ctx.session_remotes = frozenset(moved_remotes(session, repo))
+    try:
+        decision = judge(event, cfg, session, approvals, ctx)
+    except Exception as exc:  # the call could not be checked: ask, but still remember what it changed
+        decision = Decision(c.ASK, "error", f"haris hit an internal error ({type(exc).__name__}) and "
+                                            "could not check this, so it asks you instead.")
+    if ctx.moved_remotes or ctx.staged:
+        decision.learned = {"root": repo, "remotes": sorted(ctx.moved_remotes), "files": sorted(ctx.staged)}
+    return decision
+
+
+def repo_key(ctx: c.Ctx, root: str) -> str:
+    """Where remotes moved in the session are remembered: the repository's shared git folder, so linked
+    worktrees of one repository share it (#357). The project root when there is no git folder."""
+    dirs = ctx.git.dirs()
+    return os.path.realpath(dirs[1]) if dirs and dirs[1] else root
+
+
+def judge(event: dict, cfg: dict, session: dict, approvals: list[dict] | None, ctx: c.Ctx) -> Decision:
+    tool = str(event.get("tool_name") or "")
+    tool_input = event.get("tool_input") if isinstance(event.get("tool_input"), dict) else {}
     tainted = int(session.get("taint") or 0) > 0
-    ctx = c.Ctx(Where(root, cfg.get("secret_paths"), memory), cwd, cfg)
     ctx.cautious = tainted
     findings = list(findings_for(tool, tool_input, ctx))
     findings += rule_findings(cfg, ctx.executed)
@@ -334,6 +358,49 @@ def only_build_output(folder: str, where: Where) -> bool:
             if os.path.islink(full) and not under(os.path.realpath(full), folder):
                 return False
     return True
+
+
+SESSION_KEPT = 200
+
+
+def staged_files(session: dict) -> list[str]:
+    """Files filled with the whole environment or a secret earlier in the session (#357)."""
+    files = session.get("staged_files")
+    return [f for f in files if isinstance(f, str) and f.startswith("/")] if isinstance(files, list) else []
+
+
+def moved_remotes(session: dict, root: str) -> list[str]:
+    """Remotes of the repository at `root` added or pointed elsewhere earlier in the session (#357)."""
+    by_root = session.get("moved_remotes")
+    names = by_root.get(root) if isinstance(by_root, dict) else None
+    return [n for n in names if isinstance(n, str)] if isinstance(names, list) else []
+
+
+def remember(data: dict, decision: Decision) -> bool:
+    """Keep in the session's data what this call leaves behind for later ones (#357): the remotes it
+    moved, per repository, and the files it staged a secret in. Names and paths only, never what is in
+    them. True when `data` changed. A call that is asked about counts too: the user may say yes."""
+    learned = decision.learned
+    if not learned:
+        return False
+    changed = False
+    root = str(learned.get("root") or "")
+    names = [n if UNKNOWN not in n else "*" for n in learned.get("remotes") or []]
+    if root and names:
+        by_root = data.get("moved_remotes") if isinstance(data.get("moved_remotes"), dict) else {}
+        before = moved_remotes(data, root)
+        after = (before + [n for n in names if n not in before])[-SESSION_KEPT:]
+        if after != before:
+            data["moved_remotes"] = {**by_root, root: after}
+            changed = True
+    files = learned.get("files") or []
+    if files:
+        before = staged_files(data)
+        after = (before + [f for f in files if f not in before])[-SESSION_KEPT:]
+        if after != before:
+            data["staged_files"] = after
+            changed = True
+    return changed
 
 
 OUTSIDE_ASKS_KEPT = 50
