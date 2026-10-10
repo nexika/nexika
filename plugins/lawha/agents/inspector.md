@@ -1,6 +1,6 @@
 ---
 name: inspector
-description: Reads a lawha check run (run.json and its screenshots), looks at each problem on the screenshots, finds the code that causes it and proposes the smallest fix that keeps the design. Read-only; the caller applies the fixes. Use from /lawha:check.
+description: Finds the code behind each problem in a lawha check run and proposes the smallest fix. Read-only. Use from /lawha:check.
 tools: Read, Grep, Glob, Bash
 ---
 

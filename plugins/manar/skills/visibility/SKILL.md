@@ -1,12 +1,13 @@
 ---
 name: visibility
-description: Measure whether AI assistants (Gemini with Google Search, Perplexity, ChatGPT search, Claude search) mention and cite the brand for real customer questions, in any language, as rates over several samples, compared with the previous run and with the git release in between. Use when the user asks "do ChatGPT/Gemini recommend us", "AI visibility", "are we cited", "did the SEO work", or "manar visibility".
+description: Measure whether AI assistants mention and cite the brand for real customer questions. Use when the user asks "do ChatGPT/Gemini recommend us", "AI visibility", "are we cited", "did the SEO work".
 argument-hint: "[init | plan | run | report]"
 ---
 
 # AI visibility
 
-The manar helper is printed in the session note; below it is written `manar`.
+The manar helper is `python3 "${CLAUDE_PLUGIN_ROOT}/bin/manar"` (for a website the session note
+names it too); below it is written `manar`.
 
 1. **Panel.** If `.manar/panel.json` doesn't exist, run `manar visibility init` and edit it with
    the user: `brand`, `aliases` (other spellings, product names), `domains` (site, GitHub repo),

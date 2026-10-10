@@ -1,12 +1,13 @@
 ---
 name: direct
-description: Give a project a design when the developer cannot picture one - three complete directions (fonts, colours light and dark, spacing, corners, motion, one signature element), checked for contrast, the known "AI look" and sameness, rendered as real screens at phone and desktop, chosen by looking, then turned into the project's Tailwind and shadcn tokens. Use when the user says "design this", "make it look good", "I have no idea how it should look", "pick a style", "lawha direct", "صمم الواجهة", "اقترح تصميماً", or starts a frontend with no design.
+description: Propose three design directions, pick one by looking, and turn it into Tailwind and shadcn tokens. Use when the user says "design this", "make it look good", "pick a style", "صمم الواجهة", "اقترح تصميماً", or starts a frontend with no design.
 argument-hint: "[what the product is] [--kind landing|dashboard]"
 ---
 
 # Three directions, chosen by looking
 
-The helper is named in the session note ("Helper: .../bin/lawha"); below it is written `lawha`.
+The helper is `sh "${CLAUDE_PLUGIN_ROOT}/bin/lawha"` (in a project with a frontend the session note names it
+too); below it is written `lawha`.
 
 0. **Remember first.** With hafiz installed, `hafiz recall "design"` and `hafiz recall "taste"`.
    Also run `lawha direct history` (recent choices, so this project gets something different) and

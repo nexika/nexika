@@ -1,6 +1,6 @@
 ---
 name: warmup
-description: Start-of-session comprehension check. Tests what the learner kept from previous sessions on a topic, estimates their current level, and re-teaches anything missed BEFORE new material. Use at the start of a tutoring session, before any new lesson on a topic that has history, or when the user says "check what I remember", "where was I in my lessons", or "test my level".
+description: Check what the learner kept from past sessions and re-teach what was missed before new material. Use at the start of a tutoring session on a topic with history, or when the user says "check what I remember", "where was I in my lessons".
 argument-hint: "[topic or topic-slug, optional]"
 ---
 
@@ -11,8 +11,8 @@ recent topic with open items in the session context, and ask the learner to conf
 
 ## 1. Gather the history
 
-- Run `python3 <helper> topic <topic-slug>` (the helper path is in the "Prof plugin" session
-  context) to list every concept taught on this topic with its status:
+- Run `python3 <helper> topic <topic-slug>` (`<helper>` is
+  `${CLAUDE_PLUGIN_ROOT}/scripts/prof_store.py`) to list every concept taught on this topic with its status:
   `missed`, `shaky`, `not-checked`, `understood`.
 - Read the most recent report in `~/.claude/nexika/prof/reports/` that covers this topic
   (grep for the slug) - especially "Weak areas & logic gaps" and "Review next time".

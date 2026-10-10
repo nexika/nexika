@@ -275,10 +275,8 @@ def cmd_visibility(args: list[str]) -> int:
 def main(argv: list[str]) -> int:
     cmd, args = (argv[0], argv[1:]) if argv else ("", [])
     if cmd == "hook":
-        print("## manar (Nexika): be found by search engines and AI assistants\n"
-              "/manar:audit, /manar:fix, /manar:visibility. manar helper: "
-              f"python3 {Path(__file__).resolve().parent.parent / 'bin' / 'manar'}")
-        return 0
+        from . import hook
+        return hook.main(sys.stdin.read(), dict(os.environ))
     try:
         if cmd == "audit" and args:
             return cmd_audit(args)

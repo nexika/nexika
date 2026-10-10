@@ -100,6 +100,14 @@ Colours come from the design tokens. See the
 Built for **React, TanStack (Router, Query, Start), Tailwind CSS 4 and shadcn/ui**; the checks work
 on any web page, including plain HTML.
 
+## Quiet in projects without a frontend
+
+lawha's session-start note (about 50 tokens) appears only in a project with a frontend: a
+`package.json` naming a UI library or Tailwind, a frontend config file, an `index.html`, or a
+`.lawha/` folder, in the project folder or one level down. `lawha has-frontend` prints `yes` or
+`no`. The skills work in any project. To turn lawha off in a project entirely, see "Lean sessions"
+in the [main README](../../README.md#lean-sessions-what-each-plugin-adds-and-turning-one-off-per-project).
+
 ## Setup
 
 lawha's engine uses Playwright and Chromium. The first time it is needed, Claude asks you and runs

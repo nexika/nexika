@@ -1,12 +1,13 @@
 ---
 name: system
-description: Read the project's design system - Tailwind theme tokens (@theme or tailwind.config.js) and CSS variables, shadcn/ui components, the project's own React and Vue components with their props, TanStack and Next.js routes, fonts - and report drift (hard-coded colours, arbitrary sizes, left/right utilities that break RTL). Saves .lawha/system.json so new pages reuse the same tokens and components. Use when the user says "what's in our design system", "index the project", "lawha system", "check for design drift", "ما هي مكونات المشروع", or before building a new page in an existing project.
+description: Read the project's design system (tokens, components, routes) and report drift. Use when the user says "what's in our design system", "check for design drift", "ما هي مكونات المشروع", or before building a new page in an existing project.
 argument-hint: "[project folder]"
 ---
 
 # Know the project's design system
 
-The helper is named in the session note ("Helper: .../bin/lawha"); below it is written `lawha`.
+The helper is `sh "${CLAUDE_PLUGIN_ROOT}/bin/lawha"` (in a project with a frontend the session note names it
+too); below it is written `lawha`.
 
 1. **Index.** `lawha index [folder]` (default: the current project). If the engine is not
    installed, ask before `lawha setup` (see the check skill). It writes `.lawha/system.json` and

@@ -1,13 +1,14 @@
 ---
 name: quiz
-description: Quiz the learner on a topic or on a project they are learning, one question at a time, with feedback and a score. Use when the user says "quiz me", "test me", "check my understanding", or "am I ready".
+description: Quiz the learner on a topic or project, one question at a time, with a score. Use when the user says "quiz me", "test me", "check my understanding", or "am I ready".
 argument-hint: "[topic or project area]"
 ---
 
 # Quiz
 
 Topic: $ARGUMENTS (if empty, use the open items and recent topics in the "Prof plugin"
-session context; `python3 <helper> topic <slug>` lists a topic's concepts and statuses).
+session context; `python3 <helper> topic <slug>` lists a topic's concepts and statuses, where
+`<helper>` is `${CLAUDE_PLUGIN_ROOT}/scripts/prof_store.py`).
 
 1. Make 5 questions, easy → hard, mixed types: multiple choice, "predict the output",
    "find the bug", and "explain in your own words". For a project, base them on its real code.

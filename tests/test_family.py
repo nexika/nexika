@@ -143,6 +143,8 @@ def test_prof_still_teaches_a_learner(store, family_profile, capsys):
 
 def test_prof_session_note_asks_once(store, capsys):
     store.set_auto_report(False)
+    store.PROFILE.parent.mkdir(parents=True, exist_ok=True)  # prof speaks only to a learner (#336)
+    store.PROFILE.write_text("# Learner profile\n", encoding="utf-8")
     store.session_start({"session_id": "s1"})
     out = capsys.readouterr().out.strip()
     assert len(out.splitlines()) == 1 and "prof/scripts/prof_family.py role <answer>" in out

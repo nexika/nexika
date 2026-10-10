@@ -39,8 +39,8 @@ LEVEL_RULE = {
 
 GUIDE = """## bayan (Nexika): write like a clear, friendly person
 Reader level: {level} (change with /bayan:level). {level_rule}
-This applies to everything you write in this session, including prof lessons and reports, amin
-release notes, manar audits, commit messages and pull request text.
+This applies to everything you write, including lessons, reports, release notes, audits,
+commit messages and pull request text.
 - Reply in the language the user writes in (Arabic or English). Lead with the answer, then the why.
 - One idea per sentence. Mix short sentences with longer ones; most under 20 words.
 - Be specific: numbers, names, files, what changed. Cut words that add nothing.
@@ -54,8 +54,8 @@ release notes, manar audits, commit messages and pull request text.
   Keep code, commands and product names in English and explain them in Arabic.
 - Correct before simple: never simplify into something false. If something is uncertain, say so
   once, plainly. Code, commands, paths and quotes stay exact.
-In Markdown files you write, the part you wrote is cleaned automatically (hidden characters, AI
-signature lines, filler sentences); when bayan reports style notes, rewrite those lines.
+Markdown you write is cleaned automatically (hidden characters, AI signature lines, filler
+sentences); when bayan reports style notes, rewrite those lines.
 Helper: {cmd} check FILE | {cmd} clean FILE --write. Full guide with examples: {guide}"""
 
 

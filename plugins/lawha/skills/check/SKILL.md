@@ -1,12 +1,13 @@
 ---
 name: check
-description: Check a web page on every screen - six widths from phone to wide desktop, light and dark, LTR and RTL, with reduced motion - and fix what fails. Finds sideways scrolling, clipped or overlapping text, small tap targets, accessibility problems (axe), Tab order against the reading order and missing focus rings, layout shift, motion that ignores "reduce motion", and left/right CSS that breaks Arabic; measures alignment, spacing rhythm, type scale and colour; compares with Figma exports. Use when the user says "check this page", "is it responsive", "does it work on mobile", "lawha check", "افحص الصفحة", "هل الصفحة متجاوبة", or after building or changing a page.
+description: Check a web page at every screen width, light and dark, LTR and RTL, and fix what fails. Use when the user says "check this page", "is it responsive", "does it work on mobile", "افحص الصفحة", "هل الصفحة متجاوبة", or after building or changing a page.
 argument-hint: "[url] [--fix]"
 ---
 
 # Check a page on every screen
 
-The helper is named in the session note ("Helper: .../bin/lawha"); below it is written `lawha`.
+The helper is `sh "${CLAUDE_PLUGIN_ROOT}/bin/lawha"` (in a project with a frontend the session note names it
+too); below it is written `lawha`.
 
 0. **Remember first.** If hafiz is installed (its session card names the helper), run
    `hafiz recall "ui"` and `hafiz recall "design"`: past decisions (a breakpoint, a token, "tables

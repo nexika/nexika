@@ -43,6 +43,36 @@
 
 Restart Claude Code afterwards so the plugin's hooks load.
 
+### Lean sessions: what each plugin adds, and turning one off per project
+
+Claude Code loads every installed plugin's skill and agent descriptions into each session, and each
+plugin's session-start note. Some plugins stay quiet when they have nothing to do:
+
+- **lawha** adds its note only in a project with a frontend: a `package.json` that names a UI library
+  (React, Vue, Svelte, Next.js, Astro, Angular and others) or Tailwind, a frontend config file such as
+  `vite.config.ts` or `tailwind.config.ts`, an `index.html`, or a `.lawha/` folder, in the project
+  folder or one level down (`apps/*` and `packages/*` too). `lawha has-frontend` shows the answer.
+- **manar** adds its note only for a website: a web framework, a static site (Jekyll, an
+  `index.html`), an ASP.NET project with pages, or a `.manar/` folder.
+- **prof** adds its note only when a lesson is due for review, a learner profile exists, or the
+  Nexika profile says you are learning to code.
+
+Their skills still work everywhere. To turn a plugin off in one project, so not even its
+descriptions load, set it to `false` in that project's `.claude/settings.json` (commit it to share
+with the team, or use `.claude/settings.local.json` for yourself):
+
+```json
+{
+  "enabledPlugins": {
+    "lawha@nexika": false,
+    "manar@nexika": false
+  }
+}
+```
+
+For example, lawha and manar off in a backend service, or prof off in a repository where nobody
+is learning. `/plugin` shows what is enabled where.
+
 ## Repository layout
 
 ```

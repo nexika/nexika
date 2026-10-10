@@ -1,6 +1,6 @@
 ---
 name: director
-description: Proposes three complete, distinct design directions for a product (fonts, light and dark palettes, scale, corners, spacing, motion, layout, one signature element) and writes them as directions.json for `lawha direct preview`. Uses the brief, the person's past choices and taste, and any design DNA from reference sites. Use from /lawha:direct.
+description: Proposes three distinct design directions and writes them as directions.json. Use from /lawha:direct.
 tools: Read, Write, Bash
 ---
 

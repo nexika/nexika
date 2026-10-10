@@ -1,12 +1,13 @@
 ---
 name: elevate
-description: Make a working page more beautiful with an art director's eye - looks at the page on phone and desktop, measures alignment, rhythm, type scale, colour and where the eye lands first, proposes a few bold improvements (hierarchy, spacing, type, colour, one signature detail, motion or a Three.js scene where it earns its place), and keeps a change only if a blind judge prefers it side by side. Learns the person's taste from their own picks. Use when the user says "make it beautiful", "it looks boring", "polish this", "elevate", "lawha elevate", "حسّن التصميم", "اجعلها أجمل".
+description: Make a working page more beautiful, keeping only changes a blind judge prefers. Use when the user says "make it beautiful", "it looks boring", "polish this", "حسّن التصميم", "اجعلها أجمل".
 argument-hint: "[url] [--rounds 3]"
 ---
 
 # Elevate a page, and prove it got better
 
-The helper is named in the session note ("Helper: .../bin/lawha"); below it is written `lawha`.
+The helper is `sh "${CLAUDE_PLUGIN_ROOT}/bin/lawha"` (in a project with a frontend the session note names it
+too); below it is written `lawha`.
 Never show or invent a "beauty score": a change is better only when it wins a blind comparison.
 
 0. **Remember first.** `lawha ab taste` (the person's past picks), `.lawha/design.json` (the chosen

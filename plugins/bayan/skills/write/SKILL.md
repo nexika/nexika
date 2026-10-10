@@ -1,6 +1,6 @@
 ---
 name: write
-description: Rewrite a text or file so it reads as clear, friendly and natural, for the chosen reader (no-code, junior or developer), in English or Arabic, without changing any facts. Use when the user says "make this simpler", "humanize this", "rewrite for a non-technical reader", "this sounds like AI", "اكتبها بشكل أبسط", or "bayan write".
+description: Rewrite a text or file to read clear and natural for the chosen reader, in English or Arabic, without changing facts. Use when the user says "make this simpler", "humanize this", "this sounds like AI", "اكتبها بشكل أبسط", or "bayan write".
 argument-hint: "<file or text> [no-code|junior|developer]"
 ---
 

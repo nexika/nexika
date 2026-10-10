@@ -1,13 +1,13 @@
 ---
 name: audit
-description: Audit a website or a built site folder for search engines and AI assistants - indexing, titles and descriptions, canonical, language, structured data, sitemap, robots.txt rules for every AI crawler, llms.txt, client-side rendering, and how quotable the content is - then give a prioritised fix list. Use when the user says "SEO audit", "why don't we show up in Google / ChatGPT / Gemini", "check our site", or "manar audit".
+description: Audit a website or built site folder for search engines and AI assistants, with a prioritised fix list. Use when the user says "SEO audit", "why don't we show up in Google / ChatGPT / Gemini", "check our site", or "manar audit".
 argument-hint: "<URL or built folder>"
 ---
 
 # Audit
 
-The manar helper is printed in the session note ("manar helper: python3 .../bin/manar"); below
-it is written `manar`.
+The manar helper is `python3 "${CLAUDE_PLUGIN_ROOT}/bin/manar"` (for a website the session note
+names it too); below it is written `manar`.
 
 1. Target: $ARGUMENTS. A live URL, or a built folder (`dist/`, `_site/`, `out/`, `wwwroot/`) with
    `--base-url https://the-real-domain` (manar infers it from a CNAME file or the home page's

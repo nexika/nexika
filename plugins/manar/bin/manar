@@ -8,6 +8,13 @@ if sys.argv[1:2] == ["hook"] and os.environ.get("NEXIKA_BACKGROUND") == "1":
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 
+if sys.argv[1:2] == ["hook"]:  # every session: only the light hook module, not the whole CLI
+    from manar import hook  # noqa: E402
+    try:
+        sys.exit(hook.main(sys.stdin.read(), dict(os.environ)))
+    except Exception:  # a hook must never break the session
+        sys.exit(0)
+
 from manar.cli import entry  # noqa: E402
 
 entry()

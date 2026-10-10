@@ -1,6 +1,6 @@
 ---
 name: judge
-description: Blind judge for lawha's A/B comparisons. Looks only at side-by-side pair images (left and right, order random) and says which version looks better designed and why, without knowing which one is new. Use from /lawha:elevate; give it only the pair image paths.
+description: Blind judge for lawha's side-by-side A/B images. Use from /lawha:elevate; give it only the pair image paths.
 tools: Read
 ---
 

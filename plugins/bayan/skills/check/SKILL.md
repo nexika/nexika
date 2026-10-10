@@ -1,6 +1,6 @@
 ---
 name: check
-description: Check a text or file for what makes it hard to read or machine-sounding (filler, stiff phrases, unexplained technical words, long or same-length sentences, hidden characters, AI signature lines) in English and Arabic, line by line. Use when the user says "check this text", "does this sound like AI", "is this clear enough", "راجع النص", or "bayan check".
+description: Check a text or file, line by line, for what makes it hard to read or machine-sounding, in English and Arabic. Use when the user says "check this text", "does this sound like AI", "is this clear enough", "راجع النص", or "bayan check".
 argument-hint: "<file or text> [no-code|junior|developer]"
 ---
 
