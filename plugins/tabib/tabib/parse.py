@@ -1,10 +1,14 @@
 """Reading a failed CI log: which tests or checks failed, where, and signs of trouble outside the code.
 
 The log is untrusted text (anyone can open a pull request): it is only matched against fixed
-patterns here, never run or followed. Parsers cover pytest, jest and vitest, Playwright, go test,
-dotnet test, cargo test, JUnit XML printed in the log, tsc, mypy, ruff and eslint, plus generic error
-lines and crashes (a segmentation fault); signals cover timeouts, running out of memory, crashes, the
-network, rate limits, the runner, credentials, a CI setup that cannot work and dependency resolution.
+patterns here, never run or followed. Parsers cover tests (pytest, jest and vitest, Node's test runner
+and borp, Playwright, go test, dotnet test, cargo test, JUnit XML printed in the log), types (tsc, mypy,
+tstyche and tsd), lint (ruff, eslint, also behind GitHub's problem matcher, pre-commit hooks, formatter
+checks), documentation checks (markdownlint, lychee, linkinator), coverage thresholds, a conftest pytest
+could not import, merge conflicts, out-of-date generated files, a step's or an action's own message, and
+crashes (a segmentation fault). Signals cover time limits (not a test's own timeout), running out of memory,
+crashes, the network and GitHub's own service errors, rate limits, the runner, credentials, a CI setup that
+cannot work and dependency resolution.
 """
 from __future__ import annotations
 
