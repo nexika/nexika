@@ -4,7 +4,8 @@
     python3 benchmarks/haris/bench.py                  the report, per profile, as Markdown
     python3 benchmarks/haris/bench.py --json           the same as JSON
     python3 benchmarks/haris/bench.py --check          exit 1 if a harmful case is missed that the
-                                                       baseline stopped (CI runs this as a test)
+                                                       baseline stopped, in an attended or an
+                                                       unattended session (CI runs this as a test)
     python3 benchmarks/haris/bench.py --save-baseline  record today's results as the baseline
 
 The cases are tests/haris_corpus.tsv (labelled by its expected verdict; the kind is the section it sits
@@ -94,14 +95,16 @@ def throwaway_world():
                     os.environ[k] = v
 
 
-def run(profiles=PROFILES) -> dict:
-    """Judge every case under each profile: who was stopped, who was let through, and how fast."""
+def run(profiles=PROFILES, unattended: bool = True) -> dict:
+    """Judge every case under each profile: who was stopped, who was let through, and how fast. With
+    `unattended`, each profile again as in a session nobody attends (#343), under "unattended"."""
     cases = load_cases()
-    report = {"cases": len(cases), "profiles": {}}
+    report = {"cases": len(cases), "profiles": {}, "unattended": {}}
     with throwaway_world() as (home, project):
         base_cfg = policy.effective_config(str(project))
-        for profile in profiles:
-            cfg = dict(base_cfg, profile=profile)
+        runs = [(p, False) for p in profiles] + ([(p, True) for p in profiles] if unattended else [])
+        for profile, away in runs:
+            cfg = dict(base_cfg, profile=profile, unattended_why="the benchmark" if away else "")
             sets = {s: {"total": 0, "stopped": 0, "by_kind": {}, "cases": []}
                     for s in ("harmful", "ordinary")}
             times = []
@@ -123,7 +126,7 @@ def run(profiles=PROFILES) -> dict:
                     s["cases"].append({"id": c["id"], "source": c["source"], "kind": c["kind"],
                                        "verdict": d.verdict, "class": d.cls, "value": preview(c["value"])})
             times.sort()
-            report["profiles"][profile] = {
+            report["unattended" if away else "profiles"][profile] = {
                 "recall": ratio(sets["harmful"]["stopped"], sets["harmful"]["total"]),
                 "false_alarms": ratio(sets["ordinary"]["stopped"], sets["ordinary"]["total"]),
                 "harmful": sets["harmful"], "ordinary": sets["ordinary"],
@@ -148,11 +151,14 @@ def regressions(report: dict, baseline: dict) -> list[str]:
     whatever a change gains on false alarms (#346). A case the baseline does not know is new: it is
     reported, not held against the change."""
     out = []
-    for profile, result in report["profiles"].items():
+    runs = [(p, r, "") for p, r in report["profiles"].items()]
+    runs += [(p, r, " unattended") for p, r in report.get("unattended", {}).items()]
+    for profile, result, away in runs:
+        # an unattended session must stop every harmful case the attended baseline stopped (#343)
         stopped = set(baseline.get("stopped", {}).get(profile, []))
         for c in result["harmful"]["cases"]:
             if c["id"] in stopped:
-                out.append(f"{profile}: {c['source']} [{c['kind']}] now {c['verdict']}: {c['value']}")
+                out.append(f"{profile}{away}: {c['source']} [{c['kind']}] now {c['verdict']}: {c['value']}")
     return out
 
 
@@ -170,7 +176,8 @@ def to_baseline(report: dict) -> dict:
 
 
 def markdown(report: dict, baseline: dict | None = None) -> str:
-    profiles = report["profiles"]
+    profiles = dict(report["profiles"])
+    profiles.update({f"{p}, unattended": r for p, r in report.get("unattended", {}).items()})
     lines = [f"# haris benchmark ({report['cases']} cases)", "",
              "| | " + " | ".join(profiles) + " |", "|---|" + "---|" * len(profiles)]
 
@@ -178,7 +185,7 @@ def markdown(report: dict, baseline: dict | None = None) -> str:
         lines.append(f"| {label} | " + " | ".join(fn(r, p) for p, r in profiles.items()) + " |")
 
     def was(key, p):
-        old = (baseline or {}).get(key, {}).get(p)
+        old = (baseline or {}).get(key, {}).get(p.split(",")[0])
         return f" (was {old:.1%})" if old is not None else ""
 
     row("Harmful stopped (recall)", lambda r, p: f"{r['harmful']['stopped']}/{r['harmful']['total']} = "

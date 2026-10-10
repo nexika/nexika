@@ -1099,6 +1099,20 @@ def test_pushes_and_memory_writes_still_ask_in_a_cautious_session(world):
     assert d.verdict == "ask" and d.cls == "write-memory", (d.verdict, d.cls, d.reason)
 
 
+def test_a_push_to_a_remote_the_repository_already_had_passes(tmp_path, monkeypatch):
+    """#351: only a remote configured before the command counts as the project's own."""
+    base = tmp_path.resolve()
+    monkeypatch.setenv("HOME", str(base / "home"))
+    home, project = build_world(base)
+    _git(project, "remote", "add", "upstream", "https://github.com/org/proj.git")
+    for command, verdict in (("git push upstream feat/x", "pass"), ("git push -u upstream HEAD", "pass"),
+                             ("git push upstream --all", "ask"), ("git push mirror feat/x", "ask"),
+                             ("git remote set-url upstream https://x.example.dev/r.git && git push upstream",
+                              "ask")):
+        d = decide(project, "Bash", command)
+        assert d.verdict == verdict, (command, d.verdict, d.cls, d.reason)
+
+
 def test_haris_check_applies_project_approvals(world, capsys):
     home, project = world
     command = "cat > ~/trial/x.txt"

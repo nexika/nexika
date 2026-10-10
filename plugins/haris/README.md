@@ -114,6 +114,31 @@ request from you, and for your next 3 messages (1 when the text came from a file
 this repository) sending data out and irreversible remote actions are raised one level (pass
 becomes ask, ask becomes deny).
 
+### Unattended sessions
+
+In `claude -p`, CI or a background session nobody can answer a question, so an ask would end as a
+refusal anyway. haris treats a session as unattended only on a clear signal: Claude Code's own
+`CLAUDE_CODE_SESSION_ATTENDED=0`, or, when Claude Code does not set it, `HARIS_UNATTENDED=1` or
+`CI=true`. A signal set by a project's `.claude/settings*.json` (in the working folder or any
+folder above it, below home) does not count, and an unknown session is attended. There:
+
+- a reversible change inside the project that the profile asks about passes without a question.
+  Today that is one thing, a delete under `strict`, and only when git or a rebuild gives it back: a
+  file git tracks with no uncommitted change, or a build folder (`build`, `dist`, `node_modules`,
+  `__pycache__` ...) with nothing tracked in it and, looked through up to 5000 entries, no link out
+  of it, no repository and no secret (a bigger folder is not lifted). Not a pattern (`find -name`, a glob), a link, a
+  path that does not exist yet, another worktree, `.git`, CI, `.claude` or other files that make
+  tools run commands, and only when the command does nothing else but read. Each one is logged.
+- every other ask is refused by haris itself, with its reason, so the agent learns why: secrets,
+  paths outside the project or unknown, the network, publishing, pushing, destructive git and code
+  haris cannot see. Everything refused today stays refused, and a session marked after a
+  prompt-injection warning passes nothing.
+- at the end of the run haris sums up what passed and how many asks it refused;
+  `haris audit --decision unattended` lists what passed.
+
+`"unattended": "off"` in your settings or a repository's `.haris.json` turns detection off.
+`haris check --unattended COMMAND` shows the unattended decision.
+
 ## Profiles
 
 | | relaxed | standard (default) | strict |
@@ -139,7 +164,8 @@ becomes ask, ask becomes deny).
   "allow": ["make release-notes"],
   "protected_branches": ["staging"],
   "secret_paths": ["*/secrets/*"],
-  "taint_turns": 3
+  "taint_turns": 3,
+  "unattended": "auto"
 }
 ```
 
@@ -147,7 +173,8 @@ becomes ask, ask becomes deny).
 nothing) or `off`. `ask`/`deny` are command prefixes matched after unwrapping (`*` matches one
 word), so `env X=1 nice terraform apply` still matches `terraform apply`. `allow` holds exact
 commands only, and only in your own file. In `.haris.json` only `profile` (stricter),
-`ask`, `deny`, `protected_branches`, `secret_paths` and a larger `taint_turns` count.
+`ask`, `deny`, `protected_branches`, `secret_paths`, a larger `taint_turns` count and
+`"unattended": "off"`.
 
 ## Skills
 
@@ -172,8 +199,8 @@ writes in the same folder outside the project, the ask offers that whole folder 
 
 In `~/.claude/nexika/haris/` (`HARIS_HOME` moves it), owner-only (folders 0700, files 0600):
 `config.json`, `sessions/<id>.json` (taint and session approvals, kept 7 days),
-`approvals.json` (`--project` approvals), `audit.jsonl` (every ask, refusal, approval and
-injection warning; secrets in commands replaced with `[secret]`; rotated at 1 MB) and
+`approvals.json` (`--project` approvals), `audit.jsonl` (every ask, refusal, approval,
+injection warning and ask let pass in an unattended session; secrets in commands replaced with `[secret]`; rotated at 1 MB) and
 `active/<id>`. Nothing is sent anywhere.
 
 ## Working with the other Nexika plugins

@@ -4,7 +4,7 @@ import os
 import sys
 
 # Inside a family background model call (#45) the context hooks stay quiet; the tool guard never does.
-if sys.argv[1:3] in (["hook", "session-start"], ["hook", "user-prompt-submit"]) \
+if sys.argv[1:3] in (["hook", "session-start"], ["hook", "user-prompt-submit"], ["hook", "stop"]) \
         and os.environ.get("NEXIKA_BACKGROUND") == "1":
     sys.exit(0)
 

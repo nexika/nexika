@@ -39,14 +39,16 @@ CLASS_RANK = {cls: n for n, cls in enumerate(c.TABLE)}  # TABLE lists the classe
 
 
 class Decision:
-    """allow, pass, ask or deny, with the class and reason behind it (a plain class, like Finding)."""
-    __slots__ = ("verdict", "cls", "reason", "findings", "tainted")
+    """allow, pass, ask or deny, with the class and reason behind it (a plain class, like Finding).
+    `unattended` is "passed" or "refused" when an ask was settled because nobody could answer it (#343)."""
+    __slots__ = ("verdict", "cls", "reason", "findings", "tainted", "unattended")
 
     def __init__(self, verdict: str, cls: str, reason: str, findings: list | None = None,
-                 tainted: bool = False):
+                 tainted: bool = False, unattended: str = ""):
         self.verdict, self.cls, self.reason = verdict, cls, reason
         self.findings = [] if findings is None else findings
         self.tainted = tainted
+        self.unattended = unattended
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Decision):
@@ -227,17 +229,28 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
                                           "value": normalize(a)} for a in cfg.get("allow", [])]
     index = PROFILE_INDEX.get(cfg.get("profile", "standard"), 1)
     best: tuple[c.Finding, str] | None = None
+    asked: list[c.Finding] = []
     for f in findings:
         verdict = c.TABLE.get(f.cls, (c.ASK,) * 3)[index]
         if tainted and f.cls in c.TAINT_RAISED:
             verdict = {c.ALLOW: c.PASS, c.PASS: c.ASK, c.ASK: c.DENY}.get(verdict, verdict)
         if verdict != c.ALLOW and approved(f, command, approvals):
             verdict = c.ALLOW
+        if verdict == c.ASK:
+            asked.append(f)
         # On a tie the more telling step speaks: the script run, not the `cd` before it (#226).
         if best is None or (c.LEVEL[verdict], CLASS_RANK.get(f.cls, 0)) > \
                 (c.LEVEL[best[1]], CLASS_RANK.get(best[0].cls, 0)):
             best = (f, verdict)
     finding, verdict = best
+    away = str(cfg.get("unattended_why") or "")
+    if verdict == c.ASK and away:  # nobody can answer: pass a reversible change in the project, or refuse
+        from . import unattended
+        if not tainted and unattended.may_pass(asked, findings, lambda p: restorable(p, ctx)):
+            return Decision(c.PASS, finding.cls, readable(unattended.PASS_NOTE.format(why=away) + " "
+                                                          + finding.reason), findings, tainted, "passed")
+        return Decision(c.DENY, finding.cls, readable(finding.reason + unattended.DENY_NOTE.format(why=away)),
+                        findings, tainted, "refused")
     reason = finding.reason
     if tainted and finding.cls in c.TAINT_RAISED and verdict in (c.ASK, c.DENY):
         reason += (" (Raised because this session read text that tried to give Claude orders: "
@@ -265,6 +278,62 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
             kind = "write" if tool in WRITE_TOOLS else "read"
             reason += f" If the user wants this anyway, they can type: /haris:allow {kind} {finding.target}"
     return Decision(verdict, finding.cls, readable(reason), findings, tainted)
+
+
+def inside_project(path: str, where: Where) -> bool:
+    """An ordinary place in this project itself: not the project folder as a whole, .git, CI or tool
+    settings that run commands (.github, .claude, .husky ...), another worktree, or a secret."""
+    path = path.rstrip("/")
+    if path == where.root or not under(path, where.root) or where.place(path) != "project":
+        return False
+    if any(under(path, t) or under(t, path) for t in where.trees()[1:]):
+        return False
+    top = path[len(where.root) + 1:].split("/")[0]
+    return not guarded_inside(path + "/", where.root) and top != ".github"
+
+
+# Folders a build or an install makes again: deleting one loses nothing (#343).
+REGENERATED = {"build", "dist", "node_modules", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache",
+               ".tox", "target", "coverage", "htmlcov", ".next", ".nuxt", ".turbo", ".parcel-cache"}
+
+
+def restorable(path: str, ctx: c.Ctx) -> bool:
+    """A delete target that git or a rebuild gives back, checked on disk now (#343): a file git tracks
+    with no uncommitted change, or a build folder (REGENERATED) with nothing tracked or a repository in
+    it. Never a pattern (`find -name`, a glob), a path that does not exist yet, or a link."""
+    where = ctx.where
+    raw = path.rstrip("/")
+    if not raw or raw.endswith("/_") or UNKNOWN in raw or any(ch in raw for ch in "*?["):
+        return False
+    if not inside_project(raw, where) or os.path.islink(raw) or os.path.realpath(raw) != raw:
+        return False
+    git = ctx.git
+    if os.path.isfile(raw):
+        tracked = git.try_run("ls-files", "--", raw)
+        clean = git.try_run("status", "--porcelain", "--ignored", "--untracked-files=all", "--", raw)
+        return bool(tracked and tracked.strip()) and clean == ""
+    if os.path.isdir(raw) and os.path.basename(raw) in REGENERATED:
+        return git.try_run("ls-files", "--", raw) == "" and only_build_output(raw, where)
+    return False
+
+
+WALK_LIMIT = 5000
+
+
+def only_build_output(folder: str, where: Where) -> bool:
+    """Nothing in the folder that a delete could reach beyond it or lose for good: no link out of it
+    (`find -L` and Windows junctions follow them), no repository, no secret. A folder too big to look
+    through in time is not lifted."""
+    seen = 0
+    for top, dirs, files in os.walk(folder):
+        for name in dirs + files:
+            seen += 1
+            full = os.path.join(top, name)
+            if seen > WALK_LIMIT or name == ".git" or where.is_secret(full):
+                return False
+            if os.path.islink(full) and not under(os.path.realpath(full), folder):
+                return False
+    return True
 
 
 OUTSIDE_ASKS_KEPT = 50

@@ -117,6 +117,7 @@ class Git:
         self.root = root
         self._dirs: tuple[str, str] | None = None
         self._aliases: dict[str, str] | None = None
+        self._remotes: set[str] | None = None
 
     def dirs(self) -> tuple[str, str] | None:
         if self._dirs is None:
@@ -167,6 +168,25 @@ class Git:
                 self._aliases.update(read_aliases(path))
         return self._aliases
 
+    def remotes(self) -> set[str]:
+        """The remotes the repository had before the command: [remote "x"] in its config, and the
+        folders under refs/remotes."""
+        if self._remotes is None:
+            self._remotes = set()
+            dirs = self.dirs()
+            if dirs:
+                try:
+                    with open(os.path.join(dirs[1], "config"), encoding="utf-8") as fh:
+                        self._remotes |= set(REMOTE_SECTION.findall(fh.read()))
+                except (OSError, UnicodeDecodeError):
+                    pass
+                try:
+                    self._remotes |= {d.name for d in os.scandir(os.path.join(dirs[1], "refs", "remotes"))
+                                      if d.is_dir()}
+                except OSError:
+                    pass
+        return self._remotes
+
     def run(self, *args: str) -> str:
         """Read-only git; nothing in the repository's config may make it run a program."""
         return self.try_run(*args) or ""
@@ -185,6 +205,9 @@ class Git:
 
     def dirty(self) -> bool:
         return bool(self.run("status", "--porcelain", "--untracked-files=no").strip())
+
+
+REMOTE_SECTION = re.compile(r'(?m)^\s*\[\s*remote\s+"([^"\n]+)"\s*\]')
 
 
 def read_aliases(path: str) -> dict[str, str]:
@@ -225,6 +248,9 @@ class Ctx:
         self.downloaded: set[str] = set()
         self.written: dict[str, str] = {}  # files this command wrote with known text (scripts it may run)
         self.git_aliases: dict[str, str] = {}
+        # remotes this command added or pointed elsewhere (remote add, set-url, config remote.x.url),
+        # shared with every child; "*" when it changed where any push goes (insteadOf, pushDefault) (#351)
+        self.repointed: set[str] = set()
         self.cautious = False  # the session read text that tried to give orders: computed paths ask
         # loop bodies one command may judge word by word, shared with every child: nested loops would
         # multiply the work, and a slow check is no check (#342)
