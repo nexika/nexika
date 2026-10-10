@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 
 # Most specific first: a runner shutdown or a kill explains a timeout or a cancel printed after it.
-INFRA = ("runner", "oom", "timeout", "rate_limit", "network", "cancelled")
+INFRA = ("runner", "oom", "timeout", "rate_limit", "network", "download", "cancelled")
 PARAMS = re.compile(r"^(.*?)\s*\((.*)\)\s*$")
 
 
@@ -144,7 +144,16 @@ def classify(facts: dict) -> dict:
     evidence += [f"Likely flaky, not the cause: {note}" for note in flaky_notes[:3]]
     if not failures and "setup" in signals:
         evidence.append(f"CI setup: {signals['setup']}")
+        if "input" in signals:   # an input a new major version of an action dropped (#361)
+            evidence.append(f"An action was given an input it does not know, so it ignored it: "
+                            f"{signals['input']}")
         evidence.append("The workflow cannot work as written: a re-run fails the same way.")
+        return {"kind": "setup", "detail": {}, "confidence": "medium", "evidence": evidence}
+    if not failures and "refused" in signals:
+        evidence.append(f"The link checker was refused, not sent to a missing page: {signals['refused']}")
+        evidence.append("Every broken link it reports is a 403 or 429 from a site known to refuse link "
+                        "checkers. A re-run fails the same way: accept 403 and 429 in the checker's "
+                        "settings, or skip those sites.")
         return {"kind": "setup", "detail": {}, "confidence": "medium", "evidence": evidence}
     infra = [k for k in INFRA if k in signals]
     unhappy = [j for j in facts.get("jobs") or []

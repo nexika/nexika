@@ -122,3 +122,45 @@ def test_a_temporary_folder_behind_a_link_changes_nothing(tmp_path, monkeypatch)
     case = next(c for c in bench.load_cases() if c["log"])
     record, _ = bench.diagnose(case)
     assert record["kind"] in bench.KINDS
+
+
+def _triage(source: str) -> dict:
+    case = next(c for c in bench.load_cases() if c["source"] == source)
+    return bench.diagnose(case)[0]
+
+
+def test_npm_10_no_matching_version_is_a_dependency_failure():
+    """express 35053857520 (#361): npm 10 prints 'npm error', not 'npm ERR!'."""
+    record = _triage("express.json:35053857520")
+    assert record["kind"] == "dependency"
+    assert any("No matching version found for proxy-addr@^2.0.8" in e for e in record["evidence"])
+    assert "npm error code ETARGET" in record["errors"]
+
+
+def test_a_package_mirror_that_will_not_download_is_infra():
+    """black 31070601941 (#361): yum could not download the epel mirror's metadata."""
+    record = _triage("black.json:31070601941")
+    assert (record["kind"], record["detail"]) == ("infra", {"signal": "download"})
+    assert any("Failed to download metadata for repo 'epel'" in e for e in record["evidence"])
+
+
+def test_a_setup_action_answered_with_an_html_page_is_infra():
+    """fastify 30849839665 (#361): setup-nsolid's download site answered 403 with an HTML page."""
+    record = _triage("fastify.json:30849839665")
+    assert (record["kind"], record["detail"]) == ("infra", {"signal": "download"})
+    assert any("<html>" in e for e in record["evidence"])
+
+
+def test_a_link_checker_refused_by_a_known_site_is_setup():
+    """fastify 32202758629 (#361): medium.com answers link checkers with 403; the fix allowed 403."""
+    record = _triage("fastify.json:32202758629")
+    assert record["kind"] == "setup"
+    assert any("[403] https://medium.com/" in e for e in record["evidence"])
+
+
+@pytest.mark.parametrize("run", ["30838060511", "30243111728", "30243111708", "30243109738"])
+def test_an_input_the_action_does_not_know_is_quoted_for_setup(run):
+    """black (#361): actions/setup-python 7.0.0 dropped the pip-install input, so nothing was installed."""
+    record = _triage(f"black.json:{run}")
+    assert record["kind"] == "setup"
+    assert any("Unexpected input(s) 'pip-install'" in e for e in record["evidence"])
