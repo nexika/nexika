@@ -2,6 +2,28 @@
 
 All notable changes to itqan are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] - 2026-10-10
+
+### Changed
+- The guard asks before SKIP=<hook> git commit, which skips pre-commit hooks like --no-verify, and protects the stable branch from force pushes by default. (#148)
+- Release lines named like `4.x` or `5.x` and the `next` branch are now protected by default: the guard refuses a force-push to them. The guard also asks before ignore-scripts is turned off in `.npmrc` (removing `ignore-scripts=true`, setting it to `false`, or `npm config set ignore-scripts false`). (#267)
+
+### Fixed
+- The proof now runs a Python project's pre-commit hooks, mypy and lint-style tox environments, lists the checks it found but could not run, and no longer reports passed when a test or lint check was skipped. (#144)
+- The proof runs a Python project's tests with tox -e py when tox.ini defines them, and says the dependencies are not installed, instead of reporting failed tests, when the tests cannot import the project's own package. (#145)
+- The guard now treats a PyPI token, and every other token shape Nexika redacts, as a secret: writing one asks and committing one is refused. Editing .pypirc or .netrc asks like .env. (#146)
+- The guard now checks commands inside bash -c, asks about curl piped to python and about hatch, uv, poetry and flit publish, and no longer asks when grep searches for DROP TABLE. (#147)
+- Learning from corrections now catches "use X, not Y", polite requests (please remove, rather than, shouldn't, back it out) and GitHub suggestion blocks, and no longer treats "no rush", a quoted "never" or "whether X should be" as a correction. (#149)
+- The session note now lists the project's own test and lint commands (tox environments, pre-commit, pytest, ruff), the ones the proof runs, and the python pack no longer suggests ruff ahead of them. (#151)
+- A Node project whose dependencies are not installed (no node_modules) no longer gets a false red proof: its package-script checks are listed as not run, with the install command that matches its lockfile (npm ci, pnpm install --frozen-lockfile, yarn install --immutable, or npm install when there is none). (#228)
+- The proof splits a package `test` script that is a chain (`npm run lint && npm run unit && npm run test:types`) into one check per step, so lint runs once, a failing step no longer hides the next ones, and each step gets its own kind. Package scripts the CI workflows run are no longer invisible: a lint script is run, and another check script (such as a coverage gate) is listed as not run. (#229)
+- Proof checks from package scripts are named by a command that runs: `npm run lint` instead of `npm lint`, which npm does not know (`npm test` keeps its short name). (#230)
+- The Node pack now points to the project's own checks (the session note's Project checks line) before any default command, names the type-test scripts (test:types, typecheck, tsd, tstyche), offers `npx tsc --noEmit` only when a root tsconfig.json exists, and covers node:test, borp, tap and in-process HTTP tests (fastify.inject, supertest). (#231)
+- The guard asks before `git commit -nm` and `-anm`, which skip the hooks like `--no-verify`, on its own and beside haris; `git commit -mn` (message "n") still passes. (#232)
+- The guard reads npm, pnpm and yarn publish from the command's words: `npm --tag next publish`, `pnpm -r publish` and `npm -w a publish` now ask, and `npm publish --dry-run` no longer does. (#233)
+- The correction detector now catches review wording such as "can you avoid ...", "must not", "I prefer X to Y", "prefer X over Y", "please rewrite" and "before committing", and ignores quoted lines (`> ...`) in a pasted review thread, whose words are the other person's. (#234)
+- The guard now applies the rm -r target rules to rimraf, del-cli and shx rm -r, also through npx and npm exec: `npx rimraf ~` is refused like `rm -rf ~`. (#265)
+
 ## [0.3.0] - 2026-10-08
 
 ### Added

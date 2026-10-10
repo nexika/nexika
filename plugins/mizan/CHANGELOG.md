@@ -2,6 +2,29 @@
 
 All notable changes to mizan are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-10-10
+
+### Added
+- The band names tabib's new "CI setup" kind instead of showing a raw key. (#127)
+
+### Fixed
+- When CI fails, the band names every failed workflow, each job with its workflow ("changelog/check, test +3"), instead of one job of one workflow. (#159)
+- Cancelled CI jobs are no longer counted as failures: the band names the real failure, shows how many were cancelled, and says "CI superseded" when every run was cancelled. (#160)
+- CI is found for a detached HEAD and for a commit older than the branch's last 20 runs (read by commit), and a detached HEAD no longer names you as the one who started it. (#161)
+- One gh error no longer erases a known CI result or PR list: the last good result stays (dimmed), and the band says "gh: rate limited" or "gh: timed out". (#162)
+- Names in the band: a fork pull request's branch shows the PR author's name (the same as in the PR list), bots show as "dependabot" instead of "app/dependabot", and titles like Mr. or Dr. are skipped when taking a first name. (#163)
+- "CI running" shows the time left on a fork's branch too: the usual duration comes from the branch's other runs, or from the workflow's recent runs. (#164)
+- The band names tabib's new code failures (a failed check, a merge conflict, a generated file out of date) in English and Arabic, and a kind it does not know yet shows as failures instead of a raw key. (#208)
+- CI whose workflows wait for a maintainer's approval now shows "CI waiting for approval" (and "CI not run: approval expired" after GitHub's 30 days) instead of passed or failed. (#243)
+- Only the commit's CI counts (push, pull_request and merge_group runs): monthly schedule jobs, Copilot reviews, dependabot updates and pull_request_target runs such as a labeler or a post-merge backport no longer make CI passed or failed; a PR where only those ran shows "no CI yet". (#244)
+- A workflow re-run at the same commit (a title check after a title edit) replaces the old run: the old red run no longer keeps CI failed. (#245)
+- Jobs allowed to fail (continue-on-error) in a workflow run that succeeded no longer show as CI failures on a PR; the report lists them as "allowed to fail". (#246)
+- CI running keeps showing when two workflows share a name (fastify has two called ci): the time left is looked up by workflow id, and a failed lookup only drops the time left. (#247)
+- A fork's pull request checked out under another name (`gh pr checkout` calls a fork's main `<owner>/main`) is linked again: when no PR matches the branch name, the one open PR at this exact commit is used. (#248)
+- Names: a GitHub profile name that is the word "undefined" (or "null", "none") is replaced by the login, and a branch started by a bot is credited to "dependabot", not "dependabot[bot]", as in the PR list. (#249)
+- `mizan refresh` no longer calls gh or glab when the network is off (MIZAN_OFFLINE=1 or "network": false); it says so and exits. (#250)
+- For a CI run with no jobs or log, the band says "no jobs or log" instead of sending you to a log that does not exist. (#331)
+
 ## [0.2.0] - 2026-10-08
 
 ### Added
