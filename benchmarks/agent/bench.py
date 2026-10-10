@@ -171,6 +171,9 @@ def grade_all(pilot, base, args):
     out = [{"instance_id": k[0], "arm": k[1], "run": k[2], **v} for k, v in sorted(grades.items())]
     (base / "grades.json").write_text(json.dumps(out, indent=1) + "\n")
     say(f"graded {len(out)} runs; resolved {sum(g['resolved'] for g in out)}")
+    missing = [g for g in out if not g["graded"] and diffs[(g["instance_id"], g["arm"], g["run"])].strip()]
+    if missing:
+        say(f"WARNING: {len(missing)} non-empty diffs have no report (harness error): see grading/logs")
 
 
 def cmd_validate(args):

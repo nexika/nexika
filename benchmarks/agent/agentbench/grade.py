@@ -5,6 +5,7 @@ FAIL_TO_PASS tests decide "resolved", PASS_TO_PASS tests that fail are regressio
 """
 
 import json
+import re
 import subprocess
 from collections import defaultdict
 from pathlib import Path
@@ -13,7 +14,9 @@ DATASET = "SWE-bench/SWE-bench_Verified"
 
 
 def model_label(pilot, arm, run):
-    return f"{pilot}__{arm}__r{run}"
+    """The harness names its docker containers after this label, and docker allows only
+    [a-zA-Z0-9_.-]: "haris+barq" becomes "haris-barq"."""
+    return re.sub(r"[^a-zA-Z0-9_.-]", "-", f"{pilot}__{arm}__r{run}")
 
 
 def predictions(metas, diffs, pilot):
