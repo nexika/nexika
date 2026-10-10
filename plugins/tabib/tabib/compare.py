@@ -26,7 +26,8 @@ ECOSYSTEMS = {
     "dotnet": re.compile(r"(?:^|/)(?:packages\.lock\.json|[^/]+\.csproj|Directory\.Packages\.props)$"),
 }
 FRAMEWORK_ECOSYSTEM = {"pytest": "python", "ruff": "python", "mypy": "python", "jest": "node",
-                       "eslint": "node", "tsc": "node", "go": "go", "cargo": "rust", "dotnet": "dotnet"}
+                       "eslint": "node", "tsc": "node", "mocha": "node", "go": "go", "cargo": "rust",
+                       "dotnet": "dotnet"}
 
 
 def git(cwd: str, *args: str, timeout: float = 30) -> tuple[int, str]:

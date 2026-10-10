@@ -1,3 +1,4 @@
+Node.js 20 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:45.7598332Z   1) req
 Node.js 20 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:45.7598530Z        .acceptsEncodings(encoding)
 Node.js 20 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:45.7598894Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 20 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:45.7599170Z 
@@ -55,6 +56,7 @@ Node.js 20 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:45.8212071Z Post job cl
 Node.js 20 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:45.8729468Z [command]/usr/bin/git version
 Node.js 20 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:45.8758195Z git version 2.55.0
 Node.js 20 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:45.9494825Z Cleaning up orphan processes
+Node.js 19 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:45.8439992Z   1) req
 Node.js 19 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:45.8440563Z        .acceptsEncodings(encoding)
 Node.js 19 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:45.8441132Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 19 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:45.8441425Z 
@@ -112,6 +114,7 @@ Node.js 19 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:45.9017997Z Post job cl
 Node.js 19 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:45.9637729Z [command]/usr/bin/git version
 Node.js 19 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:45.9665261Z git version 2.55.0
 Node.js 19 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.0302643Z Cleaning up orphan processes
+Node.js 21 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.6947898Z   1) req
 Node.js 21 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.6948295Z        .acceptsEncodings(encoding)
 Node.js 21 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.6948940Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 21 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.6949276Z 
@@ -169,6 +172,7 @@ Node.js 21 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.7783372Z Post job cl
 Node.js 21 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.8679435Z [command]/usr/bin/git version
 Node.js 21 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.8725369Z git version 2.55.0
 Node.js 21 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.9748874Z Cleaning up orphan processes
+Node.js 20 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:09.1415649Z   1) req
 Node.js 20 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:09.1416043Z        .acceptsEncodings(encoding)
 Node.js 20 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:09.1416675Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 20 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:09.1417138Z 
@@ -226,6 +230,7 @@ Node.js 20 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:09.2906182Z Post job c
 Node.js 20 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:09.4654178Z [command]"C:\Program Files\Git\bin\git.exe" version
 Node.js 20 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:09.4938971Z git version 2.55.0.windows.5
 Node.js 20 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:11.3163928Z Cleaning up orphan processes
+Node.js 22 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:48.5009544Z   1) req
 Node.js 22 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:48.5010342Z        .acceptsEncodings(encoding)
 Node.js 22 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:48.5010877Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 22 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:48.5011412Z 
@@ -283,6 +288,7 @@ Node.js 22 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:48.5878166Z Post job cl
 Node.js 22 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:48.6731010Z [command]/usr/bin/git version
 Node.js 22 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:48.6779836Z git version 2.55.0
 Node.js 22 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:48.7745951Z Cleaning up orphan processes
+Node.js 19 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:24.5096259Z   1) req
 Node.js 19 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:24.5096515Z        .acceptsEncodings(encoding)
 Node.js 19 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:24.5097043Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 19 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:24.5097311Z 
@@ -340,6 +346,7 @@ Node.js 19 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:24.6634995Z Post job c
 Node.js 19 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:24.8508611Z [command]"C:\Program Files\Git\bin\git.exe" version
 Node.js 19 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:24.8813979Z git version 2.55.0.windows.5
 Node.js 19 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:26.6802207Z Cleaning up orphan processes
+Node.js 18 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:51.0202540Z   1) req
 Node.js 18 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:51.0203027Z        .acceptsEncodings(encoding)
 Node.js 18 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:51.0204131Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 18 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:51.0204489Z 
@@ -397,6 +404,7 @@ Node.js 18 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:51.1128126Z Post job cl
 Node.js 18 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:51.1997561Z [command]/usr/bin/git version
 Node.js 18 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:51.2040335Z git version 2.55.0
 Node.js 18 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:51.3061559Z Cleaning up orphan processes
+Node.js 26 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.8038271Z   1) req
 Node.js 26 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.8038703Z        .acceptsEncodings(encoding)
 Node.js 26 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.8039288Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 26 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.8039532Z 
@@ -453,6 +461,7 @@ Node.js 26 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.8659891Z Post job cl
 Node.js 26 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.9394386Z [command]/usr/bin/git version
 Node.js 26 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.9423929Z git version 2.55.0
 Node.js 26 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:50.0135419Z Cleaning up orphan processes
+Node.js 18 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:12.5218676Z   1) req
 Node.js 18 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:12.5219111Z        .acceptsEncodings(encoding)
 Node.js 18 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:12.5219794Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 18 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:12.5220156Z 
@@ -510,6 +519,7 @@ Node.js 18 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:12.6654335Z Post job c
 Node.js 18 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:12.8802226Z [command]"C:\Program Files\Git\bin\git.exe" version
 Node.js 18 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:12.9199722Z git version 2.55.0.windows.5
 Node.js 18 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:14.7260030Z Cleaning up orphan processes
+Node.js 23 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:17.9055792Z   1) req
 Node.js 23 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:17.9056179Z        .acceptsEncodings(encoding)
 Node.js 23 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:17.9057007Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 23 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:17.9057581Z 
@@ -567,6 +577,7 @@ Node.js 23 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:18.0512315Z Post job c
 Node.js 23 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:18.2582415Z [command]"C:\Program Files\Git\bin\git.exe" version
 Node.js 23 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:18.2908653Z git version 2.55.0.windows.5
 Node.js 23 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:20.0863718Z Cleaning up orphan processes
+Node.js 24 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:44.7877826Z   1) req
 Node.js 24 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:44.7878305Z        .acceptsEncodings(encoding)
 Node.js 24 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:44.7879088Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 24 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:44.7879637Z 
@@ -623,6 +634,7 @@ Node.js 24 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:44.8901057Z Post job cl
 Node.js 24 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:44.9770988Z [command]/usr/bin/git version
 Node.js 24 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:44.9816106Z git version 2.55.0
 Node.js 24 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:45.0817948Z Cleaning up orphan processes
+Node.js 26 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:17.5115734Z   1) req
 Node.js 26 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:17.5115985Z        .acceptsEncodings(encoding)
 Node.js 26 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:17.5116470Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 26 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:17.5116714Z 
@@ -679,6 +691,7 @@ Node.js 26 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:17.6275980Z Post job c
 Node.js 26 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:17.7646032Z [command]"C:\Program Files\Git\bin\git.exe" version
 Node.js 26 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:17.7870583Z git version 2.55.0.windows.5
 Node.js 26 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:19.1819663Z Cleaning up orphan processes
+Node.js 21 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:21.7393350Z   1) req
 Node.js 21 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:21.7393703Z        .acceptsEncodings(encoding)
 Node.js 21 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:21.7394375Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 21 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:21.7394845Z 
@@ -736,6 +749,7 @@ Node.js 21 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:21.8806255Z Post job c
 Node.js 21 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:22.0819969Z [command]"C:\Program Files\Git\bin\git.exe" version
 Node.js 21 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:22.1108144Z git version 2.55.0.windows.5
 Node.js 21 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.9295447Z Cleaning up orphan processes
+Node.js 23 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:51.4775485Z   1) req
 Node.js 23 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:51.4775906Z        .acceptsEncodings(encoding)
 Node.js 23 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:51.4776637Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 23 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:51.4777127Z 
@@ -793,6 +807,7 @@ Node.js 23 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:51.5588074Z Post job cl
 Node.js 23 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:51.6440758Z [command]/usr/bin/git version
 Node.js 23 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:51.6477402Z git version 2.55.0
 Node.js 23 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:51.7427012Z Cleaning up orphan processes
+Node.js 25 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.6474762Z   1) req
 Node.js 25 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.6475260Z        .acceptsEncodings(encoding)
 Node.js 25 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.6475870Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 25 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.6476187Z 
@@ -849,6 +864,7 @@ Node.js 25 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.7350398Z Post job cl
 Node.js 25 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.8154998Z [command]/usr/bin/git version
 Node.js 25 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.8200576Z git version 2.55.0
 Node.js 25 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:49.9158727Z Cleaning up orphan processes
+Node.js 22 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:10.5652207Z   1) req
 Node.js 22 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:10.5652754Z        .acceptsEncodings(encoding)
 Node.js 22 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:10.5653351Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 22 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:10.5653799Z 
@@ -906,6 +922,7 @@ Node.js 22 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:10.7118942Z Post job c
 Node.js 22 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:10.9604903Z [command]"C:\Program Files\Git\bin\git.exe" version
 Node.js 22 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:11.0005146Z git version 2.55.0.windows.5
 Node.js 22 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:12.9406599Z Cleaning up orphan processes
+Node.js 25 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:12.0072912Z   1) req
 Node.js 25 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:12.0073940Z        .acceptsEncodings(encoding)
 Node.js 25 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:12.0074667Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 25 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:12.0075162Z 
@@ -962,6 +979,7 @@ Node.js 25 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:12.3236892Z Post job c
 Node.js 25 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:12.5430353Z [command]"C:\Program Files\Git\bin\git.exe" version
 Node.js 25 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:12.5744927Z git version 2.55.0.windows.5
 Node.js 25 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:14.4349261Z Cleaning up orphan processes
+Node.js 24 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:34.3208008Z   1) req
 Node.js 24 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:34.3208239Z        .acceptsEncodings(encoding)
 Node.js 24 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:34.3208606Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 24 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:34.3208825Z 

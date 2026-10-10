@@ -606,6 +606,88 @@ def crash(lines: list[str]) -> dict | None:
     return failure
 
 
+# ------------------------------------------------------------------ mocha (#360)
+# The spec and dot reporters end with an "N failing" block: "  1) suite", deeper "suite" lines, the test's
+# title ending in ":" (old mocha puts it all on the numbered line), the error, then the stack.
+MOCHA_ENTRY = re.compile(r"^( {1,8})(\d+)\) (\S.*)$")
+MOCHA_TITLE = re.compile(r"^(\s+)(\S.*):\s*$")
+MOCHA_AT = re.compile(r"^\s*at ")
+# The TAP reporter: "not ok 2 suite title" (node:test's TAP puts " - " before the name, and YAML after it).
+MOCHA_TAP = re.compile(r"^not ok \d+ (?!- )(\S.*?)\s*$")
+MOCHA_TAP_END = re.compile(r"^(?:(?:not )?ok \d+\b|# |\d+\.\.\d+)")
+
+
+def _indent(line: str) -> int:
+    return len(line) - len(line.lstrip(" "))
+
+
+def _mocha_failure(test: str, body: list[str]) -> dict:
+    """The message is the first line of the body; the place, the first stack frame in the project."""
+    message = next((x.strip() for x in body if x.strip()), "")
+    message = message[len("Uncaught "):] if message.startswith("Uncaught ") else message
+    file, number = "", 0
+    for line in body:
+        if MOCHA_AT.match(line) and (m := NODE_FRAME.search(line.replace("\\", "/"))):
+            path = _checkout_path(m.group(1))
+            if "/" in path and not FOREIGN.search(path):   # "net.js" is Node's own module
+                file, number = path, int(m.group(2))
+                break
+    return _failure("mocha", "tests", test, file, number, message)
+
+
+def _mocha_title(lines: list[str], i: int) -> list[str] | None:
+    """The suites and title of the failure whose title is at line i: the shallower lines above it, up to
+    its number. None when line i is no title, or no number is above it."""
+    if MOCHA_AT.match(lines[i]) or not (m := MOCHA_TITLE.match(lines[i])):
+        return None
+    after = next((x for x in lines[i + 1:i + 4] if x.strip()), "")
+    if not after.startswith("  "):
+        return None   # a title is followed by its indented error
+    if e := MOCHA_ENTRY.match(lines[i]):   # old mocha: "  1) suite title:" on one line
+        return [e.group(3)[:-1].rstrip()]
+    names, depth = [m.group(2)], len(m.group(1))
+    for j in range(i - 1, max(i - 8, -1), -1):
+        above = lines[j]
+        if not above.strip() or _indent(above) >= depth or above.rstrip().endswith(":"):
+            return None
+        depth = _indent(above)
+        if e := MOCHA_ENTRY.match(above):
+            return [e.group(3), *names]
+        names.insert(0, above.strip())
+    return None
+
+
+def mocha(lines: list[str]) -> list[dict]:
+    """mocha's failures: each test or hook in the 'N failing' block with its suites, message and the
+    first frame in the project; else the TAP reporter's 'not ok' lines."""
+    found: list[dict] = []
+    titles = [(i, names) for i, line in enumerate(lines)
+              if line.rstrip().endswith(":") and (names := _mocha_title(lines, i))]
+    ends = [i for i, _ in titles[1:]] + [len(lines)] if titles else []
+    for (i, names), end in zip(titles, ends, strict=True):
+        body, stack = [], False
+        for line in lines[i + 1:min(end, i + 200)]:
+            if (line.startswith("##[") or MOCHA_ENTRY.match(line)
+                    or (stack and line.strip() and not _indent(line))):
+                break   # the next failure, or the end of the stack
+            stack = stack or bool(MOCHA_AT.match(line))
+            body.append(line)
+        found.append(_mocha_failure(" > ".join(names), body))
+    if found:
+        return found
+    for i, line in enumerate(lines):
+        if m := MOCHA_TAP.match(line):
+            body = []
+            for x in lines[i + 1:i + 200]:
+                if MOCHA_TAP_END.match(x) or x.startswith("##["):
+                    break
+                body.append(x)
+            if body and body[0].strip() == "---":
+                continue   # YAML diagnostics: node:test's TAP or another runner's, not mocha's
+            found.append(_mocha_failure(m.group(1), body))
+    return found
+
+
 # A test runner's own time limit for one test (#253): node:test, jest, pytest-timeout.
 TEST_TIMEOUT = re.compile(r"test timed out after \d|Exceeded timeout of \d|^(?:Failed: )?Timeout >\s?\d")
 
@@ -725,6 +807,7 @@ def failures(lines: list[str]) -> list[dict]:
     found += type_tests(lines)
     found += coverage(lines)
     found += node_test(lines)
+    found += mocha(lines)
     found += doc_checks(lines)
     for block in junit_blocks(lines):
         found += junit_xml(block)
