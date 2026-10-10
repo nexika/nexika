@@ -188,6 +188,35 @@ def test_info_keeps_a_root_node_project_first(project, barq_run):
     assert "test   npm test   [node (npm)]" in out
 
 
+def test_node_test_command_skips_a_script_that_lints_first(project, barq_run):
+    # #277 (decided half): fastify's `npm test` runs eslint before the tests, so one lint error
+    # hid the whole suite. A script that runs test code and no linter is the test command.
+    scripts = {"lint": "npm run lint:eslint", "lint:eslint": "eslint", "unit": "borp",
+               "test:types": "tstyche", "test": "npm run lint && npm run unit && npm run test:types",
+               "test:ci": "npm run unit && npm run test:types"}
+    (project / "package.json").write_text(json.dumps({"scripts": scripts}))
+    _, out = barq_run("info")
+    assert "test   npm run test:ci   [node (npm)]" in out
+    assert "lint   npm run lint   [node (npm)]" in out
+
+
+@pytest.mark.parametrize("scripts, expected", [
+    ({"test": "jest"}, "npm test"),
+    ({"test": "node --test"}, "npm test"),
+    ({"test": "eslint . && mocha"}, "npm test"),  # mixed, but no lint-free script exists
+    ({"test": "eslint .", "spec": "node tests/run.js"}, "npm run spec"),
+    ({"test": "echo \"Error: no test specified\" && exit 1"}, None),
+    ({"test": "standard", "check": "node check.js"}, "npm run check"),  # check.js uses node:test
+    ({"test": "npm run lint", "lint": "eslint ."}, None),
+])
+def test_node_test_script_must_run_test_code(project, barq_run, scripts, expected):
+    (project / "check.js").write_text("const test = require('node:test')\ntest('x', () => {})\n")
+    (project / "package.json").write_text(json.dumps({"scripts": scripts}))
+    _, out = barq_run("info")
+    line = next(ln for ln in out.split("\n") if ln.strip().startswith("test "))
+    assert line.split("[")[0].strip() == f"test   {expected or '-'}"
+
+
 def test_info_finds_pre_commit_tox_and_the_build_backend(project, barq_run):
     # #167: on psf/black, info said lint - and build -, and listed docs and fixture pyprojects
     (project / "pyproject.toml").write_text(

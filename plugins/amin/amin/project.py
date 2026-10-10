@@ -13,10 +13,11 @@ from __future__ import annotations
 import datetime
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
-SEMVER = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:-rc\.(\d+))?$")   # 1.3.0 or a release candidate 1.3.0-rc.2
+# 1.3.0, or a SemVer prerelease such as 1.3.0-rc.2, 6.0.0-alpha.4 or 6.0.0-beta.0
+SEMVER = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$")
 TYPES = ("breaking", "added", "changed", "deprecated", "removed", "fixed", "security")
 MAJOR_TYPES = {"breaking", "removed"}
 MINOR_TYPES = {"added", "changed", "deprecated"}
@@ -79,6 +80,14 @@ class Project:
     changelog: str
     tag_format: str
     fragments: str           # repo-relative folder holding this project's notes
+    # .amin.json {"file": "fastify.js", "pattern": "const VERSION = '(.*)'"}: file -> its pattern
+    version_patterns: dict[str, str] = field(default_factory=dict)
+
+    def read_version(self, root: Path, rel: str) -> str | None:
+        return read_version(root, rel, self.version_patterns.get(rel))
+
+    def write_version(self, root: Path, rel: str, version: str) -> None:
+        write_version(root, rel, version, self.version_patterns.get(rel))
 
     @property
     def github_changelog(self) -> bool:
@@ -95,17 +104,32 @@ class Project:
 # ---------------------------------------------------------------- semantic versions
 
 
-def parse(version: str) -> tuple[int, int, int, int, int]:
-    """A sortable key: (major, minor, patch, 0 for a release candidate else 1, rc number)."""
+def parse(version: str) -> tuple:
+    """A sortable key with SemVer precedence: 6.0.0-alpha.4 < 6.0.0-alpha.10 < 6.0.0-beta.0 < 6.0.0-rc.1
+    < 6.0.0. (major, minor, patch, 0 for a prerelease else 1, the prerelease identifiers)."""
     m = SEMVER.match(version.strip())
     if not m:
         raise ValueError(f"not a MAJOR.MINOR.PATCH version: {version!r}")
-    rc = m.group(4)
-    return int(m.group(1)), int(m.group(2)), int(m.group(3)), 0 if rc else 1, int(rc or 0)
+    pre = m.group(4)
+    ids = tuple((0, int(x), "") if x.isdigit() else (1, 0, x) for x in pre.split(".")) if pre else ()
+    return int(m.group(1)), int(m.group(2)), int(m.group(3)), 0 if pre else 1, ids
 
 
 def is_prerelease(version: str) -> bool:
-    return "-rc." in version
+    m = SEMVER.match(version.strip())
+    return bool(m and m.group(4))
+
+
+def final(version: str) -> str:
+    """The release a prerelease leads to: 6.0.0-alpha.4 -> 6.0.0."""
+    return "{}.{}.{}".format(*parse(version)[:3])
+
+
+def prerelease_label(version: str) -> tuple[str, int] | None:
+    """("alpha", 4) for 6.0.0-alpha.4 (also 6.0.0-alpha4); None for a final or another shape."""
+    m = SEMVER.match(version.strip())
+    pre = re.fullmatch(r"([A-Za-z-]+)\.?(\d+)", m.group(4) or "") if m else None
+    return (pre.group(1), int(pre.group(2))) if pre else None
 
 
 def bump(version: str, types: set[str]) -> tuple[str, str]:
@@ -124,6 +148,28 @@ def bump(version: str, types: set[str]) -> tuple[str, str]:
     if types:
         return f"{major}.{minor}.{patch + 1}", "fixes only: patch bump"
     return version, "no notes: no release"
+
+
+def next_version(last: str, types: set[str], last_final: str | None = None,
+                 current: str | None = None) -> tuple[str, str]:
+    """(next version, reason) after the release `last`. On a prerelease line (the version file or the
+    last tag is 6.0.0-alpha.4) the next one continues the line (6.0.0-alpha.5); a release candidate is
+    promoted (1.3.0-rc.2 -> 1.3.0), as is any line whose notes need more than the line's release."""
+    start = last
+    if current and SEMVER.match(current) and is_prerelease(current) and parse(current) > parse(last):
+        start = current
+    if not is_prerelease(start):
+        return bump(start, types)
+    base, label = final(start), prerelease_label(start)
+    required = bump(last_final, types)[0] if last_final else base
+    if parse(required) > parse(base):
+        if label and label[0] != "rc":
+            return f"{required}-{label[0]}.1", f"the notes need {required}: a new {label[0]} line"
+        return required, f"the notes need {required}"
+    if label is None or label[0] == "rc":
+        return base, f"promotes {start} to {base}"
+    return (f"{base}-{label[0]}.{label[1] + 1}",
+            f"next {label[0]} of {base} (or promote: NAME={base}, or --pre=beta)")
 
 
 def is_calver(versions: list[str], today: datetime.date) -> bool:
@@ -190,8 +236,40 @@ def _pattern(path: str) -> re.Pattern:
     raise ValueError(f"don't know how to read a version from {path}")
 
 
-def _patterns(root: Path, rel: str) -> list[tuple[re.Pattern, int]]:
+class _CustomVersion:
+    """A pattern from .amin.json whose one group is the version, e.g. `const VERSION = '(.*)'`."""
+
+    class _Match:
+        def __init__(self, m: re.Match):
+            self.m = m
+
+        def group(self, n: int) -> str:
+            return self.m.group(1) if n == 2 else ""
+
+    def __init__(self, pattern: str):
+        try:
+            self.rx = re.compile(pattern, re.M)
+        except re.error as exc:
+            raise ValueError(f"bad version pattern {pattern!r}: {exc}") from None
+        if self.rx.groups != 1:
+            raise ValueError(f"a version pattern needs exactly one group (the version): {pattern!r}")
+
+    def search(self, text: str):
+        m = self.rx.search(text)
+        return self._Match(m) if m else None
+
+    def subn(self, repl, text: str, count: int = 0) -> tuple[str, int]:
+        found = list(self.rx.finditer(text))
+        found = found[:count] if count else found
+        for m in reversed(found):
+            text = text[: m.start(1)] + repl(self._Match(m)) + text[m.end(1):]
+        return text, len(found)
+
+
+def _patterns(root: Path, rel: str, custom: str | None = None) -> list[tuple[re.Pattern, int]]:
     """(pattern, how many matches to replace; 0 = all) for a version file."""
+    if custom:
+        return [(_CustomVersion(custom), 1)]
     name = Path(rel).name
     if name == "Cargo.lock":
         return [(_cargo_lock_pattern(_cargo_names((root / rel).parent)), 0)]
@@ -200,18 +278,20 @@ def _patterns(root: Path, rel: str) -> list[tuple[re.Pattern, int]]:
     return [(_pattern(rel), 1)]
 
 
-def read_version(root: Path, rel: str) -> str | None:
+def read_version(root: Path, rel: str, pattern: str | None = None) -> str | None:
+    """The version in a file; pattern: a regex whose one group is the version (a bad one raises)."""
+    custom = _patterns(root, rel, pattern) if pattern else None
     try:
-        m = _patterns(root, rel)[0][0].search((root / rel).read_text(encoding="utf-8"))
+        m = (custom or _patterns(root, rel))[0][0].search((root / rel).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
     return m.group(2).strip() if m else None
 
 
-def write_version(root: Path, rel: str, version: str) -> None:
+def write_version(root: Path, rel: str, version: str, custom: str | None = None) -> None:
     path = root / rel
     content = path.read_text(encoding="utf-8")
-    for pattern, limit in _patterns(root, rel):
+    for pattern, limit in _patterns(root, rel, custom):
         content, count = pattern.subn(lambda m: m.group(1) + version + m.group(3), content, count=limit)
         if not count:
             raise ValueError(f"no version field found in {rel}")
@@ -235,9 +315,12 @@ def _from_config(entries: list[dict]) -> list[Project]:
         name, path = str(item["name"]), str(item.get("path", "."))
         single = path in (".", "")
         folder = path.rstrip("/")
+        files = [str(f["file"]) if isinstance(f, dict) else str(f) for f in item["version_files"]]
+        patterns = {str(f["file"]): str(f["pattern"]) for f in item["version_files"]
+                    if isinstance(f, dict) and f.get("pattern")}
         projects.append(Project(
             name=name, path="." if single else folder,
-            version_files=list(item["version_files"]),
+            version_files=files, version_patterns=patterns,
             changelog=item.get("changelog") or ("CHANGELOG.md" if single else f"{folder}/CHANGELOG.md"),
             tag_format=item.get("tag") or ("v{version}" if single else "{name}-v{version}"),
             fragments="changelog.d" if single else f"changelog.d/{name}",
@@ -311,6 +394,37 @@ def detect(root: Path) -> list[Project]:
         changelog = next((n for n in CHANGELOG_NAMES if (root / n).is_file()), CHANGELOG_NAMES[0])
         return [Project(_manifest_name(root, rel), ".", files, changelog, _tag_format(root), "changelog.d")]
     return []
+
+
+SOURCE_SUFFIXES = (".js", ".mjs", ".cjs", ".ts", ".py", ".rb", ".go", ".rs", ".cs", ".php", ".java", ".kt")
+VERSION_CONSTANT = r"""(?:\b[A-Z_]*VERSION|\b__version__)\s*(?::\s*\w+\s*)?[:=]\s*['"]{}['"]"""
+
+
+def unlisted_version_files(root: Path, p: Project, version: str | None = None) -> list[str]:
+    """Source files in the project's own folder (not below it) that hold its version in a VERSION
+    constant (fastify.js `const VERSION = '5.12.5'`) but are not version files: prepare would leave
+    them behind. amin only warns; it never guesses a file to write."""
+    version = version or next((v for v in (p.read_version(root, f) for f in p.version_files) if v), None)
+    if not version:
+        return []
+    from . import gitops
+    folder = "" if p.path == "." else p.path.rstrip("/") + "/"
+    try:
+        tracked = gitops.Runner(root).git("ls-files", "--", folder or ".", check=False).splitlines()
+    except gitops.CommandError:
+        return []
+    constant = re.compile(VERSION_CONSTANT.format(re.escape(version)))
+    found = []
+    for rel in tracked:
+        if "/" in rel[len(folder):] or not rel.endswith(SOURCE_SUFFIXES) or rel in p.version_files:
+            continue
+        try:
+            text = (root / rel).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        if constant.search(text):
+            found.append(rel)
+    return found
 
 
 def copies(root: Path) -> dict[str, list[str]]:

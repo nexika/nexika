@@ -60,7 +60,10 @@ released plugins, published with `amin publish <marketplace name>` as tag `<name
 
 Release candidates: `amin prepare <project> --rc` releases `1.3.0-rc.1` (then `-rc.2` ...) as a
 GitHub pre-release and keeps the notes; a later `amin prepare <project>` promotes to `1.3.0` and
-collects every note.
+collects every note. Other prereleases (`6.0.0-alpha.4`, `-beta.0`, ...) are a line of their own:
+when the version file or the last tag is one, `plan` proposes the next one (`6.0.0-alpha.5`) and
+each consumes its notes; `--pre=beta` starts another label, `NAME=6.0.0` promotes. `prepare` never
+writes a version lower than the version file's without `--allow-lower`.
 
 A project whose changelog is its GitHub releases (no changelog file) sets `"changelog": "github"`
 in `.amin.json`: `prepare` writes no file and prints the notes for the release PR body, and
@@ -90,4 +93,7 @@ Anything else: `.amin.json`
 ## Requirements and limits
 - `git` and an authenticated `gh` (GitHub only for now).
 - amin keeps no state of its own: notes, changelogs and tags in the repo are the state.
-- Version files supported: JSON `"version"`, TOML `version =`, MSBuild `<Version>`.
+- Version files supported: JSON `"version"`, TOML `version =`, MSBuild `<Version>`, and any file
+  with a pattern whose one group is the version: in `.amin.json` `"version_files"`,
+  `{"file": "fastify.js", "pattern": "const VERSION = '(.*)'"}`. `projects` and `plan` warn when
+  another source file next to the version file holds the version in a `VERSION` constant.

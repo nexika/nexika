@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import __version__, doctor, family, forge, gitinfo, hooks, i18n, render, snapshot
+from . import __version__, config, doctor, family, forge, gitinfo, hooks, i18n, render, snapshot
 
 STDIN_LIMIT = 1_000_000
 HOOKS = {"session-start": lambda event: hooks.on_session_start(event, helper_path()), "stop": hooks.on_stop}
@@ -69,7 +69,9 @@ def cmd_export(args) -> int:
 def cmd_refresh(args) -> int:
     info = gitinfo.read(args.cwd or os.getcwd())
     try:
-        if info:
+        if not config.network():  # MIZAN_OFFLINE=1 or "network": false: no gh or glab call at all
+            sys.stderr.write("mizan: the network is off (MIZAN_OFFLINE, or \"network\": false): no gh call\n")
+        elif info:
             forge.refresh(info)
     finally:
         if args.locked:

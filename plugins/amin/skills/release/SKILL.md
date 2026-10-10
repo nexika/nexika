@@ -24,6 +24,8 @@ Show each proposed version with its reason (`added` → minor, `fixed` only → 
 → major, or minor while the version is 0.x). The user may override (`NAME=VERSION`). Ask
 explicitly before any major version. For a release candidate add `--rc` to prepare (`1.3.0-rc.1`,
 published as a pre-release; notes are kept); preparing again without `--rc` promotes it to final.
+On an alpha or beta line (`6.0.0-alpha.4`) the plan proposes the next one (`6.0.0-alpha.5`); offer
+the promotion (`--pre=beta`, or `<project>=6.0.0`) as a choice, never pick it yourself.
 
 ## 4. Release pull request
 1. From an up-to-date default branch with a clean tree, create `release/<project>-<version>`

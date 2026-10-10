@@ -80,7 +80,7 @@ A plugin with hundreds of skills of which you used one is a context cost worth q
 - `rm -r` of `/`, `~`, the project root, or anything outside the project (also `rimraf`, `del-cli` and
   `shx rm -r`, run directly or through `npx` or `npm exec`)
 - force-push to a protected branch (`main`, `master`, `develop`, `production`, `stable`,
-  `release/*`)
+  `release/*`, release lines such as `4.x` and `5.x`, `next`)
 - committing a `.env` / key file, or staged changes that contain a secret token
 - editing files inside `.git/`
 
@@ -91,6 +91,8 @@ A plugin with hundreds of skills of which you used one is a context cost worth q
   `grep` pattern), database resets, `terraform destroy`, `kubectl delete`, publishing a package
   (npm, pnpm, yarn, NuGet, twine, cargo, hatch, uv, poetry, flit)
 - commands inside `bash -c "..."` are checked like any other
+- turning off `ignore-scripts` in `.npmrc` (removing `ignore-scripts=true`, setting it to `false`, or
+  `npm config set ignore-scripts false`): npm would run every dependency's install scripts again
 - editing `.env`, `.pypirc`, `.netrc` or key files, or lock files; writing content that contains a
   secret token (the same token shapes Nexika redacts everywhere, PyPI tokens included)
 
