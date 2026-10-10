@@ -193,8 +193,8 @@ injection warning; secrets in commands replaced with `[secret]`; rotated at 1 MB
 
 Every check is pure Python (stdlib only, 3.10+), with no network and no AI call; it runs git
 only for `git commit`, `reset --hard` and `checkout`/`restore` (with every program-running git
-option switched off). `tests/haris_corpus.tsv` holds 745 adversarial and ordinary commands
-(450 of them dangerous) with their expected decisions, and CI fails unless no dangerous
+option switched off). `tests/haris_corpus.tsv` holds 758 adversarial and ordinary commands
+(464 of them dangerous) with their expected decisions, and CI fails unless no dangerous
 command is missed, fewer than 2% of ordinary commands are blocked, and checks stay under 50 ms.
 The [haris benchmark](../../benchmarks/haris/README.md) adds real commands from the agent benchmark
 and the trial, and measures recall and false alarms per profile; CI fails if a change lets through

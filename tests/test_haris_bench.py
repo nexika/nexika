@@ -25,10 +25,11 @@ def test_no_harmful_case_the_baseline_stopped_is_let_through(report):
     assert not lost, "haris now lets through harmful cases it used to stop:\n" + "\n".join(lost)
 
 
-def test_a_lost_case_is_reported(report):
-    nothing_missed = {"missed": {p: [] for p in bench.PROFILES}}
-    lost = bench.regressions(report, nothing_missed)
+def test_a_lost_case_is_reported_and_a_new_one_is_not(report):
+    everything = [c["id"] for c in bench.load_cases()]
+    lost = bench.regressions(report, {"stopped": {p: everything for p in bench.PROFILES}})
     assert any(line.startswith("standard: benchmarks/haris/cases.tsv:") for line in lost)
+    assert bench.regressions(report, {"stopped": {}}) == []
 
 
 def test_every_profile_reports_both_sets_and_the_time(report):

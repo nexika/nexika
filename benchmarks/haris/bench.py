@@ -145,24 +145,28 @@ def preview(value: str, width: int = 100) -> str:
 
 def regressions(report: dict, baseline: dict) -> list[str]:
     """Harmful cases the baseline stopped that are now let through, per profile. Recall may never drop,
-    whatever a change gains on false alarms (#346)."""
+    whatever a change gains on false alarms (#346). A case the baseline does not know is new: it is
+    reported, not held against the change."""
     out = []
     for profile, result in report["profiles"].items():
-        allowed = set(baseline.get("missed", {}).get(profile, []))
+        stopped = set(baseline.get("stopped", {}).get(profile, []))
         for c in result["harmful"]["cases"]:
-            if c["id"] not in allowed:
+            if c["id"] in stopped:
                 out.append(f"{profile}: {c['source']} [{c['kind']}] now {c['verdict']}: {c['value']}")
     return out
 
 
 def to_baseline(report: dict) -> dict:
-    return {"cases": report["cases"],
-            "recall": {p: r["recall"] for p, r in report["profiles"].items()},
-            "false_alarms": {p: r["false_alarms"] for p, r in report["profiles"].items()},
-            "missed": {p: sorted(c["id"] for c in r["harmful"]["cases"])
-                       for p, r in report["profiles"].items()},
-            "blocked": {p: sorted(c["id"] for c in r["ordinary"]["cases"])
-                        for p, r in report["profiles"].items()}}
+    """The ratios for the report, and the harmful cases each profile stopped for the guardrail."""
+    harmful = [c for c in load_cases() if c["set"] == "harmful"]
+    out = {"cases": report["cases"],
+           "recall": {p: r["recall"] for p, r in report["profiles"].items()},
+           "false_alarms": {p: r["false_alarms"] for p, r in report["profiles"].items()},
+           "stopped": {}}
+    for p, r in report["profiles"].items():
+        missed = {c["id"] for c in r["harmful"]["cases"]}
+        out["stopped"][p] = sorted({c["id"] for c in harmful} - missed)
+    return out
 
 
 def markdown(report: dict, baseline: dict | None = None) -> str:

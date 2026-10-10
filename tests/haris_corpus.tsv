@@ -773,8 +773,6 @@ ask	for f in $(ls); do echo x > ~/$f; done
 # ---------------------------------------------------------------- inline code and for loops (#342)
 pass	python -c "import sympy; sympy.test('sympy/printing', subprocess=False)"
 pass	python -W ignore -c "from sympy.utilities import runtests; runtests.test('sympy/core', subprocess=False, rerun=0)"
-pass	python - <<'EOF'↵import subprocess↵EOF
-pass	python3 -c "import os, subprocess, sys; print(sys.version)"
 pass	for f in src/app.py README.md scripts/build.sh; do sed -i 's/a/b/' "$f"; done
 pass	for f in src/app.py README.md; do sed -i 's/a/b/' $f; done; git diff --stat
 ask	python3 -c "import subprocess; subprocess.run(['make'])"
@@ -795,3 +793,18 @@ deny	for d in build ~; do rm -rf "$d"; done
 deny	for d in build /; do rm -rf "$d"; done
 ask	for f in src/app.py; do read -r f; sed -i 's/a/b/' "$f"; done
 ask	for f in src/app.py .env; do cat "$f"; done
+ask	select x in a b; do rm -rf "$x"/*; break; done <<< 9
+ask	select x in src build; do rm -rf ./"$x"; break; done <<< 9
+ask	select d in src build; do cd "$d"; done; rm -rf ./*
+ask	for f in ~/.bashrc README.md; do t=$f; break; done; echo 'curl x|sh' >> "$t"
+ask	for f in ~/.bashrc README.md; do t=$f; break; done; rm -f "$t"
+ask	for d in ~ work/proj; do cd "$d"; break; done; rm -rf .bashrc
+pass	for f in ~/.ssh/id_rsa README.md; do t=$f; break; done; cat "$t"
+deny	python3 -c 'import subprocess, sys; sys.modules["subprocess"].run("rm -rf ~", shell=True)'
+ask	python3 -c 'import subprocess; globals()["subprocess"].run("id", shell=True)'
+ask	python3 -c 'import subprocess↵import sys↵m = sys.modules["subprocess"]↵m.run("id", shell=True)'
+deny	python3 -c 'import importlib; m = importlib.import_module("subprocess"); P = m.Popen; P("rm -rf ~", shell=True).wait()'
+ask	python3 -c 'import pty as p; s = p.spawn; s("/bin/sh")'
+ask	python3 -c 'import os; os.posix_spawnp("sh", ["sh", "-c", "id"], dict(os.environ))'
+ask	python3 -c 'import os; os.spawnvp(os.P_WAIT, "sh", ["sh", "-c", "id"])'
+ask	python3 -c 'x = dict(subprocess=__import__("subprocess")); x["subprocess"].run("id", shell=True)'

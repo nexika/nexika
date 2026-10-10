@@ -540,7 +540,7 @@ class Parser:
             self._expect_word("done")
             return Group(body, False, self._redirects())
         if word in ("for", "select"):
-            return self._for()
+            return self._for(word)
         if word == "case":
             return self._case()
         if word == "function":
@@ -590,7 +590,7 @@ class Parser:
         self._expect_word("fi")
         return Group(body, False, self._redirects())
 
-    def _for(self) -> Group:
+    def _for(self, keyword: str = "for") -> Group:
         self.k += 1
         body: list = []
         name, words = "", []
@@ -628,8 +628,9 @@ class Parser:
             # one word (a glob, say) gives the loop variable a known shape; several stay unknown
             value = words[0] if len(words) == 1 else Word([Part("var", "?")])
             body.append(Pipeline([Simple([], assigns=[(name, value)])]))
-            if 1 < len(words) <= MAX_UNROLLED and all(map(written_out, words)):
-                # written out word by word: the body can be judged once per word, as if typed out (#342)
+            if keyword == "for" and 1 < len(words) <= MAX_UNROLLED and all(map(written_out, words)):
+                # written out word by word: the body can be judged once per word, as if typed out (#342);
+                # never `select`, whose variable is what the user types
                 each = [[Pipeline([Simple([], assigns=[(name, word)])])] + inner for word in words]
         body += inner
         return Group(body, False, self._redirects(), each)
