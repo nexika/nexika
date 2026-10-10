@@ -30,6 +30,11 @@ USAGE = f"""amin {__version__} - repository maintainer; you always merge (Nexika
 """
 
 
+# Read again on every turn (#345): the skills list themselves, so the note keeps the helper they run
+# and the one rule that holds in any session.
+SESSION_NOTE = "amin (Nexika): a human merges every PR; never merge one yourself. amin helper: {helper}"
+
+
 def helper_command() -> str:
     return f"python3 {Path(__file__).resolve().parent.parent / 'bin' / 'amin'}"
 
@@ -157,9 +162,7 @@ def run(argv: list[str]) -> int:
         return 0 if cmd else 2
     if cmd == "hook":
         if argv[1:2] == ["session-start"]:
-            print("## amin (Nexika): maintain this repo; you always merge\n"
-                  "/amin:triage, /amin:work <issue>, /amin:release, /amin:setup. "
-                  f"amin helper: {helper_command()}")
+            print(SESSION_NOTE.format(helper=helper_command()))
         return 0
     root = gitops.repo_root(Path.cwd())
     runner = gitops.Runner(root)

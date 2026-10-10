@@ -793,6 +793,14 @@ def test_startup_note_is_small_with_a_long_path():
     assert "/clear" in note and "never clear" in note and long_path in note
 
 
+def test_startup_note_keeps_only_what_changes_behaviour():
+    """#345: the band shows itself; the note keeps the task list and the context rule."""
+    note = json.loads(hooks.on_session_start({}, "H"))["hookSpecificOutput"]["additionalContext"]
+    assert "TodoWrite" in note and "never clear or compact" in note and "/clear" in note
+    assert "Helper: python3 H" in note and "above the prompt" not in note
+    assert len(note.replace("H", "")) <= 200, note
+
+
 def test_startup_note_from_the_helper():
     done = run("hook", "session-start", stdin={})
     note = json.loads(done.stdout)["hookSpecificOutput"]["additionalContext"]

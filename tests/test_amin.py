@@ -845,6 +845,17 @@ def test_session_note_and_help(capsys):
     assert cli.main([]) == 2
 
 
+def test_session_note_is_one_short_line(capsys):
+    """#345: the note is read again on every turn. The skills already list themselves; the note keeps
+    the helper and the one rule that matters in any session."""
+    assert cli.main(["hook", "session-start"]) == 0
+    note = capsys.readouterr().out.strip()
+    helper = cli.helper_command()
+    assert f"amin helper: {helper}" in note and "never merge" in note
+    assert "/amin:triage" not in note
+    assert len(note.replace(helper, "")) <= 110, note
+
+
 # ---------------------------------------------------------------- a repo like psf/black (#52)
 
 BLACK_PYPROJECT = '''[tool.black]

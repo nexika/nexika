@@ -1470,7 +1470,16 @@ def test_flaky_comes_with_the_rerun_command_and_no_local_run(ci, project, monkey
 def test_startup_note_is_small():
     long_path = "/home/" + "a-rather-long-user-name/" * 3 + ".claude/plugins/cache/nexika/tabib/0.1.0/bin/tabib"
     note = json.loads(hooks.on_session_start({}, long_path))["hookSpecificOutput"]["additionalContext"]
-    assert len(note.encode("utf-8")) < 400 and "never edit code" in note and long_path in note
+    assert len(note.encode("utf-8")) < 400 and long_path in note
+
+
+def test_startup_note_keeps_the_helper_and_the_log_rule():
+    """#345: how to diagnose is in the skill, read when it runs; every session keeps the helper and
+    the rule for CI logs read outside it."""
+    note = json.loads(hooks.on_session_start({}, "H"))["hookSpecificOutput"]["additionalContext"]
+    assert "Helper: python3 H" in note and "/tabib:diagnose" in note and "untrusted" in note
+    assert "never edit code" not in note
+    assert len(note.replace("H", "")) <= 100, note
 
 
 # ---------------------------------------------------------------- with mizan and itqan

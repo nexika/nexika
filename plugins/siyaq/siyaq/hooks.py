@@ -13,6 +13,10 @@ from . import rank, state, text
 FILE_TOOLS = {"Read", "Edit", "Write", "MultiEdit", "NotebookEdit"}
 HEADER = ("siyaq: project knowledge matched to this {what} (from the repo's docs; if they disagree "
           "with the code, trust the code and mention the mismatch):\n\n")
+# Read again on every turn (#345): the knowledge itself comes with the prompt or file it matches, so
+# the note only says so and names the helper (the skills run it; `match` searches on demand).
+NOTE = ("siyaq (Nexika): project knowledge is added when a prompt or a file you touch matches it. "
+        "siyaq helper: {helper} (match TEXT | entries | stats | index)")
 
 
 def _context(event: dict) -> tuple[Path, dict] | None:
@@ -134,18 +138,5 @@ def on_session_start(event: dict, helper: str) -> str:
     if not ctx:
         return ""
     root, config = ctx
-    index = idx.load_ready(root, config, wait=idx.SESSION_START_WAIT)
-    manual = sum(1 for e in index["entries"] if e["kind"] == "manual")
-    lines = ["## siyaq (Nexika): project knowledge on demand"]
-    if index["n"]:
-        lines.append(f"{index['n']} knowledge entries from {len(index['sources'])} sources "
-                     f"({manual} hand-written) are added only when a prompt or a file you touch "
-                     "matches them.")
-    elif index.get("building"):
-        lines.append("The knowledge index is being built in the background; prompts and files get "
-                     "matching knowledge once it is ready.")
-    else:
-        lines.append("No knowledge entries yet. Docs under docs/ or READMEs are picked up automatically; "
-                     "/siyaq:add captures knowledge, /siyaq:slim moves situational CLAUDE.md sections.")
-    lines.append(f"siyaq helper: {helper} (match TEXT | entries | stats | index)")
-    return "\n".join(lines)
+    idx.load_ready(root, config, wait=idx.SESSION_START_WAIT)  # starts or refreshes the index
+    return NOTE.format(helper=helper)

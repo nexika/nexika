@@ -467,6 +467,26 @@ def test_session_start_without_env_file_prints_full_command(barq_env):
     assert f"BARQ_SESSION=s1 python3 {BARQ_ROOT / 'bin' / 'barq'} run:test" in res.stdout
 
 
+def test_session_note_keeps_only_the_tool_guidance(barq_env):
+    """#345: the note is read again on every turn, so it keeps what makes barq used and nothing else."""
+    res = run_hook({"session_id": "s1", "source": "startup"},
+                   {"CLAUDE_ENV_FILE": str(barq_env / "e"), "BARQ_HOME": str(barq_env / "h")})
+    note = res.stdout
+    assert len(note) <= 560, len(note)
+    for line in ("Read, Grep and Glob", "Edit needs a Read", "barq run:test", "barq git-status",
+                 "'read:PATH:outline'", "barq info", "Quote every op"):
+        assert line in note
+    assert "[masked]" not in note  # said by the output that has masked lines (below)
+
+
+def test_masked_lines_carry_their_own_warning(project, barq_run):
+    (project / "settings.py").write_text('DATABASE_URL = "postgres://admin:hunter2@db/app"\n')
+    _, out = barq_run("grep:DATABASE_URL:.")
+    assert "hunter2" not in out and "[masked]" in out
+    assert "don't copy [masked] lines into an edit" in out
+    assert "masked" not in barq_run("grep:Cart:src")[1]
+
+
 def test_session_start_after_compact_resets_cache(project, barq_run, barq_env):
     barq_run("read:src/app.py")
     assert "unchanged" in barq_run("read:src/app.py")[1]
