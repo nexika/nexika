@@ -1,3 +1,6 @@
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7855122Z   1) req
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7855381Z        .acceptsEncodings(encoding)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7855950Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7856331Z 
 Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7856557Z       Error: expected { bogus: 'bogus' } response body, got { bogus: false }
 Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7856875Z       + expected - actual
@@ -53,6 +56,9 @@ Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.9018007Z Post job c
 Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:17.0374354Z [command]"C:\Program Files\Git\bin\git.exe" version
 Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:17.0590775Z git version 2.55.0.windows.5
 Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:18.5366973Z Cleaning up orphan processes
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3036292Z   1) req
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3036577Z        .acceptsEncodings(encoding)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3037002Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3037297Z 
 Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3037536Z       Error: expected { bogus: 'bogus' } response body, got { bogus: false }
 Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3037927Z       + expected - actual
@@ -108,6 +114,9 @@ Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.4405181Z Post job c
 Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.6561928Z [command]"C:\Program Files\Git\bin\git.exe" version
 Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.6856007Z git version 2.55.0.windows.5
 Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:25.5144055Z Cleaning up orphan processes
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4783405Z   1) req
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4783898Z        .acceptsEncodings(encoding)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4784770Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4785162Z 
 Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4785651Z       Error: expected { bogus: 'bogus' } response body, got { bogus: false }
 Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4786425Z       + expected - actual
@@ -163,6 +172,9 @@ Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.5663655Z Post job cl
 Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.6497276Z [command]/usr/bin/git version
 Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.6534738Z git version 2.55.0
 Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.7534743Z Cleaning up orphan processes
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9698060Z   1) req
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9698427Z        .acceptsEncodings(encoding)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9699113Z          should accept any encoding when Accept-Encoding is not present:
 Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9699356Z 
 Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9699577Z       Error: expected { bogus: 'bogus' } response body, got { bogus: false }
 Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9699895Z       + expected - actual
