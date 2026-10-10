@@ -52,6 +52,10 @@ def nexika_home(tmp_path, monkeypatch):
     """The family's shared settings and background-call log stay out of ~/.claude (#45)."""
     monkeypatch.setenv("NEXIKA_HOME", str(tmp_path / "nexika"))
     monkeypatch.delenv("NEXIKA_BACKGROUND", raising=False)
+    # whether a session is attended (#343): CI sets CI=true, Claude Code its own variable; a test
+    # that wants an unattended session sets them itself
+    for name in ("CI", "HARIS_UNATTENDED", "CLAUDE_CODE_SESSION_ATTENDED", "CLAUDE_PROJECT_DIR"):
+        monkeypatch.delenv(name, raising=False)
     return tmp_path / "nexika"
 
 
