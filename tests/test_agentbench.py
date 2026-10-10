@@ -13,7 +13,7 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "benchmarks" / "agent"))
 
-from agentbench import grade, metrics, runner, summary, tasks  # noqa: E402
+from agentbench import dashboard, grade, metrics, runner, summary, tasks  # noqa: E402
 
 
 def _row(i, difficulty, repo="o/r"):
@@ -448,3 +448,84 @@ def test_ablation_arms_get_their_own_table():
     assert "| itqan | 2 | 50% → 50% | 1 / 1 | 100% (A 0%) |" in text
     assert "| +3.5k |" in text
     assert "| <15 min fix | 1/2 | 2/2 | 1/2 |" in text
+
+
+# --- dashboard -----------------------------------------------------------------------------
+
+def _fake_pilot(base, runs, grades, excluded=None):
+    """runs: (task, arm, run, cost, difficulty); grades: {(task, arm, run): resolved}."""
+    for task, arm, run, cost, difficulty in runs:
+        d = base / "runs" / f"{task}__{arm}__r{run}"
+        d.mkdir(parents=True)
+        (d / "meta.json").write_text(json.dumps({
+            "instance_id": task, "arm": arm, "run": run, "valid": True, "invalid_reason": "",
+            "difficulty": difficulty, "cost_usd": cost, "ran_tests": arm != "A",
+            "first_prompt_tokens": 20000 if arm == "A" else 30000}))
+    (base / "grades.json").write_text(json.dumps([
+        {"instance_id": t, "arm": a, "run": r, "graded": True, "resolved": ok, "regression": False}
+        for (t, a, r), ok in grades.items()]))
+    if excluded is not None:
+        (base / "excluded.json").write_text(json.dumps(excluded))
+    return base
+
+
+def test_dashboard_view_of_a_finished_pilot(tmp_path):
+    runs = [(t, a, 1, 0.1 if a == "A" else 0.2, "1-4 hours") for t in ("t1", "t2") for a in ("A", "B")]
+    grades = {("t1", "A", 1): False, ("t1", "B", 1): True, ("t2", "A", 1): True, ("t2", "B", 1): True}
+    view = dashboard.pilot_view(_fake_pilot(tmp_path / "pilot-9", runs, grades), planned_tasks=2)
+    assert (view["name"], view["done"], view["planned"], view["graded"]) == ("pilot-9", 4, 4, 4)
+    assert not view["partial"] and view["invalid"] == 0
+    a, b = view["arms"]
+    assert (a["arm"], a["resolved"], b["arm"], b["resolved"]) == ("A", 0.5, "B", 1.0)
+    assert (b["wins"], b["losses"], b["p"]) == (1, 0, 1.0)
+    assert b["cost_solved"] == pytest.approx(0.2) and a["cost_solved"] == pytest.approx(0.2)
+    assert b["ran_tests"] == 1.0 and b["first_prompt_extra"] == 10000
+    assert view["difficulty"] == {"1-4 hours": {"A": [1, 2], "B": [2, 2]}}
+
+
+def test_dashboard_counts_only_graded_runs_while_a_pilot_runs(tmp_path):
+    runs = [("t1", "A", 1, 0.1, "x"), ("t1", "B", 1, 0.2, "x"), ("t2", "A", 1, 0.1, "x")]
+    view = dashboard.pilot_view(_fake_pilot(tmp_path / "p", runs, {("t1", "A", 1): True},
+                                            excluded={"t9": "gold patch not graded resolved"}),
+                                planned_tasks=3)
+    assert (view["done"], view["graded"], view["planned"], view["excluded"]) == (3, 1, 6, 1)
+    assert view["partial"]
+    assert [a["arm"] for a in view["arms"]] == ["A"]   # B has no graded run yet: not shown as 0%
+    newest = max(p.stat().st_mtime for p in (tmp_path / "p" / "runs").glob("*/meta.json"))
+    assert dashboard.pilot_view(tmp_path / "p", 3, now=newest + 60)["active"]
+    assert not dashboard.pilot_view(tmp_path / "p", 3, now=newest + 3 * 3600)["active"]
+    assert view["cost"] == pytest.approx(0.4)
+
+
+def test_dashboard_html_is_self_contained_and_shows_the_numbers(tmp_path):
+    runs = [(t, a, 1, 0.1, "easy") for t in ("t1", "t2") for a in ("A", "B")]
+    grades = {(t, a, 1): a == "B" or t == "t1" for t in ("t1", "t2") for a in ("A", "B")}
+    view = dashboard.pilot_view(_fake_pilot(tmp_path / "p", runs, grades), planned_tasks=2)
+    page = dashboard.render([view], [], refresh=None, now="2026-10-10 14:00")
+    assert "<svg" in page and "prefers-color-scheme: dark" in page
+    assert "<script" not in page and "http" not in page.replace("http://www.w3.org/2000/svg", "")
+    assert "50%" in page and "100%" in page and 'http-equiv="refresh"' not in page
+    assert 'http-equiv="refresh" content="60"' in dashboard.render([view], [], refresh=60, now="x")
+
+
+def test_dashboard_context_table_from_the_context_runs(tmp_path):
+    for name, tokens, chars in (("A", 17000, 0), ("lawha", 18800, 182), ("B", 26900, 6812)):
+        d = tmp_path / "context" / name
+        d.mkdir(parents=True)
+        (d / "meta.json").write_text(json.dumps({"arm": name, "first_prompt_tokens": tokens,
+                                                 "hook_output_chars": chars}))
+    rows = dashboard.context_rows(tmp_path)
+    assert rows[0] == {"name": "A", "tokens": 17000, "extra": 0, "hook_chars": 0}
+    assert {r["name"]: r["extra"] for r in rows} == {"A": 0, "B": 9900, "lawha": 1800}
+    assert [r["name"] for r in rows] == ["A", "B", "lawha"]   # baseline, all, then the most costly
+
+
+def test_bench_dashboard_writes_the_page(tmp_path, monkeypatch):
+    import bench
+    runs = [(t, a, 1, 0.1, "easy") for t in ("t1",) for a in ("A", "B")]
+    _fake_pilot(tmp_path / "pilot-2", runs, {("t1", "A", 1): True, ("t1", "B", 1): True})
+    (tmp_path / "notes").mkdir()   # not a pilot: no runs/ or results.csv
+    out = tmp_path / "dash.html"
+    bench.main(["dashboard", "--root", str(tmp_path), "--out", str(out)])
+    page = out.read_text()
+    assert "pilot-2" in page and "notes" not in page

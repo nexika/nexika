@@ -28,7 +28,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from agentbench import grade, runner, summary, tasks  # noqa: E402
+from agentbench import dashboard, grade, runner, summary, tasks  # noqa: E402
 
 REPO = HERE.parent.parent
 PILOT = HERE / "pilot.json"
@@ -283,6 +283,37 @@ def cmd_summary(args):
     print(f"wrote {base / 'results.csv'} and {base / 'summary.md'}")
 
 
+def bench_root():
+    """Where the pilot folders live: the parent of AGENTBENCH_HOME when it is set."""
+    env = os.environ.get("AGENTBENCH_HOME")
+    return Path(env).parent if env else Path.home() / "nexika-bench"
+
+
+def write_dashboard(root, out, refresh=None):
+    import datetime
+    known = {}
+    for path in sorted(HERE.glob("pilot*.json")):
+        pilot = tasks.load_pilot(path)
+        known[pilot["name"]] = (len(pilot.get("instance_ids") or []) or None, pilot.get("note", ""))
+    bases = dashboard.find_pilots(root)
+    views = [dashboard.pilot_view(base, *known.get(base.name, (None, ""))) for base in bases]
+    context = next((rows for base in bases if (rows := dashboard.context_rows(base))), [])
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    Path(out).write_text(dashboard.render(views, context, refresh=refresh, now=now))
+
+
+def cmd_dashboard(args):
+    import time
+    root = Path(args.root) if args.root else bench_root()
+    out = Path(args.out) if args.out else root / "dashboard.html"
+    while True:
+        write_dashboard(root, out, refresh=args.watch)
+        say(f"wrote {out}")
+        if not args.watch:
+            return
+        time.sleep(args.watch)
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--pilot", default=str(PILOT), help="pilot file (default: pilot.json here)")
@@ -340,6 +371,13 @@ def main(argv=None):
 
     m = sub.add_parser("summary", help="write results.csv and the paired comparison")
     m.set_defaults(fn=cmd_summary)
+
+    d = sub.add_parser("dashboard", help="one HTML page with every pilot (live while one runs)")
+    d.add_argument("--root", help="folder of the pilot folders (default: ~/nexika-bench)")
+    d.add_argument("--out", help="the page to write (default: <root>/dashboard.html)")
+    d.add_argument("--watch", type=int, metavar="SECONDS",
+                   help="rewrite every N seconds; an open page reloads too")
+    d.set_defaults(fn=cmd_dashboard)
 
     args = p.parse_args(argv)
     args.fn(args)
