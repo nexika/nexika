@@ -1108,3 +1108,16 @@ def test_tabib_code_kinds_have_band_labels(what, en, ar):
     found = {"kind": "code", "detail": {"what": what, "count": 2}}
     assert render.tabib_label(found, "en") == en
     assert render.tabib_label(found, "ar") == ar
+
+
+@pytest.mark.parametrize("detail, en, ar", [
+    ({"jobs": 0}, "no jobs or log", "لا مهام ولا سجل"),   # #331: there is no log to see
+    ({}, "see the log", "راجع السجل"),
+    ({"jobs": 3}, "see the log", "راجع السجل"),
+])
+def test_an_unknown_run_without_jobs_does_not_send_to_a_log(detail, en, ar):
+    found = {"kind": "unknown", "detail": detail}
+    assert render.tabib_label(found, "en") == en
+    assert render.tabib_label(found, "ar") == ar
+    snap = {"git": {"branch": "main"}, "tabib": found}
+    assert f"tabib: {en}" in [s["text"] for s in render.band(snap, "en")[0]]
