@@ -1,0 +1,81 @@
+main	UNKNOWN STEP	﻿2026-09-16T08:21:24.6352849Z Current runner version: '2.337.0'
+main	UNKNOWN STEP	2026-09-16T08:21:24.6372285Z ##[group]Runner Image Provisioner
+main	UNKNOWN STEP	2026-09-16T08:21:24.6373038Z Hosted Compute Agent
+main	UNKNOWN STEP	2026-09-16T08:21:24.6373576Z Version: 20260828.587
+main	UNKNOWN STEP	2026-09-16T08:21:24.6380698Z ##[group]Runner Image
+main	UNKNOWN STEP	2026-09-16T08:21:24.6381195Z Image: ubuntu-24.04
+main	UNKNOWN STEP	2026-09-16T08:21:24.6381677Z Version: 20260907.300.1
+main	UNKNOWN STEP	2026-09-16T08:21:26.1847870Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+main	UNKNOWN STEP	2026-09-16T08:21:26.1849473Z with:
+main	UNKNOWN STEP	2026-09-16T08:21:26.1850319Z   persist-credentials: false
+main	UNKNOWN STEP	2026-09-16T08:21:27.3874495Z ##[group]Run astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+main	UNKNOWN STEP	2026-09-16T08:21:27.3874885Z with:
+main	UNKNOWN STEP	2026-09-16T08:21:27.3875116Z   enable-cache: true
+main	UNKNOWN STEP	2026-09-16T08:21:29.8586169Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+main	UNKNOWN STEP	2026-09-16T08:21:29.8586528Z with:
+main	UNKNOWN STEP	2026-09-16T08:21:29.8586766Z   python-version-file: pyproject.toml
+main	UNKNOWN STEP	2026-09-16T08:21:30.0518889Z ##[group]Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+main	UNKNOWN STEP	2026-09-16T08:21:30.0519209Z with:
+main	UNKNOWN STEP	2026-09-16T08:21:30.0519410Z   path: ~/.cache/pre-commit
+main	UNKNOWN STEP	2026-09-16T08:21:30.0519744Z   key: pre-commit|cf690451bf17c6ce9d4065d0f7d42144efaa6fb1b5f2a3a28ead820689f2cf84
+main	UNKNOWN STEP	2026-09-16T08:21:30.0520099Z   enableCrossOsArchive: false
+main	UNKNOWN STEP	2026-09-16T08:21:30.0520326Z   fail-on-cache-miss: false
+main	UNKNOWN STEP	2026-09-16T08:21:30.0520692Z   lookup-only: false
+main	UNKNOWN STEP	2026-09-16T08:21:30.0520888Z   save-always: false
+main	UNKNOWN STEP	2026-09-16T08:21:30.0521070Z env:
+main	UNKNOWN STEP	2026-09-16T08:21:31.1845095Z [command]/usr/bin/tar -xf /home/runner/work/_temp/bd0dd9c1-5202-4b18-962f-3fcd48e6356a/cache.tzst -P -C /home/runner/work/click/click --use-compress-program unzstd
+main	UNKNOWN STEP	2026-09-16T08:21:31.3426104Z Cache restored successfully
+main	UNKNOWN STEP	2026-09-16T08:21:31.3502312Z Cache restored from key: pre-commit|cf690451bf17c6ce9d4065d0f7d42144efaa6fb1b5f2a3a28ead820689f2cf84
+main	UNKNOWN STEP	2026-09-16T08:21:31.3588988Z ##[group]Run uv run --locked --no-default-groups --group pre-commit pre-commit run --show-diff-on-failure --color=always --all-files
+main	UNKNOWN STEP	2026-09-16T08:21:31.3589794Z ^[[36;1muv run --locked --no-default-groups --group pre-commit pre-commit run --show-diff-on-failure --color=always --all-files^[[0m
+main	UNKNOWN STEP	2026-09-16T08:21:31.3614512Z shell: /usr/bin/bash -e {0}
+main	UNKNOWN STEP	2026-09-16T08:21:31.3614777Z env:
+main	UNKNOWN STEP	2026-09-16T08:21:31.3615046Z   UV_PYTHON_INSTALL_DIR: /home/runner/work/_temp/uv-python-dir
+main	UNKNOWN STEP	2026-09-16T08:21:31.3615397Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+main	UNKNOWN STEP	2026-09-16T08:21:31.3615737Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.7/x64
+main	UNKNOWN STEP	2026-09-16T08:21:31.3616323Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.7/x64/lib/pkgconfig
+main	UNKNOWN STEP	2026-09-16T08:21:31.3616693Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+main	UNKNOWN STEP	2026-09-16T08:21:31.3617013Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+main	UNKNOWN STEP	2026-09-16T08:21:31.3617383Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+main	UNKNOWN STEP	2026-09-16T08:21:31.3617704Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.7/x64/lib
+main	UNKNOWN STEP	2026-09-16T08:21:31.3617995Z ##[endgroup]
+main	UNKNOWN STEP	2026-09-16T08:21:32.7546429Z Using CPython 3.14.7 interpreter at: /opt/hostedtoolcache/Python/3.14.7/x64/bin/python3
+main	UNKNOWN STEP	2026-09-16T08:21:32.7547126Z Creating virtual environment at: .venv
+main	UNKNOWN STEP	2026-09-16T08:21:32.7592778Z    Building click @ file:///home/runner/work/click/click
+main	UNKNOWN STEP	2026-09-16T08:21:34.2722324Z       Built click @ file:///home/runner/work/click/click
+main	UNKNOWN STEP	2026-09-16T08:21:34.2826555Z Installed 13 packages in 9ms
+main	UNKNOWN STEP	2026-09-16T08:21:35.9053553Z ruff check...............................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:35.9378196Z ruff format..............................................................^[[41mFailed^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:35.9378661Z ^[[2m- hook id: ruff-format^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:35.9378948Z ^[[2m- files were modified by this hook^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:35.9379122Z 
+main	UNKNOWN STEP	2026-09-16T08:21:35.9379272Z 1 file reformatted, 75 files left unchanged
+main	UNKNOWN STEP	2026-09-16T08:21:35.9379450Z 
+main	UNKNOWN STEP	2026-09-16T08:21:35.9958659Z uv-lock..................................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.4357708Z codespell................................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.5114236Z check for merge conflicts................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.7173657Z debug statements (python)................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.7812212Z fix utf-8 byte order marker..............................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.8498118Z trim trailing whitespace.................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.9155130Z fix end of files.........................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.9155602Z pre-commit hook(s) made changes.
+main	UNKNOWN STEP	2026-09-16T08:21:36.9156194Z If you are seeing this message in CI, reproduce locally with: `pre-commit run --all-files`.
+main	UNKNOWN STEP	2026-09-16T08:21:36.9156811Z To run `pre-commit` as part of git workflow, use `pre-commit install`.
+main	UNKNOWN STEP	2026-09-16T08:21:36.9157200Z All changes made by hooks:
+main	UNKNOWN STEP	2026-09-16T08:21:36.9210984Z ^[[1mdiff --git a/src/click/types.py b/src/click/types.py^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.9211479Z ^[[1mindex 585ee21..ec37623 100644^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.9211840Z ^[[1m--- a/src/click/types.py^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.9212181Z ^[[1m+++ b/src/click/types.py^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.9212627Z ^[[36m@@ -724,6 +724,7 @@^[[m ^[[mclass _NumberRangeBase(^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.9213020Z  ^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.9213669Z  class IntParamType(_NumberParamTypeBase[t.SupportsInt | t.SupportsIndex, int]):^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.9214533Z      name = "integer"^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.9214961Z ^[[32m+^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.9215423Z      def convert(self, value, param, ctx):^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.9216240Z          return super().convert(value, param, ctx) + 1^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.9216849Z  ^[[m
+main	UNKNOWN STEP	2026-09-16T08:21:36.9484233Z ##[error]Process completed with exit code 1.
+main	UNKNOWN STEP	2026-09-16T08:21:36.9581212Z Post job cleanup.
+main	UNKNOWN STEP	2026-09-16T08:21:37.0250839Z [command]/usr/bin/git version
+main	UNKNOWN STEP	2026-09-16T08:21:37.0278265Z git version 2.55.0
+main	UNKNOWN STEP	2026-09-16T08:21:37.0961893Z Cleaning up orphan processes

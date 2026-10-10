@@ -1,0 +1,24 @@
+check	UNKNOWN STEP	﻿2026-08-13T22:24:23.0740634Z Current runner version: '2.336.0'
+check	UNKNOWN STEP	2026-08-13T22:24:23.0778380Z ##[group]Runner Image Provisioner
+check	UNKNOWN STEP	2026-08-13T22:24:23.0779789Z Hosted Compute Agent
+check	UNKNOWN STEP	2026-08-13T22:24:23.0780833Z Version: 20260729.566
+check	UNKNOWN STEP	2026-08-13T22:24:23.0793696Z ##[group]Runner Image
+check	UNKNOWN STEP	2026-08-13T22:24:23.0794833Z Image: ubuntu-24.04
+check	UNKNOWN STEP	2026-08-13T22:24:23.0796167Z Version: 20260810.271.1
+check	UNKNOWN STEP	2026-08-13T22:24:23.6627819Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+check	UNKNOWN STEP	2026-08-13T22:24:23.6628886Z with:
+check	UNKNOWN STEP	2026-08-13T22:24:23.6629334Z   persist-credentials: false
+check	UNKNOWN STEP	2026-08-13T22:24:24.5165360Z ##[group]Run grep -Pz "\((\n\s*)?#5308(\n\s*)?\)" CHANGES.md || \
+check	UNKNOWN STEP	2026-08-13T22:24:24.5167187Z ^[[36;1mgrep -Pz "\((\n\s*)?#5308(\n\s*)?\)" CHANGES.md || \^[[0m
+check	UNKNOWN STEP	2026-08-13T22:24:24.5169843Z ^[[36;1m(echo "Please add '(#5308)' change line to CHANGES.md (or if appropriate, ask a maintainer to add the 'ci: skip news' label)" && \^[[0m
+check	UNKNOWN STEP	2026-08-13T22:24:24.5172270Z ^[[36;1mexit 1)^[[0m
+check	UNKNOWN STEP	2026-08-13T22:24:24.5214258Z shell: /usr/bin/bash -e {0}
+check	UNKNOWN STEP	2026-08-13T22:24:24.5215639Z env:
+check	UNKNOWN STEP	2026-08-13T22:24:24.5216437Z   PIP_UPLOADED_PRIOR_TO: P2D
+check	UNKNOWN STEP	2026-08-13T22:24:24.5217423Z ##[endgroup]
+check	UNKNOWN STEP	2026-08-13T22:24:24.5325088Z Please add '(#5308)' change line to CHANGES.md (or if appropriate, ask a maintainer to add the 'ci: skip news' label)
+check	UNKNOWN STEP	2026-08-13T22:24:24.5352560Z ##[error]Process completed with exit code 1.
+check	UNKNOWN STEP	2026-08-13T22:24:24.5684600Z Post job cleanup.
+check	UNKNOWN STEP	2026-08-13T22:24:24.6557930Z [command]/usr/bin/git version
+check	UNKNOWN STEP	2026-08-13T22:24:24.6594687Z git version 2.54.0
+check	UNKNOWN STEP	2026-08-13T22:24:24.7571025Z Cleaning up orphan processes

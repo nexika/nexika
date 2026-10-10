@@ -1,0 +1,25 @@
+lock-threads / Lock Threads	UNKNOWN STEP	﻿2026-10-01T00:29:16.8229581Z Current runner version: '2.337.0'
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:16.8258193Z ##[group]Runner Image Provisioner
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:16.8259043Z Hosted Compute Agent
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:16.8259746Z Version: 20260828.587
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:16.8268573Z ##[group]Runner Image
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:16.8269187Z Image: ubuntu-24.04
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:16.8269785Z Version: 20260920.314.1
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:17.4846661Z ##[group]Run dessant/lock-threads@89ae32b08ed1a541efecbab17912962a5e38981c
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:17.4847792Z with:
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:17.4848247Z   issue-inactive-days: 90
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:17.4848748Z   pr-inactive-days: 90
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:17.4849398Z   exclude-any-issue-labels: discussion,good first issue,help wanted
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:17.4850818Z   issue-comment: This issue has been automatically locked since there has not been any recent activity after it was closed. Please open a new issue for related bugs.
+lock-threads / Lock Threads	UNKNOWN STEP	
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:17.4852763Z   pr-comment: This pull request has been automatically locked since there has not been any recent activity after it was closed. Please open a new issue for related bugs.
+lock-threads / Lock Threads	UNKNOWN STEP	
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:17.4857777Z   github-token: [secret]
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:17.4858279Z   issue-lock-reason: resolved
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:17.4858801Z   pr-lock-reason: resolved
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:17.4859315Z   discussion-inactive-days: 365
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:17.4859825Z   log-output: false
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:29:17.4860752Z ##[endgroup]
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:34:18.7742488Z ##[error]Request failed due to following response errors:
+lock-threads / Lock Threads	UNKNOWN STEP	 - Resource not accessible by integration
+lock-threads / Lock Threads	UNKNOWN STEP	2026-10-01T00:34:18.7948490Z Cleaning up orphan processes

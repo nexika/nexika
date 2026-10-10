@@ -1,0 +1,49 @@
+quality-check / Lint Code	UNKNOWN STEP	﻿2026-07-16T14:24:08.8191752Z Current runner version: '2.335.1'
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:08.8227772Z ##[group]Runner Image Provisioner
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:08.8229362Z Hosted Compute Agent
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:08.8230410Z Version: 20260707.563
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:08.8244934Z ##[group]Runner Image
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:08.8245994Z Image: ubuntu-24.04
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:08.8247172Z Version: 20260714.240.1
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:10.3732560Z ##[group]Run actions/checkout@v6
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:10.3733825Z with:
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:10.3734350Z   persist-credentials: false
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:11.4690288Z ##[group]Run actions/setup-node@v6
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:11.4690863Z with:
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:11.4691272Z   check-latest: true
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:12.8415477Z ##[group]Run npm i --ignore-scripts
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:12.8415905Z ^[[36;1mnpm i --ignore-scripts^[[0m
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:12.8506133Z shell: /usr/bin/bash -e {0}
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:31.7049756Z ##[group]Run npm run lint
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:31.7050075Z ^[[36;1mnpm run lint^[[0m
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:31.7106038Z shell: /usr/bin/bash -e {0}
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:31.7106304Z ##[endgroup]
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:31.8095244Z 
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:31.8095771Z > fastify@5.10.0 lint
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:31.8096415Z > npm run lint:eslint
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:31.8096698Z 
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:31.9065456Z 
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:31.9065976Z > fastify@5.10.0 lint:eslint
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:31.9066509Z > eslint
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:31.9066731Z 
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.8036335Z 
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.8037037Z Oops! Something went wrong! :(
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.8037422Z 
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.8037597Z ESLint: 9.39.5
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.8037828Z 
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.8038367Z TypeError: Cannot read properties of undefined (reading 'Intrinsic')
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.8039627Z     at Object.<anonymous> (/home/runner/work/fastify/fastify/node_modules/ts-api-utils/lib/index.cjs:787:57)
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.8040663Z     at Module._compile (node:internal/modules/cjs/loader:1871:14)
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.8041381Z     at Object..js (node:internal/modules/cjs/loader:2002:10)
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.8042351Z     at Module.load (node:internal/modules/cjs/loader:1594:32)
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.8043074Z     at Module._load (node:internal/modules/cjs/loader:1396:12)
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.8043820Z     at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.8044621Z     at Module.require (node:internal/modules/cjs/loader:1617:12)
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.8045270Z     at require (node:internal/modules/helpers:153:16)
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.8046653Z     at Object.<anonymous> (/home/runner/work/fastify/fastify/node_modules/neostandard/node_modules/@typescript-eslint/typescript-estree/dist/convert-comments.js:37:30)
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.8048050Z     at Module._compile (node:internal/modules/cjs/loader:1871:14)
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.9735706Z ##[error]Process completed with exit code 2.
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:32.9869384Z Post job cleanup.
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:33.0688523Z [command]/usr/bin/git version
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:33.0724719Z git version 2.54.0
+quality-check / Lint Code	UNKNOWN STEP	2026-07-16T14:24:33.1690193Z Cleaning up orphan processes

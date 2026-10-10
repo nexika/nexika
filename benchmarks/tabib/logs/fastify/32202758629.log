@@ -1,0 +1,122 @@
+linkChecker	UNKNOWN STEP	﻿2026-08-19T06:06:16.7988957Z Current runner version: '2.336.0'
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:16.8012038Z ##[group]Runner Image Provisioner
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:16.8012752Z Hosted Compute Agent
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:16.8013271Z Version: 20260729.566
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:16.8019163Z ##[group]Runner Image
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:16.8019641Z Image: ubuntu-24.04
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:16.8020147Z Version: 20260810.271.1
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:19.0750761Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:19.0751201Z with:
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:19.0751630Z   persist-credentials: false
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1190736Z ##[endgroup]
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1399160Z ##[group]Run lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1399550Z with:
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1399707Z   fail: true
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1399950Z   args: --offline --verbose --no-progress --root-dir "$(pwd)" './**/*.md'
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1400227Z   debug: false
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1400385Z   failIfEmpty: true
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1485177Z ##[group]Run echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1485640Z ^[[36;1mecho "$HOME/.local/bin" >> "$GITHUB_PATH"^[[0m
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1485929Z ^[[36;1mmkdir -p "$HOME/.local/bin"^[[0m
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1511947Z ##[endgroup]
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1579772Z ##[end-action id=lychee.__run;outcome=success;conclusion=success;duration_ms=12]
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1582112Z ##[start-action display=Clean up existing lychee binary;id=lychee.__run_2]
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1600465Z ##[group]Run # Remove any existing lychee binary to prevent conflicts
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1600882Z ^[[36;1m# Remove any existing lychee binary to prevent conflicts^[[0m
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1601204Z ^[[36;1mrm -f "$HOME/.local/bin/lychee"^[[0m
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1619562Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1619866Z env:
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1684887Z ##[group]Run # Create a temporary directory for downloads and extraction
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1685350Z ^[[36;1m# Create a temporary directory for downloads and extraction^[[0m
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.1685700Z ^[[36;1mTEMP_DIR="${RUNNER_TEMP}/lychee-download"^[[0m
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.6658928Z ##[group]Run # Install lychee from the temporary directory
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.6659306Z ^[[36;1m# Install lychee from the temporary directory^[[0m
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.6659683Z ^[[36;1minstall -t "$HOME/.local/bin" -D "/home/runner/work/_temp/lychee-download/lychee"^[[0m
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.6808947Z ##[group]Run /home/runner/work/_actions/lycheeverse/lychee-action/8646ba30535128ac92d33dfc9133794bfdd9b411/entrypoint.sh
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.6809624Z ^[[36;1m/home/runner/work/_actions/lycheeverse/lychee-action/8646ba30535128ac92d33dfc9133794bfdd9b411/entrypoint.sh^[[0m
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.6825079Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9011085Z [EXCLUDED] https://github.com/smartiniOnGitHub/fastify-healthcheck
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9011638Z [EXCLUDED] https://github.com/manju4ever/fastify-impressions
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9011984Z [EXCLUDED] https://github.com/mgcrea/pino-pretty-compact
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9012308Z [EXCLUDED] https://github.com/hemerajs/fastify-error-page
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9012630Z [EXCLUDED] https://github.com/hsynlms/fastify-guard
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9012969Z [EXCLUDED] https://github.com/ShogunPanda/fastify-http-errors-enhanced
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9013311Z [EXCLUDED] https://github.com/Jnig/fastify-flux
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9110621Z [EXCLUDED] https://github.com/fastify/fastify-swagger-ui
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9110929Z [EXCLUDED] https://www.i18next.com/
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9111193Z [EXCLUDED] https://github.com/inaiat/fastify-papr
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9111690Z [EXCLUDED] https://github.com/bhouston/fastify-http-exceptions
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9112046Z [EXCLUDED] https://github.com/jeka-kiselyov/fastify-mongoose-api
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9112372Z [EXCLUDED] https://github.com/mgcrea/fastify-session
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9112694Z [EXCLUDED] https://postgraphile.org/postgraphile/4/
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9138949Z [EXCLUDED] https://www.cve.org/
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9139246Z [EXCLUDED] https://github.com/hapijs/hapi/issues/3916
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9139757Z [EXCLUDED] https://web.archive.org/web/20190201220503/https://hueniverse.com/on-hapi-licensing-a-preview-f982662ee898?gi=b54e9a75bac6
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9140272Z [EXCLUDED] https://github.com/fastify/fastify-error
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9140622Z [EXCLUDED] https://github.com/fastify/process-warning
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9140971Z [EXCLUDED] https://github.com/fastify/point-of-view
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9141258Z [EXCLUDED] https://github.com/mcollina/avvio
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9170244Z [EXCLUDED] https://github.com/fastify/fastify-helmet
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9170547Z [EXCLUDED] https://github.com/fastify/fastify-plugin
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9170878Z [EXCLUDED] https://nodejs.org/api/esm.html
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9171200Z [EXCLUDED] https://github.com/mcollina/avvio#error-handling
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9171798Z [EXCLUDED] https://github.com/fastify/fastify/pull/5020
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9172148Z [EXCLUDED] https://nodejs.org/en/blog/community/domain-postmortem
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9172484Z [EXCLUDED] https://github.com/fastify/fastify/pull/2023
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9172802Z [EXCLUDED] https://github.com/fastify/fastify/pull/4323
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9173103Z [EXCLUDED] https://github.com/fastify/fastify/pull/6832
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9173411Z [EXCLUDED] https://github.com/fastify/fastify/pull/2415
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9173830Z [EXCLUDED] https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9174233Z [EXCLUDED] https://github.com/fastify/fastify/pull/3090
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9174531Z [EXCLUDED] https://github.com/fastify/fastify/pull/5768
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9174840Z [EXCLUDED] https://github.com/fastify/fastify/pull/5141
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9182195Z [EXCLUDED] https://github.com/fastify/fastify/pull/4520
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9182496Z [EXCLUDED] https://github.com/fastify/fastify/pull/2954
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9182879Z [EXCLUDED] https://github.com/fastify/fastify/pull/5286
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9183311Z [EXCLUDED] https://nodejs.org/api/process.html#warning-using-uncaughtexception-correctly
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9183758Z [EXCLUDED] https://github.com/fastify/fastify/pull/4824
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9184063Z [EXCLUDED] https://github.com/fastify/fastify/pull/4886
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9184374Z [EXCLUDED] https://github.com/fastify/fastify/pull/4601
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9190860Z [EXCLUDED] https://github.com/fastify/fastify-static
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9191225Z [EXCLUDED] https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Vary
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9191788Z [EXCLUDED] https://semver.org/
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9192066Z [EXCLUDED] https://ajv.js.org/api.html#error-objects
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9192365Z [EXCLUDED] https://github.com/fastify/fastify-static
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9192739Z [EXCLUDED] https://github.com/pinojs/pino/blob/main/docs/api.md#level-string
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9193083Z [EXCLUDED] https://json-schema.org/
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9336860Z ##[group]Run # docs/Guides/Ecosystem.md is checked by scripts/validate-ecosystem-links.js
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9337407Z ^[[36;1m# docs/Guides/Ecosystem.md is checked by scripts/validate-ecosystem-links.js^[[0m
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9338149Z ^[[36;1mchanged_files=$(git diff --name-only --diff-filter=ACMRT "9334d07129589f7340adfa4729ebe6c55e34bbfd" "70397d9430ec88aff2e1e9202b747b71bfe7a002" | grep -E '\.md$' | grep -v '^docs/Guides/Ecosystem\.md$' || true)^[[0m
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9510674Z ##[group]Run JustinBeckwith/linkinator-action@7b6b0bc671f6264e1a8daa4488a5bd91ce61dcd4
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9511036Z with:
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9511258Z   paths: docs/Guides/Style-Guide.md
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9511808Z   serverRoot: /home/runner/work/fastify/fastify
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9511883Z   retry: true
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9511987Z   redirects: error
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9512051Z   verbosity: error
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9512352Z   linksToSkip: https://github.com/orgs/fastify/.*,https://github.com/fastify/fastify/security/advisories/new
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9512430Z   concurrency: 100
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9512530Z   recurse: false
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9512629Z   timeout: 0
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9512695Z   markdown: true
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9512853Z   directoryListing: true
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9512930Z   retryErrors: false
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9513039Z   retryErrorsCount: 3
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9513122Z   retryErrorsJitter: 2000
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9513227Z   allowInsecureCerts: false
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9513412Z   requireHttps: false
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9513492Z   cleanUrls: false
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9513594Z   checkCss: false
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9513677Z   checkFragments: false
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:21.9513785Z ##[endgroup]
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:22.0420783Z rewrite repo to Snehal-Pradhan/fastify
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:22.0425213Z Scanning docs/Guides/Style-Guide.md
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:22.2766780Z ##[error][403] https://medium.com/better-programming/string-case-styles-camel-pascal-snake-and-kebab-case-981407998841 - HTTP 403
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:22.4929020Z Scanned total of 7 links!
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:22.4944138Z ##[error]Detected 1 broken links.
+linkChecker	UNKNOWN STEP	 docs/Guides/Style-Guide.md
+linkChecker	UNKNOWN STEP	   [403] https://medium.com/better-programming/string-case-styles-camel-pascal-snake-and-kebab-case-981407998841 - HTTP 403
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:22.5081950Z Post job cleanup.
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:22.5706318Z [command]/usr/bin/git version
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:22.5734411Z git version 2.54.0
+linkChecker	UNKNOWN STEP	2026-08-19T06:06:22.6443335Z Cleaning up orphan processes

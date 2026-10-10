@@ -1,0 +1,28 @@
+Lint Ecosystem Order	UNKNOWN STEP	﻿2026-08-22T16:55:57.1821665Z Current runner version: '2.336.0'
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:55:57.1848712Z ##[group]Runner Image Provisioner
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:55:57.1849603Z Hosted Compute Agent
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:55:57.1850498Z Version: 20260729.566
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:55:57.1858722Z ##[group]Runner Image
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:55:57.1859324Z Image: ubuntu-24.04
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:55:57.1860246Z Version: 20260816.277.1
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:55:58.9233704Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:55:58.9235320Z with:
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:55:58.9235896Z   persist-credentials: false
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:56:00.2236260Z ##[group]Run actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:56:00.2237871Z with:
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:56:00.2246752Z   github-token: [secret]
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:56:00.2248342Z   script: const script = require('./.github/scripts/lint-ecosystem.js')
+Lint Ecosystem Order	UNKNOWN STEP	await script({ core })
+Lint Ecosystem Order	UNKNOWN STEP	
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:56:00.2250238Z   debug: false
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:56:00.2251159Z   user-agent: actions/github-script
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:56:00.2252259Z   result-encoding: json
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:56:00.2253195Z   retries: 0
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:56:00.2254154Z   retry-exempt-status-codes: 400,401,403,404,422
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:56:00.2255374Z ##[endgroup]
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:56:00.3455414Z ##[error]@punkish/fastify-better-sqlite3 not listed in alphabetical order
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:56:00.3469320Z ##[error]Failed when linting Ecosystem.md
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:56:00.8240492Z Post job cleanup.
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:56:00.9146505Z [command]/usr/bin/git version
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:56:00.9198793Z git version 2.55.0
+Lint Ecosystem Order	UNKNOWN STEP	2026-08-22T16:56:01.0336693Z Cleaning up orphan processes

@@ -1,0 +1,97 @@
+main	UNKNOWN STEP	﻿2026-07-30T14:37:25.8462380Z Current runner version: '2.336.0'
+main	UNKNOWN STEP	2026-07-30T14:37:25.8505297Z ##[group]Runner Image Provisioner
+main	UNKNOWN STEP	2026-07-30T14:37:25.8506810Z Hosted Compute Agent
+main	UNKNOWN STEP	2026-07-30T14:37:25.8508102Z Version: 20260707.563
+main	UNKNOWN STEP	2026-07-30T14:37:25.8523762Z ##[group]Runner Image
+main	UNKNOWN STEP	2026-07-30T14:37:25.8524897Z Image: ubuntu-24.04
+main	UNKNOWN STEP	2026-07-30T14:37:25.8526066Z Version: 20260720.247.2
+main	UNKNOWN STEP	2026-07-30T14:37:27.1150362Z ##[group]Run actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+main	UNKNOWN STEP	2026-07-30T14:37:27.1151966Z with:
+main	UNKNOWN STEP	2026-07-30T14:37:27.1152710Z   persist-credentials: false
+main	UNKNOWN STEP	2026-07-30T14:37:27.8505284Z ##[group]Run astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57
+main	UNKNOWN STEP	2026-07-30T14:37:27.8506981Z with:
+main	UNKNOWN STEP	2026-07-30T14:37:27.8507798Z   enable-cache: true
+main	UNKNOWN STEP	2026-07-30T14:37:29.8003096Z ##[group]Run actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+main	UNKNOWN STEP	2026-07-30T14:37:29.8003767Z with:
+main	UNKNOWN STEP	2026-07-30T14:37:29.8004093Z   python-version-file: pyproject.toml
+main	UNKNOWN STEP	2026-07-30T14:37:30.0542875Z ##[group]Run actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
+main	UNKNOWN STEP	2026-07-30T14:37:30.0543550Z with:
+main	UNKNOWN STEP	2026-07-30T14:37:30.0543908Z   path: ~/.cache/pre-commit
+main	UNKNOWN STEP	2026-07-30T14:37:30.0544584Z   key: pre-commit|86a87bb0986ce0b5bc75bf3138e4477238ff37466f26796dadad611d7337a637
+main	UNKNOWN STEP	2026-07-30T14:37:30.0545349Z   enableCrossOsArchive: false
+main	UNKNOWN STEP	2026-07-30T14:37:30.0545792Z   fail-on-cache-miss: false
+main	UNKNOWN STEP	2026-07-30T14:37:30.0546231Z   lookup-only: false
+main	UNKNOWN STEP	2026-07-30T14:37:30.0546599Z   save-always: false
+main	UNKNOWN STEP	2026-07-30T14:37:30.0546955Z env:
+main	UNKNOWN STEP	2026-07-30T14:37:30.7323654Z [command]/usr/bin/tar -xf /home/runner/work/_temp/38489137-b30a-41e5-86bc-685c5ec189c8/cache.tzst -P -C /home/runner/work/flask/flask --use-compress-program unzstd
+main	UNKNOWN STEP	2026-07-30T14:37:31.0053865Z Cache restored successfully
+main	UNKNOWN STEP	2026-07-30T14:37:31.0177152Z Cache restored from key: pre-commit|86a87bb0986ce0b5bc75bf3138e4477238ff37466f26796dadad611d7337a637
+main	UNKNOWN STEP	2026-07-30T14:37:31.0369422Z ##[group]Run uv run --locked --no-default-groups --group pre-commit pre-commit run --show-diff-on-failure --color=always --all-files
+main	UNKNOWN STEP	2026-07-30T14:37:31.0370821Z ^[[36;1muv run --locked --no-default-groups --group pre-commit pre-commit run --show-diff-on-failure --color=always --all-files^[[0m
+main	UNKNOWN STEP	2026-07-30T14:37:31.0432125Z shell: /usr/bin/bash -e {0}
+main	UNKNOWN STEP	2026-07-30T14:37:31.0432578Z env:
+main	UNKNOWN STEP	2026-07-30T14:37:31.0433091Z   UV_PYTHON_INSTALL_DIR: /home/runner/work/_temp/uv-python-dir
+main	UNKNOWN STEP	2026-07-30T14:37:31.1909263Z Using CPython 3.14.6 interpreter at: /opt/hostedtoolcache/Python/3.14.6/x64/bin/python3
+main	UNKNOWN STEP	2026-07-30T14:37:31.1910761Z Creating virtual environment at: .venv
+main	UNKNOWN STEP	2026-07-30T14:37:31.1994197Z    Building flask @ file:///home/runner/work/flask/flask
+main	UNKNOWN STEP	2026-07-30T14:37:31.5957157Z       Built flask @ file:///home/runner/work/flask/flask
+main	UNKNOWN STEP	2026-07-30T14:37:31.6116921Z Installed 19 packages in 14ms
+main	UNKNOWN STEP	2026-07-30T14:37:32.0445322Z [INFO]^[[m Installing environment for https://github.com/astral-sh/ruff-pre-commit.
+main	UNKNOWN STEP	2026-07-30T14:37:32.0446617Z [INFO]^[[m Once installed this environment will be reused.
+main	UNKNOWN STEP	2026-07-30T14:37:32.0447492Z [INFO]^[[m This may take a few minutes...
+main	UNKNOWN STEP	2026-07-30T14:37:32.0639634Z [INFO]^[[m Using pre-commit with uv 0.11.15 via pre-commit-uv 4.2.1
+main	UNKNOWN STEP	2026-07-30T14:37:33.4804868Z [INFO]^[[m Installing environment for https://github.com/astral-sh/uv-pre-commit.
+main	UNKNOWN STEP	2026-07-30T14:37:33.4805828Z [INFO]^[[m Once installed this environment will be reused.
+main	UNKNOWN STEP	2026-07-30T14:37:33.4806454Z [INFO]^[[m This may take a few minutes...
+main	UNKNOWN STEP	2026-07-30T14:37:33.5041934Z [INFO]^[[m Using pre-commit with uv 0.11.15 via pre-commit-uv 4.2.1
+main	UNKNOWN STEP	2026-07-30T14:37:34.6213217Z [INFO]^[[m Installing environment for https://github.com/codespell-project/codespell.
+main	UNKNOWN STEP	2026-07-30T14:37:34.6214232Z [INFO]^[[m Once installed this environment will be reused.
+main	UNKNOWN STEP	2026-07-30T14:37:34.6214912Z [INFO]^[[m This may take a few minutes...
+main	UNKNOWN STEP	2026-07-30T14:37:34.6344143Z [INFO]^[[m Using pre-commit with uv 0.11.15 via pre-commit-uv 4.2.1
+main	UNKNOWN STEP	2026-07-30T14:37:37.3232396Z [INFO]^[[m Installing environment for https://github.com/pre-commit/pre-commit-hooks.
+main	UNKNOWN STEP	2026-07-30T14:37:37.3233182Z [INFO]^[[m Once installed this environment will be reused.
+main	UNKNOWN STEP	2026-07-30T14:37:37.3233688Z [INFO]^[[m This may take a few minutes...
+main	UNKNOWN STEP	2026-07-30T14:37:37.3490094Z [INFO]^[[m Using pre-commit with uv 0.11.15 via pre-commit-uv 4.2.1
+main	UNKNOWN STEP	2026-07-30T14:37:38.5417200Z ruff check...............................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:38.5790958Z ruff format..............................................................^[[41mFailed^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:38.5791943Z ^[[2m- hook id: ruff-format^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:38.5792532Z ^[[2m- files were modified by this hook^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:38.5792815Z 
+main	UNKNOWN STEP	2026-07-30T14:37:38.5792972Z 1 file reformatted, 82 files left unchanged
+main	UNKNOWN STEP	2026-07-30T14:37:38.5793256Z 
+main	UNKNOWN STEP	2026-07-30T14:37:38.6632381Z uv-lock..................................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.0499961Z codespell................................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.1620548Z check for merge conflicts................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.3750371Z debug statements (python)................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.4693622Z fix utf-8 byte order marker..............................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.5726336Z trim trailing whitespace.................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6744120Z fix end of files.........................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6745106Z pre-commit hook(s) made changes.
+main	UNKNOWN STEP	2026-07-30T14:37:39.6746101Z If you are seeing this message in CI, reproduce locally with: `pre-commit run --all-files`.
+main	UNKNOWN STEP	2026-07-30T14:37:39.6747163Z To run `pre-commit` as part of git workflow, use `pre-commit install`.
+main	UNKNOWN STEP	2026-07-30T14:37:39.6748148Z All changes made by hooks:
+main	UNKNOWN STEP	2026-07-30T14:37:39.6834641Z ^[[1mdiff --git a/src/flask/views.py b/src/flask/views.py^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6835758Z ^[[1mindex b53814f..885540e 100644^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6836583Z ^[[1m--- a/src/flask/views.py^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6837114Z ^[[1m+++ b/src/flask/views.py^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6837676Z ^[[36m@@ -12,6 +12,7 @@^[[m ^[[mhttp_method_funcs = frozenset(^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6838430Z      ["get", "post", "head", "options", "delete", "put", "trace", "patch"]^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6838998Z  )^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6839281Z  ^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6839572Z ^[[32m+^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6839882Z  class View:^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6840409Z      """Subclass this class and override :meth:`dispatch_request` to^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6841188Z      create a generic class-based view. Call :meth:`as_view` to create a^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6842219Z ^[[36m@@ -133,6 +134,7 @@^[[m ^[[mclass View:^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6842992Z          view.provide_automatic_options = cls.provide_automatic_options  # type: ignore^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6843688Z          return view^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6844029Z  ^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6844328Z ^[[32m+^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6844686Z  class MethodView(View):^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6845308Z      """Dispatches request methods to the corresponding instance methods.^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.6846117Z      For example, if you implement a ``get`` method, it will be used to^[[m
+main	UNKNOWN STEP	2026-07-30T14:37:39.7242429Z ##[error]Process completed with exit code 1.
+main	UNKNOWN STEP	2026-07-30T14:37:39.7405226Z Post job cleanup.
+main	UNKNOWN STEP	2026-07-30T14:37:39.8312338Z [command]/usr/bin/git version
+main	UNKNOWN STEP	2026-07-30T14:37:39.8357058Z git version 2.54.0
+main	UNKNOWN STEP	2026-07-30T14:37:39.9482497Z Cleaning up orphan processes

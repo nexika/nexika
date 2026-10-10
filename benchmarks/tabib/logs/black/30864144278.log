@@ -1,0 +1,190 @@
+build (linux/amd64)	UNKNOWN STEP	﻿2026-08-04T00:00:14.0951526Z Current runner version: '2.336.0'
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:14.0986597Z ##[group]Runner Image Provisioner
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:14.0988031Z Hosted Compute Agent
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:14.0989075Z Version: 20260707.563
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:14.1004387Z ##[group]Runner Image
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:14.1005443Z Image: ubuntu-24.04
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:14.1006630Z Version: 20260720.247.2
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:16.1526154Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:16.1529016Z with:
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:16.1530502Z   persist-credentials: false
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:17.0877475Z ##[group]Run docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:17.0878004Z with:
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:17.0878271Z   driver: docker-container
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:21.0549832Z ##[group]Run docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:21.0550249Z with:
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:21.0550593Z   username: ***
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:21.5021549Z ##[group]Run echo "platform=${platform//\//-}" >> $GITHUB_OUTPUT
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:21.5022256Z ^[[36;1mecho "platform=${platform//\//-}" >> $GITHUB_OUTPUT^[[0m
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:21.5070537Z shell: /usr/bin/bash -e {0}
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:21.5271026Z ##[group]Run docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:21.5271447Z with:
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:21.5271635Z   context: .
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:47.0096759Z #12 3.633 Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:47.0097536Z #12 3.636 Downloading jaraco.classes-3.4.0-py3-none-any.whl (6.8 kB)
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:47.0098045Z #12 3.639 Downloading jaraco_context-6.1.2-py3-none-any.whl (7.9 kB)
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:47.0098540Z #12 3.642 Downloading jaraco_functools-4.6.0-py3-none-any.whl (11 kB)
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:47.0099030Z #12 3.645 Downloading more_itertools-11.1.0-py3-none-any.whl (72 kB)
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:47.0099503Z #12 3.649 Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:47.0099968Z #12 3.652 Downloading setuptools-83.0.0-py3-none-any.whl (1.0 MB)
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:47.0100575Z #12 3.655    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.0/1.0 MB 802.2 MB/s  0:00:00
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:47.0101108Z #12 3.659 Downloading trove_classifiers-2026.6.1.19-py3-none-any.whl (14 kB)
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:47.0543829Z #12 3.854 Installing collected packages: trove-classifiers, ptyprocess, distlib, zstandard, uv, tomlkit, tomli-w, shellingham, setuptools, pygments, pycparser, pluggy, platformdirs, pexpect, pathspec, packaging, more-itertools, mdurl, jeepney, jaraco.context, idna, h11, filelock, click, certifi, virtualenv, vcs-versioning, userpath, markdown-it-py, jaraco.functools, jaraco.classes, hyperlink, httpcore, hatchling, cffi, anyio, setuptools-scm, rich, httpx, hatch-fancy-pypi-readme, cryptography, SecretStorage, hatch-vcs, keyring, hatch
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:50.7978736Z #12 7.598 
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:50.9533680Z #12 7.602 Successfully installed SecretStorage-3.5.0 anyio-4.14.2 certifi-2026.7.22 cffi-2.1.0 click-8.4.2 cryptography-50.0.0 distlib-0.4.3 filelock-3.32.2 h11-0.16.0 hatch-1.15.1 hatch-fancy-pypi-readme-25.1.0 hatch-vcs-0.5.0 hatchling-1.31.0 httpcore-1.0.9 httpx-0.28.1 hyperlink-21.0.0 idna-3.18 jaraco.classes-3.4.0 jaraco.context-6.1.2 jaraco.functools-4.6.0 jeepney-0.9.0 keyring-25.7.0 markdown-it-py-4.2.0 mdurl-0.1.2 more-itertools-11.1.0 packaging-26.2 pathspec-1.1.1 pexpect-4.9.0 platformdirs-4.11.0 pluggy-1.6.0 ptyprocess-0.7.0 pycparser-3.0 pygments-2.20.0 rich-15.0.0 setuptools-83.0.0 setuptools-scm-10.2.1 shellingham-1.5.4 tomli-w-1.2.0 tomlkit-0.15.1 trove-classifiers-2026.6.1.19 userpath-1.9.2 uv-0.12.1 vcs-versioning-2.2.3 virtualenv-20.39.1 zstandard-0.25.0
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:51.2997683Z #12 8.099 ──────────────────────────────────── wheel ─────────────────────────────────────
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:51.5383954Z #12 8.143 /opt/venv/lib/python3.14/site-packages/vcs_versioning/_backends/_git.py:431: UserWarning: "/src" is shallow and may cause errors
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:51.5385247Z #12 8.143   pre_parse(wd)
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:51.5385819Z #12 8.187 Setting up build environment
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.3579395Z #12 9.158 
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.3580060Z #12 9.158 [optparse.groups]Usage:[/]   
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.3581174Z #12 9.158   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] <requirement specifier> \[package-index-options] ...
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.3583199Z #12 9.158   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] -r <requirements file> \[package-index-options] ...
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.3584779Z #12 9.158   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] [-e] <vcs project url> ...
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.3586179Z #12 9.158   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] [-e] <local project path> ...
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.3587576Z #12 9.158   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] <archive url/path> ...
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.3588428Z #12 9.158 
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.3588883Z #12 9.158 --uploaded-prior-to error: invalid value: 'P2D': Invalid isoformat
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.3589626Z #12 9.158 string: 'P2D'. Expected an ISO 8601 datetime string, e.g '2023-01-01'
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.3590208Z #12 9.158 or '2023-01-01T00:00:00Z'
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6456185Z #12 ERROR: process "/bin/sh -c cd /src     && pip install --no-cache-dir --upgrade pip     && pip install --no-cache-dir --group hatch     && hatch build -t wheel     && pip install --no-cache-dir dist/*-cp*     && pip install black[colorama,d,uvloop]" did not complete successfully: exit code: 2
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6714240Z ------
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6715799Z  > [builder 6/6] RUN cd /src     && pip install --no-cache-dir --upgrade pip     && pip install --no-cache-dir --group hatch     && hatch build -t wheel     && pip install --no-cache-dir dist/*-cp*     && pip install black[colorama,d,uvloop]:
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6717174Z 9.158 [optparse.groups]Usage:[/]   
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6718136Z 9.158   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] <requirement specifier> \[package-index-options] ...
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6719414Z 9.158   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] -r <requirements file> \[package-index-options] ...
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6720540Z 9.158   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] [-e] <vcs project url> ...
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6721563Z 9.158   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] [-e] <local project path> ...
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6723183Z 9.158   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] <archive url/path> ...
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6724168Z 9.158 
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6724742Z 9.158 --uploaded-prior-to error: invalid value: 'P2D': Invalid isoformat
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6725630Z 9.158 string: 'P2D'. Expected an ISO 8601 datetime string, e.g '2023-01-01'
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6726665Z 9.158 or '2023-01-01T00:00:00Z'
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6728397Z ------
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6817853Z Dockerfile:13
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6818254Z --------------------
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6818612Z   12 |     RUN python -m venv $VIRTUAL_ENV
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6818900Z   13 | >>> RUN cd /src \
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6819189Z   14 | >>>     && pip install --no-cache-dir --upgrade pip \
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6819750Z   15 | >>>     && pip install --no-cache-dir --group hatch \
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6820089Z   16 | >>>     && hatch build -t wheel \
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6820404Z   17 | >>>     && pip install --no-cache-dir dist/*-cp* \
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6820725Z   18 | >>>     && pip install black[colorama,d,uvloop]
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6820998Z   19 |     
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6821177Z --------------------
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.6822746Z ERROR: failed to build: failed to solve: process "/bin/sh -c cd /src     && pip install --no-cache-dir --upgrade pip     && pip install --no-cache-dir --group hatch     && hatch build -t wheel     && pip install --no-cache-dir dist/*-cp*     && pip install black[colorama,d,uvloop]" did not complete successfully: exit code: 2
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.7090944Z ##[group]Reference
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.7951210Z builder-13aed503-bb2f-453d-9fff-f34d1006f7bc/builder-13aed503-bb2f-453d-9fff-f34d1006f7bc0/ygqoclwpic1od834h1qxmavt8
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.7953373Z ##[endgroup]
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.7954358Z ##[group]Check build summary support
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.7956127Z Build summary supported!
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.7957140Z ##[endgroup]
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.7989681Z ##[error]buildx failed with: ERROR: failed to build: failed to solve: process "/bin/sh -c cd /src     && pip install --no-cache-dir --upgrade pip     && pip install --no-cache-dir --group hatch     && hatch build -t wheel     && pip install --no-cache-dir dist/*-cp*     && pip install black[colorama,d,uvloop]" did not complete successfully: exit code: 2
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:52.8185993Z Post job cleanup.
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:53.0549507Z ##[group]Generating build summary
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:53.1215395Z exporting build record to /home/runner/work/_temp/docker-actions-toolkit-kXMnac/export
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:53.9622967Z Post job cleanup.
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:54.1658222Z ##[group]Logout from docker.io
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:54.1698351Z [command]/usr/bin/docker logout docker.io
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:54.2003252Z Post job cleanup.
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:54.3887420Z ##[group]Removing builder
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:54.4895215Z [command]/usr/bin/docker buildx rm builder-13aed503-bb2f-453d-9fff-f34d1006f7bc
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:55.2996219Z Post job cleanup.
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:55.3832546Z [command]/usr/bin/git version
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:55.3870317Z git version 2.54.0
+build (linux/amd64)	UNKNOWN STEP	2026-08-04T00:00:55.4848369Z Cleaning up orphan processes
+build (linux/arm64)	UNKNOWN STEP	﻿2026-08-04T00:00:12.9128264Z Current runner version: '2.336.0'
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:12.9153826Z ##[group]Runner Image Provisioner
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:12.9155385Z Hosted Compute Agent
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:12.9155993Z Version: 20260707.563
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:12.9166479Z ##[group]Runner Image
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:12.9167145Z Image: ubuntu-24.04-arm
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:12.9167756Z Version: 20260719.67.1
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:14.3043753Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:14.3045541Z with:
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:14.3046324Z   persist-credentials: false
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:14.9177362Z ##[group]Run docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:14.9178024Z with:
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:14.9178562Z   driver: docker-container
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:21.3882219Z ##[group]Run docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:21.3882736Z with:
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:21.3883193Z   username: ***
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:22.1895747Z ##[group]Run echo "platform=${platform//\//-}" >> $GITHUB_OUTPUT
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:22.1896588Z ^[[36;1mecho "platform=${platform//\//-}" >> $GITHUB_OUTPUT^[[0m
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:22.1938025Z shell: /usr/bin/bash -e {0}
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:22.2159256Z ##[group]Run docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:22.2159875Z with:
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:22.2160118Z   context: .
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:47.9487312Z #12 3.706 Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:47.9487709Z #12 3.714 Downloading jaraco.classes-3.4.0-py3-none-any.whl (6.8 kB)
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:47.9488140Z #12 3.720 Downloading jaraco_context-6.1.2-py3-none-any.whl (7.9 kB)
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:47.9488546Z #12 3.751 Downloading jaraco_functools-4.6.0-py3-none-any.whl (11 kB)
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:47.9488952Z #12 3.759 Downloading more_itertools-11.1.0-py3-none-any.whl (72 kB)
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:47.9489331Z #12 3.768 Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:47.9489701Z #12 3.776 Downloading setuptools-83.0.0-py3-none-any.whl (1.0 MB)
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:47.9490204Z #12 3.783    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.0/1.0 MB 144.9 MB/s  0:00:00
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:47.9490624Z #12 3.790 Downloading trove_classifiers-2026.6.1.19-py3-none-any.whl (14 kB)
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:48.1072946Z #12 3.948 Installing collected packages: trove-classifiers, ptyprocess, distlib, zstandard, uv, tomlkit, tomli-w, shellingham, setuptools, pygments, pycparser, pluggy, platformdirs, pexpect, pathspec, packaging, more-itertools, mdurl, jeepney, jaraco.context, idna, h11, filelock, click, certifi, virtualenv, vcs-versioning, userpath, markdown-it-py, jaraco.functools, jaraco.classes, hyperlink, httpcore, hatchling, cffi, anyio, setuptools-scm, rich, httpx, hatch-fancy-pypi-readme, cryptography, SecretStorage, hatch-vcs, keyring, hatch
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:51.2328206Z #12 7.074 
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:51.3868397Z #12 7.077 Successfully installed SecretStorage-3.5.0 anyio-4.14.2 certifi-2026.7.22 cffi-2.1.0 click-8.4.2 cryptography-50.0.0 distlib-0.4.3 filelock-3.32.2 h11-0.16.0 hatch-1.15.1 hatch-fancy-pypi-readme-25.1.0 hatch-vcs-0.5.0 hatchling-1.31.0 httpcore-1.0.9 httpx-0.28.1 hyperlink-21.0.0 idna-3.18 jaraco.classes-3.4.0 jaraco.context-6.1.2 jaraco.functools-4.6.0 jeepney-0.9.0 keyring-25.7.0 markdown-it-py-4.2.0 mdurl-0.1.2 more-itertools-11.1.0 packaging-26.2 pathspec-1.1.1 pexpect-4.9.0 platformdirs-4.11.0 pluggy-1.6.0 ptyprocess-0.7.0 pycparser-3.0 pygments-2.20.0 rich-15.0.0 setuptools-83.0.0 setuptools-scm-10.2.1 shellingham-1.5.4 tomli-w-1.2.0 tomlkit-0.15.1 trove-classifiers-2026.6.1.19 userpath-1.9.2 uv-0.12.1 vcs-versioning-2.2.3 virtualenv-20.39.1 zstandard-0.25.0
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:51.6687823Z #12 7.510 ──────────────────────────────────── wheel ─────────────────────────────────────
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:51.8865480Z #12 7.544 /opt/venv/lib/python3.14/site-packages/vcs_versioning/_backends/_git.py:431: UserWarning: "/src" is shallow and may cause errors
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:51.8866077Z #12 7.544   pre_parse(wd)
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:51.8866295Z #12 7.577 Setting up build environment
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:52.5008257Z #12 8.342 
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:52.5008629Z #12 8.342 [optparse.groups]Usage:[/]   
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:52.5009329Z #12 8.342   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] <requirement specifier> \[package-index-options] ...
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:52.5010752Z #12 8.342   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] -r <requirements file> \[package-index-options] ...
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:52.5011892Z #12 8.342   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] [-e] <vcs project url> ...
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:52.5012804Z #12 8.342   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] [-e] <local project path> ...
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:52.5013658Z #12 8.342   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] <archive url/path> ...
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:52.5014187Z #12 8.342 
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:52.5014700Z #12 8.342 --uploaded-prior-to error: invalid value: 'P2D': Invalid isoformat
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:52.5015148Z #12 8.342 string: 'P2D'. Expected an ISO 8601 datetime string, e.g '2023-01-01'
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:52.5015495Z #12 8.342 or '2023-01-01T00:00:00Z'
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2036104Z #12 ERROR: process "/bin/sh -c cd /src     && pip install --no-cache-dir --upgrade pip     && pip install --no-cache-dir --group hatch     && hatch build -t wheel     && pip install --no-cache-dir dist/*-cp*     && pip install black[colorama,d,uvloop]" did not complete successfully: exit code: 2
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2137510Z ------
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2138535Z  > [builder 6/6] RUN cd /src     && pip install --no-cache-dir --upgrade pip     && pip install --no-cache-dir --group hatch     && hatch build -t wheel     && pip install --no-cache-dir dist/*-cp*     && pip install black[colorama,d,uvloop]:
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2141591Z 8.342 [optparse.groups]Usage:[/]   
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2142478Z 8.342   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] <requirement specifier> \[package-index-options] ...
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2143863Z 8.342   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] -r <requirements file> \[package-index-options] ...
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2145124Z 8.342   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] [-e] <vcs project url> ...
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2146008Z 8.342   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] [-e] <local project path> ...
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2146986Z 8.342   /root/.local/share/hatch/env/virtual/black/VsnhxLU2/black-build/bin/python -m pip install \[options] <archive url/path> ...
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2147689Z 8.342 
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2149644Z 8.342 --uploaded-prior-to error: invalid value: 'P2D': Invalid isoformat
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2151548Z 8.342 string: 'P2D'. Expected an ISO 8601 datetime string, e.g '2023-01-01'
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2152459Z 8.342 or '2023-01-01T00:00:00Z'
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2153717Z ------
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2154210Z Dockerfile:13
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2154625Z --------------------
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2154858Z   12 |     RUN python -m venv $VIRTUAL_ENV
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2157060Z   13 | >>> RUN cd /src \
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2157352Z   14 | >>>     && pip install --no-cache-dir --upgrade pip \
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2157682Z   15 | >>>     && pip install --no-cache-dir --group hatch \
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2157985Z   16 | >>>     && hatch build -t wheel \
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2158255Z   17 | >>>     && pip install --no-cache-dir dist/*-cp* \
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2158560Z   18 | >>>     && pip install black[colorama,d,uvloop]
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2158812Z   19 |     
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2158967Z --------------------
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2160004Z ERROR: failed to build: failed to solve: process "/bin/sh -c cd /src     && pip install --no-cache-dir --upgrade pip     && pip install --no-cache-dir --group hatch     && hatch build -t wheel     && pip install --no-cache-dir dist/*-cp*     && pip install black[colorama,d,uvloop]" did not complete successfully: exit code: 2
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.2481840Z ##[group]Reference
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.3251784Z builder-e4781fd0-509f-4086-8e63-5fe20a82b6cb/builder-e4781fd0-509f-4086-8e63-5fe20a82b6cb0/2wu0fp4glf3ebg6rmhg94wmhq
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.3252657Z ##[endgroup]
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.3252998Z ##[group]Check build summary support
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.3255549Z Build summary supported!
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.3255903Z ##[endgroup]
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.3282253Z ##[error]buildx failed with: ERROR: failed to build: failed to solve: process "/bin/sh -c cd /src     && pip install --no-cache-dir --upgrade pip     && pip install --no-cache-dir --group hatch     && hatch build -t wheel     && pip install --no-cache-dir dist/*-cp*     && pip install black[colorama,d,uvloop]" did not complete successfully: exit code: 2
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.3454998Z Post job cleanup.
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.5367639Z ##[group]Generating build summary
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:53.5952544Z exporting build record to /home/runner/work/_temp/docker-actions-toolkit-9S7nqZ/export
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:54.2261182Z Post job cleanup.
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:54.3911109Z ##[group]Logout from docker.io
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:54.3945682Z [command]/usr/bin/docker logout docker.io
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:54.4192294Z Post job cleanup.
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:54.5640995Z ##[group]Removing builder
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:54.6404762Z [command]/usr/bin/docker buildx rm builder-e4781fd0-509f-4086-8e63-5fe20a82b6cb
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:55.0649887Z Post job cleanup.
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:55.1339522Z [command]/usr/bin/git version
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:55.1373185Z git version 2.54.0
+build (linux/arm64)	UNKNOWN STEP	2026-08-04T00:00:55.2185303Z Cleaning up orphan processes

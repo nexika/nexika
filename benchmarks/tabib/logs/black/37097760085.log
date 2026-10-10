@@ -1,0 +1,183 @@
+uvloop (ubuntu-latest)	UNKNOWN STEP	﻿2026-10-03T04:48:36.8952037Z Current runner version: '2.337.0'
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:36.8970273Z ##[group]Runner Image Provisioner
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:36.8970808Z Hosted Compute Agent
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:36.8971304Z Version: 20260901.588
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:36.8976388Z ##[group]Runner Image
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:36.8976732Z Image: ubuntu-24.04
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:36.8977122Z Version: 20260927.320.1
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:37.4560011Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:37.4560527Z with:
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:37.4560783Z   persist-credentials: false
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:38.4068512Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:38.4069067Z with:
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:38.4069315Z   python-version: 3.15
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:38.4074278Z   PIP_UPLOADED_PRIOR_TO: P2D
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:38.4074611Z ##[endgroup]
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:38.4816830Z ##[group]Installed versions
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:38.4863504Z Version ~3.15.0-0 was not found in the local cache
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:39.1991422Z Version ~3.15.0-0 is available for downloading
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:39.1993614Z Download from "https://github.com/actions/python-versions/releases/download/3.15.0-rc.2-33583724836/python-3.15.0-rc.2-linux-24.04-x64.tar.gz"
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:39.7636674Z Extract downloaded archive
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:44.7064036Z ##[group]Run python -m pip install -e ".[uvloop]"
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:44.7064305Z ^[[36;1mpython -m pip install -e ".[uvloop]"^[[0m
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:44.7289910Z shell: /usr/bin/bash -e {0}
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:47.8591444Z ##[group]Run python -m black --check .
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:47.8591662Z ^[[36;1mpython -m black --check .^[[0m
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:47.8646870Z shell: /usr/bin/bash -e {0}
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:47.8647009Z env:
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:47.8647126Z   PIP_UPLOADED_PRIOR_TO: P2D
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:47.8647312Z   pythonLocation: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:47.8647571Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64/lib/pkgconfig
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:47.8647823Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:47.8648048Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:47.8648269Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:47.8648496Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64/lib
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:47.8648681Z ##[endgroup]
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:48.5693971Z would reformat /home/runner/work/black/black/scripts/diff_shades_gha_helper.py
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:50.4574544Z 
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:50.4575287Z Oh no! 💥 💔 💥
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:50.4575580Z 1 file would be reformatted, 67 files would be left unchanged.
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:50.4894402Z ##[error]Process completed with exit code 1.
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:50.4986813Z Post job cleanup.
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:50.5574990Z [command]/usr/bin/git version
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:50.5603238Z git version 2.55.0
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-10-03T04:48:50.6354668Z Cleaning up orphan processes
+uvloop (windows-latest)	UNKNOWN STEP	﻿2026-10-03T04:48:36.7070543Z Current runner version: '2.337.0'
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:36.7099455Z ##[group]Runner Image Provisioner
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:36.7100394Z Hosted Compute Agent
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:36.7101141Z Version: 20260901.588
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:36.7113570Z ##[group]Runner Image
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:36.7114258Z Image: windows-2025-vs2026
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:36.7115010Z Version: 20260925.250.1
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:37.3741699Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:37.3742738Z with:
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:37.3743070Z   persist-credentials: false
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:43.5757783Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:43.5758157Z with:
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:43.5758324Z   python-version: 3.15
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:43.5761550Z   PIP_UPLOADED_PRIOR_TO: P2D
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:43.5761725Z ##[endgroup]
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:43.7022834Z ##[group]Installed versions
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:43.7187449Z Version ~3.15.0-0 was not found in the local cache
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:44.2293582Z Version ~3.15.0-0 is available for downloading
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:44.2294571Z Download from "https://github.com/actions/python-versions/releases/download/3.15.0-rc.2-33583724836/python-3.15.0-rc.2-win32-x64.zip"
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:44.5972226Z Extract downloaded archive
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:44.6622399Z [command]"C:\Program Files\PowerShell\7\pwsh.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command "$ErrorActionPreference = 'Stop' ; try { Add-Type -AssemblyName System.IO.Compression.ZipFile } catch { } ; try { [System.IO.Compression.ZipFile]::ExtractToDirectory('D:\a\_temp\python-3.15.0-rc.2-win32-x64.zip', 'D:\a\_temp\2f50b0b0-c12b-414f-abd4-485c6f30d962', $true) } catch { if (($_.Exception.GetType().FullName -eq 'System.Management.Automation.MethodException') -or ($_.Exception.GetType().FullName -eq 'System.Management.Automation.RuntimeException') ){ Expand-Archive -LiteralPath 'D:\a\_temp\python-3.15.0-rc.2-win32-x64.zip' -DestinationPath 'D:\a\_temp\2f50b0b0-c12b-414f-abd4-485c6f30d962' -Force } else { throw $_ } } ;"
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:45.0857630Z Execute installation script
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:48.0323678Z Check if Python hostedtoolcache folder exist...
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:48:48.0327251Z 
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:49:20.5059489Z ##[group]Run python -m pip install -e ".[uvloop]"
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:49:20.5059917Z ^[[36;1mpython -m pip install -e ".[uvloop]"^[[0m
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:49:20.5214303Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:11.6779848Z ##[group]Run python -m black --check .
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:11.6780212Z ^[[36;1mpython -m black --check .^[[0m
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:11.6844482Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:11.6844783Z env:
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:11.6844955Z   PIP_UPLOADED_PRIOR_TO: P2D
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:11.6845234Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.15.0-rc.2\x64
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:11.6845636Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.15.0-rc.2\x64/lib/pkgconfig
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:11.6846027Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-rc.2\x64
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:11.6846365Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-rc.2\x64
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:11.6846695Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-rc.2\x64
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:11.6847201Z ##[endgroup]
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:12.9238586Z would reformat D:\a\black\black\scripts\diff_shades_gha_helper.py
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:15.2189538Z 
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:15.2190426Z Oh no! 💥 💔 💥
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:15.2190764Z 1 file would be reformatted, 67 files would be left unchanged.
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:15.3298549Z ##[error]Process completed with exit code 1.
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:15.3510547Z Post job cleanup.
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:15.5023293Z [command]"C:\Program Files\Git\bin\git.exe" version
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:15.5242688Z git version 2.55.0.windows.5
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:16.9382985Z Cleaning up orphan processes
+uvloop (windows-latest)	UNKNOWN STEP	2026-10-03T04:50:16.9619562Z Terminate orphan process: pid (3968) (vctip)
+uvloop (macOS-latest)	UNKNOWN STEP	﻿2026-10-03T04:48:42.2512350Z Current runner version: '2.337.0'
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:42.2530670Z ##[group]Runner Image Provisioner
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:42.2531480Z Hosted Compute Agent
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:42.2531880Z Version: 20260828.587
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:42.2538060Z ##[group]Runner Image
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:42.2538450Z Image: macos-26-arm64
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:42.2538920Z Version: 20260907.0351.1
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:43.3922590Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:43.3923300Z with:
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:43.3923630Z   persist-credentials: false
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:45.2711760Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:45.2712200Z with:
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:45.2712380Z   python-version: 3.15
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:45.2715690Z   PIP_UPLOADED_PRIOR_TO: P2D
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:45.2715900Z ##[endgroup]
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:45.3749480Z ##[group]Installed versions
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:45.3801530Z Version ~3.15.0-0 was not found in the local cache
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:46.3981750Z Version ~3.15.0-0 is available for downloading
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:46.3982540Z Download from "https://github.com/actions/python-versions/releases/download/3.15.0-rc.2-33583724836/python-3.15.0-rc.2-darwin-arm64.tar.gz"
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:48:47.3540840Z Extract downloaded archive
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:15.0272900Z ##[group]Run python -m pip install -e ".[uvloop]"
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:15.0297990Z ^[[36;1mpython -m pip install -e ".[uvloop]"^[[0m
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:15.0371510Z shell: /bin/bash -e {0}
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:19.1922190Z ##[group]Run python -m black --check .
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:19.1922460Z ^[[36;1mpython -m black --check .^[[0m
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:19.1957720Z shell: /bin/bash -e {0}
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:19.1957930Z env:
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:19.1958090Z   PIP_UPLOADED_PRIOR_TO: P2D
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:19.1958400Z   pythonLocation: /Users/runner/hostedtoolcache/Python/3.15.0-rc.2/arm64
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:19.1958860Z   PKG_CONFIG_PATH: /Users/runner/hostedtoolcache/Python/3.15.0-rc.2/arm64/lib/pkgconfig
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:19.1959320Z   Python_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.15.0-rc.2/arm64
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:19.1959730Z   Python2_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.15.0-rc.2/arm64
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:19.1960120Z   Python3_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.15.0-rc.2/arm64
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:19.1960480Z ##[endgroup]
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:19.7413790Z would reformat /Users/runner/work/black/black/scripts/diff_shades_gha_helper.py
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:21.3756270Z 
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:21.3765730Z Oh no! 💥 💔 💥
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:21.3785970Z 1 file would be reformatted, 67 files would be left unchanged.
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:21.4033100Z ##[error]Process completed with exit code 1.
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:21.4163170Z Post job cleanup.
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:21.5276210Z [command]/opt/homebrew/bin/git version
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:21.5339680Z git version 2.55.0
+uvloop (macOS-latest)	UNKNOWN STEP	2026-10-03T04:49:21.8854570Z Cleaning up orphan processes
+uvloop (windows-11-arm)	UNKNOWN STEP	﻿2026-10-03T04:48:37.5800397Z Current runner version: '2.337.0'
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:37.5830024Z ##[group]Runner Image Provisioner
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:37.5830855Z Hosted Compute Agent
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:37.5831308Z Version: 20260901.588
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:37.5838185Z ##[group]Runner Image
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:37.5838673Z Image: windows-11-vs2026-arm64
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:37.5839210Z Version: 20260924.168.1
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:38.8067935Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:38.8069696Z with:
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:38.8070245Z   persist-credentials: false
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:53.8226778Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:53.8227320Z with:
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:53.8227508Z   python-version: 3.15
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:53.8231441Z   PIP_UPLOADED_PRIOR_TO: P2D
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:53.8231644Z ##[endgroup]
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:54.0535361Z ##[group]Installed versions
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:54.0592638Z Version ~3.15.0-0 was not found in the local cache
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:54.8466958Z Version ~3.15.0-0 is available for downloading
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:54.8467685Z Download from "https://github.com/actions/python-versions/releases/download/3.15.0-rc.2-33583724836/python-3.15.0-rc.2-win32-arm64.zip"
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:55.7833971Z Extract downloaded archive
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:55.8884742Z [command]"C:\Program Files\PowerShell\7\pwsh.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command "$ErrorActionPreference = 'Stop' ; try { Add-Type -AssemblyName System.IO.Compression.ZipFile } catch { } ; try { [System.IO.Compression.ZipFile]::ExtractToDirectory('C:\a\_temp\python-3.15.0-rc.2-win32-arm64.zip', 'C:\a\_temp\9ef460f8-7063-4ff7-a6d5-bc2a272ba2a6', $true) } catch { if (($_.Exception.GetType().FullName -eq 'System.Management.Automation.MethodException') -or ($_.Exception.GetType().FullName -eq 'System.Management.Automation.RuntimeException') ){ Expand-Archive -LiteralPath 'C:\a\_temp\python-3.15.0-rc.2-win32-arm64.zip' -DestinationPath 'C:\a\_temp\9ef460f8-7063-4ff7-a6d5-bc2a272ba2a6' -Force } else { throw $_ } } ;"
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:48:56.3905251Z Execute installation script
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:49:30.7843792Z Check if Python hostedtoolcache folder exist...
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:49:30.7950573Z Check if current Python version is installed...
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:50:38.9730216Z ##[group]Run python -m pip install -e ".[uvloop]"
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:50:38.9730830Z ^[[36;1mpython -m pip install -e ".[uvloop]"^[[0m
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:50:38.9793175Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:33.6548734Z ##[group]Run python -m black --check .
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:33.6549129Z ^[[36;1mpython -m black --check .^[[0m
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:33.6603742Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:33.6604072Z env:
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:33.6604249Z   PIP_UPLOADED_PRIOR_TO: P2D
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:33.6604559Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.15.0-rc.2\arm64
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:33.6605024Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.15.0-rc.2\arm64/lib/pkgconfig
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:33.6605480Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-rc.2\arm64
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:33.6605892Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-rc.2\arm64
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:33.6606304Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-rc.2\arm64
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:33.6606975Z ##[endgroup]
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:35.1749411Z would reformat C:\a\black\black\scripts\diff_shades_gha_helper.py
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:37.0686613Z 
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:37.0688619Z Oh no! 💥 💔 💥
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:37.0689121Z 1 file would be reformatted, 67 files would be left unchanged.
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:37.2280600Z ##[error]Process completed with exit code 1.
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:37.2715408Z Post job cleanup.
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:37.5675842Z [command]"C:\Program Files\Git\bin\git.exe" version
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:37.6149324Z git version 2.55.0.windows.5
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:41.4062748Z Cleaning up orphan processes
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-10-03T04:51:41.4388847Z Terminate orphan process: pid (2152) (vctip)

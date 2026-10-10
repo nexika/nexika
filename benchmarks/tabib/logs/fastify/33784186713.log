@@ -1,0 +1,322 @@
+coverage-win / check-coverage	UNKNOWN STEP	﻿2026-09-03T17:23:30.3274750Z Current runner version: '2.337.0'
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:30.3645369Z ##[group]Runner Image Provisioner
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:30.3646344Z Hosted Compute Agent
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:30.3646969Z Version: 20260819.586
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:30.3654494Z ##[group]Runner Image
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:30.3655131Z Image: windows-2025-vs2026
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:30.3655765Z Version: 20260824.214.3
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:30.4883171Z Getting action download info
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:30.6637660Z Download action repository 'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0' (SHA:9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:30.8665710Z Download action repository 'actions/setup-node@820762786026740c76f36085b0efc47a31fe5020' (SHA:820762786026740c76f36085b0efc47a31fe5020)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:31.4472707Z Uses: fastify/fastify/.github/workflows/coverage-win.yml@refs/heads/5.x (179619c8e99d54924309b9933402151ef9af37e0)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:31.4478532Z Complete job name: coverage-win / check-coverage
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:32.2514203Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:32.2515688Z with:
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:32.2516149Z   persist-credentials: false
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:40.3809735Z ##[group]Run actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:40.3810200Z with:
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:23:40.3810394Z   node-version: lts/*
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:00.1194893Z ##[group]Run npm install --ignore-scripts
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:00.1195373Z ^[[36;1mnpm install --ignore-scripts^[[0m
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:00.4135662Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:27.0824504Z a different dependency.
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:27.0824722Z 
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:27.0824897Z Run `npm audit` for details.
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:28.1918636Z ##[group]Run npm run coverage:ci-check-coverage
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:28.1919100Z ^[[36;1mnpm run coverage:ci-check-coverage^[[0m
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:28.2016102Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:28.2016474Z ##[endgroup]
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:28.9803212Z 
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:28.9804020Z > fastify@5.12.1 coverage:ci-check-coverage
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:28.9805001Z > borp --reporter=@jsumners/line-reporter --coverage --check-coverage --lines 100
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:28.9805563Z 
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:29.3834610Z parsed config: test/**/*.test.js test/**/*.test.mjs
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:29.6146770Z passed: D:\a\fastify\fastify\test\wrap-thenable.test.js (178.4 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:30.1920247Z passed: D:\a\fastify\fastify\test\versioned-routes.test.js (744.7 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:30.6234635Z passed: D:\a\fastify\fastify\test\web-api.test.js (1,179 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:30.7761211Z passed: D:\a\fastify\fastify\test\validation-error-handling.test.js (1,142 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:30.8213844Z passed: D:\a\fastify\fastify\test\use-semicolon-delimiter.test.js (626.6 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:31.1902601Z passed: D:\a\fastify\fastify\test\upgrade.test.js (434.6 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:31.2035900Z passed: D:\a\fastify\fastify\test\url-rewriting.test.js (582.8 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:32.8527149Z passed: D:\a\fastify\fastify\test\stream-serializers.test.js (460.8 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:32.8649238Z passed: D:\a\fastify\fastify\test\stream.2.test.js (517.9 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:32.9404544Z passed: D:\a\fastify\fastify\test\stream.1.test.js (583 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:33.3103069Z passed: D:\a\fastify\fastify\test\set-error-handler.test.js (450.3 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:33.8365576Z passed: D:\a\fastify\fastify\test\serialize-response.test.js (528.1 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:34.6629451Z passed: D:\a\fastify\fastify\test\server.test.js (1,723 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:35.0200836Z passed: D:\a\fastify\fastify\test\schema-validation.test.js (1,184 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:40.8420203Z passed: D:\a\fastify\fastify\test\route-hooks.test.js (1,164 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:41.0150111Z passed: D:\a\fastify\fastify\test\request-media-type.test.js (342.5 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:41.3080468Z passed: D:\a\fastify\fastify\test\request-id.test.js (468.7 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:41.9196626Z passed: D:\a\fastify\fastify\test\request-error.test.js (611.9 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:42.2120198Z passed: D:\a\fastify\fastify\test\reply-web-stream-locked.test.js (292.5 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:43.5541941Z passed: D:\a\fastify\fastify\test\skip-reply-send.test.js (10,700 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:43.6044694Z passed: D:\a\fastify\fastify\test\reply-trailers.test.js (1,390 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:43.9144360Z passed: D:\a\fastify\fastify\test\reply-media-type.test.js (360.8 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:44.3356510Z passed: D:\a\fastify\fastify\test\reply-early-hints.test.js (421.7 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:44.3732136Z passed: D:\a\fastify\fastify\test\reply-error.test.js (770.3 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:44.6920480Z passed: D:\a\fastify\fastify\test\reply-code.test.js (354.2 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:44.8816708Z passed: D:\a\fastify\fastify\test\register.test.js (508.7 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:45.4765377Z passed: D:\a\fastify\fastify\test\put.test.js (783 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:45.6627497Z passed: D:\a\fastify\fastify\test\put.error-handler.test.js (781.1 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:45.9802721Z passed: D:\a\fastify\fastify\test\proto-poisoning.test.js (505.7 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:46.1613403Z passed: D:\a\fastify\fastify\test\promises.test.js (498.4 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:46.3633057Z passed: D:\a\fastify\fastify\test\pretty-print.test.js (384.6 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:47.7136253Z passed: D:\a\fastify\fastify\test\request-header-host.test.js (6,695 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:48.1863342Z passed: D:\a\fastify\fastify\test\patch.test.js (859.6 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:48.3405208Z passed: D:\a\fastify\fastify\test\output-validation.test.js (628.7 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:48.6344306Z passed: D:\a\fastify\fastify\test\patch.error-handler.test.js (955.6 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:49.1306961Z passed: D:\a\fastify\fastify\test\options.test.js (942.9 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:49.2438826Z passed: D:\a\fastify\fastify\test\options.error-handler.test.js (903.2 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:49.2540662Z passed: D:\a\fastify\fastify\test\noop-set.test.js (123 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:49.4078100Z passed: D:\a\fastify\fastify\test\nullable-validation.test.js (774.3 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:49.6418290Z passed: D:\a\fastify\fastify\test\middleware.test.js (396.7 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:54.8359622Z passed: D:\a\fastify\fastify\test\handler-timeout.test.js (1,759 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:54.9895821Z passed: D:\a\fastify\fastify\test\fix-6411.test.js (296.9 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:55.2132058Z passed: D:\a\fastify\fastify\test\find-route.test.js (375.4 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:55.5722260Z passed: D:\a\fastify\fastify\test\encapsulated-error-handler.test.js (361 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:55.8863914Z passed: D:\a\fastify\fastify\test\encapsulated-child-logger-factory.test.js (313.5 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:56.3703663Z passed: D:\a\fastify\fastify\test\delete.test.js (484.5 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:24:56.7916602Z passed: D:\a\fastify\fastify\test\hooks.test.js (5,751 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:14.6733098Z passed: D:\a\fastify\fastify\test\diagnostics-channel\sync-request.test.js (444.9 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:14.6858242Z passed: D:\a\fastify\fastify\test\diagnostics-channel\sync-request-reply.test.js (453.5 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:14.7670247Z passed: D:\a\fastify\fastify\test\diagnostics-channel\sync-delay-request.test.js (472.4 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:15.1087700Z passed: D:\a\fastify\fastify\test\diagnostics-channel\error-status.test.js (422.2 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:15.1459412Z passed: D:\a\fastify\fastify\test\diagnostics-channel\init.test.js (472.2 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:15.2194833Z passed: D:\a\fastify\fastify\test\diagnostics-channel\error-request.test.js (453.2 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:15.2611268Z passed: D:\a\fastify\fastify\test\diagnostics-channel\error-before-handler.test.js (152.3 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:15.6376374Z passed: D:\a\fastify\fastify\test\diagnostics-channel\async-request.test.js (491.1 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:15.6668759Z passed: D:\a\fastify\fastify\test\diagnostics-channel\async-error-handler.test.js (447.9 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:15.7144098Z passed: D:\a\fastify\fastify\test\diagnostics-channel\async-delay-request.test.js (451.5 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:16.0029617Z passed: D:\a\fastify\fastify\test\build\version.test.js (340.8 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:16.0535979Z passed: D:\a\fastify\fastify\test\diagnostics-channel\404.test.js (422.8 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:17.9223748Z passed: D:\a\fastify\fastify\test\build\error-serializer.test.js (2,214 ms)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:17.9260056Z 
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:17.9260086Z 
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:17.9260416Z Passed: 2370
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:17.9260720Z Failed: 0
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:17.9260992Z Total: 2370
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.6548269Z ##[group]Test results (2335 passed, 0 failed)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.6580370Z ##[notice]Total Tests: 2341
+coverage-win / check-coverage	UNKNOWN STEP	Suites 📂: 22
+coverage-win / check-coverage	UNKNOWN STEP	Passed ✅: 2335
+coverage-win / check-coverage	UNKNOWN STEP	Failed ❌: 0
+coverage-win / check-coverage	UNKNOWN STEP	Canceled 🚫: 0
+coverage-win / check-coverage	UNKNOWN STEP	Skipped ⏭️: 6
+coverage-win / check-coverage	UNKNOWN STEP	Todo 📝: 0
+coverage-win / check-coverage	UNKNOWN STEP	Duration 🕐: 48499.411ms
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.6591099Z ##[endgroup]
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.6953839Z ERROR: Coverage for lines (99.67%) does not meet global threshold (100%)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.6954880Z ERROR: Coverage for branches (99.72%) does not meet global threshold (100%)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.6955806Z ERROR: Coverage for statements (99.67%) does not meet global threshold (100%)
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7049661Z -------------------------------|---------|----------|---------|---------|---------------------------
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7050561Z File                           | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s         
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7051191Z -------------------------------|---------|----------|---------|---------|---------------------------
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7056062Z All files                      |   99.67 |    99.72 |     100 |   99.67 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7056617Z  fastify                       |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7057329Z   eslint.config.js             |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7059697Z   fastify.js                   |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7060781Z  fastify/build                 |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7061762Z   build-error-serializer.js    |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7063230Z  fastify/lib                   |   99.63 |    99.68 |     100 |   99.63 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7064101Z   config-validator.js          |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7065017Z   content-type-parser.js       |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7065934Z   content-type.js              |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7067030Z   context.js                   |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7067857Z   decorate.js                  |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7068701Z   error-handler.js             |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7069604Z   error-serializer.js          |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7070500Z   error-status.js              |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7071324Z   errors.js                    |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7072148Z   four-oh-four.js              |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7073020Z   handle-request.js            |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7073880Z   head-route.js                |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7074708Z   hooks.js                     |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7075604Z   initial-config-validation.js |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7076534Z   log-controller.js            |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7077934Z   logger-factory.js            |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7078790Z   logger-pino.js               |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7079639Z   noop-set.js                  |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7080708Z   plugin-override.js           |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7081589Z   plugin-utils.js              |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7082591Z   promise.js                   |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7083449Z   reply.js                     |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7084339Z   req-id-gen-factory.js        |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7085167Z   request.js                   |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7085966Z   route.js                     |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7087062Z   schema-controller.js         |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7087879Z   schemas.js                   |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7088622Z   server.js                    |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7089380Z   symbols.js                   |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7090135Z   validation.js                |      93 |    96.25 |     100 |      93 | ...22-132,134-144,171-173 
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7090910Z   warnings.js                  |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7091697Z   wrap-thenable.js             |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7092507Z  fastify/scripts               |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7093368Z   validate-ecosystem-links.js  |     100 |      100 |     100 |     100 |                           
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.7094342Z -------------------------------|---------|----------|---------|---------|---------------------------
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.8726361Z ##[error]Process completed with exit code 1.
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:22.9004593Z Post job cleanup.
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:23.0783234Z [command]"C:\Program Files\Git\bin\git.exe" version
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:23.1075565Z git version 2.55.0.windows.5
+coverage-win / check-coverage	UNKNOWN STEP	2026-09-03T17:25:25.0722681Z Cleaning up orphan processes
+coverage-nix / check-coverage	UNKNOWN STEP	﻿2026-09-03T17:23:21.7588260Z Current runner version: '2.337.0'
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:21.7626223Z ##[group]Runner Image Provisioner
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:21.7627834Z Hosted Compute Agent
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:21.7628858Z Version: 20260828.587
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:21.7640971Z ##[group]Runner Image
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:21.7641951Z Image: ubuntu-24.04
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:21.7642895Z Version: 20260831.293.1
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:21.8180777Z Getting action download info
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:22.0526980Z Download action repository 'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0' (SHA:9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:22.1723800Z Download action repository 'actions/setup-node@820762786026740c76f36085b0efc47a31fe5020' (SHA:820762786026740c76f36085b0efc47a31fe5020)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:22.3834524Z Uses: fastify/fastify/.github/workflows/coverage-nix.yml@refs/heads/5.x (179619c8e99d54924309b9933402151ef9af37e0)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:22.3839626Z Complete job name: coverage-nix / check-coverage
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:22.4577265Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:22.4578402Z with:
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:22.4578863Z   persist-credentials: false
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:23.3791538Z ##[group]Run actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:23.3793164Z with:
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:23.3794039Z   node-version: lts/*
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:25.4142495Z ##[group]Run npm install --ignore-scripts
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:25.4142955Z ^[[36;1mnpm install --ignore-scripts^[[0m
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:25.4195042Z shell: /usr/bin/bash -e {0}
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:42.8067795Z a different dependency.
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:42.8067959Z 
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:42.8068095Z Run `npm audit` for details.
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:42.8798959Z ##[group]Run npm run coverage:ci-check-coverage
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:42.8799538Z ^[[36;1mnpm run coverage:ci-check-coverage^[[0m
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:42.8842719Z shell: /usr/bin/bash -e {0}
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:42.8843011Z ##[endgroup]
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:42.9852260Z 
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:42.9852870Z > fastify@5.12.1 coverage:ci-check-coverage
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:42.9853604Z > borp --reporter=@jsumners/line-reporter --coverage --check-coverage --lines 100
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:42.9853954Z 
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:43.2332927Z parsed config: test/**/*.test.js test/**/*.test.mjs
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:43.4207559Z passed: /home/runner/work/fastify/fastify/test/wrap-thenable.test.js (125.3 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:43.8224257Z passed: /home/runner/work/fastify/fastify/test/versioned-routes.test.js (516.9 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:44.1877335Z passed: /home/runner/work/fastify/fastify/test/validation-error-handling.test.js (770.3 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:44.2069137Z passed: /home/runner/work/fastify/fastify/test/use-semicolon-delimiter.test.js (388.5 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:44.2488795Z passed: /home/runner/work/fastify/fastify/test/web-api.test.js (949.7 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:44.4740799Z passed: /home/runner/work/fastify/fastify/test/upgrade.test.js (265.5 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:45.6538121Z passed: /home/runner/work/fastify/fastify/test/stream.2.test.js (341 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:45.7264691Z passed: /home/runner/work/fastify/fastify/test/stream-serializers.test.js (278 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:45.7948913Z passed: /home/runner/work/fastify/fastify/test/stream.1.test.js (423.2 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:46.0028021Z passed: /home/runner/work/fastify/fastify/test/set-error-handler.test.js (275.5 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:46.3425278Z passed: /home/runner/work/fastify/fastify/test/serialize-response.test.js (341.7 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:47.2163968Z passed: /home/runner/work/fastify/fastify/test/schema-validation.test.js (873.8 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:47.2412407Z passed: /home/runner/work/fastify/fastify/test/server.test.js (1,449 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:51.6455300Z passed: /home/runner/work/fastify/fastify/test/route-hooks.test.js (1,002 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:51.7124349Z passed: /home/runner/work/fastify/fastify/test/request-media-type.test.js (221.1 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:51.9762606Z passed: /home/runner/work/fastify/fastify/test/request-id.test.js (330.8 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:52.3464238Z passed: /home/runner/work/fastify/fastify/test/request-error.test.js (370 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:52.5455039Z passed: /home/runner/work/fastify/fastify/test/reply-web-stream-locked.test.js (198.4 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:53.8149187Z passed: /home/runner/work/fastify/fastify/test/reply-trailers.test.js (1,270 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:54.0312754Z passed: /home/runner/work/fastify/fastify/test/reply-media-type.test.js (216.2 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:54.5288807Z passed: /home/runner/work/fastify/fastify/test/reply-error.test.js (497.6 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:54.7491702Z passed: /home/runner/work/fastify/fastify/test/reply-early-hints.test.js (220.2 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:54.9606142Z passed: /home/runner/work/fastify/fastify/test/reply-code.test.js (211.2 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:55.2489426Z passed: /home/runner/work/fastify/fastify/test/register.test.js (288.4 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:55.7183220Z passed: /home/runner/work/fastify/fastify/test/put.test.js (469.4 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:56.1238638Z passed: /home/runner/work/fastify/fastify/test/skip-reply-send.test.js (10,470 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:56.3267634Z passed: /home/runner/work/fastify/fastify/test/put.error-handler.test.js (608.5 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:56.5124924Z passed: /home/runner/work/fastify/fastify/test/proto-poisoning.test.js (391.4 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:56.6690999Z passed: /home/runner/work/fastify/fastify/test/promises.test.js (341.9 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:56.7954969Z passed: /home/runner/work/fastify/fastify/test/pretty-print.test.js (283.3 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:57.7080844Z passed: /home/runner/work/fastify/fastify/test/plugin.1.test.js (349.3 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:58.0188412Z passed: /home/runner/work/fastify/fastify/test/patch.test.js (545.7 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:58.2250740Z passed: /home/runner/work/fastify/fastify/test/request-header-host.test.js (6,511 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:58.2919746Z passed: /home/runner/work/fastify/fastify/test/patch.error-handler.test.js (581.5 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:58.4138223Z passed: /home/runner/work/fastify/fastify/test/output-validation.test.js (395.9 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:58.9768295Z passed: /home/runner/work/fastify/fastify/test/options.test.js (749.7 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:58.9867741Z passed: /home/runner/work/fastify/fastify/test/nullable-validation.test.js (574.6 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:59.0388869Z passed: /home/runner/work/fastify/fastify/test/options.error-handler.test.js (747.7 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:59.0589581Z passed: /home/runner/work/fastify/fastify/test/noop-set.test.js (84.95 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:59.2414523Z passed: /home/runner/work/fastify/fastify/test/middleware.test.js (252.6 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:23:59.3257167Z passed: /home/runner/work/fastify/fastify/test/max-requests-per-socket.test.js (287.3 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:03.2082714Z passed: /home/runner/work/fastify/fastify/test/fix-6411.test.js (201.5 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:03.4127364Z passed: /home/runner/work/fastify/fastify/test/handler-timeout.test.js (1,603 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:03.4664133Z passed: /home/runner/work/fastify/fastify/test/find-route.test.js (257.6 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:03.7525383Z passed: /home/runner/work/fastify/fastify/test/encapsulated-error-handler.test.js (285.9 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:03.9586276Z passed: /home/runner/work/fastify/fastify/test/encapsulated-child-logger-factory.test.js (205.9 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:04.3071924Z passed: /home/runner/work/fastify/fastify/test/delete.test.js (349 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:04.7568019Z passed: /home/runner/work/fastify/fastify/test/decorator.test.js (449.6 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:18.5379416Z passed: /home/runner/work/fastify/fastify/test/diagnostics-channel/sync-delay-request.test.js (292.5 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:18.5530263Z passed: /home/runner/work/fastify/fastify/test/diagnostics-channel/sync-request-reply.test.js (335.4 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:18.8108614Z passed: /home/runner/work/fastify/fastify/test/diagnostics-channel/init.test.js (294.8 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:18.8317260Z passed: /home/runner/work/fastify/fastify/test/diagnostics-channel/error-status.test.js (293.6 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:18.8783789Z passed: /home/runner/work/fastify/fastify/test/diagnostics-channel/error-request.test.js (325.2 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:18.9305620Z passed: /home/runner/work/fastify/fastify/test/diagnostics-channel/error-before-handler.test.js (119.9 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:19.1554128Z passed: /home/runner/work/fastify/fastify/test/diagnostics-channel/async-request.test.js (323.1 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:19.1795926Z passed: /home/runner/work/fastify/fastify/test/diagnostics-channel/async-error-handler.test.js (300.5 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:19.2517288Z passed: /home/runner/work/fastify/fastify/test/diagnostics-channel/async-delay-request.test.js (322 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:19.4105787Z passed: /home/runner/work/fastify/fastify/test/build/version.test.js (235.4 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:19.4540874Z passed: /home/runner/work/fastify/fastify/test/diagnostics-channel/404.test.js (302.3 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:20.9607668Z passed: /home/runner/work/fastify/fastify/test/build/error-serializer.test.js (1,711 ms)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:20.9633285Z 
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:20.9633411Z 
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:20.9634273Z Passed: 2370
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:20.9634685Z Failed: 0
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:20.9635000Z Total: 2370
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:20.9664945Z ##[group]Test results (2337 passed, 0 failed)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:20.9687103Z ##[notice]Total Tests: 2341
+coverage-nix / check-coverage	UNKNOWN STEP	Suites 📂: 22
+coverage-nix / check-coverage	UNKNOWN STEP	Passed ✅: 2337
+coverage-nix / check-coverage	UNKNOWN STEP	Failed ❌: 0
+coverage-nix / check-coverage	UNKNOWN STEP	Canceled 🚫: 0
+coverage-nix / check-coverage	UNKNOWN STEP	Skipped ⏭️: 4
+coverage-nix / check-coverage	UNKNOWN STEP	Todo 📝: 0
+coverage-nix / check-coverage	UNKNOWN STEP	Duration 🕐: 37675.994ms
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:20.9693758Z ##[endgroup]
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9633138Z ERROR: Coverage for lines (99.67%) does not meet global threshold (100%)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9634169Z ERROR: Coverage for branches (99.72%) does not meet global threshold (100%)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9635155Z ERROR: Coverage for statements (99.67%) does not meet global threshold (100%)
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9713356Z -------------------------------|---------|----------|---------|---------|---------------------------
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9714513Z File                           | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s         
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9715592Z -------------------------------|---------|----------|---------|---------|---------------------------
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9720120Z All files                      |   99.67 |    99.72 |     100 |   99.67 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9721012Z  fastify                       |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9721938Z   eslint.config.js             |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9723296Z   fastify.js                   |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9724283Z  fastify/build                 |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9726218Z   build-error-serializer.js    |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9727832Z  fastify/lib                   |   99.63 |    99.68 |     100 |   99.63 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9728992Z   config-validator.js          |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9730152Z   content-type-parser.js       |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9731198Z   content-type.js              |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9732145Z   context.js                   |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9733250Z   decorate.js                  |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9734125Z   error-handler.js             |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9735035Z   error-serializer.js          |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9735970Z   error-status.js              |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9737056Z   errors.js                    |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9737910Z   four-oh-four.js              |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9738826Z   handle-request.js            |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9739731Z   head-route.js                |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9740571Z   hooks.js                     |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9741513Z   initial-config-validation.js |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9742495Z   log-controller.js            |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9743419Z   logger-factory.js            |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9744331Z   logger-pino.js               |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9745206Z   noop-set.js                  |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9746090Z   plugin-override.js           |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9747122Z   plugin-utils.js              |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9747938Z   promise.js                   |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9748723Z   reply.js                     |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9749540Z   req-id-gen-factory.js        |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9750414Z   request.js                   |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9751243Z   route.js                     |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9752153Z   schema-controller.js         |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9753076Z   schemas.js                   |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9753889Z   server.js                    |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9754602Z   symbols.js                   |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9755110Z   validation.js                |      93 |    96.25 |     100 |      93 | ...22-132,134-144,171-173 
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9755889Z   warnings.js                  |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9756950Z   wrap-thenable.js             |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9758045Z  fastify/scripts               |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9759011Z   validate-ecosystem-links.js  |     100 |      100 |     100 |     100 |                           
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:24.9760071Z -------------------------------|---------|----------|---------|---------|---------------------------
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:25.0515911Z ##[error]Process completed with exit code 1.
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:25.0677000Z Post job cleanup.
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:25.1548990Z [command]/usr/bin/git version
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:25.1587136Z git version 2.55.0
+coverage-nix / check-coverage	UNKNOWN STEP	2026-09-03T17:24:25.2658609Z Cleaning up orphan processes

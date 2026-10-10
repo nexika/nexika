@@ -1,0 +1,54 @@
+Analyze (actions)	UNKNOWN STEP	﻿2026-08-06T16:11:47.6546676Z Current runner version: '2.336.0'
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6572475Z ##[group]Runner Image Provisioner
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6573896Z Hosted Compute Agent
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6574633Z Version: 20260707.563
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6583442Z ##[group]Runner Image
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6584052Z Image: ubuntu-24.04
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6584709Z Version: 20260720.247.2
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6586155Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260720.247/images/ubuntu/Ubuntu2404-Readme.md
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6587845Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260720.247
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6588944Z ##[endgroup]
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6590481Z ##[group]GITHUB_TOKEN Permissions
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6592717Z Actions: read
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6593714Z Contents: read
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6594421Z Metadata: read
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6595011Z Packages: read
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6595596Z SecurityEvents: write
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6596288Z ##[endgroup]
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6598375Z Secret source: Actions
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.6599779Z Prepare workflow directory
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.7121591Z Prepare all required actions
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:11:47.7169539Z Getting action download info
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:12:31.3684273Z Failed to resolve action download info. Error: Service Unavailable
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:12:31.3762817Z Retrying in 24.022 seconds
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:13:54.0293658Z Failed to resolve action download info. Error: Service Unavailable
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:13:54.0297650Z Retrying in 28.233 seconds
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:15:05.8184257Z ##[error]Service Unavailable
+Analyze (actions)	UNKNOWN STEP	2026-08-06T16:15:05.8205349Z ##[error]Failed to resolve action download info.
+Analyze (javascript)	UNKNOWN STEP	﻿2026-08-06T16:13:45.5407628Z Current runner version: '2.336.0'
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5431024Z ##[group]Runner Image Provisioner
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5431942Z Hosted Compute Agent
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5432749Z Version: 20260707.563
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5440870Z ##[group]Runner Image
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5441481Z Image: ubuntu-24.04
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5442045Z Version: 20260720.247.2
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5444021Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260720.247/images/ubuntu/Ubuntu2404-Readme.md
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5445638Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260720.247
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5446617Z ##[endgroup]
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5448070Z ##[group]GITHUB_TOKEN Permissions
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5450228Z Actions: read
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5450873Z Contents: read
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5451549Z Metadata: read
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5452111Z Packages: read
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5452998Z SecurityEvents: write
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5453633Z ##[endgroup]
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5455703Z Secret source: Actions
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5456857Z Prepare workflow directory
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.5978674Z Prepare all required actions
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:13:45.6024889Z Getting action download info
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:14:47.3940986Z Failed to resolve action download info. Error: Service Unavailable
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:14:47.4019463Z Retrying in 22.716 seconds
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:15:56.9257889Z Failed to resolve action download info. Error: Service Unavailable
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:15:56.9261180Z Retrying in 12.437 seconds
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:16:52.3523320Z ##[error]Service Unavailable
+Analyze (javascript)	UNKNOWN STEP	2026-08-06T16:16:52.3545577Z ##[error]Failed to resolve action download info.

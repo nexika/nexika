@@ -1,0 +1,121 @@
+lint	UNKNOWN STEP	﻿2026-07-13T16:34:55.5054492Z Current runner version: '2.335.1'
+lint	UNKNOWN STEP	2026-07-13T16:34:55.5079780Z ##[group]Runner Image Provisioner
+lint	UNKNOWN STEP	2026-07-13T16:34:55.5080614Z Hosted Compute Agent
+lint	UNKNOWN STEP	2026-07-13T16:34:55.5081244Z Version: 20260624.560
+lint	UNKNOWN STEP	2026-07-13T16:34:55.5088317Z ##[group]Runner Image
+lint	UNKNOWN STEP	2026-07-13T16:34:55.5088949Z Image: ubuntu-24.04
+lint	UNKNOWN STEP	2026-07-13T16:34:55.5089464Z Version: 20260705.232.1
+lint	UNKNOWN STEP	2026-07-13T16:34:57.1050015Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+lint	UNKNOWN STEP	2026-07-13T16:34:57.1051793Z with:
+lint	UNKNOWN STEP	2026-07-13T16:34:57.1052788Z   persist-credentials: false
+lint	UNKNOWN STEP	2026-07-13T16:34:58.4228655Z ##[endgroup]
+lint	UNKNOWN STEP	2026-07-13T16:34:58.4456039Z ##[group]Run if [ "$GITHUB_BASE_REF" != "main" ]; then
+lint	UNKNOWN STEP	2026-07-13T16:34:58.4457465Z ^[[36;1mif [ "$GITHUB_BASE_REF" != "main" ]; then^[[0m
+lint	UNKNOWN STEP	2026-07-13T16:34:58.4459356Z ^[[36;1m    echo "::error::PR targeting '$GITHUB_BASE_REF', please refile targeting 'main'." && exit 1^[[0m
+lint	UNKNOWN STEP	2026-07-13T16:34:58.4460989Z ^[[36;1mfi^[[0m
+lint	UNKNOWN STEP	2026-07-13T16:34:58.4616167Z shell: /usr/bin/bash -e {0}
+lint	UNKNOWN STEP	2026-07-13T16:34:58.4617218Z ##[endgroup]
+lint	UNKNOWN STEP	2026-07-13T16:34:58.4876037Z ##[group]Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+lint	UNKNOWN STEP	2026-07-13T16:34:58.4877478Z with:
+lint	UNKNOWN STEP	2026-07-13T16:34:58.4878574Z   python-version: 3.14
+lint	UNKNOWN STEP	2026-07-13T16:35:06.9484239Z ##[group]Run pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd
+lint	UNKNOWN STEP	2026-07-13T16:35:06.9484726Z with:
+lint	UNKNOWN STEP	2026-07-13T16:35:06.9485022Z   extra_args: --all-files
+lint	UNKNOWN STEP	2026-07-13T16:35:06.9573671Z ##[group]Run python -m pip install pre-commit
+lint	UNKNOWN STEP	2026-07-13T16:35:06.9574107Z ^[[36;1mpython -m pip install pre-commit^[[0m
+lint	UNKNOWN STEP	2026-07-13T16:35:06.9600018Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+lint	UNKNOWN STEP	2026-07-13T16:35:08.2972854Z ##[group]Run python -m pip freeze --local
+lint	UNKNOWN STEP	2026-07-13T16:35:08.2973286Z ^[[36;1mpython -m pip freeze --local^[[0m
+lint	UNKNOWN STEP	2026-07-13T16:35:08.2994632Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+lint	UNKNOWN STEP	2026-07-13T16:35:09.1710671Z ##[group]Run actions/cache@v4
+lint	UNKNOWN STEP	2026-07-13T16:35:09.1710974Z with:
+lint	UNKNOWN STEP	2026-07-13T16:35:09.1711356Z   path: ~/.cache/pre-commit
+lint	UNKNOWN STEP	2026-07-13T16:35:09.1711924Z   key: pre-commit-3|/opt/hostedtoolcache/Python/3.14.6/x64|011faabb0ed761679046a295818c63ffe7b46d1e90df5689a6809ac57cdd9931
+lint	UNKNOWN STEP	2026-07-13T16:35:09.1712517Z   enableCrossOsArchive: false
+lint	UNKNOWN STEP	2026-07-13T16:35:09.1712880Z   fail-on-cache-miss: false
+lint	UNKNOWN STEP	2026-07-13T16:35:09.1713186Z   lookup-only: false
+lint	UNKNOWN STEP	2026-07-13T16:35:09.1713517Z   save-always: false
+lint	UNKNOWN STEP	2026-07-13T16:35:09.1713788Z env:
+lint	UNKNOWN STEP	2026-07-13T16:35:10.8813610Z [command]/usr/bin/tar -xf /home/runner/work/_temp/4138f35b-0929-444d-853d-c3208f0f8793/cache.tzst -P -C /home/runner/work/black/black --use-compress-program unzstd
+lint	UNKNOWN STEP	2026-07-13T16:35:11.3149237Z Cache restored successfully
+lint	UNKNOWN STEP	2026-07-13T16:35:11.3249885Z Cache restored from key: pre-commit-3|/opt/hostedtoolcache/Python/3.14.6/x64|011faabb0ed761679046a295818c63ffe7b46d1e90df5689a6809ac57cdd9931
+lint	UNKNOWN STEP	2026-07-13T16:35:11.3335070Z ##[group]Run pre-commit run --show-diff-on-failure --color=always --all-files
+lint	UNKNOWN STEP	2026-07-13T16:35:11.3335699Z ^[[36;1mpre-commit run --show-diff-on-failure --color=always --all-files^[[0m
+lint	UNKNOWN STEP	2026-07-13T16:35:11.3356897Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+lint	UNKNOWN STEP	2026-07-13T16:35:11.3357306Z env:
+lint	UNKNOWN STEP	2026-07-13T16:35:11.3357843Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.6/x64
+lint	UNKNOWN STEP	2026-07-13T16:35:13.1640266Z isort....................................................................^[[42mPassed^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:15.3851804Z flake8...................................................................^[[42mPassed^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:22.0543942Z mypy.....................................................................^[[42mPassed^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8358896Z prettier.................................................................^[[41mFailed^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8359516Z ^[[2m- hook id: prettier^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8359981Z ^[[2m- files were modified by this hook^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8360189Z 
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8376608Z ^[[90mdocs/change_log.md^[[39m 1ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8377319Z ^[[90mdocs/integrations/source_version_control.md^[[39m 107ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8378092Z ^[[90mdocs/usage_and_configuration/the_basics.md^[[39m 215ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8378615Z ^[[90m.github/workflows/docker.yml^[[39m 19ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8379413Z ^[[90m.github/ISSUE_TEMPLATE/bug_report.md^[[39m 6ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8380391Z ^[[90m.pre-commit-config.yaml^[[39m 10ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8380937Z ^[[90mdocs/the_black_code_style/current_style.md^[[39m 263ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8381774Z ^[[90mdocs/the_black_code_style/future_style.md^[[39m 154ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8382506Z ^[[90mdocs/integrations/index.md^[[39m 10ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8383259Z ^[[90mdocs/usage_and_configuration/black_docker_image.md^[[39m 42ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8383878Z ^[[90mdocs/guides/introducing_black_to_your_project.md^[[39m 15ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8384543Z ^[[90m.pre-commit-hooks.yaml^[[39m 13ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8385186Z ^[[90m.github/ISSUE_TEMPLATE/feature_request.md^[[39m 13ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8386033Z ^[[90mdocs/usage_and_configuration/black_as_a_server.md^[[39m 108ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8386811Z ^[[90m.readthedocs.yaml^[[39m 16ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8387479Z ^[[90m.github/workflows/publish_binaries.yml^[[39m 17ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8388415Z ^[[90mdocs/integrations/editors.md^[[39m 107ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8389264Z ^[[90mdocs/usage_and_configuration/file_collection_and_discovery.md^[[39m 24ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8390012Z CHANGES.md 287ms
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8390627Z ^[[90mdocs/integrations/doctest_formatting.md^[[39m 9ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8391412Z ^[[90m.github/ISSUE_TEMPLATE/style_issue.md^[[39m 4ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8392149Z ^[[90mdocs/index.md^[[39m 9ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8392753Z ^[[90mAUTHORS.md^[[39m 207ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8393897Z ^[[90mdocs/getting_started.md^[[39m 43ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8394767Z ^[[90m.github/workflows/changelog.yml^[[39m 32ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8395467Z ^[[90mdocs/contributing/gauging_changes.md^[[39m 34ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8396242Z ^[[90m.github/workflows/post_release.yml^[[39m 33ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8396863Z ^[[90maction.yml^[[39m 28ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8397422Z ^[[90mdocs/guides/index.md^[[39m 6ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8398501Z ^[[90m.github/zizmor.yml^[[39m 6ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8399218Z ^[[90m.github/workflows/zizmor.yml^[[39m 17ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8399864Z ^[[90m.github/workflows/fuzz.yml^[[39m 36ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8400448Z ^[[90mdocs/faq.md^[[39m 102ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8400979Z ^[[90mSECURITY.md^[[39m 2ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8401665Z ^[[90mdocs/contributing/issue_triage.md^[[39m 77ms (unchanged)
+lint	UNKNOWN STEP	2026-07-13T16:35:24.8402075Z 
+lint	UNKNOWN STEP	2026-07-13T16:35:24.9160135Z fix end of files.........................................................^[[42mPassed^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0011759Z trim trailing whitespace.................................................^[[42mPassed^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0012302Z pre-commit hook(s) made changes.
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0012785Z If you are seeing this message in CI, reproduce locally with: `pre-commit run --all-files`.
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0013489Z To run `pre-commit` as part of git workflow, use `pre-commit install`.
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0041957Z All changes made by hooks:
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0042556Z ^[[1mdiff --git a/CHANGES.md b/CHANGES.md^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0043066Z ^[[1mindex 62e6ed3..8bf2f89 100644^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0043505Z ^[[1m--- a/CHANGES.md^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0043925Z ^[[1m+++ b/CHANGES.md^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0044359Z ^[[36m@@ -128,9 +128,9 @@^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0045015Z    conversion's position instead of rescanning the whole list from the start on every^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0045598Z    node removal (#5232)^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0046231Z  - Improve performance on deeply nested expressions (such as a long `a ** b ** c ** ...`^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0047033Z ^[[31m-  chain) by walking the `blib2to3` node tree iteratively in `pre_order`, `post_order` and^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0047730Z ^[[31m-  `leaves` instead of recursing with `yield from`, whose per-node generator delegation^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0048588Z ^[[31m-  made a full traversal quadratic in nesting depth (#5235)^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0049511Z ^[[32m+^[[m^[[32m  chain) by walking the `blib2to3` node tree iteratively in `pre_order`, `post_order`^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0050217Z ^[[32m+^[[m^[[32m  and `leaves` instead of recursing with `yield from`, whose per-node generator^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0050863Z ^[[32m+^[[m^[[32m  delegation made a full traversal quadratic in nesting depth (#5235)^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0051306Z  ^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0051606Z  ### Output^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0051922Z  ^[[m
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0302079Z ##[error]Process completed with exit code 1.
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0415035Z Post job cleanup.
+lint	UNKNOWN STEP	2026-07-13T16:35:25.0497197Z Post job cleanup.
+lint	UNKNOWN STEP	2026-07-13T16:35:25.1282059Z [command]/usr/bin/git version
+lint	UNKNOWN STEP	2026-07-13T16:35:25.1325210Z git version 2.54.0
+lint	UNKNOWN STEP	2026-07-13T16:35:25.1828196Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+lint	UNKNOWN STEP	2026-07-13T16:35:25.1853969Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+lint	UNKNOWN STEP	2026-07-13T16:35:25.2155275Z Cleaning up orphan processes
+lint	UNKNOWN STEP	2026-07-13T16:35:25.2368023Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

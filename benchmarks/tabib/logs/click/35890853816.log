@@ -1,0 +1,81 @@
+main	UNKNOWN STEP	﻿2026-09-23T16:44:41.3247491Z Current runner version: '2.337.0'
+main	UNKNOWN STEP	2026-09-23T16:44:41.3282700Z ##[group]Runner Image Provisioner
+main	UNKNOWN STEP	2026-09-23T16:44:41.3284276Z Hosted Compute Agent
+main	UNKNOWN STEP	2026-09-23T16:44:41.3285436Z Version: 20260828.587
+main	UNKNOWN STEP	2026-09-23T16:44:41.3299091Z ##[group]Runner Image
+main	UNKNOWN STEP	2026-09-23T16:44:41.3300011Z Image: ubuntu-24.04
+main	UNKNOWN STEP	2026-09-23T16:44:41.3301118Z Version: 20260907.300.1
+main	UNKNOWN STEP	2026-09-23T16:44:42.3541768Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+main	UNKNOWN STEP	2026-09-23T16:44:42.3543050Z with:
+main	UNKNOWN STEP	2026-09-23T16:44:42.3543612Z   persist-credentials: false
+main	UNKNOWN STEP	2026-09-23T16:44:43.1103221Z ##[group]Run astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+main	UNKNOWN STEP	2026-09-23T16:44:43.1105162Z with:
+main	UNKNOWN STEP	2026-09-23T16:44:43.1105997Z   enable-cache: true
+main	UNKNOWN STEP	2026-09-23T16:44:44.9391800Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+main	UNKNOWN STEP	2026-09-23T16:44:44.9392301Z with:
+main	UNKNOWN STEP	2026-09-23T16:44:44.9392578Z   python-version-file: pyproject.toml
+main	UNKNOWN STEP	2026-09-23T16:44:45.1803426Z ##[group]Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+main	UNKNOWN STEP	2026-09-23T16:44:45.1804215Z with:
+main	UNKNOWN STEP	2026-09-23T16:44:45.1804500Z   path: ~/.cache/pre-commit
+main	UNKNOWN STEP	2026-09-23T16:44:45.1804978Z   key: pre-commit|c755cd903c51030892c1a2a658309609a49ebead8644d713ec6381ab91c42868
+main	UNKNOWN STEP	2026-09-23T16:44:45.1805480Z   enableCrossOsArchive: false
+main	UNKNOWN STEP	2026-09-23T16:44:45.1805806Z   fail-on-cache-miss: false
+main	UNKNOWN STEP	2026-09-23T16:44:45.1806096Z   lookup-only: false
+main	UNKNOWN STEP	2026-09-23T16:44:45.1806607Z   save-always: false
+main	UNKNOWN STEP	2026-09-23T16:44:45.1806898Z env:
+main	UNKNOWN STEP	2026-09-23T16:44:45.7859521Z [command]/usr/bin/tar -xf /home/runner/work/_temp/d7d1b0fc-11ff-414b-a823-983ae7fff9c3/cache.tzst -P -C /home/runner/work/click/click --use-compress-program unzstd
+main	UNKNOWN STEP	2026-09-23T16:44:46.0573243Z Cache restored successfully
+main	UNKNOWN STEP	2026-09-23T16:44:46.0669161Z Cache restored from key: pre-commit|c755cd903c51030892c1a2a658309609a49ebead8644d713ec6381ab91c42868
+main	UNKNOWN STEP	2026-09-23T16:44:46.0831413Z ##[group]Run uv run --locked --no-default-groups --group pre-commit pre-commit run --show-diff-on-failure --color=always --all-files
+main	UNKNOWN STEP	2026-09-23T16:44:46.0832508Z ^[[36;1muv run --locked --no-default-groups --group pre-commit pre-commit run --show-diff-on-failure --color=always --all-files^[[0m
+main	UNKNOWN STEP	2026-09-23T16:44:46.0875197Z shell: /usr/bin/bash -e {0}
+main	UNKNOWN STEP	2026-09-23T16:44:46.0875498Z env:
+main	UNKNOWN STEP	2026-09-23T16:44:46.0875797Z   UV_PYTHON_INSTALL_DIR: /home/runner/work/_temp/uv-python-dir
+main	UNKNOWN STEP	2026-09-23T16:44:46.0876223Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+main	UNKNOWN STEP	2026-09-23T16:44:46.0876654Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.7/x64
+main	UNKNOWN STEP	2026-09-23T16:44:46.0877093Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.7/x64/lib/pkgconfig
+main	UNKNOWN STEP	2026-09-23T16:44:46.0877537Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+main	UNKNOWN STEP	2026-09-23T16:44:46.0877925Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+main	UNKNOWN STEP	2026-09-23T16:44:46.0878380Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+main	UNKNOWN STEP	2026-09-23T16:44:46.0878772Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.7/x64/lib
+main	UNKNOWN STEP	2026-09-23T16:44:46.0879114Z ##[endgroup]
+main	UNKNOWN STEP	2026-09-23T16:44:46.8799094Z Using CPython 3.14.7 interpreter at: /opt/hostedtoolcache/Python/3.14.7/x64/bin/python3
+main	UNKNOWN STEP	2026-09-23T16:44:46.8799985Z Creating virtual environment at: .venv
+main	UNKNOWN STEP	2026-09-23T16:44:46.8882344Z    Building click @ file:///home/runner/work/click/click
+main	UNKNOWN STEP	2026-09-23T16:44:47.5946714Z       Built click @ file:///home/runner/work/click/click
+main	UNKNOWN STEP	2026-09-23T16:44:47.6014605Z Installed 13 packages in 5ms
+main	UNKNOWN STEP	2026-09-23T16:44:48.6596786Z ruff check...............................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:48.7038609Z ruff format..............................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:48.7774508Z uv-lock..................................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.1520931Z codespell................................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.2511244Z check for merge conflicts................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.5798652Z debug statements (python)................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.6703264Z fix utf-8 byte order marker..............................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.7644596Z trim trailing whitespace.................................................^[[42mPassed^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.8557769Z fix end of files.........................................................^[[41mFailed^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.8559066Z ^[[2m- hook id: end-of-file-fixer^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.8559561Z ^[[2m- exit code: 1^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.8560094Z ^[[2m- files were modified by this hook^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.8560432Z 
+main	UNKNOWN STEP	2026-09-23T16:44:49.8560599Z Fixing docs/parameters.md
+main	UNKNOWN STEP	2026-09-23T16:44:49.8560883Z 
+main	UNKNOWN STEP	2026-09-23T16:44:49.8561062Z pre-commit hook(s) made changes.
+main	UNKNOWN STEP	2026-09-23T16:44:49.8561792Z If you are seeing this message in CI, reproduce locally with: `pre-commit run --all-files`.
+main	UNKNOWN STEP	2026-09-23T16:44:49.8562714Z To run `pre-commit` as part of git workflow, use `pre-commit install`.
+main	UNKNOWN STEP	2026-09-23T16:44:49.8563371Z All changes made by hooks:
+main	UNKNOWN STEP	2026-09-23T16:44:49.8631624Z ^[[1mdiff --git a/docs/parameters.md b/docs/parameters.md^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.8632095Z ^[[1mindex b76914a..02218d9 100644^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.8632428Z ^[[1m--- a/docs/parameters.md^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.8632744Z ^[[1m+++ b/docs/parameters.md^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.8633323Z ^[[36m@@ -57,4 +57,4 @@^[[m ^[[mThe name must match the Python argument name. To choose the spec an argument sho^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.8634260Z      invoke(multi_echo, ['--times=3', 'index.txt'], prog_name='multi_echo')^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.8634683Z  ```^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.8634889Z  ^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.8637018Z ^[[31m-Click also keeps the parsed declarations on the parameter. {attr}`Parameter.opts` holds every spelling an option answers to, and {attr}`Parameter.secondary_opts` the ones that set a boolean flag to false. For an argument, `opts` holds its single declaration, `filename` rather than `FILENAME`, and `secondary_opts` is empty, since the parser binds an argument by name. Read {attr}`Parameter.spec` when you want the one string that designates a parameter.^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.8638741Z \ No newline at end of file^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.8640666Z ^[[32m+^[[m^[[32mClick also keeps the parsed declarations on the parameter. {attr}`Parameter.opts` holds every spelling an option answers to, and {attr}`Parameter.secondary_opts` the ones that set a boolean flag to false. For an argument, `opts` holds its single declaration, `filename` rather than `FILENAME`, and `secondary_opts` is empty, since the parser binds an argument by name. Read {attr}`Parameter.spec` when you want the one string that designates a parameter.^[[m
+main	UNKNOWN STEP	2026-09-23T16:44:49.8917919Z ##[error]Process completed with exit code 1.
+main	UNKNOWN STEP	2026-09-23T16:44:49.9043670Z Post job cleanup.
+main	UNKNOWN STEP	2026-09-23T16:44:49.9886253Z [command]/usr/bin/git version
+main	UNKNOWN STEP	2026-09-23T16:44:49.9923273Z git version 2.55.0
+main	UNKNOWN STEP	2026-09-23T16:44:50.0901001Z Cleaning up orphan processes

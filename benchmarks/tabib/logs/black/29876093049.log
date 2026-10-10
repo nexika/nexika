@@ -1,0 +1,62 @@
+sdist + pure wheel	UNKNOWN STEP	﻿2026-07-21T23:07:30.9239680Z Current runner version: '2.336.0'
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:30.9260017Z ##[group]Runner Image Provisioner
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:30.9260731Z Hosted Compute Agent
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:30.9261258Z Version: 20260707.563
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:30.9267652Z ##[group]Runner Image
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:30.9268165Z Image: ubuntu-24.04
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:30.9268643Z Version: 20260714.240.1
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:32.0232114Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:32.0233071Z with:
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:32.0233464Z   persist-credentials: false
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:34.6138462Z ##[group]Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:34.6138770Z with:
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:34.6138942Z   python-version: 3.15
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:34.6139122Z   pip-version: 26.1
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:34.6139299Z   pip-install: --group hatch
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:34.6139490Z   check-latest: false
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:34.6141498Z   token: [secret]
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:34.6141662Z   update-environment: true
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:34.6141853Z   allow-prereleases: false
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:34.6142035Z   freethreaded: false
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:34.6142199Z env:
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:34.6142366Z   PROJECT: https://pypi.org/p/black
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:34.6142577Z ##[endgroup]
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:34.7179030Z ##[group]Installed versions
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:34.7974702Z Version 3.15 was not found in the local cache
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:35.8632855Z ##[error]The version '3.15' with architecture 'x64' was not found for Ubuntu 24.04.
+sdist + pure wheel	UNKNOWN STEP	The list of all available versions can be found here: https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:35.8811853Z Post job cleanup.
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:35.9485146Z [command]/usr/bin/git version
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:35.9515124Z git version 2.54.0
+sdist + pure wheel	UNKNOWN STEP	2026-07-21T23:07:36.0299114Z Cleaning up orphan processes
+generate wheels matrix	UNKNOWN STEP	﻿2026-07-21T23:07:31.5763853Z Current runner version: '2.335.1'
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:31.5792283Z ##[group]Runner Image Provisioner
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:31.5793252Z Hosted Compute Agent
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:31.5793838Z Version: 20260707.563
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:31.5802089Z ##[group]Runner Image
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:31.5802887Z Image: ubuntu-24.04
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:31.5803515Z Version: 20260714.240.1
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:32.3439448Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:32.3440575Z with:
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:32.3441014Z   persist-credentials: false
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:33.4490619Z ##[group]Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:33.4492611Z with:
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:33.4493494Z   python-version: 3.15
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:33.4494488Z   pip-version: 26.1
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:33.4495505Z   pip-install: --group cibw
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:33.4496561Z   check-latest: false
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:33.4506582Z   token: [secret]
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:33.4507521Z   update-environment: true
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:33.4508591Z   allow-prereleases: false
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:33.4509653Z   freethreaded: false
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:33.4510595Z env:
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:33.4511703Z   PROJECT: https://pypi.org/p/black
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:33.4512924Z ##[endgroup]
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:33.5850421Z ##[group]Installed versions
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:33.5963678Z Version 3.15 was not found in the local cache
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:34.3830484Z ##[error]The version '3.15' with architecture 'x64' was not found for Ubuntu 24.04.
+generate wheels matrix	UNKNOWN STEP	The list of all available versions can be found here: https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:34.4153304Z Post job cleanup.
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:34.5000672Z [command]/usr/bin/git version
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:34.5044901Z git version 2.54.0
+generate wheels matrix	UNKNOWN STEP	2026-07-21T23:07:34.6064424Z Cleaning up orphan processes

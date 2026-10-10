@@ -1,0 +1,173 @@
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4630775Z ▶ get test
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4631050Z   ✔ shorthand - request get (22.179732ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4631713Z   ✔ shorthand - request get params schema (2.877412ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4632470Z   ✔ shorthand - request get params schema error (2.198693ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4633131Z   ✔ shorthand - request get headers schema (2.807846ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4633868Z   ✔ shorthand - request get headers schema error (2.702205ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4634745Z   ✔ shorthand - request get querystring schema (1.658841ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4635482Z   ✔ shorthand - request get querystring schema error (2.53405ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4636589Z   ✔ shorthand - request get missing schema (2.403257ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4637288Z   ✔ shorthand - custom serializer (2.610013ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4637897Z   ✔ shorthand - empty response (2.631551ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4641111Z ✔ missing method from http client (44.128215ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4641890Z ✔ addHttpMethod increase the supported HTTP methods supported (8.085876ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4642780Z ✔ addHttpMethod adds a new custom method without body (0.802362ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4643965Z (node:4061) [FSTDEP025] FastifyDeprecation: Calling addHttpMethod for existing method "GET" without { overrideExisting: true } is deprecated. In Fastify v6, this will throw an error.
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4644895Z (Use `node --trace-warnings ...` to show where the warning was created)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4645638Z ✔ addHttpMethod adds a new custom method with body (4.562704ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4646620Z ✔ addHttpMethod rejects fake http method (0.586676ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4654469Z ✔ diagnostics channel sync events fire in expected order (62.143957ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4655189Z ✔ diagnostics_channel when present and subscribers (78.184121ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4655924Z ✔ diagnostics_channel when present and no subscribers (3.051297ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4656912Z ✔ diagnostics channel error event should report correct status code (39.388429ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4657832Z ✔ diagnostics channel error event should report 500 for errors without status (3.065165ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4659000Z ✔ diagnostics channel error event should report correct status with custom error handler (3.697743ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4659808Z ✔ Error.status property support (4.119984ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4660528Z ✔ diagnostics channel events report on errors (60.683598ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4661344Z ✔ diagnostics channel handles an error before calling context handler (1.234133ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4662209Z ✔ diagnostics channel async events fire in expected order (69.156348ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4663150Z ✔ diagnostics channel tracks async operations in async error handlers (60.378957ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4664060Z ✔ diagnostics channel async events fire in expected order (59.51726ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.4664844Z ✔ diagnostics channel sync events fire in expected order (59.662481ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:01.5097852Z ✔ should be the same as package.json (1.123021ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.3492028Z ✔ check generated code syntax (760.500182ms)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.3494364Z ﹣ ensure the current error serializer is latest (0.350521ms) # SKIP
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.4195832Z ℹ tests 2305
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.4196424Z ℹ suites 22
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.4196665Z ℹ pass 2301
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.4196865Z ℹ fail 0
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.4197069Z ℹ cancelled 0
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.4197297Z ℹ skipped 4
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.4197500Z ℹ todo 0
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.4197777Z ℹ duration_ms 26048.620225
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.4218375Z ##[group]Test results (2301 passed, 0 failed)
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.4245313Z ##[notice]Total Tests: 2305
+Test pino compatibility (^10)	UNKNOWN STEP	Suites 📂: 22
+Test pino compatibility (^10)	UNKNOWN STEP	Passed ✅: 2301
+Test pino compatibility (^10)	UNKNOWN STEP	Failed ❌: 0
+Test pino compatibility (^10)	UNKNOWN STEP	Canceled 🚫: 0
+Test pino compatibility (^10)	UNKNOWN STEP	Skipped ⏭️: 4
+Test pino compatibility (^10)	UNKNOWN STEP	Todo 📝: 0
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.4404010Z ##[group]Run npm run test:types
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.4404272Z ^[[36;1mnpm run test:types^[[0m
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.4428205Z shell: /usr/bin/bash -e {0}
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.4428632Z   NODE_OPTIONS: no-network-family-autoselection
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.4428933Z ##[endgroup]
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.5157280Z 
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.5157648Z > fastify@5.11.2 test:types
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.5157927Z > tstyche
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.5158010Z 
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.5559240Z ^[[90m····^[[0m TSTyche 7.2.2^[[90m at /home/runner/work/fastify/fastify^[[0m
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:02.5559479Z 
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:04.2389971Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mdecorate-request-reply.tst.ts
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:04.2478341Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0merrors.tst.ts
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:05.1667018Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mfastify.tst.ts
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:06.4397295Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mhooks.tst.ts
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:07.4322913Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0minstance.tst.ts
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0279635Z ^[[31mfail^[[0m ^[[90m./test/types/^[[0mlogger.tst.ts
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0279946Z 
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0287367Z ^[[31mError: ^[[0mType 'Partial<FastifyReply<RouteGenericInterface, Server<typeof IncomingMessage, typeof ServerResponse>, IncomingMessage, ... 4 more ..., unknown>>' is not the same as type 'Partial<FastifyReply<RouteGenericInterface, RawServerDefault, IncomingMessage, ServerResponse<IncomingMessage>, unknown, FastifySchema, FastifyTypeProviderDefault, unknown>> & Pick<...>'.
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0288630Z 
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0288882Z ^[[90m  158^[[0m^[[90m | ^[[0m      },
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0289219Z ^[[90m  159^[[0m^[[90m | ^[[0m      res (reply) {
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0289850Z ^[[31m  160^[[0m^[[90m | ^[[0m        expect(reply).type.toBe<Partial<FastifyReply> & Pick<FastifyReply, 'statusCode'>>()
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0292060Z 
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0292316Z        ^[[90m at ^[[0m^[[36m./test/types/logger.tst.ts^[[0m^[[90m:160:33^[[0m^[[90m^[[0m
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0292552Z 
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0293994Z ^[[31mError: ^[[0mType 'Partial<FastifyReply<RouteGenericInterface, Server<typeof IncomingMessage, typeof ServerResponse>, IncomingMessage, ... 4 more ..., unknown>>' is not the same as type 'Partial<FastifyReply<RouteGenericInterface, RawServerDefault, IncomingMessage, ServerResponse<IncomingMessage>, unknown, FastifySchema, FastifyTypeProviderDefault, unknown>> & Pick<...>'.
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0295074Z 
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0295231Z ^[[90m  193^[[0m^[[90m | ^[[0m    serializers: {
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0295542Z ^[[90m  194^[[0m^[[90m | ^[[0m      res (reply) {
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0296067Z ^[[31m  195^[[0m^[[90m | ^[[0m        expect(reply).type.toBe<Partial<FastifyReply> & Pick<FastifyReply, 'statusCode'>>()
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0298386Z 
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0299148Z        ^[[90m at ^[[0m^[[36m./test/types/logger.tst.ts^[[0m^[[90m:195:33^[[0m^[[90m^[[0m
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0299416Z 
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0301315Z ^[[31mError: ^[[0mType 'Partial<FastifyReply<RouteGenericInterface, Server<typeof IncomingMessage, typeof ServerResponse>, IncomingMessage, ... 4 more ..., unknown>>' is not the same as type 'Partial<FastifyReply<RouteGenericInterface, RawServerDefault, IncomingMessage, ServerResponse<IncomingMessage>, unknown, FastifySchema, FastifyTypeProviderDefault, unknown>> & Pick<...>'.
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0302541Z 
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0302702Z ^[[90m  221^[[0m^[[90m | ^[[0m      },
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0303057Z ^[[90m  222^[[0m^[[90m | ^[[0m      res (reply) {
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0303695Z ^[[31m  223^[[0m^[[90m | ^[[0m        expect(reply).type.toBe<Partial<FastifyReply> & Pick<FastifyReply, 'statusCode'>>()
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0306058Z 
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0306487Z        ^[[90m at ^[[0m^[[36m./test/types/logger.tst.ts^[[0m^[[90m:223:33^[[0m^[[90m^[[0m
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.0306746Z 
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.4681740Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mplugin.tst.ts
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:08.9239193Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mregister.tst.ts
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:09.8085980Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mreply.tst.ts
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:12.7679310Z Duration:   10.2s
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:12.8344094Z ##[error]Process completed with exit code 1.
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:12.8442757Z Post job cleanup.
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:12.9091460Z [command]/usr/bin/git version
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:12.9125480Z git version 2.54.0
+Test pino compatibility (^10)	UNKNOWN STEP	2026-08-07T15:29:12.9778474Z Cleaning up orphan processes
+test-types	UNKNOWN STEP	2026-08-07T15:28:35.0180335Z   NODE_OPTIONS: no-network-family-autoselection
+test-types	UNKNOWN STEP	2026-08-07T15:28:35.0180641Z ##[endgroup]
+test-types	UNKNOWN STEP	2026-08-07T15:28:35.1332826Z 
+test-types	UNKNOWN STEP	2026-08-07T15:28:35.1333392Z > fastify@5.11.2 test:types
+test-types	UNKNOWN STEP	2026-08-07T15:28:35.1333879Z > tstyche
+test-types	UNKNOWN STEP	2026-08-07T15:28:35.1334064Z 
+test-types	UNKNOWN STEP	2026-08-07T15:28:35.1905213Z ^[[90m····^[[0m TSTyche 7.2.2^[[90m at /home/runner/work/fastify/fastify^[[0m
+test-types	UNKNOWN STEP	2026-08-07T15:28:35.1905604Z 
+test-types	UNKNOWN STEP	2026-08-07T15:28:38.8325111Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mdecorate-request-reply.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:28:38.8662946Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0merrors.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:28:40.6160775Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mfastify.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:28:42.8718713Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mhooks.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:28:44.3885020Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0minstance.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5474532Z ^[[31mfail^[[0m ^[[90m./test/types/^[[0mlogger.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5475171Z 
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5485470Z ^[[31mError: ^[[0mType 'Partial<FastifyReply<RouteGenericInterface, Server<typeof IncomingMessage, typeof ServerResponse>, IncomingMessage, ... 4 more ..., unknown>>' is not the same as type 'Partial<FastifyReply<RouteGenericInterface, RawServerDefault, IncomingMessage, ServerResponse<IncomingMessage>, unknown, FastifySchema, FastifyTypeProviderDefault, unknown>> & Pick<...>'.
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5487194Z 
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5487414Z ^[[90m  158^[[0m^[[90m | ^[[0m      },
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5487841Z ^[[90m  159^[[0m^[[90m | ^[[0m      res (reply) {
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5488571Z ^[[31m  160^[[0m^[[90m | ^[[0m        expect(reply).type.toBe<Partial<FastifyReply> & Pick<FastifyReply, 'statusCode'>>()
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5489327Z      ^[[90m | ^[[0m                                ^[[31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^[[0m
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5490396Z ^[[90m  161^[[0m^[[90m | ^[[0m        expect(reply).type.not.toBeAssignableTo<FastifyReply>()
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5491585Z ^[[90m  162^[[0m^[[90m | ^[[0m        return {
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5492427Z ^[[90m  163^[[0m^[[90m | ^[[0m          statusCode: 'statusCode'
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5492838Z 
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5493381Z        ^[[90m at ^[[0m^[[36m./test/types/logger.tst.ts^[[0m^[[90m:160:33^[[0m^[[90m^[[0m
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5493871Z 
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5497571Z ^[[31mError: ^[[0mType 'Partial<FastifyReply<RouteGenericInterface, Server<typeof IncomingMessage, typeof ServerResponse>, IncomingMessage, ... 4 more ..., unknown>>' is not the same as type 'Partial<FastifyReply<RouteGenericInterface, RawServerDefault, IncomingMessage, ServerResponse<IncomingMessage>, unknown, FastifySchema, FastifyTypeProviderDefault, unknown>> & Pick<...>'.
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5501364Z 
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5501851Z ^[[90m  193^[[0m^[[90m | ^[[0m    serializers: {
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5502627Z ^[[90m  194^[[0m^[[90m | ^[[0m      res (reply) {
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5504022Z ^[[31m  195^[[0m^[[90m | ^[[0m        expect(reply).type.toBe<Partial<FastifyReply> & Pick<FastifyReply, 'statusCode'>>()
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5505492Z      ^[[90m | ^[[0m                                ^[[31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^[[0m
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5506808Z ^[[90m  196^[[0m^[[90m | ^[[0m        expect(reply).type.not.toBeAssignableTo<FastifyReply>()
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5507747Z ^[[90m  197^[[0m^[[90m | ^[[0m        return {
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5508498Z ^[[90m  198^[[0m^[[90m | ^[[0m          status: '200'
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5508863Z 
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5509388Z        ^[[90m at ^[[0m^[[36m./test/types/logger.tst.ts^[[0m^[[90m:195:33^[[0m^[[90m^[[0m
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5509887Z 
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5514317Z ^[[31mError: ^[[0mType 'Partial<FastifyReply<RouteGenericInterface, Server<typeof IncomingMessage, typeof ServerResponse>, IncomingMessage, ... 4 more ..., unknown>>' is not the same as type 'Partial<FastifyReply<RouteGenericInterface, RawServerDefault, IncomingMessage, ServerResponse<IncomingMessage>, unknown, FastifySchema, FastifyTypeProviderDefault, unknown>> & Pick<...>'.
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5521523Z 
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5522093Z ^[[90m  221^[[0m^[[90m | ^[[0m      },
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5523183Z ^[[90m  222^[[0m^[[90m | ^[[0m      res (reply) {
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5524642Z ^[[31m  223^[[0m^[[90m | ^[[0m        expect(reply).type.toBe<Partial<FastifyReply> & Pick<FastifyReply, 'statusCode'>>()
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5525478Z      ^[[90m | ^[[0m                                ^[[31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^[[0m
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5526161Z ^[[90m  224^[[0m^[[90m | ^[[0m        expect(reply).type.not.toBeAssignableTo<FastifyReply>()
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5526880Z ^[[90m  225^[[0m^[[90m | ^[[0m        return {
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5527320Z ^[[90m  226^[[0m^[[90m | ^[[0m          statusCode: 'statusCode'
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5527557Z 
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5527856Z        ^[[90m at ^[[0m^[[36m./test/types/logger.tst.ts^[[0m^[[90m:223:33^[[0m^[[90m^[[0m
+test-types	UNKNOWN STEP	2026-08-07T15:28:45.5528135Z 
+test-types	UNKNOWN STEP	2026-08-07T15:28:46.2649102Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mplugin.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:28:47.0296285Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mregister.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:28:48.4912694Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mreply.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:28:49.3497624Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mrequest.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:28:50.3396923Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mroute.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:28:50.8291357Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mschema.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:28:50.8413018Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mserverFactory.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:28:52.8369421Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0mtype-provider.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:28:53.1389943Z ^[[32mpass^[[0m ^[[90m./test/types/^[[0musing.tst.ts
+test-types	UNKNOWN STEP	2026-08-07T15:28:53.1390461Z 
+test-types	UNKNOWN STEP	2026-08-07T15:28:53.1402093Z Targets:    ^[[31m1 failed^[[0m, 1 total
+test-types	UNKNOWN STEP	2026-08-07T15:28:53.1403085Z Test files: ^[[31m1 failed^[[0m, ^[[32m15 passed^[[0m, 16 total
+test-types	UNKNOWN STEP	2026-08-07T15:28:53.1403950Z Tests:      ^[[32m2 passed^[[0m, 2 total
+test-types	UNKNOWN STEP	2026-08-07T15:28:53.1404993Z Assertions: ^[[31m3 failed^[[0m, ^[[32m1279 passed^[[0m, 1282 total
+test-types	UNKNOWN STEP	2026-08-07T15:28:53.1405951Z Suppressed: ^[[32m57 matched^[[0m, 57 total
+test-types	UNKNOWN STEP	2026-08-07T15:28:53.1406569Z Duration:   17.9s
+test-types	UNKNOWN STEP	2026-08-07T15:28:53.2062143Z ##[error]Process completed with exit code 1.
+test-types	UNKNOWN STEP	2026-08-07T15:28:53.2228809Z Post job cleanup.
+test-types	UNKNOWN STEP	2026-08-07T15:28:53.3072456Z [command]/usr/bin/git version
+test-types	UNKNOWN STEP	2026-08-07T15:28:53.3115144Z git version 2.54.0
+test-types	UNKNOWN STEP	2026-08-07T15:28:53.4098899Z Cleaning up orphan processes

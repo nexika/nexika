@@ -1,0 +1,295 @@
+Analyze (javascript)	UNKNOWN STEP	﻿2026-09-13T08:50:56.4612902Z Current runner version: '2.337.0'
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:50:56.4649945Z ##[group]Runner Image Provisioner
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:50:56.4651420Z Hosted Compute Agent
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:50:56.4652364Z Version: 20260828.587
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:50:56.4666366Z ##[group]Runner Image
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:50:56.4667686Z Image: ubuntu-24.04
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:50:56.4668850Z Version: 20260907.300.1
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:50:57.2334436Z ##[group]Run actions/checkout@v6
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:50:57.2335446Z with:
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:50:57.2336022Z   repository: fastify/fastify
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:50:57.9516699Z ##[group]Run github/codeql-action/start-proxy@v4
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:50:57.9518217Z with:
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:50:57.9519152Z   registries_credentials: [secret]
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:50:58.2394486Z ##[group]Run github/codeql-action/init@v4
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:50:58.2395013Z with:
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:50:58.2395405Z   analysis-kinds: code-scanning
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:14.8466276Z ##[group]Run github/codeql-action/analyze@v4
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:14.8466603Z with:
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:14.8466831Z   category: /language:javascript
+Analyze (javascript)	UNKNOWN STEP	  "build-mode": "none",
+Analyze (javascript)	UNKNOWN STEP	  "runner": "[\"ubuntu-latest\"]"
+Analyze (javascript)	UNKNOWN STEP	}
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:14.8472316Z   expect-error: false
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:14.8472531Z env:
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:14.8472740Z   CODE_SCANNING_REF: refs/pull/6855/head
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:14.8473213Z   CODE_SCANNING_BASE_BRANCH: main
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.7476141Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/types/utils.d.ts (13 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.7476994Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/fastify.d.ts
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.7731236Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/fastify.d.ts (27 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.7787148Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/bundler/esbuild/src/fail-plugin-version.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.7789524Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/bundler/webpack/src/fail-plugin-version.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.7791497Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/bundler/esbuild/src/index.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.7793450Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/bundler/webpack/src/index.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8266368Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/bundler/webpack/src/index.js (45 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8284267Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/bundler/esbuild/bundler-test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8308618Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/bundler/esbuild/src/index.js (47 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8326449Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/bundler/esbuild/package.json
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8328586Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/bundler/webpack/src/fail-plugin-version.js (48 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8330660Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/bundler/webpack/bundler-test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8358905Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/bundler/webpack/bundler-test.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8381424Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/bundler/webpack/package.json
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8397102Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/bundler/esbuild/src/fail-plugin-version.js (50 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8399318Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/bundler/webpack/webpack.config.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8401092Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/bundler/webpack/webpack.config.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8426888Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/.github/scripts/lint-ecosystem.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8521098Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/.github/workflows/backport.yml (4 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8568637Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/.github/workflows/citgm.yml
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8608400Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/.github/scripts/lint-ecosystem.js (9 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8610221Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/.github/workflows/coverage-nix.yml
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8611846Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/.github/workflows/ci.yml (9 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8613768Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/.github/workflows/coverage-win.yml
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8616052Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/.github/workflows/coverage-win.yml (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8618420Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/.github/workflows/integration-alternative-runtimes.yml
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8620487Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/.github/workflows/citgm-package.yml (10 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8622178Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/.github/workflows/integration.yml
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8623977Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/.github/workflows/coverage-nix.yml (5 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8625680Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/.github/workflows/labeler.yml
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8627992Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/.github/workflows/citgm.yml (10 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8629683Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/.github/workflows/links-check.yml
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8749823Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/examples/benchmark/hooks-benchmark-async-await.js (4 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8751701Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/examples/benchmark/webstream.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8753439Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/examples/benchmark/webstream.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8755217Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/build/error-serializer.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8757029Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/examples/benchmark/hooks-benchmark.js (4 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8774421Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/build/version.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8790272Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/examples/benchmark/parser.js (5 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8793614Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/examples/benchmark/simple.js (5 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8795296Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/async-delay-request.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8797125Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/404.test.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8799336Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/async-error-handler.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8801410Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/async-delay-request.test.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8803390Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/build/version.test.js (3 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8805211Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/async-request.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8807162Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/error-before-handler.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8814493Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/error-before-handler.test.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8816191Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/error-request.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8818441Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/build/error-serializer.test.js (7 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8820342Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/error-status.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8822290Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/error-status.test.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8825506Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/init.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8828498Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/error-request.test.js (3 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8830647Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/sync-delay-request.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8832687Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/sync-delay-request.test.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8835107Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/sync-request-reply.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8837083Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/async-error-handler.test.js (7 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8839335Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/sync-request.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8841298Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/diagnostics-channel/async-request.test.js (7 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.8843104Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/esm/errorCodes.test.mjs
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9706633Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/logger/logging.test.js (6 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9744488Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/.github/labeler.yml
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9745749Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/.github/dependabot.yml (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9747119Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/build/build-error-serializer.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9748740Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/.github/labeler.yml (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9750051Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/build/build-validation.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9751456Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/build/build-error-serializer.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9752826Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/build/sync-version.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9754152Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/logger/response.test.js (6 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9755516Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/examples/asyncawait.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9948709Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/lib/context.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9950114Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/lib/decorate.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9951338Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/examples/simple.js (5 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9952623Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/lib/error-handler.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9953842Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/lib/decorate.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9955096Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/lib/error-serializer.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9956436Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/lib/content-type-parser.js (4 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9958047Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/lib/error-status.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:20.9959981Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/lib/error-handler.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0038958Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/lib/errors.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0040282Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/lib/error-serializer.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0041581Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/lib/four-oh-four.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0042879Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/lib/error-status.js (3 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0044206Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/lib/handle-request.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0045509Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/lib/four-oh-four.js (2 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0046786Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/lib/head-route.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0390679Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/decorator.test.js (2 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0392165Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/encapsulated-child-logger-factory.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0393650Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/delete.test.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0400956Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/encapsulated-error-handler.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0402582Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/decorator-instance-properties.test.js (3 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0404164Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/fastify-instance.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0405750Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/encapsulated-child-logger-factory.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0412652Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/fix-6411.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0414043Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/find-route.test.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0415531Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/fix-root-primitive-coercion.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0417152Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/encapsulated-error-handler.test.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0418913Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/fluent-schema.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0420258Z [2026-09-13 08:51:20] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/fix-6411.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0421581Z [2026-09-13 08:51:20] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/genReqId.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0501266Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/noop-set.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0502565Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/nullable-validation.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0504031Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/nullable-validation.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0505552Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/options.error-handler.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0506926Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/inject.test.js (10 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0508453Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/options.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0509830Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/options.error-handler.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0511295Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/output-validation.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0512630Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/listen.4.test.js (7 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0513990Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/patch.error-handler.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0515390Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/options.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0516690Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/patch.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0523973Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/output-validation.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0525408Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/plugin.1.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0527096Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/patch.error-handler.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0529007Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/patch.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0530323Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/plugin.2.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0531548Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/plugin.3.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0552493Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/plugin.2.test.js (2 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0553868Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/proto-poisoning.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0555230Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/promises.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0556575Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/put.error-handler.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0558264Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/proto-poisoning.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0559577Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/put.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0560874Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/pretty-print.test.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0565993Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/register.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0567601Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/reply-early-hints.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0569036Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/reply-early-hints.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0570629Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/reply-error.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0571999Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/reply-error.test.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0573405Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/reply-media-type.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0574800Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/reply-media-type.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0576135Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/reply-trailers.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0579027Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/reply-trailers.test.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0580499Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/plugin.3.test.js (10 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0582115Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/reply-web-stream-locked.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0583510Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/request-error.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0585005Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/reply-web-stream-locked.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0586527Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/request-header-host.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0588198Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/request-error.test.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0589559Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/request-id.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0590954Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/request-header-host.test.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0592465Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/request-media-type.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0595223Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/request-port.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0596582Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/reply-code.test.js (7 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0598216Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/request-timeout.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0599643Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/put.error-handler.test.js (9 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0601009Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/rfc-10008.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0602368Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/request-timeout.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0603764Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/route-hooks.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0664457Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/schema-special-usage.test.js (5 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0665865Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/server.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0667160Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/route.6.test.js (9 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0668838Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/set-error-handler.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0674333Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/set-error-handler.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0676000Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/skip-reply-send.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0677608Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/server.test.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0678993Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/stream-serializers.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0711007Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/url-rewriting.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0712451Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/use-semicolon-delimiter.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0713925Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/use-semicolon-delimiter.test.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0715472Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/validation-error-handling.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0717230Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/stream.3.test.js (6 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0719181Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/test/versioned-routes.test.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0720617Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/versioned-routes.test.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0732356Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/.markdownlint-cli2.yaml
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0736993Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/type-provider.test.js (8 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0738896Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/eslint.config.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0740590Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/test/validation-error-handling.test.js (7 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0742324Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/fastify.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0743864Z [2026-09-13 08:51:21] [build-stdout] Done extracting /home/runner/work/fastify/fastify/.markdownlint-cli2.yaml (3 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0746524Z [2026-09-13 08:51:21] [build-stdout] Extracting /home/runner/work/fastify/fastify/package.json
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0948830Z [2026-09-13 08:51:21] [build-stdout] Extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/string_decoder.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0950579Z [2026-09-13 08:51:21] [build-stdout] Done extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/url.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0952342Z [2026-09-13 08:51:21] [build-stdout] Done extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/net.js (6 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0954034Z [2026-09-13 08:51:21] [build-stdout] Extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/assert.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0955714Z [2026-09-13 08:51:21] [build-stdout] Extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/vm.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0957706Z [2026-09-13 08:51:21] [build-stdout] Done extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/readline.js (6 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0959473Z [2026-09-13 08:51:21] [build-stdout] Extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/zlib.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0961245Z [2026-09-13 08:51:21] [build-stdout] Done extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/assert.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0963039Z [2026-09-13 08:51:21] [build-stdout] Extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/sys.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0964779Z [2026-09-13 08:51:21] [build-stdout] Done extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/vm.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.0966568Z [2026-09-13 08:51:21] [build-stdout] Extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/cluster.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.1445060Z [2026-09-13 08:51:21] [build-stdout] Done extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/crypto.js (3 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.1446931Z [2026-09-13 08:51:21] [build-stdout] Extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/child_process.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.1448980Z [2026-09-13 08:51:21] [build-stdout] Done extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/stream.js (6 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.1450827Z [2026-09-13 08:51:21] [build-stdout] Extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/assert_legacy.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.1452618Z [2026-09-13 08:51:21] [build-stdout] Done extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/querystring.js (5 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.1454363Z [2026-09-13 08:51:21] [build-stdout] Extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/http.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.1456130Z [2026-09-13 08:51:21] [build-stdout] Done extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/console.js (1 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.1458113Z [2026-09-13 08:51:21] [build-stdout] Extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/lib/bdd.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.1460205Z [2026-09-13 08:51:21] [build-stdout] Done extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/nodejs/assert_legacy.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.1462091Z [2026-09-13 08:51:21] [build-stdout] Extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/lib/vows.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.1463867Z [2026-09-13 08:51:21] [build-stdout] Done extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/lib/bdd.js (0 ms)
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:21.1465511Z [2026-09-13 08:51:21] [build-stdout] Extracting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/javascript/tools/data/externs/lib/jquery-3.2.js
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:36.0718744Z [55/105] Loaded /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/qlpacks/codeql/javascript-queries/2.4.5/Security/CWE-079/Xss.qlx.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:36.1749023Z [56/105] Loaded /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/qlpacks/codeql/javascript-queries/2.4.5/Security/CWE-338/InsecureRandomness.qlx.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:36.2508878Z [57/105] Loaded /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/qlpacks/codeql/javascript-queries/2.4.5/Security/CWE-079/StoredXss.qlx.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:36.4087646Z [58/105] Loaded /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/qlpacks/codeql/javascript-queries/2.4.5/Security/CWE-079/ExceptionXss.qlx.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:36.4468851Z [59/105] Loaded /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/qlpacks/codeql/javascript-queries/2.4.5/Security/CWE-078/CommandInjection.qlx.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:36.4648969Z [60/105] Loaded /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/qlpacks/codeql/javascript-queries/2.4.5/Security/CWE-078/UselessUseOfCat.qlx.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:36.4848979Z [61/105] Loaded /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/qlpacks/codeql/javascript-queries/2.4.5/Security/CWE-079/UnsafeHtmlConstruction.qlx.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:46.6028363Z Starting evaluation of codeql/javascript-queries/Security/CWE-078/ShellCommandInjectionFromEnvironment.ql.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:46.6030015Z Starting evaluation of codeql/javascript-queries/Security/CWE-078/UnsafeShellCommandConstruction.ql.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:46.6031281Z Starting evaluation of codeql/javascript-queries/Security/CWE-078/UselessUseOfCat.ql.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:46.6096688Z Starting evaluation of codeql/javascript-queries/Security/CWE-079/ExceptionXss.ql.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:46.6098742Z Starting evaluation of codeql/javascript-queries/Security/CWE-079/ReflectedXss.ql.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:46.6128257Z Starting evaluation of codeql/javascript-queries/Security/CWE-079/StoredXss.ql.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:46.6130268Z Starting evaluation of codeql/javascript-queries/Security/CWE-079/UnsafeHtmlConstruction.ql.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:55.7658018Z [61/105 eval 9.2s] Evaluation done; writing results to codeql/javascript-queries/Security/CWE-094/UnsafeCodeConstruction.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:55.8199119Z [62/105 eval 9.2s] Evaluation done; writing results to codeql/javascript-queries/Security/CWE-079/ReflectedXss.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:55.8228522Z [63/105 eval 9.2s] Evaluation done; writing results to codeql/javascript-queries/Security/CWE-079/StoredXss.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:55.8476708Z [64/105 eval 9.3s] Evaluation done; writing results to codeql/javascript-queries/Security/CWE-079/ExceptionXss.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:55.8536812Z [65/105 eval 2.4s] Evaluation done; writing results to codeql/javascript-queries/Security/CWE-506/HardcodedDataInterpretedAsCode.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:55.8647563Z [66/105 eval 9.3s] Evaluation done; writing results to codeql/javascript-queries/Security/CWE-094/CodeInjection.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:51:55.9936322Z [67/105 eval 9.4s] Evaluation done; writing results to codeql/javascript-queries/Security/CWE-089/SqlInjection.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:00.6500926Z  ... found results file at /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-079/ReflectedXss.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:00.6508441Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/qlpacks/codeql/javascript-queries/2.4.5/Security/CWE-079/Xss.ql...
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:00.6569541Z  ... found results file at /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-079/Xss.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:00.6589638Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/qlpacks/codeql/javascript-queries/2.4.5/Security/CWE-079/ExceptionXss.ql...
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:00.6648854Z  ... found results file at /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-079/ExceptionXss.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:00.6676320Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/qlpacks/codeql/javascript-queries/2.4.5/Security/CWE-079/StoredXss.ql...
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:00.6705717Z  ... found results file at /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-079/StoredXss.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:00.6713174Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/qlpacks/codeql/javascript-queries/2.4.5/Security/CWE-079/UnsafeHtmlConstruction.ql...
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.0956678Z Interpreted pathproblem query "DOM text reinterpreted as HTML" (js/xss-through-dom) at path /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-079/XssThroughDom.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.0959628Z Interpreted pathproblem query "Reflected cross-site scripting" (js/reflected-xss) at path /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-079/ReflectedXss.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.0962187Z Interpreted pathproblem query "Client-side cross-site scripting" (js/xss) at path /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-079/Xss.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.0964838Z Interpreted pathproblem query "Exception text reinterpreted as HTML" (js/xss-through-exception) at path /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-079/ExceptionXss.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.0968092Z Interpreted pathproblem query "Stored cross-site scripting" (js/stored-xss) at path /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-079/StoredXss.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.0971202Z Interpreted pathproblem query "Unsafe HTML constructed from library input" (js/html-constructed-from-input) at path /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-079/UnsafeHtmlConstruction.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.0974268Z Interpreted pathproblem query "Insecure randomness" (js/insecure-randomness) at path /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-338/InsecureRandomness.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.1145401Z Interpreted problem query "Disabling SCE" (js/angular/disabling-sce) at path /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/AngularJS/DisablingSce.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.1148506Z Interpreted problem query "Sensitive cookie without SameSite restrictions" (js/samesite-none-cookie) at path /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-1275/SameSiteNoneCookie.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.1151339Z Interpreted pathproblem query "Log injection" (js/log-injection) at path /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-117/LogInjection.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.1154030Z Interpreted problem query "Failure to abandon session" (js/session-fixation) at path /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-384/SessionFixation.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.1160951Z Interpreted pathproblem query "Client-side request forgery" (js/client-side-request-forgery) at path /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-918/ClientSideRequestForgery.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.1164086Z Interpreted problem query "Missing regular expression anchor" (js/regex/missing-regexp-anchor) at path /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-020/MissingRegExpAnchor.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.1167221Z Interpreted problem query "Missing origin verification in `postMessage` handler" (js/missing-origin-check) at path /home/runner/work/_temp/codeql_databases/javascript/results/codeql/javascript-queries/Security/CWE-020/MissingOriginCheck.bqrs.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.5480215Z Exporting results to SARIF...
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.7865822Z Exported results to SARIF (237ms).
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.8098478Z ##[endgroup]
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.8099508Z To speed up pull request analysis, file coverage information is only enabled when analyzing the default branch and protected branches.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.8110532Z Post-processing sarif files: ["/home/runner/work/fastify/results/javascript.sarif"]
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.8168509Z Adding fingerprints to SARIF file. See https://docs.github.com/en/code-security/reference/code-scanning/sarif-support-for-code-scanning#data-for-preventing-duplicated-alerts for more information.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.8170932Z ##[group]Uploading code scanning results
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:01.8406662Z Uploading results
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:21.2934823Z Post job cleanup.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:21.5818964Z Post job cleanup.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:21.8567596Z [command]/opt/hostedtoolcache/CodeQL/2.27.0/x64/codeql/codeql database export-diagnostics /home/runner/work/_temp/codeql_databases --db-cluster --format=sarif-latest --output=../codeql-failed-run.sarif --sarif-include-diagnostics -vvv --sarif-category /language:javascript
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:22.4042736Z Writing logs to /home/runner/work/_temp/codeql_databases/log/database-export-diagnostics-20260913.085222.400.log.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:22.6535841Z Interpreting diagnostic messages...
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:22.6556433Z Looking for diagnostics in /home/runner/work/_temp/codeql_databases/javascript/diagnostic...
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:22.7056611Z Found 4 raw diagnostic messages.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:22.7239376Z Processed diagnostic messages (removed 0 due to limits, created 0 summary diagnostics for status page).
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:22.7279041Z Interpreted diagnostic messages (70ms).
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:22.8506060Z Uploading failed SARIF file ../codeql-failed-run.sarif
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:22.8510962Z Post-processing sarif files: ["../codeql-failed-run.sarif"]
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:22.8522225Z Adding fingerprints to SARIF file. See https://docs.github.com/en/code-security/reference/code-scanning/sarif-support-for-code-scanning#data-for-preventing-duplicated-alerts for more information.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:22.8524523Z ##[group]Uploading code scanning results
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:22.8657396Z CodeQL job status was failure.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:22.8668617Z Sending status report for init-post step.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:23.2098832Z Status report sent for init-post step.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:23.2514035Z Post job cleanup.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:23.5248949Z Post job cleanup.
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:23.6104797Z [command]/usr/bin/git version
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:23.6143097Z git version 2.55.0
+Analyze (javascript)	UNKNOWN STEP	2026-09-13T08:52:23.7472264Z Cleaning up orphan processes

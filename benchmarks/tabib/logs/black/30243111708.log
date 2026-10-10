@@ -1,0 +1,210 @@
+fuzz (3.13)	UNKNOWN STEP	﻿2026-07-27T06:33:13.4405436Z Current runner version: '2.336.0'
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:13.4455001Z ##[group]Runner Image Provisioner
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:13.4456099Z Hosted Compute Agent
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:13.4456705Z Version: 20260707.563
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:13.4465051Z ##[group]Runner Image
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:13.4465756Z Image: ubuntu-24.04
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:13.4466330Z Version: 20260720.247.2
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:15.7950164Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:15.7951997Z with:
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:15.7952797Z   persist-credentials: false
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:17.1849006Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:17.2061824Z Removing credentials config '/home/runner/work/_temp/git-credentials-973b617a-454e-4921-b54d-1c95daba4b9b.config'
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:17.2071928Z ##[endgroup]
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:17.2332892Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:17.2345361Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:17.2345771Z with:
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:17.2345976Z   python-version: 3.13
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.4790349Z ##[group]Run tox -e fuzz --result-json $python_ver
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.4790855Z ^[[36;1mtox -e fuzz --result-json $python_ver^[[0m
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.4839684Z shell: /usr/bin/bash -e {0}
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.4840079Z env:
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.4840349Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.14/x64
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.4840797Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.14/x64/lib/pkgconfig
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.4841229Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.14/x64
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.4841835Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.14/x64
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.4842224Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.14/x64
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.4842606Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.14/x64/lib
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.4842929Z   python_ver: 3.13
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.4843135Z ##[endgroup]
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.4933857Z /home/runner/work/_temp/4841a15a-060b-48b1-86f7-8064dc0b8f56.sh: line 1: tox: command not found
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.4942225Z ##[error]Process completed with exit code 127.
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.5015877Z ##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.5016313Z with:
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.5016517Z   name: 3.13
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.5020249Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.14/x64
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.5020664Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.14/x64/lib
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.5020990Z ##[endgroup]
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.6505400Z ##[warning]No files were found with the provided path: 3.13. No artifacts will be uploaded.
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.6693582Z Post job cleanup.
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.7581582Z [command]/usr/bin/git version
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.7621746Z git version 2.54.0
+fuzz (3.13)	UNKNOWN STEP	2026-07-27T06:33:21.8706013Z Cleaning up orphan processes
+fuzz (3.14)	UNKNOWN STEP	﻿2026-07-27T06:33:12.7412782Z Current runner version: '2.336.0'
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:12.7484969Z ##[group]Runner Image Provisioner
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:12.7486231Z Hosted Compute Agent
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:12.7487271Z Version: 20260707.563
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:12.7501229Z ##[group]Runner Image
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:12.7502251Z Image: ubuntu-24.04
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:12.7503458Z Version: 20260720.247.2
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:13.7501090Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:13.7502160Z with:
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:13.7502600Z   persist-credentials: false
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:14.4296440Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:14.4531815Z Removing credentials config '/home/runner/work/_temp/git-credentials-c788725d-9356-4b9b-bd50-d2099b89fbac.config'
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:14.4537863Z ##[endgroup]
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:14.4888814Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:14.4919611Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:14.4921221Z with:
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:14.4921981Z   python-version: 3.14
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.7895109Z ##[group]Run tox -e fuzz --result-json $python_ver
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.7895621Z ^[[36;1mtox -e fuzz --result-json $python_ver^[[0m
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.7947633Z shell: /usr/bin/bash -e {0}
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.7947948Z env:
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.7948229Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.6/x64
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.7948695Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.6/x64/lib/pkgconfig
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.7949333Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.7950015Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.7950425Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.7950814Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.6/x64/lib
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.7951165Z   python_ver: 3.14
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.7951384Z ##[endgroup]
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.8051448Z /home/runner/work/_temp/c3d2bdf2-287f-4d08-a940-ce4ca6dc9beb.sh: line 1: tox: command not found
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.8060823Z ##[error]Process completed with exit code 127.
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.8203886Z ##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.8204344Z with:
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.8204548Z   name: 3.14
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.8208054Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.8208486Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.6/x64/lib
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.8208810Z ##[endgroup]
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.9650930Z ##[warning]No files were found with the provided path: 3.14. No artifacts will be uploaded.
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:18.9863705Z Post job cleanup.
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:19.0734632Z [command]/usr/bin/git version
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:19.0772666Z git version 2.54.0
+fuzz (3.14)	UNKNOWN STEP	2026-07-27T06:33:19.1789628Z Cleaning up orphan processes
+fuzz (3.12)	UNKNOWN STEP	﻿2026-07-27T06:33:13.1091474Z Current runner version: '2.336.0'
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:13.1158925Z ##[group]Runner Image Provisioner
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:13.1160310Z Hosted Compute Agent
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:13.1160914Z Version: 20260707.563
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:13.1169219Z ##[group]Runner Image
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:13.1170123Z Image: ubuntu-24.04
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:13.1170739Z Version: 20260720.247.2
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:14.9719161Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:14.9721432Z with:
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:14.9722347Z   persist-credentials: false
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:15.9455372Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:15.9683563Z Removing credentials config '/home/runner/work/_temp/git-credentials-b0aaff4d-a738-448b-b242-54abea0b3d7a.config'
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:15.9691610Z ##[endgroup]
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:15.9954095Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:15.9967670Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:15.9968080Z with:
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:15.9968304Z   python-version: 3.12
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2047949Z ##[group]Run tox -e fuzz --result-json $python_ver
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2048401Z ^[[36;1mtox -e fuzz --result-json $python_ver^[[0m
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2099600Z shell: /usr/bin/bash -e {0}
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2099890Z env:
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2100175Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.13/x64
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2100646Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib/pkgconfig
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2101105Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2101735Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2102119Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2102510Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2102843Z   python_ver: 3.12
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2103058Z ##[endgroup]
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2194815Z /home/runner/work/_temp/9fda0445-f334-4af8-b533-785f1c360802.sh: line 1: tox: command not found
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2203072Z ##[error]Process completed with exit code 127.
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2277086Z ##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2277508Z with:
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2277709Z   name: 3.12
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2281383Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2281798Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.2282127Z ##[endgroup]
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.3658651Z ##[warning]No files were found with the provided path: 3.12. No artifacts will be uploaded.
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.3846543Z Post job cleanup.
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.4675102Z [command]/usr/bin/git version
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.4713145Z git version 2.54.0
+fuzz (3.12)	UNKNOWN STEP	2026-07-27T06:33:18.5766973Z Cleaning up orphan processes
+fuzz (3.10)	UNKNOWN STEP	﻿2026-07-27T06:33:14.5764958Z Current runner version: '2.336.0'
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:14.5813807Z ##[group]Runner Image Provisioner
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:14.5814687Z Hosted Compute Agent
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:14.5815393Z Version: 20260707.563
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:14.5823882Z ##[group]Runner Image
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:14.5824491Z Image: ubuntu-24.04
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:14.5825131Z Version: 20260720.247.2
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:16.6179174Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:16.6180505Z with:
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:16.6180960Z   persist-credentials: false
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:18.0669353Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:18.0888068Z Removing credentials config '/home/runner/work/_temp/git-credentials-a9d2d67b-9fc5-47d7-b146-952d6061fe3e.config'
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:18.0895911Z ##[endgroup]
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:18.1249493Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:18.1275925Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:18.1277435Z with:
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:18.1278171Z   python-version: 3.10
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4323200Z ##[group]Run tox -e fuzz --result-json $python_ver
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4323668Z ^[[36;1mtox -e fuzz --result-json $python_ver^[[0m
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4374562Z shell: /usr/bin/bash -e {0}
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4374837Z env:
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4375116Z   pythonLocation: /opt/hostedtoolcache/Python/3.10.20/x64
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4375591Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.20/x64/lib/pkgconfig
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4376055Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.20/x64
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4376679Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.20/x64
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4377085Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.20/x64
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4377513Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.20/x64/lib
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4377859Z   python_ver: 3.10
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4378068Z ##[endgroup]
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4470847Z /home/runner/work/_temp/47c6fc7e-a7b4-4663-bc62-eaec8e2bc763.sh: line 1: tox: command not found
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4480046Z ##[error]Process completed with exit code 127.
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4554702Z ##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4555131Z with:
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4555379Z   name: 3.10
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4558839Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.20/x64
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4559262Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.20/x64/lib
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.4559589Z ##[endgroup]
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.6118164Z ##[warning]No files were found with the provided path: 3.10. No artifacts will be uploaded.
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.6308443Z Post job cleanup.
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.7211014Z [command]/usr/bin/git version
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.7249144Z git version 2.54.0
+fuzz (3.10)	UNKNOWN STEP	2026-07-27T06:33:22.9014977Z Cleaning up orphan processes
+fuzz (3.11)	UNKNOWN STEP	﻿2026-07-27T06:33:13.0211580Z Current runner version: '2.335.1'
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:13.0260518Z ##[group]Runner Image Provisioner
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:13.0261461Z Hosted Compute Agent
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:13.0262028Z Version: 20260707.563
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:13.0270245Z ##[group]Runner Image
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:13.0270952Z Image: ubuntu-24.04
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:13.0271498Z Version: 20260720.247.2
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:14.2993363Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:14.2994601Z with:
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:14.2995096Z   persist-credentials: false
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:15.2161221Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:15.2393305Z Removing credentials config '/home/runner/work/_temp/git-credentials-1af4f192-2c27-4edf-a271-c3dd34b50f59.config'
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:15.2400848Z ##[endgroup]
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:15.2735427Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:15.2763424Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:15.2765004Z with:
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:15.2765833Z   python-version: 3.11
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3328865Z ##[group]Run tox -e fuzz --result-json $python_ver
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3329681Z ^[[36;1mtox -e fuzz --result-json $python_ver^[[0m
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3381185Z shell: /usr/bin/bash -e {0}
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3381465Z env:
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3381738Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3382205Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3382653Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3383302Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3383694Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3384089Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3384418Z   python_ver: 3.11
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3384629Z ##[endgroup]
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3476893Z /home/runner/work/_temp/9963faef-ea12-44f0-b644-2c95de0e0cae.sh: line 1: tox: command not found
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3485612Z ##[error]Process completed with exit code 127.
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3611327Z ##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3611771Z with:
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3611968Z   name: 3.11
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3615385Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3615811Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.3616143Z ##[endgroup]
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.5087548Z ##[warning]No files were found with the provided path: 3.11. No artifacts will be uploaded.
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.5329126Z Post job cleanup.
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.6174867Z [command]/usr/bin/git version
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.6216753Z git version 2.54.0
+fuzz (3.11)	UNKNOWN STEP	2026-07-27T06:33:17.7220366Z Cleaning up orphan processes

@@ -1,0 +1,55 @@
+validate	UNKNOWN STEP	﻿2026-09-02T14:00:33.6109185Z Current runner version: '2.337.0'
+validate	UNKNOWN STEP	2026-09-02T14:00:33.6135826Z ##[group]Runner Image Provisioner
+validate	UNKNOWN STEP	2026-09-02T14:00:33.6136754Z Hosted Compute Agent
+validate	UNKNOWN STEP	2026-09-02T14:00:33.6137428Z Version: 20260819.586
+validate	UNKNOWN STEP	2026-09-02T14:00:33.6145855Z ##[group]Runner Image
+validate	UNKNOWN STEP	2026-09-02T14:00:33.6146488Z Image: ubuntu-24.04
+validate	UNKNOWN STEP	2026-09-02T14:00:33.6147142Z Version: 20260823.283.1
+validate	UNKNOWN STEP	2026-09-02T14:00:34.4370111Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+validate	UNKNOWN STEP	2026-09-02T14:00:34.4371226Z with:
+validate	UNKNOWN STEP	2026-09-02T14:00:34.4371682Z   repository: flypythoncom/python
+validate	UNKNOWN STEP	2026-09-02T14:00:35.4595401Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+validate	UNKNOWN STEP	2026-09-02T14:00:35.4596763Z with:
+validate	UNKNOWN STEP	2026-09-02T14:00:35.4597343Z   python-version-file: .python-version
+validate	UNKNOWN STEP	2026-09-02T14:00:35.4611704Z ##[endgroup]
+validate	UNKNOWN STEP	2026-09-02T14:00:35.5791159Z Resolved .python-version as 3.12.13
+validate	UNKNOWN STEP	2026-09-02T14:00:35.5793033Z ##[group]Installed versions
+validate	UNKNOWN STEP	2026-09-02T14:00:35.5812729Z Version 3.12.13 was not found in the local cache
+validate	UNKNOWN STEP	2026-09-02T14:00:36.6406736Z Version 3.12.13 is available for downloading
+validate	UNKNOWN STEP	2026-09-02T14:00:36.6408302Z Download from "https://github.com/actions/python-versions/releases/download/3.12.13-27650778726/python-3.12.13-linux-24.04-x64.tar.gz"
+validate	UNKNOWN STEP	2026-09-02T14:00:37.3944306Z Extract downloaded archive
+validate	UNKNOWN STEP	2026-09-02T14:00:44.6523235Z ##[group]Run python -m pip install --disable-pip-version-check -r requirements-dev.lock.txt
+validate	UNKNOWN STEP	2026-09-02T14:00:44.6524378Z ^[[36;1mpython -m pip install --disable-pip-version-check -r requirements-dev.lock.txt^[[0m
+validate	UNKNOWN STEP	2026-09-02T14:00:44.6568590Z shell: /usr/bin/bash -e {0}
+validate	UNKNOWN STEP	2026-09-02T14:00:48.5977911Z ##[group]Run python -m pytest
+validate	UNKNOWN STEP	2026-09-02T14:00:48.5978238Z ^[[36;1mpython -m pytest^[[0m
+validate	UNKNOWN STEP	2026-09-02T14:00:48.6018369Z shell: /usr/bin/bash -e {0}
+validate	UNKNOWN STEP	2026-09-02T14:00:48.6018629Z env:
+validate	UNKNOWN STEP	2026-09-02T14:00:48.6018896Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.13/x64
+validate	UNKNOWN STEP	2026-09-02T14:00:48.6019341Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib/pkgconfig
+validate	UNKNOWN STEP	2026-09-02T14:00:48.6019805Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+validate	UNKNOWN STEP	2026-09-02T14:00:48.6020211Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+validate	UNKNOWN STEP	2026-09-02T14:00:48.6020608Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+validate	UNKNOWN STEP	2026-09-02T14:00:48.6020994Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib
+validate	UNKNOWN STEP	2026-09-02T14:00:48.6021342Z ##[endgroup]
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2122933Z 
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2123670Z ==================================== ERRORS ====================================
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2124853Z _______________ ERROR collecting tests/test_content_manifest.py ________________
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2125998Z ImportError while importing test module '/home/runner/work/python/python/tests/test_content_manifest.py'.
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2127016Z Hint: make sure your test modules/packages have valid Python names.
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2127628Z Traceback:
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2128312Z /opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/importlib/__init__.py:90: in import_module
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2129244Z     return _bootstrap._gcd_import(name[level:], package, level)
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2129841Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2130409Z tests/test_content_manifest.py:6: in <module>
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2130978Z     from jsonschema import Draft202012Validator, FormatChecker
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2131635Z E   ModuleNotFoundError: No module named 'jsonschema'
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2132313Z =========================== short test summary info ============================
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2132941Z ERROR tests/test_content_manifest.py
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2133504Z !!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2134346Z 1 error in 0.34s
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2536870Z ##[error]Process completed with exit code 2.
+validate	UNKNOWN STEP	2026-09-02T14:00:49.2701636Z Post job cleanup.
+validate	UNKNOWN STEP	2026-09-02T14:00:49.3689558Z [command]/usr/bin/git version
+validate	UNKNOWN STEP	2026-09-02T14:00:49.3746431Z git version 2.55.0
+validate	UNKNOWN STEP	2026-09-02T14:00:49.5362617Z Cleaning up orphan processes

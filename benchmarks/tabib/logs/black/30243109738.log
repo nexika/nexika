@@ -1,0 +1,52 @@
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	﻿2026-07-27T06:33:10.2145020Z Current runner version: '2.335.1'
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:10.2158410Z ##[group]Runner Image Provisioner
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:10.2158950Z Hosted Compute Agent
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:10.2159290Z Version: 20260707.563
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:10.2163600Z ##[group]Runner Image
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:10.2163950Z Image: macos-26-arm64
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:10.2164290Z Version: 20260720.0258.1
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:12.1907510Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:12.1908620Z with:
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:12.1909150Z   fetch-depth: 0
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:14.6193530Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:14.6826340Z Removing credentials config '/Users/runner/work/_temp/git-credentials-bbdf0398-477f-4244-8ec0-1ae17d8c0d67.config'
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:14.6837840Z ##[endgroup]
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:14.7029350Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:14.7038670Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:14.7039030Z with:
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:14.7039220Z   python-version: 3.12
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:14.7039420Z   allow-prereleases: true
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:14.7039630Z   pip-version: 25.3
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:14.7039860Z   pip-install: --group coverage
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:14.7040090Z   check-latest: false
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:14.7042280Z   token: [secret]
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:14.7042460Z   update-environment: true
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:16.8907430Z ##[group]Run python --version --version && which python
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:16.8907780Z ^[[36;1mpython --version --version && which python^[[0m
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:16.8944490Z shell: /bin/bash -e {0}
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:16.9995250Z ##[group]Run pip --version && which pip
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:16.9995540Z ^[[36;1mpip --version && which pip^[[0m
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.0029340Z shell: /bin/bash -e {0}
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1577430Z ##[group]Run git --version && which git
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1577690Z ^[[36;1mgit --version && which git^[[0m
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1607630Z shell: /bin/bash -e {0}
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1609770Z ##[endgroup]
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1910700Z git version 2.55.0
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1928230Z /opt/homebrew/bin/git
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1954250Z ##[group]Run coverage run scripts/release_tests.py
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1954540Z ^[[36;1mcoverage run scripts/release_tests.py^[[0m
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1954790Z ^[[36;1mcoverage report --show-missing^[[0m
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1985450Z shell: /bin/bash -e {0}
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1985610Z env:
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1985830Z   pythonLocation: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1986210Z   PKG_CONFIG_PATH: /Users/runner/hostedtoolcache/Python/3.12.10/arm64/lib/pkgconfig
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1986590Z   Python_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1986930Z   Python2_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1987260Z   Python3_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.1987520Z ##[endgroup]
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.2246900Z /Users/runner/work/_temp/20415f4f-8a6a-422e-bdc8-17a14abdbcf3.sh: line 1: coverage: command not found
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.2251680Z ##[error]Process completed with exit code 127.
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.2340700Z Post job cleanup.
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.3140480Z [command]/opt/homebrew/bin/git version
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.3194420Z git version 2.55.0
+test-release-tool (3.12, macOS-latest)	UNKNOWN STEP	2026-07-27T06:33:17.5445050Z Cleaning up orphan processes

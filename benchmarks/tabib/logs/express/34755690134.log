@@ -1,0 +1,308 @@
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	﻿2026-09-13T11:55:51.6381486Z Current runner version: '2.337.0'
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:55:51.6638781Z ##[group]Runner Image Provisioner
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:55:51.6639932Z Hosted Compute Agent
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:55:51.6640548Z Version: 20260828.587
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:55:51.6649201Z ##[group]Runner Image
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:55:51.6649804Z Image: windows-2025-vs2026
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:55:51.6650498Z Version: 20260907.229.1
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:55:54.2792987Z ##[group]Run actions/checkout@v4
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:55:54.2794077Z with:
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:55:54.2794844Z   persist-credentials: false
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:05.5863005Z ##[group]Run actions/setup-node@v4
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:05.5863258Z with:
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:05.5863437Z   node-version: 0.10
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:05.8642062Z Attempting to download 0.10...
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:05.9271436Z (node:6428) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:05.9300479Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:06.7335729Z Not found in manifest. Falling back to download directly from Node
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:06.7841034Z Acquiring 0.10.48 - x64 from https://nodejs.org/dist/v0.10.48/node-v0.10.48-win-x64.7z
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:06.9486927Z Downloading only node binary from https://nodejs.org/dist/v0.10.48/win-x64/node.exe
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:07.5750077Z ##[group]Environment details
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:12.4343042Z ##[group]Run npm install -g npm@2.15.1
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:12.4343418Z ^[[36;1mnpm install -g npm@2.15.1^[[0m
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:12.5425217Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:12.5425863Z ##[endgroup]
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:41.6393933Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:41.6403493Z added 1 package in 28s
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:42.8894353Z ##[group]Run npm config set loglevel error
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:42.8894782Z ^[[36;1mnpm config set loglevel error^[[0m
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:42.8913531Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:42.8913944Z ##[endgroup]
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:44.2993169Z ##[group]Run npm install --save-dev mocha@3.5.3 nyc@10.3.2 supertest@2.0.0
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:44.2993769Z ^[[36;1mnpm install --save-dev mocha@3.5.3 nyc@10.3.2 supertest@2.0.0^[[0m
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:44.3066947Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:58.0810533Z ##[group]Run npm install
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:58.0810867Z ^[[36;1mnpm install^[[0m
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:56:58.0883343Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:12.2471005Z ##[group]Run npm rm --silent --save-dev connect-redis
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:12.2471481Z ^[[36;1mnpm rm --silent --save-dev connect-redis^[[0m
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:12.2542392Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:13.3177506Z ##[group]Run echo "Node.js version: $(node -v)"
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:13.3177951Z ^[[36;1mecho "Node.js version: $(node -v)"^[[0m
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:13.3178261Z ^[[36;1mecho "NPM version: $(npm -v)"^[[0m
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:14.0986997Z ##[group]Run npm run test-ci
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:14.0987518Z ^[[36;1mnpm run test-ci^[[0m
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:14.1013778Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:14.1014188Z ##[endgroup]
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:14.8359313Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:14.8360100Z > express@4.22.2 test-ci D:\a\express\express
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:14.8361326Z > nyc --exclude examples --exclude test --exclude benchmarks --reporter=lcovonly --reporter=text npm test
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:14.8362100Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:16.1906574Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:16.1907227Z > express@4.22.2 test D:\a\express\express
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:16.1908105Z > mocha --require test/support/env --reporter spec --bail --check-leaks test/ test/acceptance/
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:16.1908645Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.5318436Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.5377881Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6310882Z     √ should not be affected by app.all
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6340747Z     √ should not respond if the path is not defined
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6372053Z     √ should forward requests down the middleware chain
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6374164Z     when error occurs in response handler
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6401612Z       √ should pass error to callback
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6406254Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6406506Z   app.options()
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6440267Z     √ should override the default behavior
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6449835Z   app
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6472199Z     .param(fn)
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6510872Z       √ should map app.param(name, ...) logic
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6518160Z       √ should fail if not given fn
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6518702Z     .param(names, fn)
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6569949Z       √ should map the array
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6575323Z     .param(name, fn)
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6693657Z       √ should support altering req.params across routes
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6805894Z       √ should not invoke without route handler
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6844670Z       √ should work with encoded values
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6898533Z       √ should catch thrown error
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6941127Z       √ should catch thrown secondary error
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.6973716Z       √ should defer to next route
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7004196Z       √ should defer all the param routes
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7040356Z       √ should not call when values differ on error
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7076797Z       √ should call when values differ when using "next"
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7079457Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7080814Z   app
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7103761Z       √ should support absolute paths with "view engine"
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7111465Z       √ should expose app.locals
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7122637Z       √ should support index.<engine>
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7128617Z       √ should handle render error throws
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7131299Z       when the file does not exist
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7137494Z         √ should provide a helpful error
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7138417Z       when an error occurs
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7146309Z         √ should invoke the callback
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7149963Z       when an extension is given
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7157759Z         √ should render the template
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7177144Z         when array of paths
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7185942Z           √ should lookup the file in the path
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7198146Z           √ should lookup in later paths until found
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7204391Z           √ should error if file does not exist
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7208146Z       when a "view" constructor is given
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7211653Z         √ should create an instance of it
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7212347Z       caching
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7862395Z     √ should return a new route
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7898995Z     √ should all .VERB after .all
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7928203Z     √ should support dynamic routes
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7956607Z     √ should not error on empty routes
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7960155Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7961485Z   app.router
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:19.7992950Z     √ should restore req.params after leaving router
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.0015800Z         √ should match middleware when omitting the trailing slash
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.0044567Z         √ should match middleware
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.0067904Z         √ should match middleware when adding the trailing slash
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.0092487Z         √ should fail when omitting the trailing slash
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.0117745Z         √ should fail when adding the trailing slash
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.0121441Z     *
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.0148719Z       √ should capture everything
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.0189658Z       √ should decode the capture
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.1186439Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.1187152Z   app
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.1187771Z     .VERB()
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.1232364Z       √ should not get invoked without error handler on error
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.1266958Z       √ should only call an error handling routing callback when an error is propagated
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.1269307Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.1269956Z   app
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.1331359Z     √ should emit "mount" when mounted
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.2794551Z     when JSON is invalid
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.2820340Z       √ should 400 for bad token
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.2843064Z       √ should 400 for incomplete
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.2870274Z       √ should include original body on error object
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.2873914Z     with limit option
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.2901248Z       √ should 413 when over limit with Content-Length
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.2928335Z       √ should 413 when over limit with chunked encoding
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.2994273Z       √ should accept number of bytes
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3077425Z       √ should not change when options altered
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3107513Z       √ should not hang response
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3142368Z       √ should not error when inflating
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3146146Z     with inflate option
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3150043Z       when false
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3170227Z         √ should not accept content-encoding
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3552226Z         √ should work without content-type
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3575964Z         √ should not invoke without a body
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3579780Z     with verify option
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3583744Z       √ should assert value if function
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3608245Z       √ should error from verify
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3633217Z       √ should allow custom codes
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3662937Z       √ should allow custom type
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3688805Z       √ should include original body on error object
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3716436Z       √ should allow pass-through
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3748025Z       √ should work with different charsets
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3774418Z       √ should 415 on unknown charset prior to verify
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3779345Z       - should presist store
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3796405Z       - should presist store when unmatched content-type
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3807542Z       - should presist store when inflated
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3809469Z       - should presist store when inflate error
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3814554Z       - should presist store when parse error
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3819555Z       - should presist store when limit exceeded
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3822125Z     charset
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3823020Z       √ should parse utf-8
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3842372Z       √ should parse utf-16
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3864892Z       √ should parse when content-length != char length
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3886241Z       √ should default to utf-8
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3909881Z       √ should fail on unknown charset
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3912638Z     encoding
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3937058Z       √ should parse without encoding
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.3960973Z       √ should support identity encoding
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.4396751Z       √ should accept number of bytes
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.4423896Z       √ should not change when options altered
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.4464030Z       √ should not hang response
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.4496833Z       √ should not error when inflating
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.4500717Z     with inflate option
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.4503961Z       when false
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.4526357Z         √ should not accept content-encoding
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.4851735Z         √ should work without content-type
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.4882169Z         √ should not invoke without a body
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.4886103Z     with verify option
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.4889436Z       √ should assert value is function
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.4914391Z       √ should error from verify
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.4993043Z       √ should allow custom codes
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.5023969Z       √ should allow pass-through
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.5027144Z     async local storage
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.5028302Z       - should presist store
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.5039086Z       - should presist store when unmatched content-type
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.5051877Z       - should presist store when inflated
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.5054091Z       - should presist store when inflate error
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.5059081Z       - should presist store when limit exceeded
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.5063757Z     charset
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.5066522Z       √ should ignore charset
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.9351189Z       √ should accept number of bytes
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.9376142Z       √ should not change when options altered
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:20.9403163Z       √ should not hang response
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0490041Z       √ should not error when inflating (107ms)
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0493733Z     with inflate option
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0498674Z       when false
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0524171Z         √ should not accept content-encoding
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0760530Z         √ should work without content-type
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0789422Z         √ should not invoke without a body
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0793718Z     with verify option
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0797513Z       √ should assert value is function
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0821640Z       √ should error from verify
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0851310Z       √ should allow custom codes
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0881048Z       √ should allow pass-through
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0909381Z       √ should 415 on unknown charset prior to verify
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0915043Z       - should presist store
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0919109Z       - should presist store when unmatched content-type
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0930902Z       - should presist store when inflated
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0933211Z       - should presist store when inflate error
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0938640Z       - should presist store when limit exceeded
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0942982Z     charset
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.0946397Z       √ should parse utf-8
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.1976458Z       √ should accept number of bytes
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.2005327Z       √ should not change when options altered
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.2037263Z       √ should not hang response
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.2069760Z       √ should not error when inflating
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.2073692Z     with parameterLimit option
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.2074320Z       with extended: false
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.2078684Z         √ should reject 0
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5090446Z         √ should work without content-type
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5115093Z         √ should not invoke without a body
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5118697Z     with verify option
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5122470Z       √ should assert value if function
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5147082Z       √ should error from verify
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5177017Z       √ should allow custom codes
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5203985Z       √ should allow custom type
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5231358Z       √ should allow pass-through
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5264122Z       - should presist store
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5267605Z       - should presist store when unmatched content-type
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5278223Z       - should presist store when inflated
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5280494Z       - should presist store when inflate error
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5310864Z       - should presist store when limit exceeded
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5315472Z     charset
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5318990Z       √ should parse utf-8
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5338769Z       √ should parse when content-length != char length
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5365451Z       √ should default to utf-8
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5388399Z       √ should fail on unknown charset
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5392209Z     encoding
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5420351Z       √ should parse without encoding
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5442053Z       √ should support identity encoding
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5570056Z       √ should behave like connect
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5573742Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5574588Z   throw after .end()
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5599944Z     √ should fail gracefully
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5603920Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5604781Z   req
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.5641573Z     √ should accept an argument list of type names
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9749797Z       √ should work together with res.cookie
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9754045Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9754959Z   res
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9768271Z     .attachment()
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9781021Z       √ should Content-Disposition to attachment
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9785115Z     .attachment(filename)
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9811283Z       √ should add the filename param
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9839769Z       √ should set the Content-Type
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9843233Z     .attachment(utf8filename)
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9870156Z       √ should add the filename and filename* params
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9912967Z       √ should set the Content-Type
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9916736Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9917769Z   res
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9934817Z     .clearCookie(name)
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9945114Z       √ should set a cookie passed expiry
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9948693Z     .clearCookie(name, options)
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9972312Z       √ should set the given params
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:21.9998400Z       √ should set expires when passed
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0035642Z       1) should set both maxAge and expires when passed
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0039216Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0053672Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0054659Z   723 passing (2s)
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0055209Z   24 pending
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0055970Z   1 failing
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0056670Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0058377Z   1) res .clearCookie(name, options) should set both maxAge and expires when passed:
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0059592Z      Error: expected "Set-Cookie" of "sid=; Max-Age=10; Path=/; Expires=Sun, 13 Sep 2026 11:57:31 GMT", got "sid=; Max-Age=10; Path=/; Expires=Sun, 13 Sep 2026 11:57:32 GMT"
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0060409Z       at Test._assertHeader (node_modules\supertest\lib\test.js:231:12)
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0060910Z       at Test._assertFunction (node_modules\supertest\lib\test.js:265:11)
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0061413Z       at Test.assert (node_modules\supertest\lib\test.js:153:18)
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0062258Z       at Server.assert (node_modules\supertest\lib\test.js:131:12)
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0062623Z       at net.js:1277:10
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0062767Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0062773Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0062778Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0329749Z npm ERR! Test failed.  See above for more details.
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0674393Z ------------------------|----------|----------|----------|----------|----------------|
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0813616Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0858097Z npm ERR! Windows_NT 10.0.26100
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0866470Z npm ERR! argv "C:\\hostedtoolcache\\windows\\node\\0.10.48\\x64\\node.exe" "C:\\npm\\prefix\\node_modules\\npm\\bin\\npm-cli.js" "run" "test-ci"
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0870047Z npm ERR! node v0.10.48
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0874165Z npm ERR! npm  v2.15.1
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0878761Z npm ERR! code ELIFECYCLE
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0882753Z npm ERR! express@4.22.2 test-ci: `nyc --exclude examples --exclude test --exclude benchmarks --reporter=lcovonly --reporter=text npm test`
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0885938Z npm ERR! Exit status 1
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0889397Z npm ERR! 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0894028Z npm ERR! Failed at the express@4.22.2 test-ci script 'nyc --exclude examples --exclude test --exclude benchmarks --reporter=lcovonly --reporter=text npm test'.
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0896800Z npm ERR! This is most likely a problem with the express package,
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0902209Z npm ERR! not with npm itself.
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0905460Z npm ERR! Tell the author that this fails on your system:
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0909254Z npm ERR!     nyc --exclude examples --exclude test --exclude benchmarks --reporter=lcovonly --reporter=text npm test
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0912396Z npm ERR! You can get information on how to open an issue for this project with:
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0915426Z npm ERR!     npm bugs express
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0919798Z npm ERR! Or if that isn't available, you can get their info via:
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0925085Z npm ERR! 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0928469Z npm ERR!     npm owner ls express
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0931831Z npm ERR! There is likely additional logging output above.
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.0933623Z 
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.1053214Z ##[error]Process completed with exit code 1.
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.1340080Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.1342284Z Post job cleanup.
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.3434463Z [command]"C:\Program Files\Git\bin\git.exe" version
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:22.3752556Z git version 2.55.0.windows.5
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:23.6731800Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:23.7050347Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:24.2693706Z Cleaning up orphan processes
+Run tests (windows-latest, 0.10)	UNKNOWN STEP	2026-09-13T11:57:24.3457636Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

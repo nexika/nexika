@@ -1,0 +1,2585 @@
+{
+ "project": "psf/black",
+ "license": "MIT",
+ "set": "trial",
+ "collected": "2026-10-08, from the last 1000 failed runs (July to October 2026)",
+ "source": "https://github.com/psf/black",
+ "runs": [
+  {
+   "id": 37097760085,
+   "workflow": "test",
+   "event": "pull_request",
+   "branch": "fix-annotated-string-parens-3954",
+   "sha": "cc6265bb2d0ed5a4b30e1681ff91790df4290dee",
+   "created": "2026-10-03T04:48:26Z",
+   "jobs": [
+    {
+     "name": "uvloop (ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "uvloop (windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "uvloop (macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "uvloop (windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.11, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "coveralls-finish",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/black/37097760085.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "scripts/diff_shades_gha_helper.py"
+     }
+    ]
+   },
+   "label": "the change's own source fails black's self-check (`black --check`: 'would reformat ...', 'Oh no! 1 file would be reformatted')"
+  },
+  {
+   "id": 36908128198,
+   "workflow": "lint and format",
+   "event": "pull_request",
+   "branch": "feat-cache-dir-cli",
+   "sha": "0ec6cc32b6ecff0e0f9669f1dc625ce2041a8aa8",
+   "created": "2026-10-01T18:36:49Z",
+   "jobs": [
+    {
+     "name": "lint",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/36908128198.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "src/black/cache.py"
+     }
+    ]
+   },
+   "label": "the change's own source fails black's self-check (`black --check`: 'would reformat ...', 'Oh no! 1 file would be reformatted')"
+  },
+  {
+   "id": 36884289217,
+   "workflow": "test",
+   "event": "pull_request",
+   "branch": "fix-fmt-skip-conditional-in-brackets",
+   "sha": "e5aaab3fa49d39905f698dcd8465b0c77dc7eafa",
+   "created": "2026-10-01T15:26:36Z",
+   "jobs": [],
+   "log": null,
+   "expected": {
+    "kind": [
+     "unknown"
+    ],
+    "failures": []
+   },
+   "label": "run has no jobs and no log (gh: 'log not found'); 536 of black's last 1000 failed runs look like this"
+  },
+  {
+   "id": 36875923109,
+   "workflow": "build and publish",
+   "event": "pull_request",
+   "branch": "fix/ignore-pragma-comment-mobility",
+   "sha": "642a844df9072c2726b7de04fc7f3e35301425f2",
+   "created": "2026-10-01T14:23:14Z",
+   "jobs": [],
+   "log": null,
+   "expected": {
+    "kind": [
+     "unknown"
+    ],
+    "failures": []
+   },
+   "label": "run has no jobs and no log"
+  },
+  {
+   "id": 36786844182,
+   "workflow": "changelog",
+   "event": "pull_request",
+   "branch": "hunt/string-prefix",
+   "sha": "90661ffa33beba3f2a84ff4493ba86c89bd237de",
+   "created": "2026-09-30T22:39:44Z",
+   "jobs": [],
+   "log": null,
+   "expected": {
+    "kind": [
+     "unknown"
+    ],
+    "failures": []
+   },
+   "label": "run has no jobs and no log"
+  },
+  {
+   "id": 36567389418,
+   "workflow": "docs",
+   "event": "pull_request",
+   "branch": "gsz/preserve-indented-ipynb-cells",
+   "sha": "1e09af102e0ced10af535fee805a7f3df3aec27f",
+   "created": "2026-09-29T12:19:54Z",
+   "jobs": [],
+   "log": null,
+   "expected": {
+    "kind": [
+     "unknown"
+    ],
+    "failures": []
+   },
+   "label": "run has no jobs and no log"
+  },
+  {
+   "id": 36182971828,
+   "workflow": "diff-shades",
+   "event": "pull_request",
+   "branch": "fix/config-root-for-nested-repo",
+   "sha": "0fb26ac3d440ed5a506e7cb2ca07a902a1b4af86",
+   "created": "2026-09-25T19:59:07Z",
+   "jobs": [
+    {
+     "name": "configure",
+     "conclusion": "success"
+    },
+    {
+     "name": "analysis / target / assert-no-changes",
+     "conclusion": "failure"
+    },
+    {
+     "name": "analysis / base / assert-no-changes",
+     "conclusion": "success"
+    },
+    {
+     "name": "analysis / target / preview-new-changes",
+     "conclusion": "failure"
+    },
+    {
+     "name": "analysis / base / preview-new-changes",
+     "conclusion": "success"
+    },
+    {
+     "name": "compare / preview-new-changes",
+     "conclusion": "failure"
+    },
+    {
+     "name": "compare / assert-no-changes",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/36182971828.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "CHANGES.md"
+     }
+    ]
+   },
+   "label": "diff-shades merges the PR into main and hits 'CONFLICT (content): Merge conflict in CHANGES.md'; the PR needs a rebase"
+  },
+  {
+   "id": 35684970583,
+   "workflow": "test",
+   "event": "pull_request",
+   "branch": "fix-multidrive-root-5379",
+   "sha": "c3a422d069d7482ac71e38f6832be154c6e81187",
+   "created": "2026-09-22T03:56:02Z",
+   "jobs": [
+    {
+     "name": "uvloop (macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "uvloop (windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "uvloop (ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "uvloop (windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.12.10, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "coveralls-finish",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/black/35684970583.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_black.py"
+     }
+    ]
+   },
+   "label": "the change's own source fails black's self-check (`black --check`: 'would reformat ...', 'Oh no! 1 file would be reformatted')"
+  },
+  {
+   "id": 35217726081,
+   "workflow": "lint and format",
+   "event": "pull_request",
+   "branch": "fix/parenthesize-whole-condition",
+   "sha": "8116a73686d9047a0d2b92a609f88124f5c995aa",
+   "created": "2026-09-17T11:49:28Z",
+   "jobs": [
+    {
+     "name": "lint",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/35217726081.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "src/black/resources/black.schema.json"
+     }
+    ]
+   },
+   "label": "generated schema out of date: 'git diff' shows black.schema.json missing 'parenthesize_whole_conditional_expression' after the new preview feature"
+  },
+  {
+   "id": 34987498453,
+   "workflow": "test",
+   "event": "pull_request",
+   "branch": "fix/issue-3925-line-length",
+   "sha": "96151e44f920be0db5788d5f7c48df136f7e4e78",
+   "created": "2026-09-15T15:18:00Z",
+   "jobs": [
+    {
+     "name": "uvloop (windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "uvloop (windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "uvloop (ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "uvloop (macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.13, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "coveralls-finish",
+     "conclusion": "skipped"
+    }
+   ],
+   "github": {
+    "base_failures": [
+     {
+      "id": 29216008041,
+      "jobs": [
+       "test (3.15, windows-latest)"
+      ]
+     },
+     {
+      "id": 29181739141,
+      "jobs": [
+       "test (3.13, windows-11-arm)"
+      ]
+     },
+     {
+      "id": 28639229135,
+      "jobs": [
+       "test (3.11, ubuntu-latest)",
+       "test (3.13, ubuntu-latest)",
+       "test (3.10, ubuntu-latest)",
+       "test (3.12.10, ubuntu-latest)",
+       "test (3.14, ubuntu-latest)"
+      ]
+     },
+     {
+      "id": 28392336016,
+      "jobs": [
+       "test (pypy3.11-v7.3.22, windows-latest)"
+      ]
+     },
+     {
+      "id": 27307628451,
+      "jobs": [
+       "test (3.15, ubuntu-latest)"
+      ]
+     }
+    ]
+   },
+   "log": "logs/black/34987498453.log",
+   "expected": {
+    "kind": [
+     "flaky"
+    ],
+    "failures": [
+     {
+      "test": "tests/test_black.py::BlackTestCase::test_expression_diff",
+      "file": "tests/test_black.py",
+      "line": 358
+     }
+    ]
+   },
+   "label": "only one Windows job fails one test that the change does not touch; main fails the same way on random Windows jobs (29216008041, 29181739141, 35784800430, ...)"
+  },
+  {
+   "id": 34987498587,
+   "workflow": "changelog",
+   "event": "pull_request",
+   "branch": "fix/issue-3925-line-length",
+   "sha": "96151e44f920be0db5788d5f7c48df136f7e4e78",
+   "created": "2026-09-15T15:18:00Z",
+   "jobs": [
+    {
+     "name": "check",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/34987498587.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "message": "change line to CHANGES.md"
+     }
+    ],
+    "cause": {
+     "fix": "add the '(#N)' line to CHANGES.md",
+     "points": [
+      "CHANGES.md"
+     ]
+    }
+   },
+   "label": "changelog check: the PR has no '(#N)' line in CHANGES.md ('Please add ... change line to CHANGES.md'); fixed by adding the line or the 'ci: skip news' label"
+  },
+  {
+   "id": 33361708595,
+   "workflow": "lint and format",
+   "event": "pull_request",
+   "branch": "fix-4026-standalone-comment-delimiter-split",
+   "sha": "7d239c0e09e3c2974fda617cdb2f34f0dfcd00da",
+   "created": "2026-08-31T05:46:19Z",
+   "jobs": [
+    {
+     "name": "lint",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/33361708595.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "src/black/linegen.py"
+     }
+    ]
+   },
+   "label": "the change's own source fails black's self-check (`black --check`: 'would reformat ...', 'Oh no! 1 file would be reformatted')"
+  },
+  {
+   "id": 33071276475,
+   "workflow": "test",
+   "event": "pull_request",
+   "branch": "airbate/warn-filesystem-root",
+   "sha": "014255716424e8312ef5c37cc11d0189a131e968",
+   "created": "2026-08-27T12:18:54Z",
+   "jobs": [
+    {
+     "name": "uvloop (macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "uvloop (windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "uvloop (windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.10, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.12.10, windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.13, macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "uvloop (ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.14, macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.11, windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.13, windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.15, windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.15, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.13, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.13, windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.10, macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.15, windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.11, macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.11, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.10, windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.12.10, macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.12.10, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.14, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.14, windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.15, macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.11, windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.14, windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "coveralls-finish",
+     "conclusion": "skipped"
+    }
+   ],
+   "log": "logs/black/33071276475.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "tests/test_black.py::BlackTestCase::test_is_filesystem_root",
+      "file": "tests/test_black.py"
+     }
+    ]
+   },
+   "label": "new test uses the pytest 'tmp_path' fixture in a unittest TestCase: 'test_is_filesystem_root() missing 1 required positional argument: 'tmp_path''",
+   "uncertain": "no line is labelled: the TypeError is raised in unittest's case.py before the test body runs"
+  },
+  {
+   "id": 33071276460,
+   "workflow": "build and publish",
+   "event": "pull_request",
+   "branch": "airbate/warn-filesystem-root",
+   "sha": "014255716424e8312ef5c37cc11d0189a131e968",
+   "created": "2026-08-27T12:18:54Z",
+   "jobs": [
+    {
+     "name": "sdist + pure wheel",
+     "conclusion": "success"
+    },
+    {
+     "name": "generate wheels matrix",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp314-win_amd64",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "mypyc wheels cp310-manylinux_x86_64",
+     "conclusion": "failure"
+    },
+    {
+     "name": "publish-hatch",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "publish-mypyc",
+     "conclusion": "skipped"
+    }
+   ],
+   "log": "logs/black/33071276460.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "tests/test_black.py::BlackTestCase::test_is_filesystem_root",
+      "file": "tests/test_black.py"
+     }
+    ]
+   },
+   "label": "same tmp_path TestCase bug, run by cibuildwheel's test step in the mypyc wheel job",
+   "uncertain": "no line is labelled: the TypeError is raised in unittest's case.py before the test body runs"
+  },
+  {
+   "id": 32564540905,
+   "workflow": "diff-shades",
+   "event": "pull_request",
+   "branch": "issue-4040-long-call-kwargs",
+   "sha": "1071b2c21f329ee058cea0d64e0fe377fba2009b",
+   "created": "2026-08-22T09:17:21Z",
+   "jobs": [
+    {
+     "name": "configure",
+     "conclusion": "success"
+    },
+    {
+     "name": "analysis / target / preview-new-changes",
+     "conclusion": "success"
+    },
+    {
+     "name": "analysis / base / assert-no-changes",
+     "conclusion": "success"
+    },
+    {
+     "name": "analysis / target / assert-no-changes",
+     "conclusion": "success"
+    },
+    {
+     "name": "analysis / base / preview-new-changes",
+     "conclusion": "success"
+    },
+    {
+     "name": "compare / preview-new-changes",
+     "conclusion": "success"
+    },
+    {
+     "name": "compare / assert-no-changes",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/32564540905.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "message": "change the stable code style"
+     }
+    ]
+   },
+   "label": "diff-shades 'Differences found. Please verify you didn't change the stable code style unintentionally!': the PR changes stable style"
+  },
+  {
+   "id": 31981348877,
+   "workflow": "test",
+   "event": "pull_request",
+   "branch": "fix/5307-async-semicolon-fmt-skip",
+   "sha": "45781cebc96ab6dfcddf095b76e46519623fad71",
+   "created": "2026-08-17T00:13:08Z",
+   "jobs": [
+    {
+     "name": "uvloop (macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "uvloop (ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.10, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "uvloop (windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.15, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "uvloop (windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.14, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "coveralls-finish",
+     "conclusion": "skipped"
+    }
+   ],
+   "log": "logs/black/31981348877.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "src/black/comments.py"
+     }
+    ]
+   },
+   "label": "black self-check fails in the uvloop jobs ('would reformat src/black/comments.py'); the test (3.14, windows-11-arm) failure is a Windows 'Permission denied' flake",
+   "uncertain": "code by the uvloop jobs' self-check; the one Windows test failure in the same run is a known flake"
+  },
+  {
+   "id": 31685320203,
+   "workflow": "changelog",
+   "event": "pull_request",
+   "branch": "fix-async-fmt-skip-5307",
+   "sha": "bded6979640333a71a0e15f79f4f18989a8c35a5",
+   "created": "2026-08-13T09:09:41Z",
+   "jobs": [
+    {
+     "name": "check",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/31685320203.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "message": "change line to CHANGES.md"
+     }
+    ],
+    "cause": {
+     "fix": "add the '(#N)' line to CHANGES.md",
+     "points": [
+      "CHANGES.md"
+     ]
+    }
+   },
+   "label": "changelog check: the PR has no '(#N)' line in CHANGES.md ('Please add ... change line to CHANGES.md'); fixed by adding the line or the 'ci: skip news' label"
+  },
+  {
+   "id": 31071707016,
+   "workflow": "lint and format",
+   "event": "pull_request",
+   "branch": "feat/parse-error-location",
+   "sha": "2a2ded82f618c77e2859c727f5016775c374d870",
+   "created": "2026-08-06T04:36:01Z",
+   "jobs": [
+    {
+     "name": "lint",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/31071707016.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "src/black/parsing.py"
+     }
+    ]
+   },
+   "label": "the change's own source fails black's self-check (`black --check`: 'would reformat ...', 'Oh no! 1 file would be reformatted')"
+  },
+  {
+   "id": 31070601941,
+   "workflow": "build and publish",
+   "event": "push",
+   "branch": "main",
+   "sha": "928f50354512b3857ca07c1085076286035e4a56",
+   "created": "2026-08-06T04:12:25Z",
+   "jobs": [
+    {
+     "name": "generate wheels matrix",
+     "conclusion": "success"
+    },
+    {
+     "name": "sdist + pure wheel",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp311-macosx_arm64",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp312-macosx_x86_64",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp311-manylinux_x86_64",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "mypyc wheels cp310-macosx_x86_64",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp313-manylinux_x86_64",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "mypyc wheels cp312-win_amd64",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp310-manylinux_x86_64",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "mypyc wheels cp312-macosx_arm64",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp312-manylinux_x86_64",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "mypyc wheels cp313-macosx_arm64",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp311-macosx_x86_64",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp313-win_amd64",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp311-win_amd64",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp314-macosx_x86_64",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp314-win_amd64",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp313-macosx_x86_64",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp310-macosx_arm64",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp314-manylinux_x86_64",
+     "conclusion": "failure"
+    },
+    {
+     "name": "mypyc wheels cp310-win_amd64",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "mypyc wheels cp314-macosx_arm64",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp311-win_arm64",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "mypyc wheels cp310-win_arm64",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "mypyc wheels cp314-win_arm64",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp313-win_arm64",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "mypyc wheels cp312-win_arm64",
+     "conclusion": "success"
+    },
+    {
+     "name": "publish-hatch",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "publish-mypyc",
+     "conclusion": "skipped"
+    }
+   ],
+   "log": "logs/black/31070601941.log",
+   "expected": {
+    "kind": [
+     "infra"
+    ],
+    "failures": []
+   },
+   "label": "cibuildwheel 'yum install -y clang' fails: 'Failed to download metadata for repo 'epel'' (mirrors 404/timeout)",
+   "uncertain": "infra from the log alone (the epel mirror refused); not re-run on record"
+  },
+  {
+   "id": 30875204579,
+   "workflow": "diff-shades comment",
+   "event": "workflow_run",
+   "branch": "main",
+   "sha": "006b2a74d4deac01fa16e85ccc9f5810b53a7391",
+   "created": "2026-08-04T03:35:47Z",
+   "jobs": [
+    {
+     "name": "comment",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/30875204579.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "diff-shades comment workflow_run: the repo's helper script crashes ('pr = int(pr_ref[10:-6])' ValueError: invalid literal for int() with base 10: '') when the upstream run has no PR ref"
+  },
+  {
+   "id": 30864144278,
+   "workflow": "docker",
+   "event": "push",
+   "branch": "main",
+   "sha": "a61e98a2f7d6987dfe93b4d6b25e04416a2314d6",
+   "created": "2026-08-04T00:00:09Z",
+   "jobs": [
+    {
+     "name": "build (linux/amd64)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "build (linux/arm64)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "push",
+     "conclusion": "skipped"
+    }
+   ],
+   "log": "logs/black/30864144278.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "the PR sets PIP_UPLOADED_PRIOR_TO=P2D; the pip in the image/virtualenv seed rejects it ('--uploaded-prior-to error: invalid value: 'P2D': Invalid isoformat')"
+  },
+  {
+   "id": 30838060511,
+   "workflow": "test",
+   "event": "push",
+   "branch": "dependabot/github_actions/actions/setup-python-7.0.0",
+   "sha": "be9991e0090ea3d2f2ac5cfcff4ce7f869af0a47",
+   "created": "2026-08-03T17:43:54Z",
+   "jobs": [
+    {
+     "name": "uvloop (windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "uvloop (windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.15, windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.12.10, macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.12.10, windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.11, windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.15, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.13, windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.14, windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.11, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.14, macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.13, macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.10, windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.10, macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.13, windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.12.10, windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.11, windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.15, windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.15, macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.12.10, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "uvloop (ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.11, macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "uvloop (macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.14, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.10, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.13, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.14, windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "coveralls-finish",
+     "conclusion": "skipped"
+    }
+   ],
+   "own_modules": [
+    "black"
+   ],
+   "log": "logs/black/30838060511.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": [],
+    "cause": {
+     "fix": "keep actions/setup-python below 7.0.0 or install without 'pip-install'",
+     "points": [
+      "pip-install"
+     ]
+    }
+   },
+   "label": "Dependabot bump of actions/setup-python to 7.0.0 drops the 'pip-install' input ('Unexpected input(s) 'pip-install''), so nothing is installed: tox/coverage/black not found; a re-run fails again"
+  },
+  {
+   "id": 30602589097,
+   "workflow": "build and publish",
+   "event": "pull_request",
+   "branch": "codex/zizmor-low-severity",
+   "sha": "3210e7bb670615bc40376a31d9fb89761e938639",
+   "created": "2026-07-31T03:50:31Z",
+   "jobs": [
+    {
+     "name": "generate wheels matrix",
+     "conclusion": "success"
+    },
+    {
+     "name": "sdist + pure wheel",
+     "conclusion": "failure"
+    },
+    {
+     "name": "mypyc wheels cp310-manylinux_x86_64",
+     "conclusion": "success"
+    },
+    {
+     "name": "mypyc wheels cp314-win_amd64",
+     "conclusion": "success"
+    },
+    {
+     "name": "publish-hatch",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "publish-mypyc",
+     "conclusion": "skipped"
+    }
+   ],
+   "log": "logs/black/30602589097.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "the PR sets PIP_UPLOADED_PRIOR_TO=P2D; the pip in the image/virtualenv seed rejects it ('--uploaded-prior-to error: invalid value: 'P2D': Invalid isoformat')"
+  },
+  {
+   "id": 30501014259,
+   "workflow": "changelog",
+   "event": "pull_request",
+   "branch": "test-on-315",
+   "sha": "dbc69d2cf6b3211daadd9b6ca4be0a8abff0b54e",
+   "created": "2026-07-29T23:54:36Z",
+   "jobs": [
+    {
+     "name": "check",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/30501014259.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "message": "change line to CHANGES.md"
+     }
+    ],
+    "cause": {
+     "fix": "add the '(#N)' line to CHANGES.md",
+     "points": [
+      "CHANGES.md"
+     ]
+    }
+   },
+   "label": "changelog check: the PR has no '(#N)' line in CHANGES.md ('Please add ... change line to CHANGES.md'); fixed by adding the line or the 'ci: skip news' label"
+  },
+  {
+   "id": 30501014288,
+   "workflow": "build and publish",
+   "event": "pull_request",
+   "branch": "test-on-315",
+   "sha": "dbc69d2cf6b3211daadd9b6ca4be0a8abff0b54e",
+   "created": "2026-07-29T23:54:36Z",
+   "jobs": [
+    {
+     "name": "generate wheels matrix",
+     "conclusion": "failure"
+    },
+    {
+     "name": "sdist + pure wheel",
+     "conclusion": "failure"
+    },
+    {
+     "name": "mypyc wheels ${{ matrix.only }}",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "publish-mypyc",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "publish-hatch",
+     "conclusion": "skipped"
+    }
+   ],
+   "log": "logs/black/30501014288.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": [],
+    "cause": {
+     "fix": "allow-prereleases: true for Python 3.15",
+     "points": [
+      "3.15"
+     ]
+    }
+   },
+   "label": "actions/setup-python cannot find Python 3.15 ('The version '3.15' with architecture 'x64' was not found for Ubuntu 24.04') in the 'Run most CI on 3.15' PR; the workflow needs allow-prereleases"
+  },
+  {
+   "id": 30501014250,
+   "workflow": "docs",
+   "event": "pull_request",
+   "branch": "test-on-315",
+   "sha": "dbc69d2cf6b3211daadd9b6ca4be0a8abff0b54e",
+   "created": "2026-07-29T23:54:36Z",
+   "jobs": [
+    {
+     "name": "docs (ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "docs (windows-latest)",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/30501014250.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": [],
+    "cause": {
+     "fix": "allow-prereleases: true for Python 3.15",
+     "points": [
+      "3.15"
+     ]
+    }
+   },
+   "label": "actions/setup-python cannot find Python 3.15 ('The version '3.15' with architecture 'x64' was not found for Ubuntu 24.04') in the 'Run most CI on 3.15' PR; the workflow needs allow-prereleases"
+  },
+  {
+   "id": 30377194703,
+   "workflow": "test",
+   "event": "pull_request",
+   "branch": "fix/issue-3581-target-version-greater-than",
+   "sha": "64655bf3afa46feae33cd023ba7af0cf9a880edd",
+   "created": "2026-07-28T16:13:15Z",
+   "jobs": [
+    {
+     "name": "uvloop (windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "uvloop (windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "uvloop (macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "uvloop (ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.12.10, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "coveralls-finish",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/black/30377194703.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "tests/test_black.py"
+     }
+    ]
+   },
+   "label": "the change's own source fails black's self-check (`black --check`: 'would reformat ...', 'Oh no! 1 file would be reformatted')"
+  },
+  {
+   "id": 30243111728,
+   "workflow": "diff-shades",
+   "event": "pull_request",
+   "branch": "dependabot/github_actions/actions/setup-python-7.0.0",
+   "sha": "f5db8bcf2e24ac596cf7344069e868d389001d1d",
+   "created": "2026-07-27T06:33:09Z",
+   "jobs": [
+    {
+     "name": "configure",
+     "conclusion": "failure"
+    },
+    {
+     "name": "analysis / base / ${{ matrix.mode }}",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "analysis / target / ${{ matrix.mode }}",
+     "conclusion": "skipped"
+    }
+   ],
+   "log": "logs/black/30243111728.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": [],
+    "cause": {
+     "fix": "keep actions/setup-python below 7.0.0 or install without 'pip-install'",
+     "points": [
+      "pip-install"
+     ]
+    }
+   },
+   "label": "setup-python 7.0.0 bump: 'pip-install' input ignored, so the CI helper's 'import click' fails ('No module named 'click''); click is declared in pyproject, nothing is missing from the project"
+  },
+  {
+   "id": 30243111708,
+   "workflow": "fuzz",
+   "event": "pull_request",
+   "branch": "dependabot/github_actions/actions/setup-python-7.0.0",
+   "sha": "f5db8bcf2e24ac596cf7344069e868d389001d1d",
+   "created": "2026-07-27T06:33:09Z",
+   "jobs": [
+    {
+     "name": "fuzz (3.13)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "fuzz (3.14)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "fuzz (3.12)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "fuzz (3.10)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "fuzz (3.11)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "create-issue",
+     "conclusion": "skipped"
+    }
+   ],
+   "log": "logs/black/30243111708.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": [],
+    "cause": {
+     "fix": "keep actions/setup-python below 7.0.0 or install without 'pip-install'",
+     "points": [
+      "pip-install"
+     ]
+    }
+   },
+   "label": "Dependabot bump of actions/setup-python to 7.0.0 drops the 'pip-install' input ('Unexpected input(s) 'pip-install''), so nothing is installed: tox/coverage/black not found; a re-run fails again"
+  },
+  {
+   "id": 30243109738,
+   "workflow": "test release tool",
+   "event": "push",
+   "branch": "dependabot/github_actions/actions/setup-python-7.0.0",
+   "sha": "f5db8bcf2e24ac596cf7344069e868d389001d1d",
+   "created": "2026-07-27T06:33:07Z",
+   "jobs": [
+    {
+     "name": "test-release-tool (3.13, macOS-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-release-tool (3.12, macOS-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test-release-tool (3.15, windows-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-release-tool (3.14, windows-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-release-tool (3.14, ubuntu-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-release-tool (3.13, windows-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-release-tool (3.14, macOS-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-release-tool (3.15, macOS-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-release-tool (3.12, ubuntu-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-release-tool (3.13, ubuntu-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-release-tool (3.15, ubuntu-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-release-tool (3.12, windows-latest)",
+     "conclusion": "cancelled"
+    }
+   ],
+   "log": "logs/black/30243109738.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": [],
+    "cause": {
+     "fix": "keep actions/setup-python below 7.0.0 or install without 'pip-install'",
+     "points": [
+      "pip-install"
+     ]
+    }
+   },
+   "label": "Dependabot bump of actions/setup-python to 7.0.0 drops the 'pip-install' input ('Unexpected input(s) 'pip-install''), so nothing is installed: tox/coverage/black not found; a re-run fails again"
+  },
+  {
+   "id": 29876105013,
+   "workflow": "diff-shades comment",
+   "event": "workflow_run",
+   "branch": "main",
+   "sha": "354c61aad99ee26eb7794d91f92d837afefa0f25",
+   "created": "2026-07-21T23:07:38Z",
+   "jobs": [
+    {
+     "name": "comment",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/29876105013.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "diff-shades comment workflow_run: 'Artifact directory does not exist' because the upstream diff-shades run failed (Python 3.15 not found)"
+  },
+  {
+   "id": 29876093025,
+   "workflow": "lint and format",
+   "event": "pull_request",
+   "branch": "test-on-315",
+   "sha": "890709e64c95a06839380ead5c886ab6de74a21a",
+   "created": "2026-07-21T23:07:26Z",
+   "jobs": [
+    {
+     "name": "lint",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/29876093025.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": [],
+    "cause": {
+     "fix": "allow-prereleases: true for Python 3.15",
+     "points": [
+      "3.15"
+     ]
+    }
+   },
+   "label": "actions/setup-python cannot find Python 3.15 ('The version '3.15' with architecture 'x64' was not found for Ubuntu 24.04') in the 'Run most CI on 3.15' PR; the workflow needs allow-prereleases"
+  },
+  {
+   "id": 29876093049,
+   "workflow": "build and publish",
+   "event": "pull_request",
+   "branch": "test-on-315",
+   "sha": "890709e64c95a06839380ead5c886ab6de74a21a",
+   "created": "2026-07-21T23:07:26Z",
+   "jobs": [
+    {
+     "name": "sdist + pure wheel",
+     "conclusion": "failure"
+    },
+    {
+     "name": "generate wheels matrix",
+     "conclusion": "failure"
+    },
+    {
+     "name": "mypyc wheels ${{ matrix.only }}",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "publish-mypyc",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "publish-hatch",
+     "conclusion": "skipped"
+    }
+   ],
+   "log": "logs/black/29876093049.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": [],
+    "cause": {
+     "fix": "allow-prereleases: true for Python 3.15",
+     "points": [
+      "3.15"
+     ]
+    }
+   },
+   "label": "actions/setup-python cannot find Python 3.15 ('The version '3.15' with architecture 'x64' was not found for Ubuntu 24.04') in the 'Run most CI on 3.15' PR; the workflow needs allow-prereleases"
+  },
+  {
+   "id": 29791516169,
+   "workflow": "lint and format",
+   "event": "pull_request",
+   "branch": "test-on-315",
+   "sha": "4886769286b778f2647b399b93c8807a6fe5aad9",
+   "created": "2026-07-21T00:51:47Z",
+   "jobs": [
+    {
+     "name": "lint",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/29791516169.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": [],
+    "cause": {
+     "fix": "allow-prereleases: true for Python 3.15",
+     "points": [
+      "3.15"
+     ]
+    }
+   },
+   "label": "actions/setup-python cannot find Python 3.15 ('The version '3.15' with architecture 'x64' was not found for Ubuntu 24.04') in the 'Run most CI on 3.15' PR; the workflow needs allow-prereleases"
+  },
+  {
+   "id": 29438952354,
+   "workflow": "changelog",
+   "event": "pull_request",
+   "branch": "fix-4367-poetry-pyproject-docs",
+   "sha": "03b754baea3d34029f965c4a6ec9e8510ac5f6ce",
+   "created": "2026-07-15T18:02:40Z",
+   "jobs": [
+    {
+     "name": "check",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/29438952354.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "message": "change line to CHANGES.md"
+     }
+    ],
+    "cause": {
+     "fix": "add the '(#N)' line to CHANGES.md",
+     "points": [
+      "CHANGES.md"
+     ]
+    }
+   },
+   "label": "changelog check: the PR has no '(#N)' line in CHANGES.md ('Please add ... change line to CHANGES.md'); fixed by adding the line or the 'ci: skip news' label"
+  },
+  {
+   "id": 29381783606,
+   "workflow": "test",
+   "event": "pull_request",
+   "branch": "codex/20260715-5225-fmt-off-blank-lines",
+   "sha": "7371f49127f1dcbcd24da339359bb3b370c32286",
+   "created": "2026-07-15T01:30:18Z",
+   "jobs": [
+    {
+     "name": "uvloop (macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "uvloop (windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "uvloop (windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "uvloop (ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, windows-11-arm)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.14, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "coveralls-finish",
+     "conclusion": "skipped"
+    }
+   ],
+   "github": {
+    "base_failures": [
+     {
+      "id": 29216008041,
+      "jobs": [
+       "test (3.15, windows-latest)"
+      ]
+     },
+     {
+      "id": 29181739141,
+      "jobs": [
+       "test (3.13, windows-11-arm)"
+      ]
+     },
+     {
+      "id": 28639229135,
+      "jobs": [
+       "test (3.11, ubuntu-latest)",
+       "test (3.13, ubuntu-latest)",
+       "test (3.10, ubuntu-latest)",
+       "test (3.12.10, ubuntu-latest)",
+       "test (3.14, ubuntu-latest)"
+      ]
+     },
+     {
+      "id": 28392336016,
+      "jobs": [
+       "test (pypy3.11-v7.3.22, windows-latest)"
+      ]
+     },
+     {
+      "id": 27307628451,
+      "jobs": [
+       "test (3.15, ubuntu-latest)"
+      ]
+     }
+    ]
+   },
+   "log": "logs/black/29381783606.log",
+   "expected": {
+    "kind": [
+     "flaky"
+    ],
+    "failures": [
+     {
+      "test": "tests/test_black.py::BlackTestCase::test_multi_file_force_py36",
+      "file": "tests/test_black.py",
+      "line": 133
+     }
+    ]
+   },
+   "label": "only one Windows job fails one test that the change does not touch; main fails the same way on random Windows jobs (29216008041, 29181739141, 35784800430, ...)"
+  },
+  {
+   "id": 29266989633,
+   "workflow": "lint and format",
+   "event": "pull_request",
+   "branch": "iterative-tree-traversal",
+   "sha": "ca203a5fc6ffbe5c2f96a76746743d87efa761be",
+   "created": "2026-07-13T16:34:51Z",
+   "jobs": [
+    {
+     "name": "lint",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/29266989633.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "prettier",
+      "file": "CHANGES.md"
+     }
+    ]
+   },
+   "label": "lint job: the docs formatter rewraps the PR's CHANGES.md entry (diff shown)"
+  },
+  {
+   "id": 29266969650,
+   "workflow": "changelog",
+   "event": "pull_request",
+   "branch": "iterative-tree-traversal",
+   "sha": "dae98013403fb8a762cdb22aee5d97f202b205bd",
+   "created": "2026-07-13T16:34:33Z",
+   "jobs": [
+    {
+     "name": "check",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/29266969650.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "message": "change line to CHANGES.md"
+     }
+    ],
+    "cause": {
+     "fix": "add the '(#N)' line to CHANGES.md",
+     "points": [
+      "CHANGES.md"
+     ]
+    }
+   },
+   "label": "changelog check: the PR has no '(#N)' line in CHANGES.md ('Please add ... change line to CHANGES.md'); fixed by adding the line or the 'ci: skip news' label"
+  },
+  {
+   "id": 29216008041,
+   "workflow": "test",
+   "event": "push",
+   "branch": "main",
+   "sha": "513058f032123cb5892549c0b981aa98f3376ffc",
+   "created": "2026-07-13T00:45:53Z",
+   "jobs": [
+    {
+     "name": "uvloop (ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "uvloop (macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "uvloop (windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "uvloop (windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.10, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.11, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test (3.15, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.15, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.12.10, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.13, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, windows-11-arm)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (3.14, macOS-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test (pypy3.11-v7.3.22, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "coveralls-finish",
+     "conclusion": "skipped"
+    }
+   ],
+   "github": {
+    "base_failures": [
+     {
+      "id": 29181739141,
+      "jobs": [
+       "test (3.13, windows-11-arm)"
+      ]
+     },
+     {
+      "id": 28639229135,
+      "jobs": [
+       "test (3.11, ubuntu-latest)",
+       "test (3.13, ubuntu-latest)",
+       "test (3.10, ubuntu-latest)",
+       "test (3.12.10, ubuntu-latest)",
+       "test (3.14, ubuntu-latest)"
+      ]
+     },
+     {
+      "id": 28392336016,
+      "jobs": [
+       "test (pypy3.11-v7.3.22, windows-latest)"
+      ]
+     },
+     {
+      "id": 27307628451,
+      "jobs": [
+       "test (3.15, ubuntu-latest)"
+      ]
+     }
+    ]
+   },
+   "log": "logs/black/29216008041.log",
+   "expected": {
+    "kind": [
+     "flaky"
+    ],
+    "failures": [
+     {
+      "test": "tests/test_black.py::BlackTestCase::test_multi_file_force_py36",
+      "file": "tests/test_black.py",
+      "line": 133
+     }
+    ]
+   },
+   "label": "only one Windows job fails one test that the change does not touch; main fails the same way on random Windows jobs (29216008041, 29181739141, 35784800430, ...)"
+  },
+  {
+   "id": 29181739120,
+   "workflow": "diff-shades",
+   "event": "pull_request",
+   "branch": "main",
+   "sha": "7ad9048434d43b24f96d1280d56f97fb0a471ba8",
+   "created": "2026-07-12T05:49:43Z",
+   "jobs": [
+    {
+     "name": "configure",
+     "conclusion": "success"
+    },
+    {
+     "name": "analysis / target / preview-new-changes",
+     "conclusion": "failure"
+    },
+    {
+     "name": "analysis / base / preview-new-changes",
+     "conclusion": "success"
+    },
+    {
+     "name": "analysis / base / assert-no-changes",
+     "conclusion": "success"
+    },
+    {
+     "name": "analysis / target / assert-no-changes",
+     "conclusion": "failure"
+    },
+    {
+     "name": "compare / preview-new-changes",
+     "conclusion": "failure"
+    },
+    {
+     "name": "compare / assert-no-changes",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/black/29181739120.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "CHANGES.md"
+     }
+    ]
+   },
+   "label": "diff-shades merges the PR into main and hits 'CONFLICT (content): Merge conflict in CHANGES.md'; the PR needs a rebase"
+  }
+ ]
+}

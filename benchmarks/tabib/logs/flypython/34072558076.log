@@ -1,0 +1,47 @@
+validate (3.13)	UNKNOWN STEP	﻿2026-09-07T01:17:44.7059843Z Current runner version: '2.337.0'
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:44.7095162Z ##[group]Runner Image Provisioner
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:44.7096392Z Hosted Compute Agent
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:44.7097611Z Version: 20260828.587
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:44.7110246Z ##[group]Runner Image
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:44.7111347Z Image: ubuntu-24.04
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:44.7112337Z Version: 20260831.293.1
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:45.4068188Z ##[group]Run actions/checkout@v7
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:45.4068999Z with:
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:45.4069448Z   repository: flypythoncom/python
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:45.9648085Z ##[group]Run astral-sh/setup-uv@v7
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:45.9648658Z with:
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:45.9649083Z   enable-cache: true
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:46.9893349Z ##[group]Run uv python install 3.13
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:46.9893816Z ^[[36;1muv python install 3.13^[[0m
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:46.9939520Z shell: /usr/bin/bash -e {0}
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:47.9311101Z ##[group]Run uv pip install --system -r requirements-dev.lock.txt ruff
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:47.9311690Z ^[[36;1muv pip install --system -r requirements-dev.lock.txt ruff^[[0m
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:47.9354058Z shell: /usr/bin/bash -e {0}
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:47.9354333Z env:
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:47.9354642Z   UV_PYTHON_INSTALL_DIR: /home/runner/work/_temp/uv-python-dir
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:47.9355058Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:47.9355380Z ##[endgroup]
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1452774Z Using Python 3.12.3 environment at: /usr
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1458130Z error: The interpreter at /usr is externally managed, and indicates the following:
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1458534Z 
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1458726Z   To install Python packages system-wide, try apt install
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1459414Z   python3-xyz, where xyz is the package you are trying to
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1459865Z   install.
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1460105Z 
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1460632Z   If you wish to install a non-Debian-packaged Python package,
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1461317Z   create a virtual environment using python3 -m venv path/to/venv.
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1462039Z   Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1462633Z   sure you have python3-full installed.
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1463012Z 
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1468746Z   If you wish to install a non-Debian packaged Python application,
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1469839Z   it may be easiest to use pipx install xyz, which will manage a
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1470447Z   virtual environment for you. Make sure you have pipx installed.
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1470728Z 
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1470921Z   See /usr/share/doc/python3.12/README.venv for more information.
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1471190Z 
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1471426Z hint: Virtual environments were not considered due to the `--system` flag
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1480907Z ##[error]Process completed with exit code 2.
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.1643840Z Post job cleanup.
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.2495381Z [command]/usr/bin/git version
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.2538561Z git version 2.55.0
+validate (3.13)	UNKNOWN STEP	2026-09-07T01:17:48.4005780Z Cleaning up orphan processes

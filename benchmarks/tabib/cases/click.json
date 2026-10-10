@@ -1,0 +1,495 @@
+{
+ "project": "pallets/click",
+ "license": "BSD-3-Clause",
+ "set": "held-out",
+ "collected": "2026-10-10, the 12 newest failed runs that still have a log, none skipped",
+ "source": "https://github.com/pallets/click",
+ "runs": [
+  {
+   "id": 35890878719,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "param-naming-convention",
+   "sha": "9ccb32e9a18fd810a97bcdb5bb9686ed7fce4561",
+   "created": "2026-09-23T16:44:50Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/click/35890878719.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "end-of-file-fixer",
+      "file": "docs/parameters.md"
+     }
+    ]
+   },
+   "label": "pre-commit end-of-file-fixer rewrote docs/parameters.md, a file the PR changed"
+  },
+  {
+   "id": 35890853816,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "param-naming-convention",
+   "sha": "43cd853e8f3d9dc68592d7bbfe19d35abd435740",
+   "created": "2026-09-23T16:44:38Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/click/35890853816.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "end-of-file-fixer",
+      "file": "docs/parameters.md"
+     }
+    ]
+   },
+   "label": "pre-commit end-of-file-fixer rewrote docs/parameters.md, a file the PR changed"
+  },
+  {
+   "id": 35890416013,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "param-naming-convention",
+   "sha": "509933e4898a9e770879c7c0132ea0eaf2f5e297",
+   "created": "2026-09-23T16:40:48Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/click/35890416013.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "end-of-file-fixer",
+      "file": "docs/parameters.md"
+     }
+    ]
+   },
+   "label": "pre-commit end-of-file-fixer rewrote docs/parameters.md, a file the PR changed"
+  },
+  {
+   "id": 35104209368,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "fix/edit-resolve-editor-via-which",
+   "sha": "40abfa72f8bf110ef6232d37de8a3cab0dc13351",
+   "created": "2026-09-16T13:47:39Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/click/35104209368.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "ruff-format",
+      "file": "tests/test_termui.py"
+     }
+    ]
+   },
+   "label": "pre-commit ruff-format rewrote tests/test_termui.py from the PR"
+  },
+  {
+   "id": 35104209329,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "fix/edit-resolve-editor-via-which",
+   "sha": "40abfa72f8bf110ef6232d37de8a3cab0dc13351",
+   "created": "2026-09-16T13:47:39Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "success"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "success"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "success"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "success"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "success"
+    }
+   ],
+   "log": "logs/click/35104209329.log",
+   "expected": {
+    "kind": [
+     "matrix",
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "tests/test_termui.py::test_editor_windows_path_normalization[plain notepad]",
+      "file": "tests/test_termui.py",
+      "line": 630
+     }
+    ]
+   },
+   "label": "only the Windows job fails: the PR's new test expects 'notepad' but shutil.which returns 'C:\\Windows\\system32\\notepad.EXE' on Windows (tests/test_termui.py:630); the PR's own code and test",
+   "uncertain": "matrix or code: a real bug in the PR that only Windows shows"
+  },
+  {
+   "id": 35101002097,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "garganupam-patch-1",
+   "sha": "86851b5691d3c14f7db41f259496808483632236",
+   "created": "2026-09-16T13:17:49Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/click/35101002097.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "ruff-format",
+      "file": "src/click/types.py"
+     }
+    ]
+   },
+   "label": "pre-commit ruff-format rewrote src/click/types.py from the PR (a spam PR)"
+  },
+  {
+   "id": 35101002079,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "garganupam-patch-1",
+   "sha": "86851b5691d3c14f7db41f259496808483632236",
+   "created": "2026-09-16T13:17:49Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "failure"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/click/35101002079.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "src/click/types.py",
+      "line": 727
+     },
+     {
+      "test": "tests/test_arguments.py::test_nargs_tup",
+      "file": "tests/test_arguments.py",
+      "line": 33
+     }
+    ]
+   },
+   "label": "the PR breaks IntParamType ('IntParamType' object has no attribute '_number_class'): 84 tests fail in every job, and mypy fails at src/click/types.py:727"
+  },
+  {
+   "id": 35100037841,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "feature-main",
+   "sha": "b8db3a92329608f5ed15936827a18ee5f4011c36",
+   "created": "2026-09-16T13:08:38Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "failure"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/click/35100037841.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "src/click/types.py",
+      "line": 727
+     },
+     {
+      "test": "tests/test_arguments.py::test_nargs_tup",
+      "file": "tests/test_arguments.py",
+      "line": 33
+     }
+    ]
+   },
+   "label": "the PR breaks IntParamType ('IntParamType' object has no attribute '_number_class'): tests fail in every job, and mypy fails at src/click/types.py:727"
+  },
+  {
+   "id": 35100037844,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "feature-main",
+   "sha": "b8db3a92329608f5ed15936827a18ee5f4011c36",
+   "created": "2026-09-16T13:08:38Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/click/35100037844.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "ruff-format",
+      "file": "src/click/types.py"
+     }
+    ]
+   },
+   "label": "pre-commit ruff-format rewrote src/click/types.py from the PR (a spam PR)"
+  },
+  {
+   "id": 35098650656,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "feature-main",
+   "sha": "38c657ba5d5372cd57d3878af655e9b183e77141",
+   "created": "2026-09-16T12:55:10Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/click/35098650656.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "ruff-format",
+      "file": "src/click/types.py"
+     }
+    ]
+   },
+   "label": "pre-commit ruff-format rewrote src/click/types.py from the PR (a spam PR)"
+  },
+  {
+   "id": 35098650675,
+   "workflow": "Tests",
+   "event": "pull_request",
+   "branch": "feature-main",
+   "sha": "38c657ba5d5372cd57d3878af655e9b183e77141",
+   "created": "2026-09-16T12:55:10Z",
+   "jobs": [
+    {
+     "name": "typing",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.13",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.14",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Windows",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.12",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.11",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.10",
+     "conclusion": "failure"
+    },
+    {
+     "name": "3.14t",
+     "conclusion": "failure"
+    },
+    {
+     "name": "PyPy",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Mac",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/click/35098650675.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "src/click/types.py",
+      "line": 727
+     },
+     {
+      "test": "tests/test_arguments.py::test_nargs_tup",
+      "file": "tests/test_arguments.py",
+      "line": 33
+     }
+    ]
+   },
+   "label": "the PR breaks IntParamType ('IntParamType' object has no attribute '_number_class'): tests fail in every job, and mypy fails at src/click/types.py:727"
+  },
+  {
+   "id": 35073314459,
+   "workflow": "pre-commit",
+   "event": "pull_request",
+   "branch": "feature-main",
+   "sha": "e05912a7c97628477b6cecb3cb3afbdacd6761d6",
+   "created": "2026-09-16T08:21:21Z",
+   "jobs": [
+    {
+     "name": "main",
+     "conclusion": "failure"
+    }
+   ],
+   "log": "logs/click/35073314459.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "ruff-format",
+      "file": "src/click/types.py"
+     }
+    ]
+   },
+   "label": "pre-commit ruff-format rewrote src/click/types.py from the PR (a spam PR)"
+  }
+ ]
+}

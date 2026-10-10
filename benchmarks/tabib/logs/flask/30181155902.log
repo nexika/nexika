@@ -1,0 +1,19 @@
+lock	UNKNOWN STEP	﻿2026-07-26T00:26:24.9544717Z Current runner version: '2.336.0'
+lock	UNKNOWN STEP	2026-07-26T00:26:24.9570059Z ##[group]Runner Image Provisioner
+lock	UNKNOWN STEP	2026-07-26T00:26:24.9571141Z Hosted Compute Agent
+lock	UNKNOWN STEP	2026-07-26T00:26:24.9571755Z Version: 20260707.563
+lock	UNKNOWN STEP	2026-07-26T00:26:24.9580142Z ##[group]Runner Image
+lock	UNKNOWN STEP	2026-07-26T00:26:24.9580797Z Image: ubuntu-24.04
+lock	UNKNOWN STEP	2026-07-26T00:26:24.9581432Z Version: 20260720.247.2
+lock	UNKNOWN STEP	2026-07-26T00:26:26.4063784Z ##[group]Run dessant/lock-threads@7266a7ce5c1df01b1c6db85bf8cd86c737dadbe7
+lock	UNKNOWN STEP	2026-07-26T00:26:26.4065640Z with:
+lock	UNKNOWN STEP	2026-07-26T00:26:26.4066444Z   issue-inactive-days: 14
+lock	UNKNOWN STEP	2026-07-26T00:26:26.4067389Z   pr-inactive-days: 14
+lock	UNKNOWN STEP	2026-07-26T00:26:26.4068322Z   discussion-inactive-days: 14
+lock	UNKNOWN STEP	2026-07-26T00:26:26.4077891Z   github-token: [secret]
+lock	UNKNOWN STEP	2026-07-26T00:26:26.4078806Z   issue-lock-reason: resolved
+lock	UNKNOWN STEP	2026-07-26T00:26:26.4079949Z   pr-lock-reason: resolved
+lock	UNKNOWN STEP	2026-07-26T00:26:26.4080890Z   log-output: false
+lock	UNKNOWN STEP	2026-07-26T00:26:26.4082063Z ##[endgroup]
+lock	UNKNOWN STEP	2026-07-26T00:26:26.5621672Z ##[error]"github-token" length must be less than or equal to 100 characters long
+lock	UNKNOWN STEP	2026-07-26T00:26:26.5891089Z Cleaning up orphan processes

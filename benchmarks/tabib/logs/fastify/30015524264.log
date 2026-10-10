@@ -1,0 +1,64 @@
+automerge	UNKNOWN STEP	﻿2026-07-23T14:28:26.5039576Z Current runner version: '2.335.1'
+automerge	UNKNOWN STEP	2026-07-23T14:28:26.5060669Z ##[group]Runner Image Provisioner
+automerge	UNKNOWN STEP	2026-07-23T14:28:26.5061507Z Hosted Compute Agent
+automerge	UNKNOWN STEP	2026-07-23T14:28:26.5062110Z Version: 20260707.563
+automerge	UNKNOWN STEP	2026-07-23T14:28:26.5069718Z ##[group]Runner Image
+automerge	UNKNOWN STEP	2026-07-23T14:28:26.5070314Z Image: ubuntu-24.04
+automerge	UNKNOWN STEP	2026-07-23T14:28:26.5070869Z Version: 20260720.247.2
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.1882542Z ##[group]Run fastify/github-action-merge-dependabot@73ec4cbb5e56df5591eae286972d5b2201ffe90f
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.1883269Z with:
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.1885568Z   github-token: [secret]
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.2087545Z ##[group]Run dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.2088406Z with:
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.2088715Z   skip-commit-verification: false
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.7300311Z ##[group]Run actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.7300798Z with:
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.7303135Z   github-token: [secret]
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.7307546Z   script: const { ACTION_PATH, UPDATE_TYPE, DEPENDENCY_TYPE, DEPENDENCY_NAMES } = process.env
+automerge	UNKNOWN STEP	const { default: script } = await import('file://' + ACTION_PATH + '/dist/index.js')
+automerge	UNKNOWN STEP	await script({
+automerge	UNKNOWN STEP	  github,
+automerge	UNKNOWN STEP	  context,
+automerge	UNKNOWN STEP	  inputs: {
+automerge	UNKNOWN STEP	  "github-token": [secret],
+automerge	UNKNOWN STEP	  "exclude": "",
+automerge	UNKNOWN STEP	  "approve-only": "false",
+automerge	UNKNOWN STEP	  "merge-method": "squash",
+automerge	UNKNOWN STEP	  "merge-comment": "",
+automerge	UNKNOWN STEP	  "use-github-auto-merge": "false",
+automerge	UNKNOWN STEP	  "target": "any",
+automerge	UNKNOWN STEP	  "target-development": "",
+automerge	UNKNOWN STEP	  "target-production": "",
+automerge	UNKNOWN STEP	  "target-indirect": "",
+automerge	UNKNOWN STEP	  "pr-number": "",
+automerge	UNKNOWN STEP	  "skip-commit-verification": "false",
+automerge	UNKNOWN STEP	  "skip-verification": "false",
+automerge	UNKNOWN STEP	  "merge-window": "",
+automerge	UNKNOWN STEP	  "merge-window-timezone": ""
+automerge	UNKNOWN STEP	},
+automerge	UNKNOWN STEP	  dependabotMetadata: {
+automerge	UNKNOWN STEP	    updateType:  UPDATE_TYPE,
+automerge	UNKNOWN STEP	    dependencyType: DEPENDENCY_TYPE,
+automerge	UNKNOWN STEP	    dependencyNames: DEPENDENCY_NAMES,
+automerge	UNKNOWN STEP	  }
+automerge	UNKNOWN STEP	})
+automerge	UNKNOWN STEP	
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.7310259Z   debug: false
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.7310599Z   user-agent: actions/github-script
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.7311090Z   result-encoding: json
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.7311444Z   retries: 0
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.7311797Z   retry-exempt-status-codes: 400,401,403,404,422
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.7312206Z env:
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.7312804Z   ACTION_PATH: /home/runner/work/_actions/fastify/github-action-merge-dependabot/73ec4cbb5e56df5591eae286972d5b2201ffe90f
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.7313530Z   UPDATE_TYPE: version-update:semver-major
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.7314015Z   DEPENDENCY_TYPE: direct:production
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.7314391Z   DEPENDENCY_NAMES: actions/setup-node
+automerge	UNKNOWN STEP	2026-07-23T14:28:29.7314895Z ##[endgroup]
+automerge	UNKNOWN STEP	2026-07-23T14:28:32.5726329Z PUT /repos/fastify/fastify/pulls/6866/merge - 405 with id 2441:1569B8:16FA1A5:518D22F:6A62250E in 1765ms
+automerge	UNKNOWN STEP	2026-07-23T14:28:32.5749778Z ##[error]Repository rule violations found
+automerge	UNKNOWN STEP	
+automerge	UNKNOWN STEP	At least 2 approving reviews are required by reviewers with write access.
+automerge	UNKNOWN STEP	
+automerge	UNKNOWN STEP	 - https://docs.github.com/rest/pulls/pulls#merge-a-pull-request
+automerge	UNKNOWN STEP	2026-07-23T14:28:32.5806773Z ##[end-action id=__fastify_github-action-merge-dependabot.approver;outcome=failure;conclusion=failure;duration_ms=2860]
+automerge	UNKNOWN STEP	2026-07-23T14:28:32.5933055Z Cleaning up orphan processes

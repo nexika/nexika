@@ -1,0 +1,40 @@
+configure	UNKNOWN STEP	﻿2026-07-27T06:33:12.9092426Z Current runner version: '2.335.1'
+configure	UNKNOWN STEP	2026-07-27T06:33:12.9142179Z ##[group]Runner Image Provisioner
+configure	UNKNOWN STEP	2026-07-27T06:33:12.9143119Z Hosted Compute Agent
+configure	UNKNOWN STEP	2026-07-27T06:33:12.9143719Z Version: 20260707.563
+configure	UNKNOWN STEP	2026-07-27T06:33:12.9151968Z ##[group]Runner Image
+configure	UNKNOWN STEP	2026-07-27T06:33:12.9152691Z Image: ubuntu-24.04
+configure	UNKNOWN STEP	2026-07-27T06:33:12.9153276Z Version: 20260720.247.2
+configure	UNKNOWN STEP	2026-07-27T06:33:14.1387922Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+configure	UNKNOWN STEP	2026-07-27T06:33:14.1389073Z with:
+configure	UNKNOWN STEP	2026-07-27T06:33:14.1389577Z   persist-credentials: false
+configure	UNKNOWN STEP	2026-07-27T06:33:15.3327561Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+configure	UNKNOWN STEP	2026-07-27T06:33:15.3571647Z Removing credentials config '/home/runner/work/_temp/git-credentials-2dc277e3-07b5-404c-9920-fc5c1e375470.config'
+configure	UNKNOWN STEP	2026-07-27T06:33:15.3581515Z ##[endgroup]
+configure	UNKNOWN STEP	2026-07-27T06:33:15.4007132Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+configure	UNKNOWN STEP	2026-07-27T06:33:15.4034095Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+configure	UNKNOWN STEP	2026-07-27T06:33:15.4035811Z with:
+configure	UNKNOWN STEP	2026-07-27T06:33:15.4036640Z   python-version: 3.14
+configure	UNKNOWN STEP	2026-07-27T06:33:19.5883543Z ##[group]Run python scripts/diff_shades_gha_helper.py config
+configure	UNKNOWN STEP	2026-07-27T06:33:19.5884074Z ^[[36;1mpython scripts/diff_shades_gha_helper.py config^[[0m
+configure	UNKNOWN STEP	2026-07-27T06:33:19.5938302Z shell: /usr/bin/bash -e {0}
+configure	UNKNOWN STEP	2026-07-27T06:33:19.5938620Z env:
+configure	UNKNOWN STEP	2026-07-27T06:33:19.5938834Z   HATCH_BUILD_HOOKS_ENABLE: 1
+configure	UNKNOWN STEP	2026-07-27T06:33:19.5939089Z   CC: clang-18
+configure	UNKNOWN STEP	2026-07-27T06:33:19.5939379Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.6/x64
+configure	UNKNOWN STEP	2026-07-27T06:33:19.5940047Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.6/x64/lib/pkgconfig
+configure	UNKNOWN STEP	2026-07-27T06:33:19.5940467Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+configure	UNKNOWN STEP	2026-07-27T06:33:19.5940837Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+configure	UNKNOWN STEP	2026-07-27T06:33:19.5941202Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+configure	UNKNOWN STEP	2026-07-27T06:33:19.5941583Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.6/x64/lib
+configure	UNKNOWN STEP	2026-07-27T06:33:19.5944355Z   GITHUB_TOKEN: [secret]
+configure	UNKNOWN STEP	2026-07-27T06:33:19.5944588Z ##[endgroup]
+configure	UNKNOWN STEP	2026-07-27T06:33:19.6735656Z Traceback (most recent call last):
+configure	UNKNOWN STEP	2026-07-27T06:33:19.6788316Z   File "/home/runner/work/black/black/scripts/diff_shades_gha_helper.py", line 28, in <module>
+configure	UNKNOWN STEP	2026-07-27T06:33:19.6789206Z     import click
+configure	UNKNOWN STEP	2026-07-27T06:33:19.6789683Z ModuleNotFoundError: No module named 'click'
+configure	UNKNOWN STEP	2026-07-27T06:33:19.6868407Z ##[error]Process completed with exit code 1.
+configure	UNKNOWN STEP	2026-07-27T06:33:19.6990357Z Post job cleanup.
+configure	UNKNOWN STEP	2026-07-27T06:33:19.7788035Z [command]/usr/bin/git version
+configure	UNKNOWN STEP	2026-07-27T06:33:19.7864521Z git version 2.54.0
+configure	UNKNOWN STEP	2026-07-27T06:33:19.8896908Z Cleaning up orphan processes

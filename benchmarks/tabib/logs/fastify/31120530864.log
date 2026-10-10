@@ -1,0 +1,24 @@
+quality-check / Check Licenses	UNKNOWN STEP	﻿2026-08-06T16:54:56.2134849Z Current runner version: '2.336.0'
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2167642Z ##[group]Runner Image Provisioner
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2168835Z Hosted Compute Agent
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2169862Z Version: 20260729.566
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2182839Z ##[group]Runner Image
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2183716Z Image: ubuntu-24.04
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2184727Z Version: 20260804.265.1
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2186704Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260804.265/images/ubuntu/Ubuntu2404-Readme.md
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2189404Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260804.265
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2191417Z ##[endgroup]
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2193143Z ##[group]GITHUB_TOKEN Permissions
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2195614Z Contents: read
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2196681Z Metadata: read
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2197494Z ##[endgroup]
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2200602Z Secret source: None
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2202261Z Prepare workflow directory
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2663556Z Prepare all required actions
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:54:56.2733452Z Getting action download info
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:55:42.5434363Z Failed to resolve action download info. Error: Service Unavailable
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:55:42.5509884Z Retrying in 23.669 seconds
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:57:07.5146684Z Failed to resolve action download info. Error: Service Unavailable
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:57:07.5150087Z Retrying in 13.703 seconds
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:58:02.6509874Z ##[error]Service Unavailable
+quality-check / Check Licenses	UNKNOWN STEP	2026-08-06T16:58:02.6530853Z ##[error]Failed to resolve action download info.

@@ -1,0 +1,61 @@
+typing	UNKNOWN STEP	﻿2026-08-31T13:27:59.6373962Z Current runner version: '2.337.0'
+typing	UNKNOWN STEP	2026-08-31T13:27:59.6398767Z ##[group]Runner Image Provisioner
+typing	UNKNOWN STEP	2026-08-31T13:27:59.6399654Z Hosted Compute Agent
+typing	UNKNOWN STEP	2026-08-31T13:27:59.6400350Z Version: 20260819.586
+typing	UNKNOWN STEP	2026-08-31T13:27:59.6408744Z ##[group]Runner Image
+typing	UNKNOWN STEP	2026-08-31T13:27:59.6409394Z Image: ubuntu-24.04
+typing	UNKNOWN STEP	2026-08-31T13:27:59.6409951Z Version: 20260823.283.1
+typing	UNKNOWN STEP	2026-08-31T13:28:00.9600248Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+typing	UNKNOWN STEP	2026-08-31T13:28:00.9601623Z with:
+typing	UNKNOWN STEP	2026-08-31T13:28:00.9602252Z   persist-credentials: false
+typing	UNKNOWN STEP	2026-08-31T13:28:01.9917886Z ##[group]Run astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+typing	UNKNOWN STEP	2026-08-31T13:28:01.9919498Z with:
+typing	UNKNOWN STEP	2026-08-31T13:28:01.9920366Z   enable-cache: true
+typing	UNKNOWN STEP	2026-08-31T13:28:05.2915358Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+typing	UNKNOWN STEP	2026-08-31T13:28:05.2915824Z with:
+typing	UNKNOWN STEP	2026-08-31T13:28:05.2916060Z   python-version-file: pyproject.toml
+typing	UNKNOWN STEP	2026-08-31T13:28:05.5044017Z ##[group]Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+typing	UNKNOWN STEP	2026-08-31T13:28:05.5044467Z with:
+typing	UNKNOWN STEP	2026-08-31T13:28:05.5044699Z   path: ./.mypy_cache
+typing	UNKNOWN STEP	2026-08-31T13:28:05.5045075Z   key: mypy|5f3c5600705956c4745b41029f44a5bd0f17f1c89e3ee2fdf4a2578e6e1be495
+typing	UNKNOWN STEP	2026-08-31T13:28:05.5045527Z   enableCrossOsArchive: false
+typing	UNKNOWN STEP	2026-08-31T13:28:05.5045805Z   fail-on-cache-miss: false
+typing	UNKNOWN STEP	2026-08-31T13:28:05.5046065Z   lookup-only: false
+typing	UNKNOWN STEP	2026-08-31T13:28:05.5046331Z   save-always: false
+typing	UNKNOWN STEP	2026-08-31T13:28:05.5046593Z env:
+typing	UNKNOWN STEP	2026-08-31T13:28:07.2340399Z ##[group]Run uv run --locked --no-default-groups --group dev tox run -e typing
+typing	UNKNOWN STEP	2026-08-31T13:28:07.2341074Z ^[[36;1muv run --locked --no-default-groups --group dev tox run -e typing^[[0m
+typing	UNKNOWN STEP	2026-08-31T13:28:07.2383144Z shell: /usr/bin/bash -e {0}
+typing	UNKNOWN STEP	2026-08-31T13:28:07.2383414Z env:
+typing	UNKNOWN STEP	2026-08-31T13:28:07.2383712Z   UV_PYTHON_INSTALL_DIR: /home/runner/work/_temp/uv-python-dir
+typing	UNKNOWN STEP	2026-08-31T13:28:07.2384199Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+typing	UNKNOWN STEP	2026-08-31T13:28:07.2384600Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.7/x64
+typing	UNKNOWN STEP	2026-08-31T13:28:07.2385035Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.7/x64/lib/pkgconfig
+typing	UNKNOWN STEP	2026-08-31T13:28:07.2385468Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+typing	UNKNOWN STEP	2026-08-31T13:28:07.2385857Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+typing	UNKNOWN STEP	2026-08-31T13:28:07.2386263Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+typing	UNKNOWN STEP	2026-08-31T13:28:07.2386946Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.7/x64/lib
+typing	UNKNOWN STEP	2026-08-31T13:28:07.2387371Z ##[endgroup]
+typing	UNKNOWN STEP	2026-08-31T13:28:07.9034198Z Using CPython 3.14.7 interpreter at: /opt/hostedtoolcache/Python/3.14.7/x64/bin/python3
+typing	UNKNOWN STEP	2026-08-31T13:28:07.9034745Z Creating virtual environment at: .venv
+typing	UNKNOWN STEP	2026-08-31T13:28:07.9084270Z    Building flask @ file:///home/runner/work/flask/flask
+typing	UNKNOWN STEP	2026-08-31T13:28:08.6415447Z       Built flask @ file:///home/runner/work/flask/flask
+typing	UNKNOWN STEP	2026-08-31T13:28:08.6569447Z Installed 23 packages in 14ms
+typing	UNKNOWN STEP	2026-08-31T13:28:10.2137285Z typing: venv> .venv/bin/uv venv -p /home/runner/work/flask/flask/.venv/bin/python --allow-existing '--prompt=flask[typing]' --python-preference system /home/runner/work/flask/flask/.tox/typing
+typing	UNKNOWN STEP	2026-08-31T13:28:10.2935299Z typing: uv-sync> .venv/bin/uv sync --locked --python-preference system --no-default-groups --no-editable --reinstall-package Flask --group typing -p /home/runner/work/flask/flask/.venv/bin/python
+typing	UNKNOWN STEP	2026-08-31T13:28:11.6788698Z typing: freeze> .venv/bin/uv --color never pip freeze
+typing	UNKNOWN STEP	2026-08-31T13:28:11.6931226Z typing: asgiref==3.12.1,ast-serialize==0.6.0,blinker==1.9.0,cffi==2.1.0,click==8.4.2,cryptography==49.0.0,flask @ file:///home/runner/work/flask/flask,iniconfig==2.3.0,itsdangerous==2.2.0,jinja2==3.1.6,librt==0.13.0,markupsafe==3.0.3,mypy==2.3.0,mypy-extensions==1.1.0,nodeenv==1.10.0,packaging==26.2,pathspec==1.1.1,pluggy==1.6.0,pycparser==3.0,pygments==2.20.0,pyright==1.1.411,pytest==9.1.1,python-dotenv==1.2.2,types-contextvars==2.4.7.3,types-dataclasses==0.6.6,typing-extensions==4.16.0,werkzeug==3.1.8
+typing	UNKNOWN STEP	2026-08-31T13:28:11.6934733Z typing: commands[0]> mypy
+typing	UNKNOWN STEP	2026-08-31T13:28:12.7890173Z src/flask/json/provider.py:117: error: Unused "type: ignore" comment 
+typing	UNKNOWN STEP	2026-08-31T13:28:12.8868299Z [unused-ignore]
+typing	UNKNOWN STEP	2026-08-31T13:28:12.8869100Z             return dataclasses.asdict(o)  # type: ignore[arg-type]
+typing	UNKNOWN STEP	2026-08-31T13:28:12.8869796Z             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+typing	UNKNOWN STEP	2026-08-31T13:28:12.8870317Z Found 1 error in 1 file (checked 27 source files)
+typing	UNKNOWN STEP	2026-08-31T13:28:12.8941513Z typing: exit 1 (1.20 seconds) /home/runner/work/flask/flask> mypy pid=2519
+typing	UNKNOWN STEP	2026-08-31T13:28:12.8947184Z   typing: FAIL code 1 (2.68=setup[1.48]+cmd[1.20] seconds)
+typing	UNKNOWN STEP	2026-08-31T13:28:12.8947682Z   evaluation failed :( (2.77 seconds)
+typing	UNKNOWN STEP	2026-08-31T13:28:12.9698568Z ##[error]Process completed with exit code 1.
+typing	UNKNOWN STEP	2026-08-31T13:28:12.9832409Z Post job cleanup.
+typing	UNKNOWN STEP	2026-08-31T13:28:13.0715027Z [command]/usr/bin/git version
+typing	UNKNOWN STEP	2026-08-31T13:28:13.0755789Z git version 2.55.0
+typing	UNKNOWN STEP	2026-08-31T13:28:13.1818715Z Cleaning up orphan processes

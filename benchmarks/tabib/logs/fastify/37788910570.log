@@ -1,0 +1,22 @@
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.2313482Z ✔ listen logs the port as info (7.406407ms)
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.2314342Z ✖ listen on localhost binds IPv4 and IPv6 - promise interface (30000.836826ms)
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.2342609Z ##[error]^[[32m'test timed out after 30000ms'^[[39m
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.2355405Z ✔ listen on localhost binds to all interfaces (both IPv4 and IPv6 if present) - callback interface (14.660234ms)
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.2356960Z ✔ addresses getter (6.242226ms)
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.2358005Z ✔ listen on socket (65.985128ms)
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.2377015Z ✔ listen works with undefined host (3.225291ms)
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.3909102Z 
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.3909218Z ✖ failing tests:
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.3909226Z 
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.3909378Z test at test/listen.4.test.js:89:1
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.3909745Z ✖ listen on localhost binds IPv4 and IPv6 - promise interface (30000.836826ms)
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.3909875Z   'test timed out after 30000ms'
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.3910198Z ##[group]Test results (2346 passed, 0 failed)
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.3914129Z ##[notice]Total Tests: 2351
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	Suites 📂: 22
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.3915366Z [ELIFECYCLE] Command failed with exit code 1.
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.4040619Z ##[error]Process completed with exit code 1.
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.4140405Z Post job cleanup.
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.5710863Z Pruning is unnecessary.
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.5866107Z Post job cleanup.
+pnpm (24, ubuntu-latest, 11)	UNKNOWN STEP	2026-10-08T14:06:06.6748256Z [command]/usr/bin/git version

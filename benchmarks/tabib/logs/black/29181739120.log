@@ -1,0 +1,192 @@
+analysis / target / preview-new-changes	UNKNOWN STEP	﻿2026-07-13T00:53:40.1549060Z Current runner version: '2.335.1'
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:40.1576841Z ##[group]Runner Image Provisioner
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:40.1578048Z Hosted Compute Agent
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:40.1578659Z Version: 20260624.560
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:40.1586794Z ##[group]Runner Image
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:40.1587482Z Image: ubuntu-24.04
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:40.1588062Z Version: 20260705.232.1
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:40.9683688Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:40.9684926Z with:
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:40.9685344Z   fetch-depth: 0
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:42.3573861Z ##[group]Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:42.3575677Z with:
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:42.3576511Z   python-version: 3.14
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.3970627Z ##[group]Run git config user.name "diff-shades-gha"
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.3971087Z ^[[36;1mgit config user.name "diff-shades-gha"^[[0m
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.3971477Z ^[[36;1mgit config user.email "diff-shades-gha@example.com"^[[0m
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.4315766Z ##[group]Run gh pr checkout 5222
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.4316095Z ^[[36;1mgh pr checkout 5222^[[0m
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.4316383Z ^[[36;1mgit merge origin/main^[[0m
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.4316639Z ^[[36;1mpython -m pip install .^[[0m
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.4351306Z shell: /usr/bin/bash -e {0}
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.4351573Z env:
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.4351786Z   HATCH_BUILD_HOOKS_ENABLE: 1
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.4352053Z   CC: clang-18
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.4352327Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.6/x64
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.4352750Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.6/x64/lib/pkgconfig
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.4353180Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.4353565Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.4353938Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.4354317Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.6/x64/lib
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.4357225Z   GITHUB_TOKEN: [secret]
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:49.4357460Z ##[endgroup]
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:50.1155392Z From https://github.com/psf/black
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:50.1155943Z  * [new ref]         refs/pull/5222/head -> rsb-23/main
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:50.1455779Z Previous HEAD position was 5484475 Merge 7ad9048434d43b24f96d1280d56f97fb0a471ba8 into d7587ce9f52f36eb41bc505e529540fd8cbdcd3e
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:50.1457482Z Switched to branch 'rsb-23/main'
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:50.1709323Z Auto-merging CHANGES.md
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:50.1709859Z CONFLICT (content): Merge conflict in CHANGES.md
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:50.1710392Z Auto-merging src/black/comments.py
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:50.1710817Z Auto-merging src/blib2to3/pytree.py
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:50.1713726Z Automatic merge failed; fix conflicts and then commit the result.
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:50.1732543Z ##[error]Process completed with exit code 1.
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:50.1925996Z Post job cleanup.
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:50.2830750Z [command]/usr/bin/git version
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:50.2877678Z git version 2.54.0
+analysis / target / preview-new-changes	UNKNOWN STEP	2026-07-13T00:53:50.3947444Z Cleaning up orphan processes
+analysis / target / assert-no-changes	UNKNOWN STEP	﻿2026-07-13T00:53:40.0784359Z Current runner version: '2.335.1'
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:40.0819592Z ##[group]Runner Image Provisioner
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:40.0820856Z Hosted Compute Agent
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:40.0821838Z Version: 20260624.560
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:40.0834604Z ##[group]Runner Image
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:40.0835525Z Image: ubuntu-24.04
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:40.0836567Z Version: 20260705.232.1
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:40.4351744Z Download action repository 'actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1' (SHA:ece7cb06caefa5fff74198d8649806c4678c61a1)
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:40.5064716Z Download action repository 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9' (SHA:55cc8345863c7cc4c66a329aec7e433d2d1c52a9)
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:40.6264936Z Download action repository 'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:40.7988565Z Complete job name: analysis / target / assert-no-changes
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:40.8770744Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:40.8771906Z with:
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:40.8772314Z   fetch-depth: 0
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:42.2554826Z ##[group]Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:42.2556543Z with:
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:42.2557595Z   python-version: 3.14
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3253247Z ##[group]Run git config user.name "diff-shades-gha"
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3253703Z ^[[36;1mgit config user.name "diff-shades-gha"^[[0m
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3254097Z ^[[36;1mgit config user.email "diff-shades-gha@example.com"^[[0m
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3601128Z ##[group]Run gh pr checkout 5222
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3601454Z ^[[36;1mgh pr checkout 5222^[[0m
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3601718Z ^[[36;1mgit merge origin/main^[[0m
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3601978Z ^[[36;1mpython -m pip install .^[[0m
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3633890Z shell: /usr/bin/bash -e {0}
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3634139Z env:
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3634337Z   HATCH_BUILD_HOOKS_ENABLE: 1
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3634589Z   CC: clang-18
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3634854Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.6/x64
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3635283Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.6/x64/lib/pkgconfig
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3635698Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3636071Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3636438Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3636821Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.6/x64/lib
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3639804Z   GITHUB_TOKEN: [secret]
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:50.3640070Z ##[endgroup]
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:51.0347477Z From https://github.com/psf/black
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:51.0348155Z  * [new ref]         refs/pull/5222/head -> rsb-23/main
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:51.0649001Z Previous HEAD position was 5484475 Merge 7ad9048434d43b24f96d1280d56f97fb0a471ba8 into d7587ce9f52f36eb41bc505e529540fd8cbdcd3e
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:51.0650382Z Switched to branch 'rsb-23/main'
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:51.0898716Z Auto-merging CHANGES.md
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:51.0899287Z CONFLICT (content): Merge conflict in CHANGES.md
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:51.0899796Z Auto-merging src/black/comments.py
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:51.0900235Z Auto-merging src/blib2to3/pytree.py
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:51.0903579Z Automatic merge failed; fix conflicts and then commit the result.
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:51.0920418Z ##[error]Process completed with exit code 1.
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:51.1115242Z Post job cleanup.
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:51.1982400Z [command]/usr/bin/git version
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:51.2029738Z git version 2.54.0
+analysis / target / assert-no-changes	UNKNOWN STEP	2026-07-13T00:53:51.3012265Z Cleaning up orphan processes
+compare / preview-new-changes	UNKNOWN STEP	﻿2026-07-13T01:03:58.5017020Z Current runner version: '2.335.1'
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:03:58.5042764Z ##[group]Runner Image Provisioner
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:03:58.5043608Z Hosted Compute Agent
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:03:58.5044339Z Version: 20260624.560
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:03:58.5052700Z ##[group]Runner Image
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:03:58.5053317Z Image: ubuntu-24.04
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:03:58.5053926Z Version: 20260705.232.1
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:03:59.8924212Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:03:59.8926025Z with:
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:03:59.8927084Z   persist-credentials: false
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:01.0335474Z ##[group]Run actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:01.0336972Z with:
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:01.0337658Z   merge-multiple: true
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:01.0338460Z   repository: psf/black
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:01.0339244Z   run-id: 29181739120
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:01.0340002Z   skip-decompress: false
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:01.0340802Z   digest-mismatch: error
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:01.0341562Z env:
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:01.0342237Z   HATCH_BUILD_HOOKS_ENABLE: 1
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:01.0343036Z   CC: clang-18
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:04.2912919Z ##[group]Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:04.2913620Z with:
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:04.2913965Z   python-version: 3.14
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.1968870Z ##[group]Run diff-shades --dump-html diff.html \
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.1969315Z ^[[36;1mdiff-shades --dump-html diff.html \^[[0m
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.1969784Z ^[[36;1mcompare --diff preview-main-513058f032.json preview-pr-5222-7ad9048434.json^[[0m
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.2129885Z shell: /usr/bin/bash -e {0}
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.2130175Z env:
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.2130405Z   HATCH_BUILD_HOOKS_ENABLE: 1
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.2130683Z   CC: clang-18
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.2130981Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.6/x64
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.2131464Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.6/x64/lib/pkgconfig
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.2131930Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.2132354Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.2132771Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.2133189Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.6/x64/lib
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.2133786Z ##[endgroup]
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.3424984Z Usage: diff-shades compare [OPTIONS] analysis-one analysis-two [project]
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.3425891Z Try 'diff-shades compare --help' for help.
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.3427535Z 
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.3428089Z Error: Invalid value for 'analysis-two': File 'preview-pr-5222-7ad9048434.json' does not exist.
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.3689616Z ##[error]Process completed with exit code 2.
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.3822556Z Post job cleanup.
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.4694865Z [command]/usr/bin/git version
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.4739163Z git version 2.54.0
+compare / preview-new-changes	UNKNOWN STEP	2026-07-13T01:04:14.5717780Z Cleaning up orphan processes
+compare / assert-no-changes	UNKNOWN STEP	﻿2026-07-13T01:03:57.9023542Z Current runner version: '2.335.1'
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:03:57.9048235Z ##[group]Runner Image Provisioner
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:03:57.9049219Z Hosted Compute Agent
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:03:57.9049805Z Version: 20260624.560
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:03:57.9058134Z ##[group]Runner Image
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:03:57.9058782Z Image: ubuntu-24.04
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:03:57.9059360Z Version: 20260705.232.1
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:03:58.3890011Z Download action repository 'actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c' (SHA:3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c)
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:03:59.0887473Z Download action repository 'actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1' (SHA:ece7cb06caefa5fff74198d8649806c4678c61a1)
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:03:59.1913745Z Download action repository 'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:03:59.3670631Z Complete job name: compare / assert-no-changes
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:03:59.4455992Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:03:59.4457105Z with:
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:03:59.4457542Z   persist-credentials: false
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:00.7776790Z ##[group]Run actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:00.7778075Z with:
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:00.7778541Z   merge-multiple: true
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:00.7779122Z   repository: psf/black
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:00.7779720Z   run-id: 29181739120
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:00.7780282Z   skip-decompress: false
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:00.7780898Z   digest-mismatch: error
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:00.7781461Z env:
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:00.7781911Z   HATCH_BUILD_HOOKS_ENABLE: 1
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:00.7782546Z   CC: clang-18
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:03.2968323Z ##[group]Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:03.2968808Z with:
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:03.2969040Z   python-version: 3.14
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.5430005Z ##[group]Run diff-shades --dump-html diff.html \
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.5430430Z ^[[36;1mdiff-shades --dump-html diff.html \^[[0m
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.5430942Z ^[[36;1mcompare --diff stable-main-513058f032.json stable-pr-5222-7ad9048434.json^[[0m
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.5621279Z shell: /usr/bin/bash -e {0}
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.5621595Z env:
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.5621854Z   HATCH_BUILD_HOOKS_ENABLE: 1
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.5622152Z   CC: clang-18
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.5622482Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.6/x64
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.5623020Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.6/x64/lib/pkgconfig
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.5623549Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.5624015Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.5624481Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.6/x64
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.5624954Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.6/x64/lib
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.5625647Z ##[endgroup]
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.6928839Z Usage: diff-shades compare [OPTIONS] analysis-one analysis-two [project]
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.6929750Z Try 'diff-shades compare --help' for help.
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.6930166Z 
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.6930688Z Error: Invalid value for 'analysis-two': File 'stable-pr-5222-7ad9048434.json' does not exist.
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.7207375Z ##[error]Process completed with exit code 2.
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.7339495Z Post job cleanup.
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.8178892Z [command]/usr/bin/git version
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.8217753Z git version 2.54.0
+compare / assert-no-changes	UNKNOWN STEP	2026-07-13T01:04:14.9214631Z Cleaning up orphan processes

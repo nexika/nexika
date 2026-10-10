@@ -1,0 +1,22 @@
+check	UNKNOWN STEP	﻿2026-07-29T23:54:39.7664465Z Current runner version: '2.336.0'
+check	UNKNOWN STEP	2026-07-29T23:54:39.7691586Z ##[group]Runner Image Provisioner
+check	UNKNOWN STEP	2026-07-29T23:54:39.7692462Z Hosted Compute Agent
+check	UNKNOWN STEP	2026-07-29T23:54:39.7693167Z Version: 20260707.563
+check	UNKNOWN STEP	2026-07-29T23:54:39.7703476Z ##[group]Runner Image
+check	UNKNOWN STEP	2026-07-29T23:54:39.7704123Z Image: ubuntu-24.04
+check	UNKNOWN STEP	2026-07-29T23:54:39.7704754Z Version: 20260726.254.1
+check	UNKNOWN STEP	2026-07-29T23:54:40.3475565Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+check	UNKNOWN STEP	2026-07-29T23:54:40.3476831Z with:
+check	UNKNOWN STEP	2026-07-29T23:54:40.3477274Z   persist-credentials: false
+check	UNKNOWN STEP	2026-07-29T23:54:41.1986369Z ##[group]Run grep -Pz "\((\n\s*)?#5101(\n\s*)?\)" CHANGES.md || \
+check	UNKNOWN STEP	2026-07-29T23:54:41.1987963Z ^[[36;1mgrep -Pz "\((\n\s*)?#5101(\n\s*)?\)" CHANGES.md || \^[[0m
+check	UNKNOWN STEP	2026-07-29T23:54:41.1990343Z ^[[36;1m(echo "Please add '(#5101)' change line to CHANGES.md (or if appropriate, ask a maintainer to add the 'ci: skip news' label)" && \^[[0m
+check	UNKNOWN STEP	2026-07-29T23:54:41.1992477Z ^[[36;1mexit 1)^[[0m
+check	UNKNOWN STEP	2026-07-29T23:54:41.2045123Z shell: /usr/bin/bash -e {0}
+check	UNKNOWN STEP	2026-07-29T23:54:41.2046012Z ##[endgroup]
+check	UNKNOWN STEP	2026-07-29T23:54:41.2161705Z Please add '(#5101)' change line to CHANGES.md (or if appropriate, ask a maintainer to add the 'ci: skip news' label)
+check	UNKNOWN STEP	2026-07-29T23:54:41.2180696Z ##[error]Process completed with exit code 1.
+check	UNKNOWN STEP	2026-07-29T23:54:41.2501199Z Post job cleanup.
+check	UNKNOWN STEP	2026-07-29T23:54:41.3395360Z [command]/usr/bin/git version
+check	UNKNOWN STEP	2026-07-29T23:54:41.3436906Z git version 2.54.0
+check	UNKNOWN STEP	2026-07-29T23:54:41.4498280Z Cleaning up orphan processes

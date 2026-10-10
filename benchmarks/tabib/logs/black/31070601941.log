@@ -1,0 +1,97 @@
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	﻿2026-08-06T04:12:51.4150768Z Current runner version: '2.336.0'
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:51.4175876Z ##[group]Runner Image Provisioner
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:51.4177100Z Hosted Compute Agent
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:51.4177818Z Version: 20260707.563
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:51.4186124Z ##[group]Runner Image
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:51.4186753Z Image: ubuntu-24.04
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:51.4187355Z Version: 20260720.247.2
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:53.0787972Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:53.0789143Z with:
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:53.0789641Z   persist-credentials: false
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:54.1883186Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:54.1884989Z with:
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:54.1886241Z   python-version: 3.15
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:54.1904584Z   PROJECT: https://pypi.org/p/black
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:54.1905796Z ##[endgroup]
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:54.3108906Z ##[group]Installed versions
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:54.3199474Z Version ~3.15.0-0 was not found in the local cache
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:55.2007393Z Version ~3.15.0-0 is available for downloading
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:55.2010590Z Download from "https://github.com/actions/python-versions/releases/download/3.15.0-rc.1-30966273682/python-3.15.0-rc.1-linux-24.04-x64.tar.gz"
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:12:56.0748810Z Extract downloaded archive
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:02.7995691Z ##[group]Run python -m pip install --group cibw
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:02.7996484Z ^[[36;1mpython -m pip install --group cibw^[[0m
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:02.8047439Z shell: /usr/bin/bash -e {0}
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:06.7317739Z ##[group]Run cibuildwheel . --only cp314-manylinux_x86_64
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:06.7318226Z ^[[36;1mcibuildwheel . --only cp314-manylinux_x86_64^[[0m
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:06.7361783Z shell: /usr/bin/bash -e {0}
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:07.0458383Z info: This container will host the build for cp314-manylinux_x86_64...
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:07.0469438Z + docker version -f '{{json .}}'
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:07.0769109Z + docker image inspect quay.io/pypa/manylinux_2_28_x86_64:2026.06.04-1 --format '{{.Os}}/{{.Architecture}}'
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:07.0904579Z Error response from daemon: No such image: quay.io/pypa/manylinux_2_28_x86_64:2026.06.04-1
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:08.1401287Z 2026.06.04-1: Pulling from pypa/manylinux_2_28_x86_64
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:08.1406342Z a0ca16fa6f59: Pulling fs layer
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:08.1406937Z 9610e47b346c: Pulling fs layer
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:21.4021071Z b3003ba0d296: Pull complete
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:21.4267644Z d79386695bd8: Pull complete
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:21.4400811Z eed37ddccda8: Pull complete
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:21.4785146Z 5075988f8895: Pull complete
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:21.6827213Z df9c170bcaa5: Pull complete
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:21.7043510Z 69725c18b30a: Pull complete
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:33.6778191Z d78847690352: Pull complete
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:33.6927401Z 2654ef445203: Pull complete
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:33.6961906Z Digest: sha256:d3f051574f040b4c1d23b18fd06741cd7288c6f537faa0a76b1c7edf048bfa62
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:33.6972630Z Status: Downloaded newer image for quay.io/pypa/manylinux_2_28_x86_64:2026.06.04-1
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:33.7150746Z 84015674fe7db223ff924790148c80fade462a2e01f56419dcf6bcfd0a0c1505
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:33.7171126Z     + /bin/true
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:33.8898688Z     + mkdir -p /project
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:33.8938582Z     + manylinux-interpreters --help
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.1227094Z     + manylinux-interpreters ensure cp314-cp314
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.1656437Z 'cp314-cp314' already installed at '/opt/python/cp314-cp314'
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.1714143Z ##[endgroup]
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.1714992Z                                                              ^[[32m✓ ^[[0m27.13s
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.1716144Z ##[group]Copying project into container...
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.1716566Z 
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.1716759Z     + mkdir -p /project
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.2752859Z ##[endgroup]
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.2753824Z                                                               ^[[32m✓ ^[[0m0.10s
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.2754287Z 
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.2754654Z ^[[1m^[[34mBuilding cp314-manylinux_x86_64 wheel^[[0m
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.2755290Z CPython 3.14 manylinux x86_64
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.2755596Z 
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.2756951Z ##[group]Setting up build environment...
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.2757688Z 
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.2757845Z     + mkdir -p /
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.3348772Z     + /opt/python/cp39-cp39/bin/python -c 'import sys, json, os; json.dump(os.environ.copy(), sys.stdout)'
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.4387314Z     + which python
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.4428961Z     + python -V -V
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.4467608Z Python 3.14.5 (main, Jun  4 2026, 13:38:53) [GCC 14.2.1 20250110 (Red Hat 14.2.1-11)]
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.4471089Z     + which pip
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.4507104Z ##[endgroup]
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.4507906Z                                                               ^[[32m✓ ^[[0m0.18s
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.4509364Z ##[group]Running before_build...
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.4509566Z 
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:34.4511724Z     + sh -c 'yum install -y clang'
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:35.5846585Z AlmaLinux 8 - BaseOS                            102 MB/s |  88 MB     00:00    
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:46.9302991Z AlmaLinux 8 - AppStream                          60 MB/s |  30 MB     00:00    
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:52.2134641Z AlmaLinux 8 - Extras                             45 kB/s |  14 kB     00:00    
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:13:52.6863174Z AlmaLinux 8 - PowerTools                         16 MB/s | 6.5 MB     00:00    
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.7120286Z Extra Packages for Enterprise Linux 8 - x86_64   20 kB/s | 3.5 MB     03:04    
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.7132454Z Errors during downloading metadata for repository 'epel':
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.7136131Z   - Status code: 404 for https://pubmirror1.math.uh.edu/fedora-buffet/epel/8/Everything/x86_64/repodata/daad44077b66bbe4b73f67aacc975fa0bc17e19de5482b15c8f9f2f4ac99fb74-filelists.xml.xz (IP: 129.7.128.189)
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.7140000Z   - Status code: 500 for https://mirror.fcix.net/epel/8/Everything/x86_64/repodata/daad44077b66bbe4b73f67aacc975fa0bc17e19de5482b15c8f9f2f4ac99fb74-filelists.xml.xz (IP: 23.152.160.16)
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.7142933Z   - Status code: 404 for https://dl.fedoraproject.org/pub/epel/8/Everything/x86_64/repodata/daad44077b66bbe4b73f67aacc975fa0bc17e19de5482b15c8f9f2f4ac99fb74-filelists.xml.xz (IP: 38.145.32.23)
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.7162992Z   - Status code: 404 for http://pubmirror1.math.uh.edu/fedora-buffet/epel/8/Everything/x86_64/repodata/daad44077b66bbe4b73f67aacc975fa0bc17e19de5482b15c8f9f2f4ac99fb74-filelists.xml.xz (IP: 129.7.128.189)
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.7164702Z   - Curl error (28): Timeout was reached for http://mirror.fcix.net/epel/8/Everything/x86_64/repodata/daad44077b66bbe4b73f67aacc975fa0bc17e19de5482b15c8f9f2f4ac99fb74-filelists.xml.xz [Operation too slow. Less than 1000 bytes/sec transferred the last 30 seconds]
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.7166610Z   - Status code: 404 for https://mirror.dst.ca/fedora-linux/epel/8/Everything/x86_64/repodata/daad44077b66bbe4b73f67aacc975fa0bc17e19de5482b15c8f9f2f4ac99fb74-filelists.xml.xz (IP: 208.89.84.55)
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.7168147Z   - Status code: 404 for https://d2lzkl7pfhq30w.cloudfront.net/pub/epel/8/Everything/x86_64/repodata/daad44077b66bbe4b73f67aacc975fa0bc17e19de5482b15c8f9f2f4ac99fb74-filelists.xml.xz (IP: 18.173.117.208)
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.7169585Z   - Status code: 404 for http://mirror.dst.ca/fedora-linux/epel/8/Everything/x86_64/repodata/daad44077b66bbe4b73f67aacc975fa0bc17e19de5482b15c8f9f2f4ac99fb74-filelists.xml.xz (IP: 208.89.84.55)
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.7208766Z Error: Failed to download metadata for repo 'epel': Yum repo downloading error: Downloading error(s): repodata/daad44077b66bbe4b73f67aacc975fa0bc17e19de5482b15c8f9f2f4ac99fb74-filelists.xml.xz - Cannot download, all mirrors were already tried without success
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.8841242Z ##[error]cibuildwheel: Command ['sh', '-c', 'yum install -y clang'] failed with code 1. 
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.8852314Z 
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.8852871Z ##[endgroup]
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.8853617Z                                                             ^[[31m✕ ^[[0m204.43s
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.9033941Z ##[error]Process completed with exit code 1.
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:58.9176317Z Post job cleanup.
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:59.0002646Z [command]/usr/bin/git version
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:59.0040076Z git version 2.54.0
+mypyc wheels cp314-manylinux_x86_64	UNKNOWN STEP	2026-08-06T04:16:59.1050588Z Cleaning up orphan processes

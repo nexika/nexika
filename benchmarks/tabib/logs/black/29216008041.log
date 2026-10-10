@@ -1,0 +1,213 @@
+test (3.15, windows-latest)	UNKNOWN STEP	﻿2026-07-13T00:45:57.9218115Z Current runner version: '2.335.1'
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:45:57.9249244Z ##[group]Runner Image Provisioner
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:45:57.9250661Z Hosted Compute Agent
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:45:57.9251281Z Version: 20260624.560
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:45:57.9258878Z ##[group]Runner Image
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:45:57.9259495Z Image: windows-2025-vs2026
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:45:57.9260556Z Version: 20260628.158.1
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:45:59.4515118Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:45:59.4518033Z with:
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:45:59.4518821Z   persist-credentials: false
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:46:07.4173346Z ##[group]Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:46:07.4174420Z with:
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:46:07.4174697Z   python-version: 3.15
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:46:07.4180248Z   freethreaded: false
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:46:07.4180523Z ##[endgroup]
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:46:07.5950182Z ##[group]Installed versions
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:46:07.6210667Z Version ~3.15.0-0 was not found in the local cache
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:46:08.3670549Z Version ~3.15.0-0 is available for downloading
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:46:08.3671259Z Download from "https://github.com/actions/python-versions/releases/download/3.15.0-beta.3-28071004033/python-3.15.0-beta.3-win32-x64.zip"
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:46:09.1818220Z Extract downloaded archive
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:46:09.3129130Z [command]"C:\Program Files\PowerShell\7\pwsh.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command "$ErrorActionPreference = 'Stop' ; try { Add-Type -AssemblyName System.IO.Compression.ZipFile } catch { } ; try { [System.IO.Compression.ZipFile]::ExtractToDirectory('D:\a\_temp\python-3.15.0-beta.3-win32-x64.zip', 'D:\a\_temp\929d64a1-7198-46a9-bdc1-2d2557e13089', $true) } catch { if (($_.Exception.GetType().FullName -eq 'System.Management.Automation.MethodException') -or ($_.Exception.GetType().FullName -eq 'System.Management.Automation.RuntimeException') ){ Expand-Archive -LiteralPath 'D:\a\_temp\python-3.15.0-beta.3-win32-x64.zip' -DestinationPath 'D:\a\_temp\929d64a1-7198-46a9-bdc1-2d2557e13089' -Force } else { throw $_ } } ;"
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:46:15.3885679Z Execute installation script
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:46:15.9585811Z Check if Python hostedtoolcache folder exist...
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:46:15.9587944Z 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:00.9904922Z Successfully set up CPython (3.15.0-beta.3)
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:00.9906124Z ##[endgroup]
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:00.9907675Z Installing pip packages: --group tox
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:01.0829861Z Unexpected error attempting to determine if executable file exists 'C:\Users\runneradmin\AppData\Local\Microsoft\WindowsApps\python.EXE': Error: EACCES: permission denied, stat 'C:\Users\runneradmin\AppData\Local\Microsoft\WindowsApps\python.EXE'
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:01.0840511Z [command]C:\hostedtoolcache\windows\Python\3.15.0-beta.3\x64\python.exe -m pip install --group tox
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:02.4191682Z Collecting tox>=4.22
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:02.4574288Z   Downloading tox-4.56.4-py3-none-any.whl.metadata (3.8 kB)
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:12.5245439Z ##[group]Run tox -e ci-py$(echo 3.15 | tr -d '.') -- -v --color=yes
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:12.5246033Z ^[[36;1mtox -e ci-py$(echo 3.15 | tr -d '.') -- -v --color=yes^[[0m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:12.5380311Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:12.5383042Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-beta.3\x64
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:12.5383570Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.15.0-beta.3\x64
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:12.5383983Z ##[endgroup]
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:14.6472146Z ci-py315: install_dependency-groups> python -I -m pip install coverage>=5.3 pytest-cov>=4.1.0 pytest-xdist>=3.0.2 pytest>=7
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:19.8012638Z ci-py315: freeze> python -m pip freeze --all
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:20.2092505Z ci-py315: colorama==0.4.6,coverage==7.15.1,execnet==2.1.2,iniconfig==2.3.0,packaging==26.2,pip==26.1.2,pluggy==1.6.0,Pygments==2.20.0,pytest==9.1.1,pytest-cov==7.1.0,pytest-xdist==3.8.0
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:20.2102178Z ci-py315: commands[0]> pip install -e .[d]
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:21.2252465Z D:\a\black\black\.tox\ci-py315\Lib\site-packages\pip\_internal\utils\subprocess.py:129: EncodingWarning: 'encoding' argument not specified.
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:21.2254264Z   proc = subprocess.Popen(
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:51.0863640Z Installing collected packages: pytokens, propcache, platformdirs, pathspec, mypy-extensions, multidict, idna, frozenlist, click, attrs, aiohappyeyeballs, yarl, black, aiosignal, aiohttp
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:51.8927775Z 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:51.8935519Z Successfully installed aiohappyeyeballs-2.7.1 aiohttp-3.14.1 aiosignal-1.4.0 attrs-26.1.0 black-0.1.dev1+g513058f03 click-8.4.2 frozenlist-1.8.0 idna-3.18 multidict-6.7.1 mypy-extensions-1.1.0 pathspec-1.1.1 platformdirs-4.10.0 propcache-0.5.2 pytokens-0.4.1 yarl-1.24.2
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:54.0625816Z ci-py315: commands[1]> coverage erase
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:54.7252813Z ci-py315: commands[2]> pytest tests --run-optional no_jupyter --numprocesses auto --cov -v --color=yes
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:58.6969398Z ^[[1m============================= test session starts =============================^[[0m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:58.6995306Z platform win32 -- Python 3.15.0b3, pytest-9.1.1, pluggy-1.6.0 -- D:\a\black\black\.tox\ci-py315\Scripts\python.EXE
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:58.8051310Z scheduling tests via LoadScheduling
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:58.8304148Z 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:58.8324985Z tests/test_black.py::BlackTestCase::test_report_respects_no_color 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:58.8341524Z tests/test_black.py::BlackTestCase::test_assertFormatEqual_print_full_tree 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:58.8421465Z tests/test_black.py::BlackTestCase::test_find_project_root 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:58.8599373Z tests/test_black.py::BlackTestCase::test_one_empty_line 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:58.8661978Z [gw3]^[[36m [  0%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_report_respects_no_color 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:58.9691871Z [gw1]^[[36m [  1%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_find_user_pyproject_toml_windows 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:58.9707729Z tests/test_black.py::BlackTestCase::test_required_version_does_not_match_version 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:58.9754091Z tests/test_black.py::BlackTestCase::test_for_handled_unexpected_eof_error 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:59.0027483Z [gw0]^[[36m [  1%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_assertFormatEqual_print_full_tree 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:59.0107813Z tests/test_black.py::BlackTestCase::test_assertFormatEqual_print_tree_diff 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:59.0347209Z [gw3]^[[36m [  1%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_required_version_does_not_match_version 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:59.0384463Z tests/test_black.py::BlackTestCase::test_required_version_matches_partial_version 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:59.0459940Z [gw0]^[[36m [  2%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_assertFormatEqual_print_tree_diff 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:59.0623229Z tests/test_black.py::BlackTestCase::test_bpo_2142_workaround 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:59.0721621Z [gw1]^[[36m [  2%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_for_handled_unexpected_eof_error 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:47:59.0722803Z tests/test_black.py::BlackTestCase::test_format_file_contents 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:00.8122737Z tests/test_black.py::BlackTestCase::test_string_quotes 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:00.8358926Z [gw2]^[[36m [ 15%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_piping_diff_with_color 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:00.9186823Z tests/test_black.py::BlackTestCase::test_piping_diff_with_color_respects_no_color 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:00.9587429Z [gw1]^[[36m [ 15%] ^[[0m^[[31mFAILED^[[0m tests/test_black.py::BlackTestCase::test_multi_file_force_py36 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:01.1308382Z tests/test_black.py::BlackTestCase::test_multi_file_force_pyi 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:01.1654795Z [gw3]^[[36m [ 15%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::BlackTestCase::test_string_quotes 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:01.1815536Z tests/test_black.py::BlackTestCase::test_tab_comment_indentation 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.2424479Z [gw1]^[[36m [ 26%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestDeFactoAPI::test_format_str 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.2425432Z tests/test_black.py::TestDeFactoAPI::test_format_file_contents 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.2708629Z [gw1]^[[36m [ 26%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestDeFactoAPI::test_format_file_contents 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.2760132Z tests/test_black.py::TestASTSafety::test_assert_equivalent_basic 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.2780159Z [gw1]^[[36m [ 26%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_assert_equivalent_basic 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.2781233Z tests/test_black.py::TestASTSafety::test_assert_equivalent_del 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.2782401Z [gw1]^[[36m [ 26%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_assert_equivalent_del 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.2783349Z tests/test_black.py::TestASTSafety::test_assert_equivalent_fstring 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.2784938Z [gw1]^[[36m [ 26%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_assert_equivalent_fstring 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.2785915Z tests/test_black.py::TestASTSafety::test_assert_equivalent_strings 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.2787085Z [gw1]^[[36m [ 27%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_assert_equivalent_strings 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.2788164Z tests/test_black.py::TestASTSafety::test_equivalency_ast_parse_failure_includes_error 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.2789437Z [gw1]^[[36m [ 27%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_equivalency_ast_parse_failure_includes_error 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.2790571Z tests/test_black.py::TestASTSafety::test_mixed_target_versions_with_runtime_no_warning 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.2791886Z [gw1]^[[36m [ 27%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestASTSafety::test_mixed_target_versions_with_runtime_no_warning 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.2793008Z tests/test_concurrency_manager_shutdown.py::test_manager_shutdown_called_for_diff 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.4332692Z [gw2]^[[36m [ 29%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestCaching::test_filter_cached_hash 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.4555720Z tests/test_black.py::TestCaching::test_write_cache_creates_directory_if_needed 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.4619886Z [gw2]^[[36m [ 30%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestCaching::test_write_cache_creates_directory_if_needed 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.4769810Z tests/test_black.py::TestCaching::test_failed_formatting_does_not_get_cached 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.4909432Z [gw1]^[[36m [ 30%] ^[[0m^[[32mPASSED^[[0m tests/test_format.py::test_simple_format[annotations] 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.4985187Z tests/test_format.py::test_simple_format[async_stmts] 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:02.5167528Z [gw1]^[[36m [ 30%] ^[[0m^[[32mPASSED^[[0m tests/test_format.py::test_simple_format[async_stmts] 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:03.0314680Z tests/test_black.py::BlackTestCase::test_expression_ff 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:03.0621322Z [gw1]^[[36m [ 30%] ^[[0m^[[32mPASSED^[[0m tests/test_format.py::test_simple_format[attribute_access_on_number_literals] 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:03.0710693Z tests/test_format.py::test_simple_format[backslash_before_indent] 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:03.0714132Z [gw2]^[[36m [ 31%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestCaching::test_failed_formatting_does_not_get_cached 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:03.0759197Z tests/test_black.py::TestCaching::test_write_cache_write_fail 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:03.0968048Z [gw2]^[[36m [ 31%] ^[[0m^[[32mPASSED^[[0m tests/test_black.py::TestCaching::test_write_cache_write_fail 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:03.1047595Z tests/test_black.py::TestCaching::test_read_cache_line_lengths 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:27.8654069Z tests/test_format.py::test_empty 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2948896Z [gw3]^[[36m [100%] ^[[0m^[[32mPASSED^[[0m tests/test_format.py::test_empty 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2949585Z 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2949961Z ================================== FAILURES ===================================
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2950988Z ^[[31m^[[1m__________________ BlackTestCase.test_multi_file_force_py36 ___________________^[[0m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2952302Z [gw1] win32 -- Python 3.15.0 D:\a\black\black\.tox\ci-py315\Scripts\python.EXE
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2953396Z 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2965231Z             ]^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2965605Z             ^[[94mfor^[[39;49;00m path ^[[95min^[[39;49;00m paths:^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2966266Z                 path.write_text(source, encoding=^[[33m"^[[39;49;00m^[[33mutf-8^[[39;49;00m^[[33m"^[[39;49;00m)^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2967149Z >           ^[[96mself^[[39;49;00m.invokeBlack([^[[96mstr^[[39;49;00m(p) ^[[94mfor^[[39;49;00m p ^[[95min^[[39;49;00m paths] + PY36_ARGS)^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2967664Z 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2967813Z ^[[1m^[[31mtests\test_black.py^[[0m:1250: 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2968137Z _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2972673Z         runner = BlackRunner()^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2973626Z         ^[[94mif^[[39;49;00m ignore_config:^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2974616Z             args = [^[[33m"^[[39;49;00m^[[33m--verbose^[[39;49;00m^[[33m"^[[39;49;00m, ^[[33m"^[[39;49;00m^[[33m--config^[[39;49;00m^[[33m"^[[39;49;00m, ^[[96mstr^[[39;49;00m(THIS_DIR / ^[[33m"^[[39;49;00m^[[33mempty.toml^[[39;49;00m^[[33m"^[[39;49;00m), *args]^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2975677Z         result = runner.invoke(black.main, args, catch_exceptions=^[[94mFalse^[[39;49;00m)^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2976432Z         ^[[94massert^[[39;49;00m result.stdout_bytes ^[[95mis^[[39;49;00m ^[[95mnot^[[39;49;00m ^[[94mNone^[[39;49;00m^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2977212Z         ^[[94massert^[[39;49;00m result.stderr_bytes ^[[95mis^[[39;49;00m ^[[95mnot^[[39;49;00m ^[[94mNone^[[39;49;00m^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2977734Z         msg = (^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2978374Z             ^[[33mf^[[39;49;00m^[[33m"^[[39;49;00m^[[33mFailed with args: ^[[39;49;00m^[[33m{^[[39;49;00margs^[[33m}^[[39;49;00m^[[33m\n^[[39;49;00m^[[33m"^[[39;49;00m^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2979432Z             ^[[33mf^[[39;49;00m^[[33m"^[[39;49;00m^[[33mstdout: ^[[39;49;00m^[[33m{^[[39;49;00mresult.stdout_bytes.decode()^[[33m!r}^[[39;49;00m^[[33m\n^[[39;49;00m^[[33m"^[[39;49;00m^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2980533Z             ^[[33mf^[[39;49;00m^[[33m"^[[39;49;00m^[[33mstderr: ^[[39;49;00m^[[33m{^[[39;49;00mresult.stderr_bytes.decode()^[[33m!r}^[[39;49;00m^[[33m\n^[[39;49;00m^[[33m"^[[39;49;00m^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2981708Z             ^[[33mf^[[39;49;00m^[[33m"^[[39;49;00m^[[33mexception: ^[[39;49;00m^[[33m{^[[39;49;00mresult.exception^[[33m}^[[39;49;00m^[[33m"^[[39;49;00m^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2982283Z         )^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2982655Z >       ^[[94massert^[[39;49;00m result.exit_code == exit_code, msg^[[90m^[[39;49;00m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2984458Z ^[[1m^[[31mE       AssertionError: Failed with args: ['--verbose', '--config', 'D:\\a\\black\\black\\tests\\empty.toml', 'C:\\Users\\runneradmin\\AppData\\Local\\Temp\\tmp8i7j99xb\\file1.py', 'C:\\Users\\runneradmin\\AppData\\Local\\Temp\\tmp8i7j99xb\\file2.py', '--target-version=py36', '--target-version=py37', '--target-version=py38', '--target-version=py39']^[[0m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2985798Z ^[[1m^[[31mE         stdout: ''^[[0m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2991323Z ^[[1m^[[31mE         stderr: 'Identified `C:\\` as project root containing a file system root.\r\nFound input source: "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\tmp8i7j99xb\\file1.py"\r\nFound input source: "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\tmp8i7j99xb\\file2.py"\r\nreformatted C:\\Users\\runneradmin\\AppData\\Local\\Temp\\tmp8i7j99xb\\file1.py\r\nconcurrent.futures.process._RemoteTraceback: \r\n\'\'\'\r\nProcess 7356 terminated abruptly with exit code 1\'\'\'\r\n\r\nThe above exception was the direct cause of the following exception:\r\n\r\nconcurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.\r\nerror: cannot format C:\\Users\\runneradmin\\AppData\\Local\\Temp\\tmp8i7j99xb\\file2.py: A process in the process pool was terminated abruptly while the future was running or pending.\r\n\r\nOh no! 💥 💔 💥\r\n1 file reformatted, 1 file failed to reformat.\r\n'^[[0m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2995832Z ^[[1m^[[31mE         exception: 123^[[0m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2996135Z ^[[1m^[[31mE       assert 123 == 0^[[0m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2996509Z ^[[1m^[[31mE        +  where 123 = <Result SystemExit(123)>.exit_code^[[0m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2996764Z 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2996940Z ^[[1m^[[31mtests\test_black.py^[[0m:133: AssertionError
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2997330Z ---------------------------- Captured stderr call -----------------------------
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2997691Z Process SpawnProcess-2:
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2997836Z 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2997936Z Traceback (most recent call last):
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.2998356Z 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3003593Z   File "C:\hostedtoolcache\windows\Python\3.15.0-beta.3\x64\Lib\multiprocessing\process.py", line 320, in _bootstrap
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3004114Z 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3015426Z 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3015504Z          ~~~~^^^^^^^^^^^^^^^^
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3015652Z 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3016136Z PermissionError: [Errno 13] Permission denied: 'C:\\Users\\runneradmin\\AppData\\Local\\black\\black\\Cache\\0.1.dev1+g513058f03\\Grammar3.15.0.beta.3.pickle'
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3016731Z 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3016865Z =============================== tests coverage ================================
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3017277Z _______________ coverage: platform win32, python 3.15.0-beta-3 ________________
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3017564Z 
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3017698Z Name                                         Stmts   Miss Branch BrPart  Cover
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3018244Z ------------------------------------------------------------------------------
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3018666Z src\_black_version.py                            1      0      0      0   100%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3019067Z src\black\__init__.py                          659     84    338     28    87%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3019470Z src\black\_width_table.py                        2      0      0      0   100%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3019883Z src\black\brackets.py                          181      3     86      1    99%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3020294Z src\black\cache.py                              85      6     16      1    93%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3020692Z src\black\comments.py                          405     17    248     24    93%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3021111Z src\black\concurrency.py                       119     17     50     13    80%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3021518Z src\black\const.py                               4      0      0      0   100%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3021912Z src\black\debug.py                              40      0     10      1    98%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3022303Z src\black\files.py                             216     16     82      6    91%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3022718Z src\black\handle_ipynb_magics.py               193    143     72      1    19%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3023151Z src\black\linegen.py                           886     27    508     30    96%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3023543Z src\black\lines.py                             791     46    492     44    93%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3023929Z src\black\mode.py                              100      2     10      2    96%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3024310Z src\black\nodes.py                             532     18    334     24    95%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3024708Z src\black\numerics.py                           35      0     14      0   100%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3025116Z src\black\output.py                             77      5     32      4    92%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3025647Z src\black\parsing.py                           128      6     48      0    97%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3026051Z src\black\ranges.py                            254     16    128     15    92%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3026451Z src\black\report.py                             62      0     22      0   100%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3026866Z src\black\resources\__init__.py                  0      0      0      0   100%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3027278Z src\black\rusty.py                              14      0      0      0   100%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3027669Z src\black\schema.py                             10      0      0      0   100%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3028068Z src\black\strings.py                           203     38     96      1    78%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3028463Z src\black\trans.py                             944     22    450     21    96%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3028856Z src\blackd\__init__.py                         167     13     34      3    92%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3029255Z src\blackd\client.py                            40      5     26      2    86%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3029681Z src\blackd\middlewares.py                       28      0     10      1    97%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3030094Z tests\__init__.py                                0      0      0      0   100%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3030484Z tests\conftest.py                               10      0      0      0   100%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3030884Z tests\optional.py                               68      9     20      8    81%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3031288Z tests\test_black.py                           1872     80    126     19    95%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3031685Z tests\test_blackd.py                           271      3     10      2    98%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3032125Z tests\test_concurrency_manager_shutdown.py      31      0      0      0   100%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3032572Z tests\test_docs.py                              40      6     18      6    79%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3032967Z tests\test_format.py                            41      0      4      0   100%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3033365Z tests\test_ipynb.py                            216    200      0      0     7%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3035224Z tests\test_no_ipynb.py                          22      0      0      0   100%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3035702Z tests\test_ranges.py                            39      0      0      0   100%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3036112Z tests\test_schema.py                             7      0      0      0   100%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3036520Z tests\test_tokenize.py                          27      5      2      1    79%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3036927Z tests\test_trans.py                             32      0      2      0   100%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3037309Z tests\util.py                                  176     15     36      1    92%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3037691Z ------------------------------------------------------------------------------
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3038062Z TOTAL                                         9028    802   3324    259    90%
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3038702Z ^[[36m^[[1m=========================== short test summary info ===========================^[[0m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3040039Z ^[[31mFAILED^[[0m tests/test_black.py::^[[1mBlackTestCase::test_multi_file_force_py36^[[0m - AssertionError: Failed with args: ['--verbose', '--config', 'D:\\a\\black\\...
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.3041092Z ^[[31m======== ^[[31m^[[1m1 failed^[[0m, ^[[32m468 passed^[[0m, ^[[33m4 skipped^[[0m, ^[[32m8 subtests passed^[[0m^[[31m in 33.40s^[[0m^[[31m =========^[[0m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.6813040Z ci-py315: exit 1 (34.95 seconds) D:\a\black\black> pytest tests --run-optional no_jupyter --numprocesses auto --cov -v --color=yes pid=6532
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.6821715Z   ci-py315: FAIL code 1 (75.92=setup[6.45]+cmd[33.85,0.66,34.95] seconds)
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.6822301Z   evaluation failed :( (75.95 seconds)
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.7995067Z ##[error]Process completed with exit code 1.
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:29.8267610Z Post job cleanup.
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:30.0444235Z [command]"C:\Program Files\Git\bin\git.exe" version
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:30.0777304Z git version 2.54.0.windows.1
+test (3.15, windows-latest)	UNKNOWN STEP	2026-07-13T00:48:32.2263619Z Cleaning up orphan processes

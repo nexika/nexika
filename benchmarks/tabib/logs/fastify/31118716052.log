@@ -1,0 +1,25 @@
+Backport	UNKNOWN STEP	﻿2026-08-06T16:18:36.9787643Z Current runner version: '2.336.0'
+Backport	UNKNOWN STEP	2026-08-06T16:18:36.9814162Z ##[group]Runner Image Provisioner
+Backport	UNKNOWN STEP	2026-08-06T16:18:36.9815069Z Hosted Compute Agent
+Backport	UNKNOWN STEP	2026-08-06T16:18:36.9815675Z Version: 20260707.563
+Backport	UNKNOWN STEP	2026-08-06T16:18:36.9824246Z ##[group]Runner Image
+Backport	UNKNOWN STEP	2026-08-06T16:18:36.9824951Z Image: ubuntu-24.04
+Backport	UNKNOWN STEP	2026-08-06T16:18:36.9825541Z Version: 20260720.247.2
+Backport	UNKNOWN STEP	2026-08-06T16:18:36.9826892Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260720.247/images/ubuntu/Ubuntu2404-Readme.md
+Backport	UNKNOWN STEP	2026-08-06T16:18:36.9828426Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260720.247
+Backport	UNKNOWN STEP	2026-08-06T16:18:36.9829463Z ##[endgroup]
+Backport	UNKNOWN STEP	2026-08-06T16:18:36.9830676Z ##[group]GITHUB_TOKEN Permissions
+Backport	UNKNOWN STEP	2026-08-06T16:18:36.9832637Z Contents: write
+Backport	UNKNOWN STEP	2026-08-06T16:18:36.9833295Z Metadata: read
+Backport	UNKNOWN STEP	2026-08-06T16:18:36.9834278Z PullRequests: write
+Backport	UNKNOWN STEP	2026-08-06T16:18:36.9834842Z ##[endgroup]
+Backport	UNKNOWN STEP	2026-08-06T16:18:36.9836998Z Secret source: Actions
+Backport	UNKNOWN STEP	2026-08-06T16:18:36.9838160Z Prepare workflow directory
+Backport	UNKNOWN STEP	2026-08-06T16:18:37.0217401Z Prepare all required actions
+Backport	UNKNOWN STEP	2026-08-06T16:18:37.0265714Z Getting action download info
+Backport	UNKNOWN STEP	2026-08-06T16:19:17.5087724Z Failed to resolve action download info. Error: Service Unavailable
+Backport	UNKNOWN STEP	2026-08-06T16:19:17.5165019Z Retrying in 27.595 seconds
+Backport	UNKNOWN STEP	2026-08-06T16:20:31.8672460Z Failed to resolve action download info. Error: Service Unavailable
+Backport	UNKNOWN STEP	2026-08-06T16:20:31.8675933Z Retrying in 21.619 seconds
+Backport	UNKNOWN STEP	2026-08-06T16:21:37.2444728Z ##[error]Service Unavailable
+Backport	UNKNOWN STEP	2026-08-06T16:21:37.2466147Z ##[error]Failed to resolve action download info.

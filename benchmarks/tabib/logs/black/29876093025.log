@@ -1,0 +1,36 @@
+lint	UNKNOWN STEP	﻿2026-07-21T23:07:29.7742197Z Current runner version: '2.336.0'
+lint	UNKNOWN STEP	2026-07-21T23:07:29.7762282Z ##[group]Runner Image Provisioner
+lint	UNKNOWN STEP	2026-07-21T23:07:29.7763035Z Hosted Compute Agent
+lint	UNKNOWN STEP	2026-07-21T23:07:29.7763596Z Version: 20260707.563
+lint	UNKNOWN STEP	2026-07-21T23:07:29.7770573Z ##[group]Runner Image
+lint	UNKNOWN STEP	2026-07-21T23:07:29.7771072Z Image: ubuntu-24.04
+lint	UNKNOWN STEP	2026-07-21T23:07:29.7771554Z Version: 20260714.240.1
+lint	UNKNOWN STEP	2026-07-21T23:07:32.1412321Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+lint	UNKNOWN STEP	2026-07-21T23:07:32.1412886Z with:
+lint	UNKNOWN STEP	2026-07-21T23:07:32.1413105Z   persist-credentials: false
+lint	UNKNOWN STEP	2026-07-21T23:07:33.1932014Z ##[endgroup]
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2104018Z ##[group]Run if [ "$GITHUB_BASE_REF" != "main" ]; then
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2104438Z ^[[36;1mif [ "$GITHUB_BASE_REF" != "main" ]; then^[[0m
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2104875Z ^[[36;1m    echo "::error::PR targeting '$GITHUB_BASE_REF', please refile targeting 'main'." && exit 1^[[0m
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2105254Z ^[[36;1mfi^[[0m
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2204898Z shell: /usr/bin/bash -e {0}
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2205179Z ##[endgroup]
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2351696Z ##[group]Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2352047Z with:
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2352246Z   python-version: 3.15
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2352468Z   pip-version: 26.1
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2352693Z   pip-install: -e . --group tox
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2352939Z   check-latest: false
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2354990Z   token: [secret]
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2355207Z   update-environment: true
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2355447Z   allow-prereleases: false
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2355669Z   freethreaded: false
+lint	UNKNOWN STEP	2026-07-21T23:07:33.2355879Z ##[endgroup]
+lint	UNKNOWN STEP	2026-07-21T23:07:33.3332383Z ##[group]Installed versions
+lint	UNKNOWN STEP	2026-07-21T23:07:33.3895655Z Version 3.15 was not found in the local cache
+lint	UNKNOWN STEP	2026-07-21T23:07:33.9862232Z ##[error]The version '3.15' with architecture 'x64' was not found for Ubuntu 24.04.
+lint	UNKNOWN STEP	The list of all available versions can be found here: https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json
+lint	UNKNOWN STEP	2026-07-21T23:07:34.0063519Z Post job cleanup.
+lint	UNKNOWN STEP	2026-07-21T23:07:34.0719995Z [command]/usr/bin/git version
+lint	UNKNOWN STEP	2026-07-21T23:07:34.0749290Z git version 2.54.0
+lint	UNKNOWN STEP	2026-07-21T23:07:34.1551782Z Cleaning up orphan processes

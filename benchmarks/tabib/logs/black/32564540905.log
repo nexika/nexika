@@ -1,0 +1,92 @@
+compare / assert-no-changes	UNKNOWN STEP	﻿2026-09-16T23:03:00.1500370Z Current runner version: '2.337.0'
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:00.1527598Z ##[group]Runner Image Provisioner
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:00.1528619Z Hosted Compute Agent
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:00.1529273Z Version: 20260828.587
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:00.1537857Z ##[group]Runner Image
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:00.1538615Z Image: ubuntu-24.04
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:00.1539209Z Version: 20260907.300.1
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:00.6032860Z Download action repository 'actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c' (SHA:3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c)
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:01.1011803Z Download action repository 'actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97' (SHA:5fda3b95a4ea91299a34e894583c3862153e4b97)
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:01.1804128Z Download action repository 'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:01.3673876Z Complete job name: compare / assert-no-changes
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:01.4444800Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:01.4446050Z with:
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:01.4446544Z   persist-credentials: false
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:02.5862312Z ##[group]Run actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:02.5864085Z with:
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:02.5864976Z   merge-multiple: true
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:02.5865995Z   repository: psf/black
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:02.5867173Z   run-id: 32564540905
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:02.5868163Z   skip-decompress: false
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:02.5869212Z   digest-mismatch: error
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:02.5870211Z env:
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:02.5871076Z   HATCH_BUILD_HOOKS_ENABLE: 1
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:02.5872185Z   PIP_UPLOADED_PRIOR_TO: P2D
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:05.3269102Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:05.3269548Z with:
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:05.3269793Z   python-version: 3.15
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:05.3274448Z   CC: clang-18
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:05.3274690Z ##[endgroup]
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:05.4510964Z ##[group]Installed versions
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:05.4571279Z Version ~3.15.0-0 was not found in the local cache
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:06.3198437Z Version ~3.15.0-0 is available for downloading
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:06.3199910Z Download from "https://github.com/actions/python-versions/releases/download/3.15.0-rc.2-33583724836/python-3.15.0-rc.2-linux-24.04-x64.tar.gz"
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:07.1907909Z Extract downloaded archive
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:14.1690159Z ##[group]Run python -m pip install --group diff-shades --group diff-shades-comment
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:14.1690885Z ^[[36;1mpython -m pip install --group diff-shades --group diff-shades-comment^[[0m
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:14.1736606Z shell: /usr/bin/bash -e {0}
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:18.4222986Z ##[group]Run diff-shades --dump-html diff.html \
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:18.4223440Z ^[[36;1mdiff-shades --dump-html diff.html \^[[0m
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:18.4223933Z ^[[36;1mcompare --diff stable-main-acd6198877.json stable-pr-5335-1071b2c21f.json^[[0m
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:19.9705506Z  
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:19.9705728Z  @type_check_only
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:19.9706003Z  class _DOMErrorHandler(Protocol):
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:19.9706384Z      def handleError(self, error: Exception) -> bool: ...
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:19.9706662Z 
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:19.9732466Z 
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:20.0390151Z ##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:20.0390629Z with:
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:20.0390862Z   name: stable-diff.html
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:21.0029207Z ##[group]Run python scripts/diff_shades_gha_helper.py comment-body \
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:21.0029770Z ^[[36;1mpython scripts/diff_shades_gha_helper.py comment-body \^[[0m
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:21.0030291Z ^[[36;1mstable-main-acd6198877.json stable-pr-5335-1071b2c21f.json \^[[0m
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:21.0030719Z ^[[36;1mstable assert-no-changes^[[0m
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:21.0070421Z shell: /usr/bin/bash -e {0}
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:21.0070717Z env:
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:21.0070966Z   HATCH_BUILD_HOOKS_ENABLE: 1
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:22.2229513Z ##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:22.2230251Z with:
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:22.2230642Z   name: .stable.pr-comment.md
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.1990079Z ##[group]Run diff-shades compare --check \
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.1990502Z ^[[36;1mdiff-shades compare --check \^[[0m
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.1990943Z ^[[36;1mstable-main-acd6198877.json stable-pr-5335-1071b2c21f.json || \^[[0m
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.1991544Z ^[[36;1m(echo "Please verify you didn't change the stable code style unintentionally!" \^[[0m
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.1992334Z ^[[36;1m&& exit 1)^[[0m
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.2032208Z shell: /usr/bin/bash -e {0}
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.2032506Z env:
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.2032749Z   HATCH_BUILD_HOOKS_ENABLE: 1
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.2033054Z   PIP_UPLOADED_PRIOR_TO: P2D
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.2033354Z   CC: clang-18
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.2033686Z   pythonLocation: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.2034194Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64/lib/pkgconfig
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.2034696Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.2035191Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.2035638Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.2036098Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.15.0-rc.2/x64/lib
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.2036480Z ##[endgroup]
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.4740100Z ^[[2;36m[23:03:23]^[[0m^[[2;36m ^[[0mLoaded first analysis: ^[[35m/home/runner/work/black/black/^[[0m^[[95mstable-main-acd6198877.json^[[0m ^[[1m(^[[0mcached^[[1m)^[[0m               
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.6242178Z ^[[2;36m          ^[[0m^[[2;36m ^[[0mLoaded second analysis: ^[[35m/home/runner/work/black/black/^[[0m^[[95mstable-pr-5335-1071b2c21f.json^[[0m ^[[1m(^[[0mcached^[[1m)^[[0m           
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.6242842Z 
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.7421643Z ╭─────────────────────── ^[[1mSummary^[[0m ────────────────────────╮
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.7423181Z │ ^[[36m5^[[0m projects & ^[[36m12^[[0m files changed / ^[[36m178^[[0m changes [^[[32m+109^[[0m/^[[31m-69^[[0m] │
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.7424306Z │                                                        │
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.7425181Z │ ... out of ^[[36m3 080 780^[[0m lines, ^[[36m14 128^[[0m files & ^[[36m22^[[0m projects │
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.7426298Z ╰────────────────────────────────────────────────────────╯
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.7426731Z 
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.7468181Z ^[[1;36mDifferences found.^[[0m
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.8023274Z Please verify you didn't change the stable code style unintentionally!
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.8039879Z ##[error]Process completed with exit code 1.
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.8158627Z Post job cleanup.
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.9013761Z [command]/usr/bin/git version
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:23.9053080Z git version 2.55.0
+compare / assert-no-changes	UNKNOWN STEP	2026-09-16T23:03:24.0104856Z Cleaning up orphan processes

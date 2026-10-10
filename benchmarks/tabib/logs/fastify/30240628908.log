@@ -1,0 +1,33 @@
+Lint Markdown	UNKNOWN STEP	﻿2026-07-27T05:44:59.5072043Z Current runner version: '2.335.1'
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:44:59.5106210Z ##[group]Runner Image Provisioner
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:44:59.5107553Z Hosted Compute Agent
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:44:59.5108583Z Version: 20260707.563
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:44:59.5121795Z ##[group]Runner Image
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:44:59.5122936Z Image: ubuntu-24.04
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:44:59.5123886Z Version: 20260720.247.2
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:00.3261838Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:00.3262949Z with:
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:00.3263385Z   persist-credentials: false
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:01.1255191Z ##[group]Run actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:01.1256833Z with:
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:01.1257670Z   node-version: lts/*
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:02.0224995Z ##[group]Run npm install --ignore-scripts
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:02.0225475Z ^[[36;1mnpm install --ignore-scripts^[[0m
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:02.0281730Z shell: /usr/bin/bash -e {0}
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:22.3728531Z ##[group]Run xt0rted/markdownlint-problem-matcher@1a5fabfb577370cfdf5af944d418e4be3ea06f27
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:22.3728978Z with:
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:22.3729166Z   action: add
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:22.4243549Z ##[group]Run ./node_modules/.bin/markdownlint-cli2
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:22.4243959Z ^[[36;1m./node_modules/.bin/markdownlint-cli2^[[0m
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:22.4288999Z shell: /usr/bin/bash -e {0}
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:22.4289263Z ##[endgroup]
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:22.6434645Z markdownlint-cli2 v0.23.2 (markdownlint v0.41.1)
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:23.6065738Z ##[error]docs/Reference/Warnings.md:39:81 error MD013/line-length Line length [Expected: 80; Actual: 103]
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:23.6302947Z ##[error]Process completed with exit code 1.
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:23.6420099Z Post job cleanup.
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:23.7229697Z [command]/usr/bin/git version
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:23.7266624Z git version 2.54.0
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:23.7856220Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:23.7883929Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:23.8224465Z Cleaning up orphan processes
+Lint Markdown	UNKNOWN STEP	2026-07-27T05:45:23.8577295Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: xt0rted/markdownlint-problem-matcher@1a5fabfb577370cfdf5af944d418e4be3ea06f27. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

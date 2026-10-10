@@ -1,0 +1,168 @@
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:19:49.3094644Z + docker image inspect quay.io/pypa/manylinux_2_28_x86_64:2026.06.04-1 --format '{{.Os}}/{{.Architecture}}'
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:19:49.3380223Z Error response from daemon: No such image: quay.io/pypa/manylinux_2_28_x86_64:2026.06.04-1
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:19:49.9897430Z 2026.06.04-1: Pulling from pypa/manylinux_2_28_x86_64
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:19:50.0393106Z a0ca16fa6f59: Pulling fs layer
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:19:50.0393702Z 9610e47b346c: Pulling fs layer
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:19:50.0394109Z b401ac796ddc: Pulling fs layer
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:21:07.7739537Z   Running scriptlet: gcc-toolset-15-runtime-15.0-9.el8_10.x86_64           1/19 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:21:07.7740114Z ValueError: SELinux policy is not managed or store cannot be accessed.
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:21:07.7740390Z 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:21:08.4874958Z   Installing       : clang-resource-filesystem-21.1.8-1.module_el8.10.0    2/19 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:21:08.4951160Z   Installing       : gcc-toolset-15-binutils-2.44-3.el8_10.x86_64          3/19 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:21:08.5073241Z   Running scriptlet: gcc-toolset-15-binutils-2.44-3.el8_10.x86_64          3/19 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:21:29.2263689Z * Getting build dependencies for wheel...
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:21:29.4239037Z /tmp/build-env-6xqeh0ls/lib/python3.10/site-packages/vcs_versioning/_backends/_git.py:530: UserWarning: "/project" is shallow and may cause errors
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:21:29.4239705Z   pre_parse(wd)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:21:29.4632953Z * Installing packages in isolated environment:
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:21:29.4633575Z   - click>=8.0.0
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:21:29.4633961Z   - hatch-mypyc>=0.16.0
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:21:32.5598679Z * Building wheel...
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:21:32.6564900Z /tmp/build-env-6xqeh0ls/lib/python3.10/site-packages/vcs_versioning/_backends/_git.py:530: UserWarning: "/project" is shallow and may cause errors
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:21:32.6565481Z   pre_parse(wd)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:12.6742117Z Successfully built black-0.1.dev1+g11c85a87c-cp310-cp310-linux_x86_64.whl
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:12.6874942Z     + /opt/python/cp39-cp39/bin/python -c 'import sys, json, glob; json.dump(glob.glob('"'"'/tmp/cibuildwheel/built_wheel/*.whl'"'"'), sys.stdout)'
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:12.7076776Z     + rm -rf /tmp/cibuildwheel/repaired_wheel
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:23.8497033Z   Downloading parso-0.8.7-py2.py3-none-any.whl.metadata (8.2 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:23.8947095Z Collecting ptyprocess>=0.5 (from pexpect>4.3->ipython>=7.8.0->black==0.1.dev1+g11c85a87c->black==0.1.dev1+g11c85a87c)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:23.9079889Z   Downloading ptyprocess-0.7.0-py2.py3-none-any.whl.metadata (1.3 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:23.9380304Z Collecting executing>=1.2.0 (from stack_data->ipython>=7.8.0->black==0.1.dev1+g11c85a87c->black==0.1.dev1+g11c85a87c)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:23.9511253Z   Downloading executing-2.2.1-py2.py3-none-any.whl.metadata (8.9 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:23.9757066Z Collecting asttokens>=2.1.0 (from stack_data->ipython>=7.8.0->black==0.1.dev1+g11c85a87c->black==0.1.dev1+g11c85a87c)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:23.9887111Z   Downloading asttokens-3.0.2-py3-none-any.whl.metadata (5.7 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:24.0198288Z Collecting pure-eval (from stack_data->ipython>=7.8.0->black==0.1.dev1+g11c85a87c->black==0.1.dev1+g11c85a87c)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:24.0328151Z   Downloading pure_eval-0.2.3-py3-none-any.whl.metadata (6.3 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:24.0423153Z Using cached pytokens-0.4.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (259 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:24.0558637Z Downloading aiohttp-3.14.3-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.7 MB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:24.2043426Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 11.9 MB/s  0:00:00
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:24.2174603Z Downloading async_timeout-5.0.1-py3-none-any.whl (6.2 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:24.2330396Z Downloading multidict-6.7.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (243 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:24.5631386Z Downloading yarl-1.24.5-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (110 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:24.6517873Z Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl (15 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:24.6672277Z Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:24.6837039Z Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:24.9255198Z Using cached click-8.5.0-py3-none-any.whl (125 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:24.9392634Z Downloading frozenlist-1.8.0-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (219 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:24.9567786Z Downloading idna-3.19-py3-none-any.whl (68 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:24.9723764Z Downloading ipython-8.39.0-py3-none-any.whl (831 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.2151453Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 831.8/831.8 kB 2.4 MB/s  0:00:00
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.2290880Z Downloading prompt_toolkit-3.0.53-py3-none-any.whl (392 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.2684244Z Downloading jedi-0.20.0-py2.py3-none-any.whl (4.9 MB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.3040150Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.9/4.9 MB 137.2 MB/s  0:00:00
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.3171344Z Downloading parso-0.8.7-py2.py3-none-any.whl (107 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.3206332Z Using cached mypy_extensions-1.1.0-py3-none-any.whl (5.0 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.3215935Z Using cached packaging-26.3-py3-none-any.whl (129 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.3225841Z Using cached pathspec-1.1.1-py3-none-any.whl (57 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.3355665Z Downloading pexpect-4.9.0-py2.py3-none-any.whl (63 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.3391510Z Using cached platformdirs-4.11.7-py3-none-any.whl (23 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.3523626Z Downloading propcache-0.5.2-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (60 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.3674480Z Downloading ptyprocess-0.7.0-py2.py3-none-any.whl (13 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.3828765Z Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.3898691Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 224.2 MB/s  0:00:00
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.4021893Z Downloading tokenize_rt-6.2.0-py2.py3-none-any.whl (6.0 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.4050840Z Using cached tomli-2.4.1-py3-none-any.whl (14 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.4180802Z Downloading traitlets-5.16.1-py3-none-any.whl (86 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.4212249Z Using cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.4341011Z Downloading wcwidth-0.8.3-py3-none-any.whl (331 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.4499687Z Downloading decorator-5.3.1-py3-none-any.whl (10 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.4659826Z Downloading exceptiongroup-1.3.1-py3-none-any.whl (16 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.4818952Z Downloading matplotlib_inline-0.2.2-py3-none-any.whl (9.5 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.4977990Z Downloading stack_data-0.6.3-py3-none-any.whl (24 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.5145338Z Downloading asttokens-3.0.2-py3-none-any.whl (28 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.5300059Z Downloading executing-2.2.1-py2.py3-none-any.whl (28 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.6278755Z Downloading pure_eval-0.2.3-py3-none-any.whl (11 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:25.7447554Z Installing collected packages: pure-eval, ptyprocess, wcwidth, typing-extensions, traitlets, tomli, tokenize-rt, pytokens, pygments, propcache, platformdirs, pexpect, pathspec, parso, packaging, mypy-extensions, idna, frozenlist, executing, decorator, click, attrs, async-timeout, asttokens, aiohappyeyeballs, stack_data, prompt_toolkit, multidict, matplotlib-inline, jedi, exceptiongroup, black, aiosignal, yarl, ipython, aiohttp
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:29.3560371Z 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:29.3594434Z Successfully installed aiohappyeyeballs-2.7.1 aiohttp-3.14.3 aiosignal-1.4.0 asttokens-3.0.2 async-timeout-5.0.1 attrs-26.1.0 black-0.1.dev1+g11c85a87c click-8.5.0 decorator-5.3.1 exceptiongroup-1.3.1 executing-2.2.1 frozenlist-1.8.0 idna-3.19 ipython-8.39.0 jedi-0.20.0 matplotlib-inline-0.2.2 multidict-6.7.1 mypy-extensions-1.1.0 packaging-26.3 parso-0.8.7 pathspec-1.1.1 pexpect-4.9.0 platformdirs-4.11.7 prompt_toolkit-3.0.53 propcache-0.5.2 ptyprocess-0.7.0 pure-eval-0.2.3 pygments-2.21.0 pytokens-0.4.1 stack_data-0.6.3 tokenize-rt-6.2.0 tomli-2.4.1 traitlets-5.16.1 typing-extensions-4.16.0 wcwidth-0.8.3 yarl-1.24.5
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:29.4490692Z     + pip install 'pytest>=7' 'pytest-xdist>=3.0.2'
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:29.7320325Z Collecting pytest>=7
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:29.7909477Z   Downloading pytest-9.1.1-py3-none-any.whl.metadata (7.6 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:29.9312526Z Collecting pytest-xdist>=3.0.2
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:29.9443750Z   Downloading pytest_xdist-3.8.0-py3-none-any.whl.metadata (3.0 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:29.9794729Z Requirement already satisfied: exceptiongroup>=1 in /tmp/tmp.jZaFeLhpS4/venv/lib/python3.10/site-packages (from pytest>=7) (1.3.1)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:29.9964553Z Collecting iniconfig>=1.0.1 (from pytest>=7)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:30.0095239Z   Downloading iniconfig-2.3.0-py3-none-any.whl.metadata (2.5 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:30.0554558Z Requirement already satisfied: packaging>=22 in /tmp/tmp.jZaFeLhpS4/venv/lib/python3.10/site-packages (from pytest>=7) (26.3)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:30.0723220Z Collecting pluggy<2,>=1.5 (from pytest>=7)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:30.0734342Z   Using cached pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:30.0747342Z Requirement already satisfied: pygments>=2.7.2 in /tmp/tmp.jZaFeLhpS4/venv/lib/python3.10/site-packages (from pytest>=7) (2.21.0)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:30.0752551Z Requirement already satisfied: tomli>=1 in /tmp/tmp.jZaFeLhpS4/venv/lib/python3.10/site-packages (from pytest>=7) (2.4.1)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:30.1086936Z Collecting execnet>=2.1 (from pytest-xdist>=3.0.2)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:30.1215531Z   Downloading execnet-2.1.2-py3-none-any.whl.metadata (2.9 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:30.1903139Z Requirement already satisfied: typing-extensions>=4.6.0 in /tmp/tmp.jZaFeLhpS4/venv/lib/python3.10/site-packages (from exceptiongroup>=1->pytest>=7) (4.16.0)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:30.2049393Z Downloading pytest-9.1.1-py3-none-any.whl (386 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:30.2558917Z Using cached pluggy-1.6.0-py3-none-any.whl (20 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:30.2687561Z Downloading pytest_xdist-3.8.0-py3-none-any.whl (46 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:30.3387451Z Downloading execnet-2.1.2-py3-none-any.whl (40 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:30.4021613Z Downloading iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:30.4368279Z Installing collected packages: pluggy, iniconfig, execnet, pytest, pytest-xdist
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:31.1397580Z 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:31.1429884Z Successfully installed execnet-2.1.2 iniconfig-2.3.0 pluggy-1.6.0 pytest-9.1.1 pytest-xdist-3.8.0
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:31.1936468Z     + mkdir -p /tmp/tmp.jZaFeLhpS4/test_cwd
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:31.1969736Z     + mkdir -p /tmp/tmp.jZaFeLhpS4/test_cwd
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:31.2366804Z     + sh -c 'pytest /project -k "not incompatible_with_mypyc" -n auto'
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:32.5717423Z ============================= test session starts ==============================
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:32.5718179Z platform linux -- Python 3.10.20, pytest-9.1.1, pluggy-1.6.0
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:32.5718987Z rootdir: /project
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:32.5719502Z configfile: pyproject.toml
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:32.5720158Z plugins: xdist-3.8.0
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:32.5720602Z created: 4/4 workers
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:32.5720945Z 4 workers [540 items]
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:32.5736618Z 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:32.9798596Z ............................F........................................... [ 13%]
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:33.6300256Z .........................................................s.............. [ 26%]
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:35.4320227Z ........................................................................ [ 40%]
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:38.9148014Z ........................................................................ [ 53%]
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:41.4228418Z ........................................................................ [ 66%]
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:42.6827820Z ........................................................................ [ 80%]
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:42.9142525Z ........................................ss.............................. [ 93%]
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4013767Z ....................................                                     [100%]
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4014863Z =================================== FAILURES ===================================
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4015409Z ____________________ BlackTestCase.test_is_filesystem_root _____________________
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4016283Z [gw1] linux -- Python 3.10.20 /tmp/tmp.jZaFeLhpS4/venv/bin/python
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4016613Z 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4016796Z self = <unittest.case._Outcome object at 0x7fdf8f8d8b20>
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4017527Z test_case = <tests.test_black.BlackTestCase testMethod=test_is_filesystem_root>
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4018013Z isTest = True
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4018161Z 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4018317Z     @contextlib.contextmanager
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4018747Z     def testPartExecutor(self, test_case, isTest=False):
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4019231Z         old_success = self.success
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4019576Z         self.success = True
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4019937Z         try:
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4020196Z >           yield
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4020353Z 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4020625Z /opt/python/cp310-cp310/lib/python3.10/unittest/case.py:59: 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4021127Z _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4021704Z /opt/python/cp310-cp310/lib/python3.10/unittest/case.py:591: in run
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4022204Z     self._callTestMethod(testMethod)
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4022594Z _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4022881Z 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4023129Z self = <tests.test_black.BlackTestCase testMethod=test_is_filesystem_root>
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4023915Z method = <bound method BlackTestCase.test_is_filesystem_root of <tests.test_black.BlackTestCase testMethod=test_is_filesystem_root>>
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4024432Z 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4024581Z     def _callTestMethod(self, method):
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4024976Z >       method()
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4025454Z E       TypeError: BlackTestCase.test_is_filesystem_root() missing 1 required positional argument: 'tmp_path'
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4026066Z 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4026321Z /opt/python/cp310-cp310/lib/python3.10/unittest/case.py:549: TypeError
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4026860Z =========================== short test summary info ============================
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4027506Z FAILED ../../../project/tests/test_black.py::BlackTestCase::test_is_filesystem_root
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:44.4028144Z ================== 1 failed, 536 passed, 3 skipped in 12.92s ===================
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.7762561Z ##[error]cibuildwheel: Command ['sh', '-c', 'pytest /project -k "not incompatible_with_mypyc" -n auto'] failed with code 1. 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.7772843Z ##[endgroup]
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.7773047Z 
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.7773654Z                                                              ^[[31m✕ ^[[0m31.39s
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.7937202Z ##[error]Process completed with exit code 1.
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.8057235Z Post job cleanup.
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.8702984Z [command]/usr/bin/git version
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.8730461Z git version 2.55.0
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.8754677Z Temporarily overriding HOME='/home/runner/work/_temp/a631479e-450d-4421-881f-b538b49d0527' before making global git config changes
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.8756129Z Adding repository directory to the temporary git global config as a safe directory
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.8759230Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/black/black
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.8781454Z Removing SSH command configuration
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.8787046Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.8811174Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.8963516Z Removing HTTP extra header
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.8967398Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.8990871Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+mypyc wheels cp310-manylinux_x86_64	UNKNOWN STEP	2026-09-03T20:22:45.9417184Z Cleaning up orphan processes

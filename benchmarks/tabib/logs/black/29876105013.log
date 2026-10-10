@@ -1,0 +1,71 @@
+comment	UNKNOWN STEP	﻿2026-07-21T23:07:42.0337774Z Current runner version: '2.336.0'
+comment	UNKNOWN STEP	2026-07-21T23:07:42.0375078Z ##[group]Runner Image Provisioner
+comment	UNKNOWN STEP	2026-07-21T23:07:42.0377009Z Hosted Compute Agent
+comment	UNKNOWN STEP	2026-07-21T23:07:42.0378088Z Version: 20260707.563
+comment	UNKNOWN STEP	2026-07-21T23:07:42.0391820Z ##[group]Runner Image
+comment	UNKNOWN STEP	2026-07-21T23:07:42.0392954Z Image: ubuntu-24.04
+comment	UNKNOWN STEP	2026-07-21T23:07:42.0394012Z Version: 20260714.240.1
+comment	UNKNOWN STEP	2026-07-21T23:07:43.0698095Z ##[group]Run actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+comment	UNKNOWN STEP	2026-07-21T23:07:43.0699213Z with:
+comment	UNKNOWN STEP	2026-07-21T23:07:43.0699690Z   persist-credentials: false
+comment	UNKNOWN STEP	2026-07-21T23:07:43.8104058Z ##[group]Run actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+comment	UNKNOWN STEP	2026-07-21T23:07:43.8106148Z with:
+comment	UNKNOWN STEP	2026-07-21T23:07:43.8107038Z   merge-multiple: true
+comment	UNKNOWN STEP	2026-07-21T23:07:43.8120247Z   run-id: 29876092995
+comment	UNKNOWN STEP	2026-07-21T23:07:43.8121254Z   repository: psf/black
+comment	UNKNOWN STEP	2026-07-21T23:07:43.8122324Z   skip-decompress: false
+comment	UNKNOWN STEP	2026-07-21T23:07:43.8123398Z   digest-mismatch: error
+comment	UNKNOWN STEP	2026-07-21T23:07:43.8124424Z ##[endgroup]
+comment	UNKNOWN STEP	2026-07-21T23:07:43.9606837Z Fetching artifact list for workflow run 29876092995 in repository psf/black
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1017316Z Found 0 artifact(s)
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1452493Z ##[group]Run set -euo pipefail
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1453735Z ^[[36;1mset -euo pipefail^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1454738Z ^[[36;1m^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1456210Z ^[[36;1martifact_dir="${RUNNER_TEMP}/diff-shades-artifacts"^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1457988Z ^[[36;1mpreview_artifact="${artifact_dir}/.preview.pr-comment.md"^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1459809Z ^[[36;1mstable_artifact="${artifact_dir}/.stable.pr-comment.md"^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1461238Z ^[[36;1m^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1462096Z ^[[36;1mif [ ! -d "$artifact_dir" ]; then^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1463688Z ^[[36;1m    echo "::error::Artifact directory does not exist: ${artifact_dir}"^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1465526Z ^[[36;1m    exit 1^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1466432Z ^[[36;1mfi^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1467237Z ^[[36;1m^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1468140Z ^[[36;1mwhile IFS= read -r -d '' entry; do^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1469572Z ^[[36;1m    if [ "$(dirname "$entry")" != "$artifact_dir" ]; then^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1471352Z ^[[36;1m        echo "::error::Unexpected nested artifact path: ${entry}"^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1472840Z ^[[36;1m        exit 1^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1473764Z ^[[36;1m    fi^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1474600Z ^[[36;1m^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1475715Z ^[[36;1m    case "$(basename "$entry")" in^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1477167Z ^[[36;1m        .preview.pr-comment.md|.stable.pr-comment.md) ;;^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1478553Z ^[[36;1m        *)^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1479739Z ^[[36;1m            echo "::error::Unexpected artifact path: ${entry}"^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1481164Z ^[[36;1m            exit 1^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1482163Z ^[[36;1m            ;;^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1483087Z ^[[36;1m    esac^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1483937Z ^[[36;1m^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1484895Z ^[[36;1m    if [ ! -f "$entry" ] || [ -L "$entry" ]; then^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1486771Z ^[[36;1m        echo "::error::Artifact must be a regular file: ${entry}"^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1488230Z ^[[36;1m        exit 1^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1489364Z ^[[36;1m    fi^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1490467Z ^[[36;1mdone < <(find "$artifact_dir" -mindepth 1 -print0)^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1491792Z ^[[36;1m^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1492938Z ^[[36;1mfor artifact in "$preview_artifact" "$stable_artifact"; do^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1494617Z ^[[36;1m    if [ ! -f "$artifact" ] || [ -L "$artifact" ]; then^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1496664Z ^[[36;1m        echo "::error::Missing expected artifact file: ${artifact}"^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1498178Z ^[[36;1m        exit 1^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1499102Z ^[[36;1m    fi^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1499935Z ^[[36;1mdone^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1500758Z ^[[36;1m^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1501533Z ^[[36;1m{^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1502458Z ^[[36;1m    echo "preview=${preview_artifact}"^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1503777Z ^[[36;1m    echo "stable=${stable_artifact}"^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1504991Z ^[[36;1m} >> "$GITHUB_OUTPUT"^[[0m
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1589528Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1590965Z ##[endgroup]
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1719052Z ##[error]Artifact directory does not exist: /home/runner/work/_temp/diff-shades-artifacts
+comment	UNKNOWN STEP	2026-07-21T23:07:44.1733767Z ##[error]Process completed with exit code 1.
+comment	UNKNOWN STEP	2026-07-21T23:07:44.2047712Z Post job cleanup.
+comment	UNKNOWN STEP	2026-07-21T23:07:44.2872371Z [command]/usr/bin/git version
+comment	UNKNOWN STEP	2026-07-21T23:07:44.2915107Z git version 2.54.0
+comment	UNKNOWN STEP	2026-07-21T23:07:44.3926427Z Cleaning up orphan processes

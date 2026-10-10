@@ -1,0 +1,360 @@
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.0085200Z ##[endgroup]
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.1465240Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.1481253Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.1481958Z with:
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.1482206Z   python-version: 3.15
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.1486463Z   freethreaded: false
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-03T17:45:38.3381777Z C:\hostedtoolcache\windows\Python\3.15.0-beta.4\arm64\python.exe: No module named black
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-03T17:45:38.4587957Z ##[error]Process completed with exit code 1.
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-03T17:45:38.4890907Z Post job cleanup.
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-03T17:45:38.7873003Z [command]"C:\Program Files\Git\bin\git.exe" version
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-03T17:45:38.8363623Z git version 2.55.0.windows.3
+uvloop (windows-11-arm)	UNKNOWN STEP	2026-08-03T17:45:43.0111655Z Cleaning up orphan processes
+test (pypy3.11-v7.3.22, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.7217250Z ##[endgroup]
+test (pypy3.11-v7.3.22, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.7453500Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (pypy3.11-v7.3.22, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.7465710Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (pypy3.11-v7.3.22, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.7466070Z with:
+test (pypy3.11-v7.3.22, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.7466250Z   python-version: pypy3.11-v7.3.22
+test (pypy3.11-v7.3.22, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.7469710Z   freethreaded: false
+test (pypy3.11-v7.3.22, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:17.7149740Z /Users/runner/work/_temp/61511076-9618-4cfd-823f-b8e310065d59.sh: line 1: tox: command not found
+test (pypy3.11-v7.3.22, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:17.7156900Z ##[error]Process completed with exit code 127.
+test (pypy3.11-v7.3.22, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:17.7274760Z Post job cleanup.
+test (pypy3.11-v7.3.22, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:17.8346010Z [command]/opt/homebrew/bin/git version
+test (pypy3.11-v7.3.22, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:17.8511150Z git version 2.55.0
+test (pypy3.11-v7.3.22, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:18.2268710Z Cleaning up orphan processes
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-03T17:44:05.6931026Z ##[endgroup]
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-03T17:44:05.7315098Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-03T17:44:05.7328062Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-03T17:44:05.7328472Z with:
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-03T17:44:05.7328737Z   python-version: 3.15
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-03T17:44:05.7332654Z   freethreaded: false
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-03T17:44:57.7692204Z C:\hostedtoolcache\windows\Python\3.15.0-beta.4\x64\python.exe: No module named black
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-03T17:44:57.8612759Z ##[error]Process completed with exit code 1.
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-03T17:44:57.8845710Z Post job cleanup.
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-03T17:44:58.0503879Z [command]"C:\Program Files\Git\bin\git.exe" version
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-03T17:44:58.0755496Z git version 2.55.0.windows.3
+uvloop (windows-latest)	UNKNOWN STEP	2026-08-03T17:44:59.5465287Z Cleaning up orphan processes
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.2477682Z ##[endgroup]
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.2974351Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.2990754Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.2991177Z with:
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.2991416Z   python-version: 3.15
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.2995510Z   freethreaded: false
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:45:34.0900974Z ^[[31;1m^[[0m^[[36;1m^[[36;1m^[[0m^[[36;1m^[[0m^[[36;1m^[[31;1m^[[31;1m^[[36;1m^[[31;1m^[[36;1m     | ^[[31;1mspelling of the name, or if a path was included, verify that the path is correct and try again.^[[0m
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:45:34.1414815Z ##[error]Process completed with exit code 1.
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:45:34.1730668Z Post job cleanup.
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:45:34.4723773Z [command]"C:\Program Files\Git\bin\git.exe" version
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:45:34.5229575Z git version 2.55.0.windows.3
+test (3.15, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:45:38.3548450Z Cleaning up orphan processes
+test (3.12.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:02.2364050Z ##[endgroup]
+test (3.12.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:02.2637240Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.12.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:02.2653810Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.12.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:02.2654820Z with:
+test (3.12.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:02.2655380Z   python-version: 3.12.10
+test (3.12.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:04.8479950Z ##[group]Run tox -e ci-py$(echo 3.12.10 | tr -d '.') -- -v --color=yes
+test (3.12.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:04.9231130Z /Users/runner/work/_temp/67e1ee15-892e-481e-9830-5b714aaed2f2.sh: line 1: tox: command not found
+test (3.12.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:04.9240180Z ##[error]Process completed with exit code 127.
+test (3.12.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:04.9375200Z Post job cleanup.
+test (3.12.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:05.0250870Z [command]/opt/homebrew/bin/git version
+test (3.12.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:05.0317680Z git version 2.55.0
+test (3.12.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:05.3509380Z Cleaning up orphan processes
+test (3.12.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:05.6936970Z ##[endgroup]
+test (3.12.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:05.7417727Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.12.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:05.7429395Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.12.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:05.7429755Z with:
+test (3.12.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:05.7429940Z   python-version: 3.12.10
+test (3.12.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:13.4473327Z ##[group]Run tox -e ci-py$(echo 3.12.10 | tr -d '.') -- -v --color=yes
+test (3.12.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:14.2959653Z ^[[31;1m^[[0m^[[36;1m^[[36;1m^[[0m^[[36;1m^[[0m^[[36;1m^[[31;1m^[[31;1m^[[36;1m^[[31;1m^[[36;1m     | ^[[31;1mspelling of the name, or if a path was included, verify that the path is correct and try again.^[[0m
+test (3.12.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:14.3553868Z ##[error]Process completed with exit code 1.
+test (3.12.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:14.3795351Z Post job cleanup.
+test (3.12.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:14.5667201Z [command]"C:\Program Files\Git\bin\git.exe" version
+test (3.12.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:14.5974433Z git version 2.55.0.windows.3
+test (3.12.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:16.2850243Z Cleaning up orphan processes
+test (3.11, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:15.1852799Z ##[endgroup]
+test (3.11, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:15.2407618Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.11, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:15.2425913Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.11, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:15.2426369Z with:
+test (3.11, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:15.2426621Z   python-version: 3.11
+test (3.11, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:15.2430966Z   freethreaded: false
+test (3.11, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:46:04.8146694Z ^[[31;1m^[[0m^[[36;1m^[[36;1m^[[0m^[[36;1m^[[0m^[[36;1m^[[31;1m^[[31;1m^[[36;1m^[[31;1m^[[36;1m     | ^[[31;1mspelling of the name, or if a path was included, verify that the path is correct and try again.^[[0m
+test (3.11, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:46:04.8693375Z ##[error]Process completed with exit code 1.
+test (3.11, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:46:04.9060627Z Post job cleanup.
+test (3.11, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:46:05.2232792Z [command]"C:\Program Files\Git\bin\git.exe" version
+test (3.11, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:46:05.2743617Z git version 2.55.0.windows.3
+test (3.11, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:46:09.5430990Z Cleaning up orphan processes
+test (3.15, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:17.1185321Z ##[endgroup]
+test (3.15, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:17.1414096Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.15, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:17.1427644Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.15, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:17.1428043Z with:
+test (3.15, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:17.1428234Z   python-version: 3.15
+test (3.15, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:17.1431856Z   freethreaded: false
+test (3.15, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:27.8614342Z /home/runner/work/_temp/4fcbc3fa-7aec-4bd2-8b60-77440f9d2ae6.sh: line 1: tox: command not found
+test (3.15, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:27.8624455Z ##[error]Process completed with exit code 127.
+test (3.15, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:27.8780840Z Post job cleanup.
+test (3.15, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:27.9818492Z [command]/usr/bin/git version
+test (3.15, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:27.9878094Z git version 2.54.0
+test (3.15, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:28.0995249Z Cleaning up orphan processes
+test (3.13, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:09.4265380Z ##[endgroup]
+test (3.13, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:09.4665271Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.13, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:09.4677441Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.13, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:09.4677807Z with:
+test (3.13, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:09.4677995Z   python-version: 3.13
+test (3.13, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:26.1420539Z ##[group]Run tox -e ci-py$(echo 3.13 | tr -d '.') -- -v --color=yes
+test (3.13, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:27.2449101Z ^[[31;1m^[[0m^[[36;1m^[[36;1m^[[0m^[[36;1m^[[0m^[[36;1m^[[31;1m^[[31;1m^[[36;1m^[[31;1m^[[36;1m     | ^[[31;1mspelling of the name, or if a path was included, verify that the path is correct and try again.^[[0m
+test (3.13, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:27.3047729Z ##[error]Process completed with exit code 1.
+test (3.13, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:27.3299992Z Post job cleanup.
+test (3.13, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:27.5114681Z [command]"C:\Program Files\Git\bin\git.exe" version
+test (3.13, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:27.5380373Z git version 2.55.0.windows.3
+test (3.13, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:29.2031949Z Cleaning up orphan processes
+test (3.14, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:05.5829934Z ##[endgroup]
+test (3.14, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:05.6235593Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.14, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:05.6247533Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.14, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:05.6247894Z with:
+test (3.14, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:05.6248067Z   python-version: 3.14
+test (3.14, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:25.1429842Z ##[group]Run tox -e ci-py$(echo 3.14 | tr -d '.') -- -v --color=yes
+test (3.14, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:26.2401638Z ^[[31;1m^[[0m^[[36;1m^[[36;1m^[[0m^[[36;1m^[[0m^[[36;1m^[[31;1m^[[31;1m^[[36;1m^[[31;1m^[[36;1m     | ^[[31;1mspelling of the name, or if a path was included, verify that the path is correct and try again.^[[0m
+test (3.14, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:26.2991041Z ##[error]Process completed with exit code 1.
+test (3.14, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:26.3240996Z Post job cleanup.
+test (3.14, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:26.5245983Z [command]"C:\Program Files\Git\bin\git.exe" version
+test (3.14, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:26.5540745Z git version 2.55.0.windows.3
+test (3.14, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:28.3069210Z Cleaning up orphan processes
+test (3.11, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:18.1242670Z ##[endgroup]
+test (3.11, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:18.1498701Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.11, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:18.1510818Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.11, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:18.1511222Z with:
+test (3.11, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:18.1511428Z   python-version: 3.11
+test (3.11, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:22.9136200Z ##[group]Run tox -e ci-py$(echo 3.11 | tr -d '.') -- -v --color=yes
+test (3.11, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:22.9300187Z /home/runner/work/_temp/7b1292f4-45fa-45b6-881b-9c7c65e843e4.sh: line 1: tox: command not found
+test (3.11, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:22.9308591Z ##[error]Process completed with exit code 127.
+test (3.11, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:22.9423732Z Post job cleanup.
+test (3.11, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:23.0272622Z [command]/usr/bin/git version
+test (3.11, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:23.0314229Z git version 2.54.0
+test (3.11, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:23.1431225Z Cleaning up orphan processes
+test (3.14, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:07.0693940Z ##[endgroup]
+test (3.14, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:07.1230710Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.14, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:07.1243260Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.14, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:07.1243720Z with:
+test (3.14, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:07.1243950Z   python-version: 3.14
+test (3.14, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:11.2873670Z ##[group]Run tox -e ci-py$(echo 3.14 | tr -d '.') -- -v --color=yes
+test (3.14, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:11.3687970Z /Users/runner/work/_temp/61797fd5-3076-478d-b856-5e2efeef3be8.sh: line 1: tox: command not found
+test (3.14, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:11.3706480Z ##[error]Process completed with exit code 127.
+test (3.14, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:11.3991450Z Post job cleanup.
+test (3.14, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:11.5623820Z [command]/opt/homebrew/bin/git version
+test (3.14, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:11.5741840Z git version 2.55.0
+test (3.14, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:12.0535380Z Cleaning up orphan processes
+test (3.13, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.8447450Z ##[endgroup]
+test (3.13, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.8794330Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.13, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.8815780Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.13, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.8816790Z with:
+test (3.13, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.8817280Z   python-version: 3.13
+test (3.13, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:07.3976810Z ##[group]Run tox -e ci-py$(echo 3.13 | tr -d '.') -- -v --color=yes
+test (3.13, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:07.4674490Z /Users/runner/work/_temp/b5cc3c6d-ca07-4990-b4b6-b728d72625f1.sh: line 1: tox: command not found
+test (3.13, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:07.4780930Z ##[error]Process completed with exit code 127.
+test (3.13, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:07.4942730Z Post job cleanup.
+test (3.13, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:07.6498960Z [command]/opt/homebrew/bin/git version
+test (3.13, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:07.6598660Z git version 2.55.0
+test (3.13, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:08.1693800Z Cleaning up orphan processes
+test (3.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:08.1852632Z ##[endgroup]
+test (3.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:08.2287206Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:08.2299976Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:08.2300352Z with:
+test (3.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:08.2300539Z   python-version: 3.10
+test (3.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:15.3793913Z ##[group]Run tox -e ci-py$(echo 3.10 | tr -d '.') -- -v --color=yes
+test (3.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:16.4068233Z ^[[31;1m^[[0m^[[36;1m^[[36;1m^[[0m^[[36;1m^[[0m^[[36;1m^[[31;1m^[[31;1m^[[36;1m^[[31;1m^[[36;1m     | ^[[31;1mspelling of the name, or if a path was included, verify that the path is correct and try again.^[[0m
+test (3.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:16.4676368Z ##[error]Process completed with exit code 1.
+test (3.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:16.4953872Z Post job cleanup.
+test (3.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:16.7177583Z [command]"C:\Program Files\Git\bin\git.exe" version
+test (3.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:16.7491716Z git version 2.55.0.windows.3
+test (3.10, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:18.6243466Z Cleaning up orphan processes
+test (pypy3.11-v7.3.22, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:07.7330004Z ##[endgroup]
+test (pypy3.11-v7.3.22, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:07.7756458Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (pypy3.11-v7.3.22, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:07.7770136Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (pypy3.11-v7.3.22, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:07.7770501Z with:
+test (pypy3.11-v7.3.22, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:07.7770695Z   python-version: pypy3.11-v7.3.22
+test (pypy3.11-v7.3.22, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:07.7774760Z   freethreaded: false
+test (pypy3.11-v7.3.22, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:38.1024715Z ^[[31;1m^[[0m^[[36;1m^[[36;1m^[[0m^[[36;1m^[[0m^[[36;1m^[[31;1m^[[31;1m^[[36;1m^[[31;1m^[[36;1m     | ^[[31;1mspelling of the name, or if a path was included, verify that the path is correct and try again.^[[0m
+test (pypy3.11-v7.3.22, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:38.1536562Z ##[error]Process completed with exit code 1.
+test (pypy3.11-v7.3.22, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:38.1790584Z Post job cleanup.
+test (pypy3.11-v7.3.22, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:38.3810204Z [command]"C:\Program Files\Git\bin\git.exe" version
+test (pypy3.11-v7.3.22, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:38.4073089Z git version 2.55.0.windows.3
+test (pypy3.11-v7.3.22, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:40.1438762Z Cleaning up orphan processes
+test (3.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.0975120Z ##[endgroup]
+test (3.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.1332290Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.1360930Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.1362110Z with:
+test (3.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.1362780Z   python-version: 3.10
+test (3.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:03.1377280Z   freethreaded: false
+test (3.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:26.4114750Z /Users/runner/work/_temp/6070ea2d-8364-4be1-9953-45b15d8c7d15.sh: line 1: tox: command not found
+test (3.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:26.4128680Z ##[error]Process completed with exit code 127.
+test (3.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:26.4296290Z Post job cleanup.
+test (3.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:26.7491120Z [command]/opt/homebrew/bin/git version
+test (3.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:26.7544380Z git version 2.55.0
+test (3.10, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:27.5242760Z Cleaning up orphan processes
+test (3.13, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.8529834Z ##[endgroup]
+test (3.13, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.9066524Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.13, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.9084486Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.13, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.9084901Z with:
+test (3.13, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:13.9085166Z   python-version: 3.13
+test (3.13, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:22.4354081Z ##[group]Run tox -e ci-py$(echo 3.13 | tr -d '.') -- -v --color=yes
+test (3.13, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:23.4995666Z ^[[31;1m^[[0m^[[36;1m^[[36;1m^[[0m^[[36;1m^[[0m^[[36;1m^[[31;1m^[[31;1m^[[36;1m^[[31;1m^[[36;1m     | ^[[31;1mspelling of the name, or if a path was included, verify that the path is correct and try again.^[[0m
+test (3.13, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:23.5716826Z ##[error]Process completed with exit code 1.
+test (3.13, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:23.6041402Z Post job cleanup.
+test (3.13, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:23.9197610Z [command]"C:\Program Files\Git\bin\git.exe" version
+test (3.13, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:23.9679529Z git version 2.55.0.windows.3
+test (3.13, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:28.1163720Z Cleaning up orphan processes
+test (pypy3.11-v7.3.22, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:16.3384384Z ##[endgroup]
+test (pypy3.11-v7.3.22, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:16.3632150Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (pypy3.11-v7.3.22, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:16.3645603Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (pypy3.11-v7.3.22, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:16.3645988Z with:
+test (pypy3.11-v7.3.22, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:16.3646196Z   python-version: pypy3.11-v7.3.22
+test (pypy3.11-v7.3.22, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:16.3650188Z   freethreaded: false
+test (pypy3.11-v7.3.22, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:32.6616351Z /home/runner/work/_temp/76c5629a-9127-4d81-873f-47961c2c27cb.sh: line 1: tox: command not found
+test (pypy3.11-v7.3.22, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:32.6624963Z ##[error]Process completed with exit code 127.
+test (pypy3.11-v7.3.22, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:32.6726862Z Post job cleanup.
+test (pypy3.11-v7.3.22, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:32.7569847Z [command]/usr/bin/git version
+test (pypy3.11-v7.3.22, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:32.7607704Z git version 2.54.0
+test (pypy3.11-v7.3.22, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:32.8629648Z Cleaning up orphan processes
+test (3.12.10, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:12.7215711Z ##[endgroup]
+test (3.12.10, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:12.7727545Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.12.10, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:12.7744177Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.12.10, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:12.7744610Z with:
+test (3.12.10, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:12.7744837Z   python-version: 3.12.10
+test (3.12.10, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:20.8935712Z ##[group]Run tox -e ci-py$(echo 3.12.10 | tr -d '.') -- -v --color=yes
+test (3.12.10, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:21.8887358Z ^[[31;1m^[[0m^[[36;1m^[[36;1m^[[0m^[[36;1m^[[0m^[[36;1m^[[31;1m^[[31;1m^[[36;1m^[[31;1m^[[36;1m     | ^[[31;1mspelling of the name, or if a path was included, verify that the path is correct and try again.^[[0m
+test (3.12.10, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:21.9565250Z ##[error]Process completed with exit code 1.
+test (3.12.10, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:21.9871839Z Post job cleanup.
+test (3.12.10, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:22.2771122Z [command]"C:\Program Files\Git\bin\git.exe" version
+test (3.12.10, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:22.3236343Z git version 2.55.0.windows.3
+test (3.12.10, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:26.0989640Z Cleaning up orphan processes
+test (3.11, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:07.1691928Z ##[endgroup]
+test (3.11, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:07.2026234Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.11, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:07.2037713Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.11, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:07.2038113Z with:
+test (3.11, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:07.2038350Z   python-version: 3.11
+test (3.11, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:19.1168572Z ##[group]Run tox -e ci-py$(echo 3.11 | tr -d '.') -- -v --color=yes
+test (3.11, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:20.1790720Z ^[[31;1m^[[0m^[[36;1m^[[36;1m^[[0m^[[36;1m^[[0m^[[36;1m^[[31;1m^[[31;1m^[[36;1m^[[31;1m^[[36;1m     | ^[[31;1mspelling of the name, or if a path was included, verify that the path is correct and try again.^[[0m
+test (3.11, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:20.2231909Z ##[error]Process completed with exit code 1.
+test (3.11, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:20.2431388Z Post job cleanup.
+test (3.11, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:20.3910608Z [command]"C:\Program Files\Git\bin\git.exe" version
+test (3.11, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:20.4158023Z git version 2.55.0.windows.3
+test (3.11, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:21.9019462Z Cleaning up orphan processes
+test (3.15, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:08.7235949Z ##[endgroup]
+test (3.15, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:08.7642011Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.15, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:08.7656412Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.15, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:08.7656760Z with:
+test (3.15, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:08.7656924Z   python-version: 3.15
+test (3.15, windows-latest)	UNKNOWN STEP	2026-08-03T17:44:08.7660762Z   freethreaded: false
+test (3.15, windows-latest)	UNKNOWN STEP	2026-08-03T17:45:00.5085246Z ^[[31;1m^[[0m^[[36;1m^[[36;1m^[[0m^[[36;1m^[[0m^[[36;1m^[[31;1m^[[31;1m^[[36;1m^[[31;1m^[[36;1m     | ^[[31;1mspelling of the name, or if a path was included, verify that the path is correct and try again.^[[0m
+test (3.15, windows-latest)	UNKNOWN STEP	2026-08-03T17:45:00.5626740Z ##[error]Process completed with exit code 1.
+test (3.15, windows-latest)	UNKNOWN STEP	2026-08-03T17:45:00.5859599Z Post job cleanup.
+test (3.15, windows-latest)	UNKNOWN STEP	2026-08-03T17:45:00.7874349Z [command]"C:\Program Files\Git\bin\git.exe" version
+test (3.15, windows-latest)	UNKNOWN STEP	2026-08-03T17:45:00.8180721Z git version 2.55.0.windows.3
+test (3.15, windows-latest)	UNKNOWN STEP	2026-08-03T17:45:02.5881379Z Cleaning up orphan processes
+test (3.15, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:06.4767990Z ##[endgroup]
+test (3.15, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:06.5539530Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.15, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:06.5564280Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.15, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:06.5565300Z with:
+test (3.15, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:06.5566090Z   python-version: 3.15
+test (3.15, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:06.5576310Z   freethreaded: false
+test (3.15, macOS-latest)	UNKNOWN STEP	2026-08-03T17:45:04.6631560Z /Users/runner/work/_temp/b2e0be3c-50eb-46a5-bbfe-8036a3c52e35.sh: line 1: tox: command not found
+test (3.15, macOS-latest)	UNKNOWN STEP	2026-08-03T17:45:04.6649590Z ##[error]Process completed with exit code 127.
+test (3.15, macOS-latest)	UNKNOWN STEP	2026-08-03T17:45:04.6930960Z Post job cleanup.
+test (3.15, macOS-latest)	UNKNOWN STEP	2026-08-03T17:45:04.9803950Z [command]/opt/homebrew/bin/git version
+test (3.15, macOS-latest)	UNKNOWN STEP	2026-08-03T17:45:05.0195170Z git version 2.55.0
+test (3.15, macOS-latest)	UNKNOWN STEP	2026-08-03T17:45:05.7117980Z Cleaning up orphan processes
+test (3.12.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:18.4596172Z ##[endgroup]
+test (3.12.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:18.4826852Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.12.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:18.4839139Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.12.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:18.4839516Z with:
+test (3.12.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:18.4839715Z   python-version: 3.12.10
+test (3.12.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:18.4843788Z   freethreaded: false
+test (3.12.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:29.8905106Z /home/runner/work/_temp/a2558e42-aa07-4eeb-ad5c-f5d69f4fab40.sh: line 1: tox: command not found
+test (3.12.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:29.8913947Z ##[error]Process completed with exit code 127.
+test (3.12.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:29.9015868Z Post job cleanup.
+test (3.12.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:29.9825369Z [command]/usr/bin/git version
+test (3.12.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:29.9868887Z git version 2.54.0
+test (3.12.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:30.0884290Z Cleaning up orphan processes
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:14.5000560Z ##[endgroup]
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:14.5305364Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:14.5326437Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:14.5327483Z with:
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:14.5328149Z   python-version: 3.15
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:14.5338979Z   freethreaded: false
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:28.7788255Z /opt/hostedtoolcache/Python/3.15.0-beta.4/x64/bin/python: No module named black
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:28.7823203Z ##[error]Process completed with exit code 1.
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:28.7943325Z Post job cleanup.
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:28.8797306Z [command]/usr/bin/git version
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:28.8843488Z git version 2.54.0
+uvloop (ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:28.9869121Z Cleaning up orphan processes
+test (3.11, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:08.2780320Z ##[endgroup]
+test (3.11, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:08.3227110Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.11, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:08.3239940Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.11, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:08.3240400Z with:
+test (3.11, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:08.3240630Z   python-version: 3.11
+test (3.11, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:12.2726950Z ##[group]Run tox -e ci-py$(echo 3.11 | tr -d '.') -- -v --color=yes
+test (3.11, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:12.3732240Z /Users/runner/work/_temp/f5c4c7c5-e61b-4b05-a3d2-73866ddca901.sh: line 1: tox: command not found
+test (3.11, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:12.3752400Z ##[error]Process completed with exit code 127.
+test (3.11, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:12.4033230Z Post job cleanup.
+test (3.11, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:12.6055350Z [command]/opt/homebrew/bin/git version
+test (3.11, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:12.6157030Z git version 2.55.0
+test (3.11, macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:13.2025810Z Cleaning up orphan processes
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:02.2787040Z ##[endgroup]
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:02.3114720Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:02.3142550Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:02.3143410Z with:
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:02.3143900Z   python-version: 3.15
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:02.3152680Z   freethreaded: false
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:49.2546200Z /Library/Frameworks/Python.framework/Versions/3.15/bin/python: No module named black
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:49.2667230Z ##[error]Process completed with exit code 1.
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:49.2909250Z Post job cleanup.
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:49.4920480Z [command]/opt/homebrew/bin/git version
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:49.5228130Z git version 2.55.0
+uvloop (macOS-latest)	UNKNOWN STEP	2026-08-03T17:44:50.1021510Z Cleaning up orphan processes
+test (3.14, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:12.7248755Z ##[endgroup]
+test (3.14, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:12.7495509Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.14, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:12.7509307Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.14, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:12.7509708Z with:
+test (3.14, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:12.7509902Z   python-version: 3.14
+test (3.14, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:17.1169533Z ##[group]Run tox -e ci-py$(echo 3.14 | tr -d '.') -- -v --color=yes
+test (3.14, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:17.1328575Z /home/runner/work/_temp/e1da2b64-80af-4f0e-8ea5-e00e4c3fb2ae.sh: line 1: tox: command not found
+test (3.14, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:17.1335679Z ##[error]Process completed with exit code 127.
+test (3.14, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:17.1451210Z Post job cleanup.
+test (3.14, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:17.2255608Z [command]/usr/bin/git version
+test (3.14, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:17.2293819Z git version 2.54.0
+test (3.14, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:17.3331862Z Cleaning up orphan processes
+test (3.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:21.4390485Z ##[endgroup]
+test (3.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:21.4617439Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:21.4629590Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:21.4629957Z with:
+test (3.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:21.4630147Z   python-version: 3.10
+test (3.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:25.8354134Z ##[group]Run tox -e ci-py$(echo 3.10 | tr -d '.') -- -v --color=yes
+test (3.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:25.8514937Z /home/runner/work/_temp/7464ca15-921c-4c06-8c84-3a5305ef7963.sh: line 1: tox: command not found
+test (3.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:25.8523015Z ##[error]Process completed with exit code 127.
+test (3.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:25.8626249Z Post job cleanup.
+test (3.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:25.9416975Z [command]/usr/bin/git version
+test (3.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:25.9460837Z git version 2.54.0
+test (3.10, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:26.0436198Z Cleaning up orphan processes
+test (3.13, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:16.0503356Z ##[endgroup]
+test (3.13, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:16.0729736Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.13, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:16.0742033Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.13, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:16.0742406Z with:
+test (3.13, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:16.0742602Z   python-version: 3.13
+test (3.13, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:19.5879014Z ##[group]Run tox -e ci-py$(echo 3.13 | tr -d '.') -- -v --color=yes
+test (3.13, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:19.6037170Z /home/runner/work/_temp/e007af5b-e208-4caf-822a-ff43415352f3.sh: line 1: tox: command not found
+test (3.13, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:19.6045125Z ##[error]Process completed with exit code 127.
+test (3.13, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:19.6148747Z Post job cleanup.
+test (3.13, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:19.7015437Z [command]/usr/bin/git version
+test (3.13, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:19.7059106Z git version 2.54.0
+test (3.13, ubuntu-latest)	UNKNOWN STEP	2026-08-03T17:44:19.8033551Z Cleaning up orphan processes
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:14.7200200Z ##[endgroup]
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:14.7756809Z ##[warning]Unexpected input(s) 'pip-install', valid inputs are ['python-version', 'python-version-file', 'cache', 'architecture', 'check-latest', 'token', 'cache-dependency-path', 'update-environment', 'allow-prereleases', 'freethreaded', 'pip-version']
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:14.7775619Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:14.7776036Z with:
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:14.7776261Z   python-version: 3.14
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:24.5432444Z ##[group]Run tox -e ci-py$(echo 3.14 | tr -d '.') -- -v --color=yes
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:26.5381541Z ^[[31;1m^[[0m^[[36;1m^[[36;1m^[[0m^[[36;1m^[[0m^[[36;1m^[[31;1m^[[31;1m^[[36;1m^[[31;1m^[[36;1m     | ^[[31;1mspelling of the name, or if a path was included, verify that the path is correct and try again.^[[0m
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:26.6119027Z ##[error]Process completed with exit code 1.
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:26.6445277Z Post job cleanup.
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:26.9655298Z [command]"C:\Program Files\Git\bin\git.exe" version
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:27.0158726Z git version 2.55.0.windows.3
+test (3.14, windows-11-arm)	UNKNOWN STEP	2026-08-03T17:44:31.2570184Z Cleaning up orphan processes

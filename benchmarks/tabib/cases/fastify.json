@@ -1,0 +1,1927 @@
+{
+ "project": "fastify/fastify",
+ "license": "MIT",
+ "set": "trial",
+ "collected": "2026-10-09, from the last 1000 failed runs (July to October 2026)",
+ "source": "https://github.com/fastify/fastify",
+ "runs": [
+  {
+   "id": 37053342355,
+   "workflow": "ci",
+   "event": "pull_request",
+   "branch": "bret/request-signal-response-close",
+   "sha": "6400fb3d2ccbab0e2b5c85f62394544fd049bf6a",
+   "created": "2026-10-02T19:19:17Z",
+   "jobs": [
+    {
+     "name": "quality-check / Lint Code",
+     "conclusion": "success"
+    },
+    {
+     "name": "quality-check / Check Licenses",
+     "conclusion": "success"
+    },
+    {
+     "name": "quality-check / Dependency Review",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit-custom",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "coverage-nix / check-coverage",
+     "conclusion": "failure"
+    },
+    {
+     "name": "coverage-win / check-coverage",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Test pino compatibility",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "test-types",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "test-unit",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "package",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "automerge",
+     "conclusion": "skipped"
+    }
+   ],
+   "github": {
+    "from_fork": true
+   },
+   "log": "logs/fastify/37053342355.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "lib/request.js",
+      "line": 234
+     }
+    ]
+   },
+   "label": "coverage-nix and coverage-win: 'ERROR: Coverage for branches (99.96%) does not meet global threshold (100%)' (c8 via borp), lib/request.js:234 not covered by the PR's tests"
+  },
+  {
+   "id": 33784186713,
+   "workflow": "ci",
+   "event": "push",
+   "branch": "5.x",
+   "sha": "179619c8e99d54924309b9933402151ef9af37e0",
+   "created": "2026-09-03T17:22:39Z",
+   "jobs": [
+    {
+     "name": "quality-check / Lint Code",
+     "conclusion": "success"
+    },
+    {
+     "name": "quality-check / Check Licenses",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit-custom",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "quality-check / Dependency Review",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "coverage-win / check-coverage",
+     "conclusion": "failure"
+    },
+    {
+     "name": "coverage-nix / check-coverage",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test-types",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "Test pino compatibility",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "test-unit",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "package",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "automerge",
+     "conclusion": "skipped"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/33784186713.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "lib/validation.js"
+     }
+    ],
+    "cause": {
+     "fix": "3cbe65c7",
+     "points": [
+      "lib/validation.js"
+     ]
+    }
+   },
+   "label": "push to 5.x after 'fix(validation): normalize header names': c8 thresholds fail, lib/validation.js lines 122-173 not covered; fixed by 3cbe65c7 'test(validation): cover normalization and async branches'",
+   "uncertain": "the log truncates the uncovered lines ('...22-132,134-144,171-173'), so no line is labelled"
+  },
+  {
+   "id": 31715959264,
+   "workflow": "ci",
+   "event": "push",
+   "branch": "main",
+   "sha": "15c2fb1933461f846a6160923a2bc4e091039826",
+   "created": "2026-08-13T15:32:31Z",
+   "jobs": [
+    {
+     "name": "quality-check / Lint Code",
+     "conclusion": "success"
+    },
+    {
+     "name": "quality-check / Check Licenses",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit-custom",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "quality-check / Dependency Review",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "coverage-win / check-coverage",
+     "conclusion": "failure"
+    },
+    {
+     "name": "coverage-nix / check-coverage",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test-unit",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "Test pino compatibility",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "test-types",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "package",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "automerge",
+     "conclusion": "skipped"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/31715959264.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "test/internals/reply.test.js",
+      "line": 52
+     }
+    ]
+   },
+   "label": "push to main after #6942: borp 'failed: test/internals/reply.test.js', AssertionError at reply.test.js:52 on Linux and Windows"
+  },
+  {
+   "id": 31120530864,
+   "workflow": "ci",
+   "event": "pull_request",
+   "branch": "fix/child-logger-factory-type-assignability",
+   "sha": "429bc7f7e0cc4dc4ca1a7638f529e9f301e3ca85",
+   "created": "2026-08-06T16:38:20Z",
+   "jobs": [
+    {
+     "name": "quality-check / Check Licenses",
+     "conclusion": "failure"
+    },
+    {
+     "name": "quality-check / Lint Code",
+     "conclusion": "success"
+    },
+    {
+     "name": "quality-check / Dependency Review",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit-custom",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "coverage-nix",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "coverage-win",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "Test pino compatibility",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "test-unit",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "test-types",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "automerge",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "package",
+     "conclusion": "skipped"
+    }
+   ],
+   "github": {
+    "from_fork": true
+   },
+   "log": "logs/fastify/31120530864.log",
+   "expected": {
+    "kind": [
+     "infra"
+    ],
+    "failures": []
+   },
+   "label": "'Failed to resolve action download info. Error: Service Unavailable' (GitHub Actions outage, 6 Aug 16:00-16:25 UTC; 8 runs of the set fail the same way)"
+  },
+  {
+   "id": 29506411975,
+   "workflow": "ci",
+   "event": "pull_request",
+   "branch": "dependabot/npm_and_yarn/dev-dependencies-typescript-b7ceb5d816",
+   "sha": "cba5828d0450a40cc34e4bebe7e029690e1ab1f8",
+   "created": "2026-07-16T14:24:03Z",
+   "jobs": [
+    {
+     "name": "quality-check / Check Licenses",
+     "conclusion": "success"
+    },
+    {
+     "name": "quality-check / Lint Code",
+     "conclusion": "failure"
+    },
+    {
+     "name": "quality-check / Dependency Review",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit-custom",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "coverage-nix",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "coverage-win",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "test-unit",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "Test pino compatibility",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "test-types",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "package",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "automerge",
+     "conclusion": "skipped"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/29506411975.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": []
+   },
+   "label": "dependabot dev-dependency bump: eslint crashes in @typescript-eslint/typescript-estree 'Cannot read properties of undefined (reading Intrinsic)': the bumped TypeScript does not fit the typescript-eslint in neostandard"
+  },
+  {
+   "id": 30015524264,
+   "workflow": "ci",
+   "event": "pull_request",
+   "branch": "dependabot/github_actions/actions/setup-node-7.0.0",
+   "sha": "ae1298c2cb302e889e227f4ccb0af759b4c22b1a",
+   "created": "2026-07-23T14:22:39Z",
+   "jobs": [
+    {
+     "name": "quality-check / Lint Code",
+     "conclusion": "success"
+    },
+    {
+     "name": "quality-check / Check Licenses",
+     "conclusion": "success"
+    },
+    {
+     "name": "quality-check / Dependency Review",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit-custom",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "coverage-win / check-coverage",
+     "conclusion": "success"
+    },
+    {
+     "name": "coverage-nix / check-coverage",
+     "conclusion": "success"
+    },
+    {
+     "name": "Test pino compatibility (^10)",
+     "conclusion": "success"
+    },
+    {
+     "name": "Test pino compatibility (^9)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-types",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (22, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (24, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (20, macos-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (20, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (22, macos-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (26, macos-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (26, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (20, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (24, macos-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (26, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (24, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (22, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "package",
+     "conclusion": "success"
+    },
+    {
+     "name": "automerge",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/30015524264.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "automerge job: 'Repository rule violations found. At least 2 approving reviews are required': the dependabot automerge cannot work under the branch ruleset; a re-run fails the same way"
+  },
+  {
+   "id": 31128098312,
+   "workflow": "ci",
+   "event": "pull_request",
+   "branch": "fix/child-logger-factory-type-assignability",
+   "sha": "f4ff3fce6d4ea8b077a40e08446ed33c12230f01",
+   "created": "2026-08-06T21:07:52Z",
+   "jobs": [
+    {
+     "name": "quality-check / Dependency Review",
+     "conclusion": "success"
+    },
+    {
+     "name": "quality-check / Lint Code",
+     "conclusion": "success"
+    },
+    {
+     "name": "quality-check / Check Licenses",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit-custom",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "coverage-win / check-coverage",
+     "conclusion": "success"
+    },
+    {
+     "name": "coverage-nix / check-coverage",
+     "conclusion": "success"
+    },
+    {
+     "name": "Test pino compatibility (^10)",
+     "conclusion": "success"
+    },
+    {
+     "name": "Test pino compatibility (^9)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-types",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (20, windows-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-unit (20, macos-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-unit (26, macos-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (22, windows-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-unit (22, macos-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-unit (20, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (26, ubuntu-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-unit (26, windows-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-unit (24, macos-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-unit (22, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test-unit (24, windows-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-unit (24, ubuntu-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "package",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "automerge",
+     "conclusion": "skipped"
+    }
+   ],
+   "github": {
+    "from_fork": true,
+    "base_failures": [
+     {
+      "id": 31118738667,
+      "jobs": [
+       "quality-check / Lint Code",
+       "quality-check / Check Licenses"
+      ]
+     },
+     {
+      "id": 30796259322,
+      "jobs": [
+       "coverage-win / check-coverage",
+       "coverage-nix / check-coverage"
+      ]
+     },
+     {
+      "id": 27411212893,
+      "jobs": [
+       "coverage-win / check-coverage",
+       "coverage-nix / check-coverage"
+      ]
+     },
+     {
+      "id": 27407740312,
+      "jobs": [
+       "quality-check / Lint Code"
+      ]
+     },
+     {
+      "id": 27020791219,
+      "jobs": [
+       "quality-check / Lint Code"
+      ]
+     }
+    ]
+   },
+   "log": "logs/fastify/31128098312.log",
+   "expected": {
+    "kind": [
+     "flaky"
+    ],
+    "failures": [
+     {
+      "file": "test/listen.5.test.js"
+     },
+     {
+      "file": "test/listen.4.test.js"
+     }
+    ]
+   },
+   "label": "one job (22, ubuntu): node:test '✖ test/listen.5.test.js' and listen.4 'test timed out after 30000ms'; the PR does not touch listen code, (20, ubuntu) and (26, macos) passed, the rest were cancelled by fail-fast",
+   "uncertain": "flaky is a judgement: two listen tests timed out in one job of a PR that does not touch listen code; no re-run on record"
+  },
+  {
+   "id": 31192511182,
+   "workflow": "ci",
+   "event": "pull_request",
+   "branch": "refactor/remove-res-serializer-reply",
+   "sha": "7b90bd4b702939fe2f4a86f2f89eea53e2216aef",
+   "created": "2026-08-07T15:25:15Z",
+   "jobs": [
+    {
+     "name": "quality-check / Check Licenses",
+     "conclusion": "success"
+    },
+    {
+     "name": "quality-check / Dependency Review",
+     "conclusion": "success"
+    },
+    {
+     "name": "quality-check / Lint Code",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit-custom",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "coverage-nix / check-coverage",
+     "conclusion": "success"
+    },
+    {
+     "name": "coverage-win / check-coverage",
+     "conclusion": "success"
+    },
+    {
+     "name": "Test pino compatibility (^10)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Test pino compatibility (^9)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-unit (26, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (24, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (24, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (26, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (24, macos-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (26, macos-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-types",
+     "conclusion": "failure"
+    },
+    {
+     "name": "package",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "automerge",
+     "conclusion": "skipped"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/31192511182.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "test/types/logger.tst.ts",
+      "line": 160
+     },
+     {
+      "file": "test/types/logger.tst.ts",
+      "line": 195
+     },
+     {
+      "file": "test/types/logger.tst.ts",
+      "line": 223
+     }
+    ]
+   },
+   "label": "tstyche: test/types/logger.tst.ts 'Type Partial<FastifyReply...> is not the same as type ...' (3 assertions) after the PR's type change; both jobs run the type tests"
+  },
+  {
+   "id": 32483417465,
+   "workflow": "ci",
+   "event": "pull_request",
+   "branch": "style/tighten-stylistic-consistency",
+   "sha": "47afc31d11675cacee70ff1c275297a9ad143c71",
+   "created": "2026-08-21T12:45:31Z",
+   "jobs": [
+    {
+     "name": "quality-check / Check Licenses",
+     "conclusion": "success"
+    },
+    {
+     "name": "quality-check / Lint Code",
+     "conclusion": "failure"
+    },
+    {
+     "name": "quality-check / Dependency Review",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit-custom",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "test-types",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "test-unit",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "Test pino compatibility",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "coverage-win",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "coverage-nix",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "automerge",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "package",
+     "conclusion": "skipped"
+    }
+   ],
+   "github": {
+    "from_fork": true
+   },
+   "log": "logs/fastify/32483417465.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "@stylistic/member-delimiter-style",
+      "file": "fastify.d.ts",
+      "line": 100
+     },
+     {
+      "test": "@stylistic/indent-binary-ops",
+      "file": "fastify.js",
+      "line": 865
+     }
+    ]
+   },
+   "label": "eslint: '100:80 error Expected a semicolon @stylistic/member-delimiter-style' and 2 more, from the PR's own style change"
+  },
+  {
+   "id": 36249120349,
+   "workflow": "ci",
+   "event": "pull_request",
+   "branch": "perf/skip-empty-child-logger-level",
+   "sha": "828f3a101acb43eb3cca7536e5d4eff8a409777b",
+   "created": "2026-09-26T14:37:10Z",
+   "jobs": [
+    {
+     "name": "quality-check / Check Licenses",
+     "conclusion": "success"
+    },
+    {
+     "name": "quality-check / Dependency Review",
+     "conclusion": "success"
+    },
+    {
+     "name": "quality-check / Lint Code",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit-custom",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "coverage-nix / check-coverage",
+     "conclusion": "success"
+    },
+    {
+     "name": "coverage-win / check-coverage",
+     "conclusion": "success"
+    },
+    {
+     "name": "Test pino compatibility (^10)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-types",
+     "conclusion": "success"
+    },
+    {
+     "name": "Test pino compatibility (^9)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test-unit (24, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (26, macos-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (24, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (26, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (24, macos-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (26, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "package",
+     "conclusion": "skipped"
+    },
+    {
+     "name": "automerge",
+     "conclusion": "skipped"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/36249120349.log",
+   "expected": {
+    "kind": [
+     "code",
+     "matrix"
+    ],
+    "failures": [
+     {
+      "test": "request child loggers inherit the level without resetting it",
+      "file": "test/child-logger-factory.test.js",
+      "line": 156
+     }
+    ]
+   },
+   "label": "'✖ request child loggers inherit the level without resetting it' fails with pino ^9 only (^10 cancelled by fail-fast): the PR's change breaks pino 9"
+  },
+  {
+   "id": 29506411195,
+   "workflow": "ci Alternative Runtimes",
+   "event": "pull_request",
+   "branch": "dependabot/npm_and_yarn/dev-dependencies-typescript-b7ceb5d816",
+   "sha": "cba5828d0450a40cc34e4bebe7e029690e1ab1f8",
+   "created": "2026-07-16T14:24:02Z",
+   "jobs": [
+    {
+     "name": "test-types",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test-unit (20, macos-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test-unit (20, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test-unit (20, windows-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "package",
+     "conclusion": "skipped"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/29506411195.log",
+   "expected": {
+    "kind": [
+     "dependency"
+    ],
+    "failures": [
+     {
+      "test": "check generated code syntax",
+      "file": "test/build/error-serializer.test.js"
+     }
+    ]
+   },
+   "label": "same dependabot bump as 29506411975: 'check generated code syntax' and test-types fail with typescript-eslint TypeError 'Intrinsic' / 'ProjectService'"
+  },
+  {
+   "id": 31118738254,
+   "workflow": "ci Alternative Runtimes",
+   "event": "push",
+   "branch": "main",
+   "sha": "a2f590563f111ebc8e92b8f17701909e9b19d4b7",
+   "created": "2026-08-06T16:08:16Z",
+   "jobs": [
+    {
+     "name": "test-types",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (20, macos-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-unit (20, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test-unit (20, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "package",
+     "conclusion": "skipped"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/31118738254.log",
+   "expected": {
+    "kind": [
+     "infra"
+    ],
+    "failures": []
+   },
+   "label": "'Failed to resolve action download info. Error: Service Unavailable' (6 Aug outage)"
+  },
+  {
+   "id": 31120542974,
+   "workflow": "ci Alternative Runtimes",
+   "event": "push",
+   "branch": "next",
+   "sha": "e5df35542ec46db614762884eb2fd7575f680021",
+   "created": "2026-08-06T16:38:33Z",
+   "jobs": [
+    {
+     "name": "test-types",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (24, macos-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-unit (24, windows-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "test-unit (24, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "package",
+     "conclusion": "skipped"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/31120542974.log",
+   "expected": {
+    "kind": [
+     "infra"
+    ],
+    "failures": []
+   },
+   "label": "no log; GitHub's annotation: 'The job was not acquired by Runner of type hosted even after multiple attempts' (macOS and Windows jobs cancelled after ~5.5 h)"
+  },
+  {
+   "id": 31192510459,
+   "workflow": "ci Alternative Runtimes",
+   "event": "pull_request",
+   "branch": "refactor/remove-res-serializer-reply",
+   "sha": "7b90bd4b702939fe2f4a86f2f89eea53e2216aef",
+   "created": "2026-08-07T15:25:14Z",
+   "jobs": [
+    {
+     "name": "test-types",
+     "conclusion": "failure"
+    },
+    {
+     "name": "test-unit (24, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (24, windows-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "test-unit (24, macos-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "package",
+     "conclusion": "skipped"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/31192510459.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "test/types/logger.tst.ts",
+      "line": 160
+     },
+     {
+      "file": "test/types/logger.tst.ts",
+      "line": 195
+     },
+     {
+      "file": "test/types/logger.tst.ts",
+      "line": 223
+     }
+    ]
+   },
+   "label": "tstyche: test/types/logger.tst.ts type assertions fail after the PR's type change (same commit as 31192511182)"
+  },
+  {
+   "id": 31118738236,
+   "workflow": "integration",
+   "event": "push",
+   "branch": "main",
+   "sha": "a2f590563f111ebc8e92b8f17701909e9b19d4b7",
+   "created": "2026-08-06T16:08:16Z",
+   "jobs": [
+    {
+     "name": "install-production (24, ubuntu-latest, 8)",
+     "conclusion": "success"
+    },
+    {
+     "name": "install-production (20, ubuntu-latest, 8)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "install-production (26, ubuntu-latest, 8)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "install-production (22, ubuntu-latest, 8)",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/31118738236.log",
+   "expected": {
+    "kind": [
+     "infra"
+    ],
+    "failures": []
+   },
+   "label": "'Failed to resolve action download info. Error: Service Unavailable' (6 Aug outage)"
+  },
+  {
+   "id": 30849839665,
+   "workflow": "integration Alternative Runtimes",
+   "event": "pull_request",
+   "branch": "fix/child-logger-factory-type-assignability",
+   "sha": "b07db8965e3830e3918d5ee5026965120ad9f230",
+   "created": "2026-08-03T20:21:27Z",
+   "jobs": [
+    {
+     "name": "install-production (ubuntu-latest, nsolid, 20, 8)",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": true
+   },
+   "log": "logs/fastify/30849839665.log",
+   "expected": {
+    "kind": [
+     "infra"
+    ],
+    "failures": []
+   },
+   "label": "setup-node for nsolid: 'Action failed to download the metadata. Status code: 403', then 'Unexpected token <': the nsolid download site refused; the same workflow passes again from 8 Aug",
+   "uncertain": "infra or setup: the nsolid download site answered 403 with an HTML page; the same workflow passed again two days later, so infra"
+  },
+  {
+   "id": 37051739916,
+   "workflow": "Test compare",
+   "event": "pull_request",
+   "branch": "bret/request-signal-response-close",
+   "sha": "5078d2de566e8acef98b67172e27e78ce747be98",
+   "created": "2026-10-02T19:04:50Z",
+   "jobs": [],
+   "github": {
+    "from_fork": true
+   },
+   "log": null,
+   "expected": {
+    "kind": [
+     "unknown"
+    ],
+    "failures": []
+   },
+   "label": "run has no jobs and no log (gh: 'log not found'); 562 of the 690 failed runs since 13 Jul look like this, mostly fork pull requests"
+  },
+  {
+   "id": 34024234370,
+   "workflow": "Missing Types",
+   "event": "pull_request",
+   "branch": "docs/link-style-guide",
+   "sha": "d963d6a2be0f8b8d36d98d6be8a4690833efb6a0",
+   "created": "2026-09-06T09:17:32Z",
+   "jobs": [],
+   "github": {
+    "from_fork": true
+   },
+   "log": null,
+   "expected": {
+    "kind": [
+     "unknown"
+    ],
+    "failures": []
+   },
+   "label": "run has no jobs and no log (Missing Types; every Missing Types failure since 13 Jul has no jobs)"
+  },
+  {
+   "id": 36229717996,
+   "workflow": "CITGM",
+   "event": "pull_request",
+   "branch": "patch-1",
+   "sha": "958a551a07d75f9a9788e8bf673b1067e5fdf88d",
+   "created": "2026-09-26T08:25:11Z",
+   "jobs": [],
+   "github": {
+    "from_fork": true
+   },
+   "log": null,
+   "expected": {
+    "kind": [
+     "unknown"
+    ],
+    "failures": []
+   },
+   "label": "run has no jobs and no log (CITGM; every CITGM failure since 13 Jul has no jobs)"
+  },
+  {
+   "id": 33130273449,
+   "workflow": "ci",
+   "event": "pull_request",
+   "branch": "bret/custom-content-type-parser",
+   "sha": "d997518d2ea6d32665d267a5e3f0b9cd706e57eb",
+   "created": "2026-08-28T00:36:42Z",
+   "jobs": [],
+   "github": {
+    "from_fork": true
+   },
+   "log": null,
+   "expected": {
+    "kind": [
+     "unknown"
+    ],
+    "failures": []
+   },
+   "label": "run has no jobs and no log (ci)"
+  },
+  {
+   "id": 29689275369,
+   "workflow": "pull request title check",
+   "event": "pull_request",
+   "branch": "refactor/types",
+   "sha": "f9670c8c3479c9c763b4eee1801c2f44f924046c",
+   "created": "2026-07-19T13:38:40Z",
+   "jobs": [
+    {
+     "name": "pull-request-title-check",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": false,
+    "same_commit_passed": 29689344609
+   },
+   "log": "logs/fastify/29689275369.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "message": "failed to pass match regex"
+     }
+    ]
+   },
+   "label": "PR title '(WIP) refactor(types): ...' fails the conventional-title regex; the author edited the title and the check passed on the same commit"
+  },
+  {
+   "id": 31285449036,
+   "workflow": "pull request title check",
+   "event": "pull_request",
+   "branch": "bret/custom-content-type-parser",
+   "sha": "557ac97f6ddf4402d1998221c0906bd1872dc7f7",
+   "created": "2026-08-09T00:06:05Z",
+   "jobs": [
+    {
+     "name": "pull-request-title-check",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": true,
+    "same_commit_passed": 31285459731
+   },
+   "log": "logs/fastify/31285449036.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "message": "failed to pass match regex"
+     }
+    ]
+   },
+   "label": "PR title 'Add contentTypeHeaderParserFactory header parser escape hatch' fails the title regex; passed on the same commit after the title was edited to 'feat(content-type): ...'"
+  },
+  {
+   "id": 31715822603,
+   "workflow": "pull request title check",
+   "event": "pull_request",
+   "branch": "backport-6887-to-5.x",
+   "sha": "512466ab703b3face0ac7b8af72645d829e10d28",
+   "created": "2026-08-13T15:31:02Z",
+   "jobs": [
+    {
+     "name": "pull-request-title-check",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/31715822603.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": [
+     {
+      "message": "failed to pass match regex"
+     }
+    ]
+   },
+   "label": "backport bot's title '[Backport 5.x] test: ...' rejected by the title regex; the workflow regex was changed later to allow '[Backport N.x]' (see 36318290733's log)",
+   "uncertain": "setup, not code: the title came from the backport bot and the workflow's regex was widened later to accept it"
+  },
+  {
+   "id": 36318290733,
+   "workflow": "pull request title check",
+   "event": "pull_request",
+   "branch": "jsumners-patch-1",
+   "sha": "3f099b07c79d0dbd997e75a27c7d3cc3947cb7f8",
+   "created": "2026-09-27T12:13:49Z",
+   "jobs": [
+    {
+     "name": "pull-request-title-check",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/36318290733.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "message": "failed to pass match regex"
+     }
+    ]
+   },
+   "label": "PR title 'Update lock-threads.yml' fails the title regex (GitHub's default title for a web edit)"
+  },
+  {
+   "id": 36454200650,
+   "workflow": "Lint Docs",
+   "event": "pull_request",
+   "branch": "docs/security-unvalidated-template-paths",
+   "sha": "230244331b6afbf9a941ed46416bc4186618ae13",
+   "created": "2026-09-28T16:52:53Z",
+   "jobs": [
+    {
+     "name": "Lint Markdown",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/36454200650.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "MD013/line-length",
+      "file": "docs/Guides/Ecosystem.md",
+      "line": 244
+     }
+    ]
+   },
+   "label": "markdownlint 'docs/Guides/Ecosystem.md:244:81 MD013/line-length': the long line came from main (f7f73aa7, #6660), not from this PR; the push run of the same branch passed",
+   "uncertain": "code, though not this PR's code: the long line came from main (f7f73aa7)"
+  },
+  {
+   "id": 30240628908,
+   "workflow": "Lint Docs",
+   "event": "push",
+   "branch": "docs/specific-warning-suppression",
+   "sha": "ed037752bebc96a92443a7071af850504019b80c",
+   "created": "2026-07-27T05:44:55Z",
+   "jobs": [
+    {
+     "name": "Lint Markdown",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/30240628908.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "MD013/line-length",
+      "file": "docs/Reference/Warnings.md",
+      "line": 39
+     }
+    ]
+   },
+   "label": "markdownlint 'docs/Reference/Warnings.md:39:81 MD013/line-length' in the branch's own change"
+  },
+  {
+   "id": 36346607205,
+   "workflow": "Lint Docs",
+   "event": "pull_request",
+   "branch": "docs/add-fastify-mariadb-community-plugin",
+   "sha": "a734845c9de0eec2b7f0603fb47b37cc62932dd9",
+   "created": "2026-09-27T20:03:30Z",
+   "jobs": [
+    {
+     "name": "Lint Markdown",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": true
+   },
+   "log": "logs/fastify/36346607205.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "MD013/line-length",
+      "file": "docs/Guides/Ecosystem.md",
+      "line": 247
+     }
+    ]
+   },
+   "label": "markdownlint 'Ecosystem.md:247:81 MD013/line-length': main's long @validex line again (f7f73aa7)",
+   "uncertain": "code, though not this PR's code: the long line came from main (f7f73aa7)"
+  },
+  {
+   "id": 30587884207,
+   "workflow": "Internal Links Check",
+   "event": "pull_request",
+   "branch": "docs/tutorials-part-1",
+   "sha": "da077e6de86e6626fe411328daedc68d60365b37",
+   "created": "2026-07-30T22:39:06Z",
+   "jobs": [
+    {
+     "name": "linkChecker",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": true
+   },
+   "log": "logs/fastify/30587884207.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "file": "docs/Tutorial/03-create-server.md"
+     },
+     {
+      "file": "docs/Tutorial/04-defining-routes.md"
+     }
+    ]
+   },
+   "label": "lychee --offline: '[ERROR] file:///.../docs/latest/Reference/Server#factory | Cannot find file' and more in the PR's new docs/Tutorial pages"
+  },
+  {
+   "id": 36890169568,
+   "workflow": "Internal Links Check",
+   "event": "pull_request",
+   "branch": "feat/lazy-schema-compilation",
+   "sha": "6d49605485e180410b31d85336f4e397f7a159a8",
+   "created": "2026-10-01T16:11:56Z",
+   "jobs": [
+    {
+     "name": "linkChecker",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": true
+   },
+   "log": "logs/fastify/36890169568.log",
+   "expected": {
+    "kind": [
+     "infra"
+    ],
+    "failures": []
+   },
+   "label": "linkinator: '[503] https://github.com/pinojs/pino/blob/c77d8ec5ce/docs/API.md - HTTP 503': GitHub answered 503 to one external link"
+  },
+  {
+   "id": 32202758629,
+   "workflow": "Internal Links Check",
+   "event": "pull_request",
+   "branch": "docs/fix-broken-links-style-guide",
+   "sha": "70397d9430ec88aff2e1e9202b747b71bfe7a002",
+   "created": "2026-08-19T00:50:34Z",
+   "jobs": [
+    {
+     "name": "linkChecker",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": true
+   },
+   "log": "logs/fastify/32202758629.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": [],
+    "cause": {
+     "fix": "dbebe73c",
+     "points": [
+      "medium.com"
+     ]
+    }
+   },
+   "label": "linkinator: '[403] https://medium.com/... - HTTP 403': medium blocks bots; the same PR (#6966, dbebe73c) fixed it by adding statusCodes 403: warn to the workflow"
+  },
+  {
+   "id": 31026578262,
+   "workflow": "Internal Links Check",
+   "event": "pull_request",
+   "branch": "feat/deprecation",
+   "sha": "367a47dcf233fca461d2aedb743220c0d21a5c59",
+   "created": "2026-08-05T16:42:53Z",
+   "jobs": [
+    {
+     "name": "linkChecker",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/31026578262.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "https://github.com/fastify/fastify/tree/5.x"
+     }
+    ]
+   },
+   "label": "linkinator: '[404] https://github.com/fastify/fastify/tree/5.x': the PR's README/LTS.md links a branch that did not exist yet (5.x was created 13 Aug)"
+  },
+  {
+   "id": 37788910570,
+   "workflow": "package-manager-ci",
+   "event": "push",
+   "branch": "main",
+   "sha": "5c081d4b7237f0eb2db9f1204dc6400e3aa1325e",
+   "created": "2026-10-08T14:00:24Z",
+   "jobs": [
+    {
+     "name": "yarn (26, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "pnpm (26, ubuntu-latest, 10)",
+     "conclusion": "success"
+    },
+    {
+     "name": "pnpm (24, ubuntu-latest, 10)",
+     "conclusion": "success"
+    },
+    {
+     "name": "pnpm (26, ubuntu-latest, 11)",
+     "conclusion": "success"
+    },
+    {
+     "name": "pnpm (24, ubuntu-latest, 11)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "yarn (24, ubuntu-latest)",
+     "conclusion": "success"
+    }
+   ],
+   "github": {
+    "from_fork": false,
+    "base_failures": [
+     {
+      "id": 35084423102,
+      "jobs": [
+       "yarn (26, ubuntu-latest)",
+       "pnpm (24, ubuntu-latest, 11)"
+      ]
+     },
+     {
+      "id": 33853095623,
+      "jobs": [
+       "pnpm (24, ubuntu-latest, 11)",
+       "yarn (24, ubuntu-latest)"
+      ]
+     },
+     {
+      "id": 31718133381,
+      "jobs": [
+       "yarn (26, ubuntu-latest)",
+       "pnpm (24, ubuntu-latest, 10)"
+      ]
+     },
+     {
+      "id": 31715958921,
+      "jobs": [
+       "pnpm (26, ubuntu-latest, 10)",
+       "yarn (26, ubuntu-latest)"
+      ]
+     },
+     {
+      "id": 31118738217,
+      "jobs": [
+       "pnpm (22, ubuntu-latest, 8)",
+       "pnpm (20, ubuntu-latest, 8)"
+      ]
+     }
+    ]
+   },
+   "log": "logs/fastify/37788910570.log",
+   "expected": {
+    "kind": [
+     "flaky"
+    ],
+    "failures": [
+     {
+      "test": "listen on localhost binds IPv4 and IPv6 - promise interface",
+      "file": "test/listen.4.test.js"
+     }
+    ]
+   },
+   "label": "push to main at 5c081d4b: '✖ listen on localhost binds IPv4 and IPv6 - promise interface' timed out (30 s) in 1 of 6 jobs; ci on the same commit passed"
+  },
+  {
+   "id": 31118716025,
+   "workflow": "package-manager-ci",
+   "event": "push",
+   "branch": "main",
+   "sha": "22c419abfb57135693310f7ca1bf2f98fb4224ba",
+   "created": "2026-08-06T16:07:54Z",
+   "jobs": [
+    {
+     "name": "yarn (24, ubuntu-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "pnpm (24, ubuntu-latest, 8)",
+     "conclusion": "success"
+    },
+    {
+     "name": "yarn (26, ubuntu-latest)",
+     "conclusion": "success"
+    },
+    {
+     "name": "yarn (22, ubuntu-latest)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "pnpm (22, ubuntu-latest, 8)",
+     "conclusion": "success"
+    },
+    {
+     "name": "pnpm (20, ubuntu-latest, 8)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "pnpm (26, ubuntu-latest, 8)",
+     "conclusion": "success"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/31118716025.log",
+   "expected": {
+    "kind": [
+     "infra"
+    ],
+    "failures": []
+   },
+   "label": "'Failed to resolve action download info. Error: Service Unavailable' / 'Internal Server Error' (6 Aug outage)"
+  },
+  {
+   "id": 33853095623,
+   "workflow": "package-manager-ci",
+   "event": "push",
+   "branch": "main",
+   "sha": "82f827561f9053617d5c07fde53bbf4e0f8f95a8",
+   "created": "2026-09-04T08:22:09Z",
+   "jobs": [
+    {
+     "name": "pnpm (24, ubuntu-latest, 11)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "pnpm (26, ubuntu-latest, 10)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "yarn (26, ubuntu-latest)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "pnpm (26, ubuntu-latest, 11)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "pnpm (24, ubuntu-latest, 10)",
+     "conclusion": "cancelled"
+    },
+    {
+     "name": "yarn (24, ubuntu-latest)",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/33853095623.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "test": "should be the same as package.json",
+      "file": "test/build/version.test.js",
+      "line": 13
+     }
+    ],
+    "cause": {
+     "fix": "15ebc8e2",
+     "points": [
+      "fastify.js"
+     ]
+    }
+   },
+   "label": "push 'Bumped v6.0.0-alpha.3' changed package.json only: '✖ should be the same as package.json' (test/build/version.test.js:13); fixed by 15ebc8e2 which bumped the version in fastify.js"
+  },
+  {
+   "id": 34748583815,
+   "workflow": "CodeQL",
+   "event": "dynamic",
+   "branch": "refs/pull/6855/head",
+   "sha": "896d626ee254b7aa0e7d1d50aafe2f6b0ecbec28",
+   "created": "2026-09-13T08:50:51Z",
+   "jobs": [
+    {
+     "name": "Analyze (javascript)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Analyze (actions)",
+     "conclusion": "success"
+    }
+   ],
+   "github": {
+    "from_fork": false,
+    "base_failures": [
+     {
+      "id": 31118737762,
+      "jobs": [
+       "Analyze (javascript)"
+      ]
+     },
+     {
+      "id": 31118715588,
+      "jobs": [
+       "Analyze (actions)",
+       "Analyze (javascript)"
+      ]
+     }
+    ]
+   },
+   "log": "logs/fastify/34748583815.log",
+   "expected": {
+    "kind": [
+     "infra"
+    ],
+    "failures": []
+   },
+   "label": "CodeQL (default setup, refs/pull/6855/head): analysis finished, the step failed while uploading results, with no error from the project (low confidence: the log says nothing more)",
+   "uncertain": "the log says nothing beyond the failed upload step; infra is a guess (low confidence)"
+  },
+  {
+   "id": 31118715588,
+   "workflow": "CodeQL",
+   "event": "dynamic",
+   "branch": "main",
+   "sha": "22c419abfb57135693310f7ca1bf2f98fb4224ba",
+   "created": "2026-08-06T16:07:53Z",
+   "jobs": [
+    {
+     "name": "Analyze (actions)",
+     "conclusion": "failure"
+    },
+    {
+     "name": "Analyze (javascript)",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/31118715588.log",
+   "expected": {
+    "kind": [
+     "infra"
+    ],
+    "failures": []
+   },
+   "label": "'Failed to resolve action download info. Error: Service Unavailable' (6 Aug outage)"
+  },
+  {
+   "id": 32586193515,
+   "workflow": "Lint Ecosystem Order",
+   "event": "pull_request",
+   "branch": "docs/ecosystem-cleanup",
+   "sha": "d64b2de31ebc82600b5a3c5b8a037dc951aa9126",
+   "created": "2026-08-22T16:55:51Z",
+   "jobs": [
+    {
+     "name": "Lint Ecosystem Order",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/32586193515.log",
+   "expected": {
+    "kind": [
+     "code"
+    ],
+    "failures": [
+     {
+      "message": "not listed in alphabetical order"
+     }
+    ]
+   },
+   "label": "'@punkish/fastify-better-sqlite3 not listed in alphabetical order' in the PR's Ecosystem.md edit"
+  },
+  {
+   "id": 36796889016,
+   "workflow": "Validate Ecosystem Links",
+   "event": "schedule",
+   "branch": "main",
+   "sha": "19d5be0daf1c0daace758efe3ea788f924ca1224",
+   "created": "2026-10-01T00:34:56Z",
+   "jobs": [
+    {
+     "name": "validate-links",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/36796889016.log",
+   "expected": {
+    "kind": [
+     "setup",
+     "dependency"
+    ],
+    "failures": []
+   },
+   "label": "monthly job: 'Error: Cannot find module undici': the workflow runs node scripts/validate-ecosystem-links.js without npm install (undici is a devDependency); fails every month the same way",
+   "uncertain": "setup or dependency: undici is declared as a devDependency but the workflow never installs it"
+  },
+  {
+   "id": 36796415356,
+   "workflow": "Lock Threads",
+   "event": "schedule",
+   "branch": "main",
+   "sha": "19d5be0daf1c0daace758efe3ea788f924ca1224",
+   "created": "2026-10-01T00:29:11Z",
+   "jobs": [
+    {
+     "name": "lock-threads / Lock Threads",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/36796415356.log",
+   "expected": {
+    "kind": [
+     "setup"
+    ],
+    "failures": []
+   },
+   "label": "monthly lock-threads: 'Request failed due to following response errors: Resource not accessible by integration': the token lacks a permission; fails every month (Aug, Sep, Oct)"
+  },
+  {
+   "id": 31118716052,
+   "workflow": "Backport",
+   "event": "pull_request_target",
+   "branch": "dependabot/github_actions/fastify/workflows/dot-github/workflows/lock-threads.yml-7.0.0",
+   "sha": "0bd1f0c924389f6a4a14b04b4957e193d639faf6",
+   "created": "2026-08-06T16:07:54Z",
+   "jobs": [
+    {
+     "name": "Backport",
+     "conclusion": "failure"
+    }
+   ],
+   "github": {
+    "from_fork": false
+   },
+   "log": "logs/fastify/31118716052.log",
+   "expected": {
+    "kind": [
+     "infra"
+    ],
+    "failures": []
+   },
+   "label": "'Failed to resolve action download info. Error: Service Unavailable' (6 Aug outage)"
+  }
+ ]
+}

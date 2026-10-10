@@ -1,0 +1,220 @@
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7856331Z 
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7856557Z       Error: expected { bogus: 'bogus' } response body, got { bogus: false }
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7856875Z       + expected - actual
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7856994Z 
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7857052Z        {
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7857649Z       
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7857880Z       at Context.<anonymous> (test\req.acceptsEncodings.js:50:10)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7858201Z       at processImmediate (node:internal/timers:466:21)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7858521Z       at process.callbackTrampoline (node:internal/async_hooks:130:17)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7858796Z   ----
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7858990Z       at error (node_modules\supertest\lib\test.js:335:15)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7859298Z       at Test._assertBody (node_modules\supertest\lib\test.js:193:16)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7859662Z       at D:\a\express\express\node_modules\supertest\lib\test.js:308:13
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7860016Z       at Test._assertFunction (node_modules\supertest\lib\test.js:285:13)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7860351Z       at Test.assert (node_modules\supertest\lib\test.js:164:23)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7860679Z       at Server.localAssert (node_modules\supertest\lib\test.js:120:14)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7860970Z       at Object.onceWrapper (node:events:627:28)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7861210Z       at Server.emit (node:events:513:28)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7861438Z       at emitCloseNT (node:net:1857:8)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7861749Z       at processTicksAndRejections (node:internal/process/task_queues:82:21)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7861973Z 
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7862042Z   2) req
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7862195Z        .acceptsEncodings()
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7862475Z          should return an array with * when Accept-Encoding is not present:
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7862687Z 
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7862826Z       Error: expected [ '*' ] response body, got [ 'identity' ]
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7863420Z       + expected - actual
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7864403Z 
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7864470Z        [
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7864611Z       -  "identity"
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7865023Z       
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7865254Z       at Context.<anonymous> (test\req.acceptsEncodings.js:149:10)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7865560Z       at processImmediate (node:internal/timers:466:21)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7865879Z       at process.callbackTrampoline (node:internal/async_hooks:130:17)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7866135Z   ----
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7866316Z       at error (node_modules\supertest\lib\test.js:335:15)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7866632Z       at Test._assertBody (node_modules\supertest\lib\test.js:193:16)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7866957Z       at D:\a\express\express\node_modules\supertest\lib\test.js:308:13
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7867297Z       at Test._assertFunction (node_modules\supertest\lib\test.js:285:13)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7867624Z       at Test.assert (node_modules\supertest\lib\test.js:164:23)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7867948Z       at Server.localAssert (node_modules\supertest\lib\test.js:120:14)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7868235Z       at Object.onceWrapper (node:events:627:28)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7868467Z       at Server.emit (node:events:513:28)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7868689Z       at emitCloseNT (node:net:1857:8)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7868986Z       at processTicksAndRejections (node:internal/process/task_queues:82:21)
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7869203Z 
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7869207Z 
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.7869211Z 
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.8592402Z -----------------|---------|----------|---------|---------|-------------------
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.8617090Z -----------------|---------|----------|---------|---------|-------------------
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.8820704Z ##[error]Process completed with exit code 2.
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:16.9018007Z Post job cleanup.
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:17.0374354Z [command]"C:\Program Files\Git\bin\git.exe" version
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:17.0590775Z git version 2.55.0.windows.5
+Node.js 16 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:18.5366973Z Cleaning up orphan processes
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3037297Z 
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3037536Z       Error: expected { bogus: 'bogus' } response body, got { bogus: false }
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3037927Z       + expected - actual
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3038078Z 
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3038152Z        {
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3039147Z       
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3039665Z       at Context.<anonymous> (test\req.acceptsEncodings.js:50:10)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3040144Z       at processImmediate (node:internal/timers:466:21)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3040606Z       at process.callbackTrampoline (node:internal/async_hooks:130:17)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3040965Z   ----
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3041232Z       at error (node_modules\supertest\lib\test.js:335:15)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3041665Z       at Test._assertBody (node_modules\supertest\lib\test.js:193:16)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3042151Z       at D:\a\express\express\node_modules\supertest\lib\test.js:308:13
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3042693Z       at Test._assertFunction (node_modules\supertest\lib\test.js:285:13)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3043162Z       at Test.assert (node_modules\supertest\lib\test.js:164:23)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3043623Z       at Server.localAssert (node_modules\supertest\lib\test.js:120:14)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3044044Z       at Object.onceWrapper (node:events:641:28)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3044372Z       at Server.emit (node:events:527:28)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3044671Z       at emitCloseNT (node:net:1736:8)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3045086Z       at processTicksAndRejections (node:internal/process/task_queues:82:21)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3045407Z 
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3045497Z   2) req
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3045692Z        .acceptsEncodings()
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3046260Z          should return an array with * when Accept-Encoding is not present:
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3046930Z 
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3047249Z       Error: expected [ '*' ] response body, got [ 'identity' ]
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3047583Z       + expected - actual
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3047732Z 
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3047810Z        [
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3047980Z       -  "identity"
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3048488Z       
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3048765Z       at Context.<anonymous> (test\req.acceptsEncodings.js:149:10)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3049175Z       at processImmediate (node:internal/timers:466:21)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3049609Z       at process.callbackTrampoline (node:internal/async_hooks:130:17)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3049943Z   ----
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3050262Z       at error (node_modules\supertest\lib\test.js:335:15)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3050813Z       at Test._assertBody (node_modules\supertest\lib\test.js:193:16)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3051261Z       at D:\a\express\express\node_modules\supertest\lib\test.js:308:13
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3051733Z       at Test._assertFunction (node_modules\supertest\lib\test.js:285:13)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3052172Z       at Test.assert (node_modules\supertest\lib\test.js:164:23)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3052599Z       at Server.localAssert (node_modules\supertest\lib\test.js:120:14)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3052988Z       at Object.onceWrapper (node:events:641:28)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3053292Z       at Server.emit (node:events:527:28)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3053578Z       at emitCloseNT (node:net:1736:8)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3053973Z       at processTicksAndRejections (node:internal/process/task_queues:82:21)
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3054268Z 
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3054273Z 
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3054284Z 
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3872681Z -----------------|---------|----------|---------|---------|-------------------
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.3902496Z -----------------|---------|----------|---------|---------|-------------------
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.4145828Z ##[error]Process completed with exit code 2.
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.4405181Z Post job cleanup.
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.6561928Z [command]"C:\Program Files\Git\bin\git.exe" version
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:23.6856007Z git version 2.55.0.windows.5
+Node.js 17 - windows-latest	UNKNOWN STEP	2026-10-05T22:53:25.5144055Z Cleaning up orphan processes
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4785162Z 
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4785651Z       Error: expected { bogus: 'bogus' } response body, got { bogus: false }
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4786425Z       + expected - actual
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4786662Z 
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4786764Z        {
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4787801Z       
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4788246Z       at Context.<anonymous> (test/req.acceptsEncodings.js:50:10)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4788803Z       at processImmediate (node:internal/timers:466:21)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4789733Z       at process.callbackTrampoline (node:internal/async_hooks:130:17)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4790224Z   ----
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4790577Z       at error (node_modules/supertest/lib/test.js:335:15)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4791145Z       at Test._assertBody (node_modules/supertest/lib/test.js:193:16)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4791874Z       at /home/runner/work/express/express/node_modules/supertest/lib/test.js:308:13
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4792612Z       at Test._assertFunction (node_modules/supertest/lib/test.js:285:13)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4793234Z       at Test.assert (node_modules/supertest/lib/test.js:164:23)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4793919Z       at Server.localAssert (node_modules/supertest/lib/test.js:120:14)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4794489Z       at Object.onceWrapper (node:events:641:28)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4794920Z       at Server.emit (node:events:527:28)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4795313Z       at emitCloseNT (node:net:1736:8)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4795876Z       at processTicksAndRejections (node:internal/process/task_queues:82:21)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4796291Z 
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4796410Z   2) req
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4796661Z        .acceptsEncodings()
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4797161Z          should return an array with * when Accept-Encoding is not present:
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4797546Z 
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4797793Z       Error: expected [ '*' ] response body, got [ 'identity' ]
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4798223Z       + expected - actual
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4798407Z 
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4798509Z        [
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4798749Z       -  "identity"
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4799781Z       
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4800227Z       at Context.<anonymous> (test/req.acceptsEncodings.js:149:10)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4800797Z       at processImmediate (node:internal/timers:466:21)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4801314Z       at process.callbackTrampoline (node:internal/async_hooks:130:17)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4801667Z   ----
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4801940Z       at error (node_modules/supertest/lib/test.js:335:15)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4802387Z       at Test._assertBody (node_modules/supertest/lib/test.js:193:16)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4802909Z       at /home/runner/work/express/express/node_modules/supertest/lib/test.js:308:13
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4803448Z       at Test._assertFunction (node_modules/supertest/lib/test.js:285:13)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4803948Z       at Test.assert (node_modules/supertest/lib/test.js:164:23)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4804397Z       at Server.localAssert (node_modules/supertest/lib/test.js:120:14)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4804813Z       at Object.onceWrapper (node:events:641:28)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4805140Z       at Server.emit (node:events:527:28)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4805436Z       at emitCloseNT (node:net:1736:8)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4805855Z       at processTicksAndRejections (node:internal/process/task_queues:82:21)
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4806161Z 
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4806167Z 
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.4806172Z 
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.5370854Z -----------------|---------|----------|---------|---------|-------------------
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.5396422Z -----------------|---------|----------|---------|---------|-------------------
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.5510548Z ##[error]Process completed with exit code 2.
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.5663655Z Post job cleanup.
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.6497276Z [command]/usr/bin/git version
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.6534738Z git version 2.55.0
+Node.js 17 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:55.7534743Z Cleaning up orphan processes
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9699356Z 
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9699577Z       Error: expected { bogus: 'bogus' } response body, got { bogus: false }
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9699895Z       + expected - actual
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9700030Z 
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9700110Z        {
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9701049Z       
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9701435Z       at Context.<anonymous> (test/req.acceptsEncodings.js:50:10)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9702074Z       at processImmediate (node:internal/timers:466:21)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9702451Z       at process.callbackTrampoline (node:internal/async_hooks:130:17)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9702753Z   ----
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9702994Z       at error (node_modules/supertest/lib/test.js:335:15)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9703353Z       at Test._assertBody (node_modules/supertest/lib/test.js:193:16)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9703851Z       at /home/runner/work/express/express/node_modules/supertest/lib/test.js:308:13
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9704291Z       at Test._assertFunction (node_modules/supertest/lib/test.js:285:13)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9704666Z       at Test.assert (node_modules/supertest/lib/test.js:164:23)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9705036Z       at Server.localAssert (node_modules/supertest/lib/test.js:120:14)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9705376Z       at Object.onceWrapper (node:events:627:28)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9705665Z       at Server.emit (node:events:513:28)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9705927Z       at emitCloseNT (node:net:1857:8)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9706271Z       at processTicksAndRejections (node:internal/process/task_queues:82:21)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9706511Z 
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9706600Z   2) req
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9706779Z        .acceptsEncodings()
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9707146Z          should return an array with * when Accept-Encoding is not present:
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9707460Z 
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9707639Z       Error: expected [ '*' ] response body, got [ 'identity' ]
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9707925Z       + expected - actual
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9708056Z 
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9708127Z        [
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9708300Z       -  "identity"
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9708821Z       
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9709077Z       at Context.<anonymous> (test/req.acceptsEncodings.js:149:10)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9709421Z       at processImmediate (node:internal/timers:466:21)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9709775Z       at process.callbackTrampoline (node:internal/async_hooks:130:17)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9710065Z   ----
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9710297Z       at error (node_modules/supertest/lib/test.js:335:15)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9710643Z       at Test._assertBody (node_modules/supertest/lib/test.js:193:16)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9711053Z       at /home/runner/work/express/express/node_modules/supertest/lib/test.js:308:13
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9711479Z       at Test._assertFunction (node_modules/supertest/lib/test.js:285:13)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9711945Z       at Test.assert (node_modules/supertest/lib/test.js:164:23)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9712363Z       at Server.localAssert (node_modules/supertest/lib/test.js:120:14)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9712708Z       at Object.onceWrapper (node:events:627:28)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9712989Z       at Server.emit (node:events:513:28)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9713251Z       at emitCloseNT (node:net:1857:8)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9713601Z       at processTicksAndRejections (node:internal/process/task_queues:82:21)
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9713847Z 
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9713852Z 
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:46.9713856Z 
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:47.0111032Z -----------------|---------|----------|---------|---------|-------------------
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:47.0129335Z -----------------|---------|----------|---------|---------|-------------------
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:47.0202944Z ##[error]Process completed with exit code 2.
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:47.0325058Z Post job cleanup.
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:47.1043870Z [command]/usr/bin/git version
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:47.1072702Z git version 2.55.0
+Node.js 16 - ubuntu-latest	UNKNOWN STEP	2026-10-05T22:52:47.1784501Z Cleaning up orphan processes
