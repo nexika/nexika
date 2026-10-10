@@ -136,6 +136,24 @@ Each run records:
 - the diff: files changed, lines added and removed;
 - the setup: model, claude version and Nexika commit.
 
+## The dashboard
+
+```bash
+python3 benchmarks/agent/bench.py dashboard              # writes ~/nexika-bench/dashboard.html
+python3 benchmarks/agent/bench.py dashboard --watch 60   # rewrites it every minute while a pilot runs
+```
+
+One HTML file with every pilot folder under `~/nexika-bench` (or the folder that holds
+`$AGENTBENCH_HOME`), with no scripts or outside files. For each pilot it shows:
+- progress, cost and invalid runs;
+- the resolve rate of each arm with a 95% interval;
+- each arm against A, using the same statistics as `summary.md`;
+- the results by difficulty.
+
+It also shows the context cost table from `bench.py context`. A pilot that is still running shows
+only its graded runs, labelled "in progress, partial", so a run that is waiting to be graded never
+counts as a failure. With `--watch`, an open browser tab reloads by itself.
+
 ## Reading the result
 
 The summary pairs tasks. Each measure is the mean per task in each arm, the difference B − A, and a
