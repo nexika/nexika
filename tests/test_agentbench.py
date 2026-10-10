@@ -2,6 +2,7 @@
 
 import io
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -354,6 +355,14 @@ def test_grade_run_skips_empty_diffs_and_reads_reports(tmp_path):
     assert grades[("t1", "A", 1)]["resolved"] and not grades[("t2", "A", 1)]["resolved"]
     preds = (tmp_path / "p__A__r1.jsonl").read_text().splitlines()
     assert json.loads(preds[0])["model_name_or_path"] == "p__A__r1"
+
+
+def test_model_label_is_a_valid_docker_name_for_ablation_arms():
+    # The harness names its containers after the label; docker refused "+" and the haris+barq
+    # arm of pilot 2 was never graded (every run counted as not resolved).
+    label = grade.model_label("pilot-2", "haris+barq", 1)
+    assert re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_.-]*", label)
+    assert label != grade.model_label("pilot-2", "haris", 1)
 
 
 def test_validate_grades_gold_patches(tmp_path):
