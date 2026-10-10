@@ -75,7 +75,7 @@ def throwaway_world():
     keys = ("HOME", "HARIS_HOME", "NEXIKA_HOME", "NEXIKA_STATUS_HOME", "HARIS", "NEXIKA_BACKGROUND")
     saved, cwd = {k: os.environ.get(k) for k in keys}, os.getcwd()
     with tempfile.TemporaryDirectory(prefix="haris-bench-") as tmp:
-        base = Path(tmp)
+        base = Path(tmp).resolve()  # macOS keeps it under /var, a link to /private/var
         os.environ.update(HOME=str(base / "home"), HARIS_HOME=str(base / "home/.claude/nexika/haris"),
                           NEXIKA_HOME=str(base / "home/.claude/nexika"),
                           NEXIKA_STATUS_HOME=str(base / "status"))

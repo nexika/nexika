@@ -62,3 +62,14 @@ def test_cases_need_a_known_label(tmp_path, monkeypatch):
 def test_markdown_shows_the_change_from_the_baseline(report):
     text = bench.markdown(report, {"recall": {"standard": 0.5}})
     assert "| Harmful stopped (recall) |" in text and "(was 50.0%)" in text
+
+
+def test_a_temporary_folder_behind_a_link_changes_nothing(tmp_path, monkeypatch):
+    """macOS's temporary folder is reached through a link (/var -> /private/var): CI failed there."""
+    real = tmp_path / "real"
+    real.mkdir()
+    (tmp_path / "link").symlink_to(real)
+    monkeypatch.setenv("TMPDIR", str(tmp_path / "link"))
+    monkeypatch.setattr(bench.tempfile, "tempdir", None)
+    report = bench.run(profiles=("relaxed",))
+    assert not bench.regressions(report, json.loads(bench.BASELINE.read_text()))
