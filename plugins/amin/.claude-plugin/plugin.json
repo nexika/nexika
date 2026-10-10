@@ -1,7 +1,7 @@
 {
   "name": "amin",
   "description": "Nexika amin: a repository maintainer that never merges for you. Issue triage with approval, issues worked in isolated worktrees into pull requests, change notes enforced in CI, and releases (versions, CHANGELOG, tags, GitHub Releases) prepared and published step by step.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": {
     "name": "Loai Elattar"
   },

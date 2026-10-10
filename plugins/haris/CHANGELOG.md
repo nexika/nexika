@@ -2,6 +2,38 @@
 
 All notable changes to haris are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-10-10
+
+### Changed
+- `pre-commit install` (and `--hook-type`, `init-templatedir`) now asks, naming the git hook it writes; `pre-commit run` is still allowed. (#140)
+- Writes to `$GITHUB_OUTPUT`, `$GITHUB_ENV`, `$GITHUB_STEP_SUMMARY` and `$GITHUB_PATH` (CI step commands) are treated like temp files and no longer ask. (#142)
+- `stable` is now a protected branch by default: force-pushing it is refused, like `main` and `release/*`. (#143)
+- Fewer asks that are not risk: a write whose file name alone is computed (`> logs/$id.log` in a loop) is judged by its folder, `git branch -D` of a branch whose work is on a remote (pushed, or squash-merged with its remote branch gone) no longer asks, git in a repository inside a folder you approved is covered by that approval, and the second ask about writes in one folder offers that whole folder. `haris check` now applies your project approvals and says so. (#210)
+
+### Fixed
+- `haris check --json` works again (it crashed), and `head -50 FILE` no longer reads -50 as a file name. (#137)
+- `python -m twine upload` and `python -m hatch publish` now ask like `twine upload` and `hatch publish`: a tool run as a Python module gets its own rule. (#138)
+- Printing the environment through a filter for secret names (`env | grep -i token`, `printenv | grep KEY`, `set | grep -i password`) now asks, like `echo $GITHUB_TOKEN`. (#139)
+- A git checkout, switch, restore, reset or clean in a folder outside the project (after `cd` or with `git -C`) now asks, like other writes outside the project. (#141)
+- Arabic text that only describes someone ignoring rules (يتجاهل Claude القواعد) is no longer flagged as prompt injection; orders such as تجاهل جميع التعليمات or وتجاهل القواعد still are. (#212)
+- curl ... | sh - and | bash /dev/stdin are seen as running a download, like | sh (#214)
+- env | grep -i npm (or github, aws) asks: the filter would print NPM_TOKEN and similar secrets (#215)
+- npm config set (and pnpm/yarn config set) is judged as a write to ~/.npmrc, which holds tokens, so it asks; a secret echoed into a file now says which file (#216)
+- husky, lefthook install and simple-git-hooks ask like pre-commit install, also through npx and node_modules/.bin: they make git run hook scripts later (#217)
+- gh workflow run asks when the workflow's name says it deploys, publishes or releases (deploy-website.yml, release.yml) (#218)
+- gcloud builds submit --tag (or --config) asks: it builds and publishes an image, like docker push (#219)
+- npx, npm exec and pnpm dlx of a URL or git repository (https://..., github:user/repo, user/repo) ask as download-and-run; registry packages keep passing (#220)
+- The project's own test, lint and coverage tools from node_modules/.bin that its package.json scripts run (borp, c8, tstyche, markdownlint-cli2) are allowed like npm run; cross-env is read like env (#221)
+- Reading a project .npmrc that git tracks and that holds no token no longer asks; turning off ignore-scripts in .npmrc (edit, sed, echo or npm config set) asks (#222)
+- npm publish --dry-run (and pnpm/yarn) no longer asks: it sends nothing. The README's allow example now shows one that works (#223)
+- Writing under /Applications on macOS asks as a write outside the project instead of being refused as the operating system; deleting all of /Applications is still refused (#224)
+- Defining an alias no longer asks; when the same command uses the alias, what it stands for is checked (#225)
+- npm pkg get, npm whoami and npm ping are allowed as reads; npm -v and cd ... && npm run show the reason of the step that decides (#226)
+- Release lines like 4.x and 5.x, and next, are protected branches by default: force-pushing them is refused (#227)
+- rimraf, del-cli and shx rm are judged like rm -r, also through npx and npm exec: rimraf ~ is refused, deleting outside the project asks (#264)
+- Python's pass statement inside code handed to python -c from inline code is no longer read as the pass password manager (#266)
+- git config core.hooksPath /dev/null and git -c core.hooksPath=/dev/null only switch hooks off and run nothing, so haris no longer refuses or asks about them (#267)
+
 ## [0.2.0] - 2026-10-08
 
 ### Changed

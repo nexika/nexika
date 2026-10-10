@@ -3,6 +3,18 @@
 Nexika is released as a whole (tag `nexika-vX.Y.Z`) and each plugin also has its own version, tag
 (`<plugin>-vX.Y.Z`) and CHANGELOG in `plugins/<plugin>/CHANGELOG.md`.
 
+## [0.3.0] - 2026-10-10
+
+### Released
+| Project | Version |
+|---|---|
+| [amin](plugins/amin/CHANGELOG.md) | 0.3.0 |
+| [barq](plugins/barq/CHANGELOG.md) | 0.3.0 |
+| [haris](plugins/haris/CHANGELOG.md) | 0.3.0 |
+| [itqan](plugins/itqan/CHANGELOG.md) | 0.4.0 |
+| [mizan](plugins/mizan/CHANGELOG.md) | 0.3.0 |
+| [tabib](plugins/tabib/CHANGELOG.md) | 0.3.0 |
+
 ## [0.2.0] - 2026-10-08
 
 ### Released
