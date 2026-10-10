@@ -1518,12 +1518,21 @@ def h_mv(argv, ctx, stdin):
 
 def h_ln(argv, ctx, stdin):
     opts, pos = options(argv[1:], {"-t", "--target-directory", "-S", "--suffix"})
-    if values(opts, "-t", "--target-directory"):
-        write_paths(values(opts, "-t", "--target-directory"), ctx, "creates links in")
+    # a link to a secret, or to a file staged with one, points at that secret too (#357)
+    secret = [s for s in pos if ctx.where.place(ctx.where.resolve(s, ctx.cwd)) == "secret"]
+    dest = values(opts, "-t", "--target-directory")
+    if dest:
+        write_paths(dest, ctx, "creates links in")
+        for s in secret:
+            ctx.stage(ctx.where.resolve(dest[0], ctx.cwd).rstrip("/") + "/" + os.path.basename(s.rstrip("/")))
     elif len(pos) >= 2:
         write_paths([pos[-1]], ctx, "creates a link at")
+        if secret and pos[-1] not in secret:
+            ctx.stage(ctx.where.resolve(pos[-1], ctx.cwd))
     elif pos:
         write_paths([arg(os.path.basename(pos[0]))], ctx, "creates a link at")
+        if secret:
+            ctx.stage(ctx.where.resolve(os.path.basename(pos[0]), ctx.cwd))
     return Stage()
 
 
@@ -1752,6 +1761,7 @@ CODE_WHOLE_ENV_MORE = re.compile(
     + r"|(?<![\w$])(?<![\w$]\.)(?<!env:\s)(?<!env:)(?:globalThis\s*\.\s*)?process"
       r"\s*(?:\.\s*env\b|\[\s*['\"`]env['\"`]\s*\])" + JS_ONE
     + r"|require\s*\(\s*['\"](?:node:)?process['\"]\s*\)\s*\.\s*env\b" + JS_ONE
+    + r"|\b(?:Deno\s*\.\s*env\s*\.\s*toObject\s*\(|Bun\s*\.\s*env\b" + JS_ONE + r")"
     + r"|\bgetenv\s*\(\s*\)|\$_(?:ENV|SERVER)\b(?!\s*\[)")
 # Ruby's ENV used whole: not one variable (ENV["X"], ENV.fetch) or its names alone (ENV.keys).
 RUBY_WHOLE_ENV = re.compile(r"(?<![\w$%:])ENV\b(?!\s*\[|\s*=(?!=)|\s*\.\s*(?:(?:fetch|delete|store|keys|size|"
@@ -1759,7 +1769,8 @@ RUBY_WHOLE_ENV = re.compile(r"(?<![\w$%:])ENV\b(?!\s*\[|\s*=(?!=)|\s*\.\s*(?:(?:
 # Names the environment is bound to: from os import environ [as e]; import os as o; const {env[: e]} = process
 PY_FROM_OS = re.compile(r"\bfrom\s+os\s+import\s+\(?([\w \t,]+)")
 PY_OS_AS = re.compile(r"\bimport\s+[\w \t,.]*?\bos\s+as\s+(\w+)")
-JS_FROM_PROCESS = re.compile(r"\{([^{}]*)\}\s*=\s*(?:globalThis\s*\.\s*)?process\b(?!\s*[.\[])"
+JS_FROM_PROCESS = re.compile(r"\{([^{}]*)\}\s*=\s*(?:(?:globalThis\s*\.\s*)?process\b(?!\s*[.\[])"
+                             r"|require\s*\(\s*['\"](?:node:)?process['\"]\s*\))"
                              r"|\bimport\s*\{([^{}]*)\}\s*from\s*['\"](?:node:)?process['\"]")
 
 
@@ -1771,18 +1782,21 @@ def whole_env(text: str, lang: str) -> bool:
         return True
     if "os" not in text and "process" not in text:
         return False
-    bare = STRING_LITERAL.sub("''", text)  # a name inside a string is text, not the variable
+    # Bindings are read from the code (a module name such as 'process' is a string); a name is counted
+    # as used only where it is code, not inside a string, so usage is searched in `bare`, which blanks
+    # each string's content but keeps its length so the two line up.
+    bare = STRING_LITERAL.sub(lambda m: m.group(0)[0] + " " * (len(m.group(0)) - 2) + m.group(0)[-1], text)
     uses = []
-    for m in PY_FROM_OS.finditer(bare):
+    for m in PY_FROM_OS.finditer(text):
         for item in m.group(1).split(","):
             words = item.split()
             if words[:1] in (["environ"], ["environb"]):
                 uses.append((words[2] if len(words) == 3 and words[1] == "as" else words[0], PY_ONE, m))
-    for m in PY_OS_AS.finditer(bare):
+    for m in PY_OS_AS.finditer(text):
         if re.search(rf"(?<![\w.]){m.group(1)}\s*\.\s*environb?\b" + PY_ONE, bare):
             return True
-    for m in JS_FROM_PROCESS.finditer(bare):
-        for item in (m.group(1) or m.group(2)).split(","):
+    for m in JS_FROM_PROCESS.finditer(text):
+        for item in (m.group(1) or m.group(2) or "").split(","):
             parts = re.split(r"\s*(?::|\bas\b)\s*", item.strip())
             if parts[0] == "env":
                 uses.append((parts[-1], JS_ONE, m))
@@ -2848,6 +2862,9 @@ GIT_LIST_READS = {"tag": {"", "-l", "--list", "-n", "--contains", "--points-at",
 
 def git_listing(sub, rest, ctx, stdin):
     """tag, stash, remote, worktree, reflog, notes: listing is a read, the rest changes the repo."""
+    if sub == "remote":  # git accepts -v/--verbose before the subcommand (git remote -v add ...)
+        while rest and rest[0] in ("-v", "--verbose"):
+            rest = rest[1:]
     first = rest[0] if rest else ""
     if sub == "remote" and first in ("add", "set-url", "rename"):
         _, names = options(rest[1:], {"-t", "-m"})

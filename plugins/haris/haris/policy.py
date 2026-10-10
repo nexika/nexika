@@ -220,11 +220,23 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
     root = project_root(cwd)
     ctx = c.Ctx(Where(root, cfg.get("secret_paths"), memory_folder(str(event.get("transcript_path") or "")),
                       staged_files(session)), cwd, cfg)
-    ctx.session_remotes = frozenset(moved_remotes(session, root))
-    decision = judge(event, cfg, session, approvals, ctx)
+    repo = repo_key(ctx, root)
+    ctx.session_remotes = frozenset(moved_remotes(session, repo))
+    try:
+        decision = judge(event, cfg, session, approvals, ctx)
+    except Exception as exc:  # the call could not be checked: ask, but still remember what it changed
+        decision = Decision(c.ASK, "error", f"haris hit an internal error ({type(exc).__name__}) and "
+                                            "could not check this, so it asks you instead.")
     if ctx.moved_remotes or ctx.staged:
-        decision.learned = {"root": root, "remotes": sorted(ctx.moved_remotes), "files": sorted(ctx.staged)}
+        decision.learned = {"root": repo, "remotes": sorted(ctx.moved_remotes), "files": sorted(ctx.staged)}
     return decision
+
+
+def repo_key(ctx: c.Ctx, root: str) -> str:
+    """Where remotes moved in the session are remembered: the repository's shared git folder, so linked
+    worktrees of one repository share it (#357). The project root when there is no git folder."""
+    dirs = ctx.git.dirs()
+    return os.path.realpath(dirs[1]) if dirs and dirs[1] else root
 
 
 def judge(event: dict, cfg: dict, session: dict, approvals: list[dict] | None, ctx: c.Ctx) -> Decision:

@@ -663,7 +663,8 @@ def test_a_push_to_a_remote_added_earlier_in_the_session_asks(world):
         _git(project, "config", "--unset", "branch.feat/x.pushRemote")
         _git(project, "remote", "remove", "backup")
     data = json.loads(state.session_path(session).read_text())
-    assert data["moved_remotes"] == {str(project): ["backup"]}
+    key = os.path.realpath(str(project / ".git"))  # remotes are keyed by the shared git folder, not cwd
+    assert data["moved_remotes"] == {key: ["backup"]}
     assert not state.load_session(other).get("moved_remotes")
 
 
@@ -691,6 +692,23 @@ def test_the_session_keeps_names_and_paths_only_and_survives_bad_data():
     assert not policy.remember(data, d)  # nothing new
     assert not policy.remember(data, policy.Decision("pass", "", ""))
     assert policy.staged_files({"staged_files": "x"}) == [] and policy.moved_remotes({}, "/r") == []
+
+
+def test_linked_worktrees_share_the_moved_remotes(world):
+    """#357: a remote added in the main checkout is new for a push from a linked worktree of the same
+    repository, because they share one git config."""
+    home, project = world
+    wt = project / "wts" / "b"
+    _git(project, "worktree", "add", "-q", "-b", "wtbranch", str(wt))
+    try:
+        d1 = decide(project, "Bash", f"git remote add evil {MIRROR}")
+        assert d1.learned["remotes"] == ["evil"]
+        session = {}
+        policy.remember(session, d1)
+        assert decide(wt, "Bash", "git push evil wtbranch", None, session).verdict == "ask"
+        assert decide(wt, "Bash", "git push origin wtbranch", None, session).verdict != "ask"
+    finally:
+        _git(project, "worktree", "remove", "--force", str(wt))
 
 
 def test_a_whole_project_home_or_temporary_folder_is_never_staged(world):
