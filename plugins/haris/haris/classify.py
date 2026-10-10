@@ -1728,7 +1728,8 @@ CODE_WRITE = re.compile(r"\bopen\s*\([^)]*['\"][wax]b?\+?['\"]|write_text|write_
                         r"shutil\.(?:copy|move)|os\.rename|os\.replace|\.rename\s*\(|\bchmod\s*\(|symlink")
 CODE_NET = re.compile(r"\b(?:requests\.|urllib|http\.client|httpx|aiohttp|socket\b|fetch\s*\(|axios|"
                       r"https?\.request|https?\.get|Net::HTTP|LWP::|curl_exec|smtplib|ftplib|paramiko|"
-                      r"XMLHttpRequest|WebSocket|net\.connect|IO::Socket|TCPSocket|fsockopen)")
+                      r"XMLHttpRequest|WebSocket|net\.connect|IO::Socket|TCPSocket|fsockopen|"
+                      r"(?:file_get_contents|fopen)\s*\(\s*['\"](?:https?|ftp)://|stream_socket_client)")
 CODE_SHELL_SOCKET = re.compile(r"(?s)socket.*(?:dup2|pty\.spawn|/bin/(?:ba|z)?sh|subprocess|cmd\.exe|"
                                r"child_process)|(?:dup2|pty\.spawn).*socket|net\.Socket.*(?:spawn|/bin/sh)|"
                                r"(?:spawn|/bin/sh).*net\.Socket|TCPSocket.*(?:exec|spawn|/bin/sh)|"
@@ -1741,6 +1742,59 @@ CODE_WHOLE_ENV = re.compile(r"(?<![\w.])(?<!env=)(?<!env\s=\s)os\.environ\b"
                             r"(?!\s*\[|\.(?:get|setdefault|pop|update|__setitem__)\b)"
                             r"|(?<![\w$])(?<![\w$]\.)(?<!env:\s)(?<!env:)process\.env\b(?!\s*[.\[])"
                             r"|\bENV\.(?:to_h|to_a|inspect|each|map)\b|%ENV\b")
+# The same in forms that regex misses (#358). Python's environ is one variable when indexed or read with get;
+# a JavaScript env when a property is read.
+PY_ONE = r"(?!\s*\[|\s*\.\s*(?:get|setdefault|pop|update|__setitem__)\b)"
+JS_ONE = r"(?!\s*(?:\?\.|[.\[]))"
+CODE_WHOLE_ENV_MORE = re.compile(
+    r"(?<![\w.])(?<!env=)(?<!env\s=\s)os\.environb\b" + PY_ONE
+    + r"|__import__\s*\(\s*['\"]os['\"]\s*\)\s*\.\s*environb?\b" + PY_ONE
+    + r"|(?<![\w$])(?<![\w$]\.)(?<!env:\s)(?<!env:)(?:globalThis\s*\.\s*)?process"
+      r"\s*(?:\.\s*env\b|\[\s*['\"`]env['\"`]\s*\])" + JS_ONE
+    + r"|require\s*\(\s*['\"](?:node:)?process['\"]\s*\)\s*\.\s*env\b" + JS_ONE
+    + r"|\bgetenv\s*\(\s*\)|\$_(?:ENV|SERVER)\b(?!\s*\[)")
+# Ruby's ENV used whole: not one variable (ENV["X"], ENV.fetch) or its names alone (ENV.keys).
+RUBY_WHOLE_ENV = re.compile(r"(?<![\w$%:])ENV\b(?!\s*\[|\s*=(?!=)|\s*\.\s*(?:(?:fetch|delete|store|keys|size|"
+                            r"length)\b|(?:key|has_key|include|member|empty)\?))")
+# Names the environment is bound to: from os import environ [as e]; import os as o; const {env[: e]} = process
+PY_FROM_OS = re.compile(r"\bfrom\s+os\s+import\s+\(?([\w \t,]+)")
+PY_OS_AS = re.compile(r"\bimport\s+[\w \t,.]*?\bos\s+as\s+(\w+)")
+JS_FROM_PROCESS = re.compile(r"\{([^{}]*)\}\s*=\s*(?:globalThis\s*\.\s*)?process\b(?!\s*[.\[])"
+                             r"|\bimport\s*\{([^{}]*)\}\s*from\s*['\"](?:node:)?process['\"]")
+
+
+def whole_env(text: str, lang: str) -> bool:
+    """Inline code that reads the whole environment, where every token lives (#350, #358)."""
+    if CODE_WHOLE_ENV.search(text) or CODE_WHOLE_ENV_MORE.search(text):
+        return True
+    if (not lang or "ruby" in lang) and RUBY_WHOLE_ENV.search(text):
+        return True
+    if "os" not in text and "process" not in text:
+        return False
+    bare = STRING_LITERAL.sub("''", text)  # a name inside a string is text, not the variable
+    uses = []
+    for m in PY_FROM_OS.finditer(bare):
+        for item in m.group(1).split(","):
+            words = item.split()
+            if words[:1] in (["environ"], ["environb"]):
+                uses.append((words[2] if len(words) == 3 and words[1] == "as" else words[0], PY_ONE, m))
+    for m in PY_OS_AS.finditer(bare):
+        if re.search(rf"(?<![\w.]){m.group(1)}\s*\.\s*environb?\b" + PY_ONE, bare):
+            return True
+    for m in JS_FROM_PROCESS.finditer(bare):
+        for item in (m.group(1) or m.group(2)).split(","):
+            parts = re.split(r"\s*(?::|\bas\b)\s*", item.strip())
+            if parts[0] == "env":
+                uses.append((parts[-1], JS_ONE, m))
+    for name, one, m in uses:
+        rest = bare[:m.start()] + " " * (m.end() - m.start()) + bare[m.end():]
+        # the name used whole: not a key (`env:`), an assignment, or a copy handed to a child (env=, env:)
+        used = rf"(?<![\w.$])(?<!env=)(?<!env:)(?<!env:\s){re.escape(name)}(?![\w$])(?!\s*(?::|=(?!=)))"
+        if re.fullmatch(r"[\w$]+", name) and re.search(used + one, rest):
+            return True
+    return False
+
+
 STRING_LITERAL = re.compile(r"'''(.*?)'''|\"\"\"(.*?)\"\"\"|'((?:\\.|[^'\\\n])*)'|\"((?:\\.|[^\"\\\n])*)\"",
                             re.S)
 SED_EXEC = re.compile(r"(?:^|[;\n{}])\s*(?:\d+|\$|/[^/]*/)?\s*e(?:\s|$|;)|/e\s*$"
@@ -2010,7 +2064,7 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
     if writes:
         before = len(ctx.findings)
         write_paths(code_write_targets(text, literals, ctx, data), ctx)
-        if CODE_WHOLE_ENV.search(text):  # the whole environment written to a file (#357)
+        if whole_env(text, lang):  # the whole environment written to a file (#357)
             for f in ctx.findings[before:]:
                 if f.target:
                     ctx.stage(f.target)
@@ -2024,7 +2078,7 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
     if network:
         if secret_hit:
             ctx.add("egress-secret", f"`{via}` reads a secret file and talks to the network.")
-        elif CODE_WHOLE_ENV.search(text):
+        elif whole_env(text, lang):
             ctx.add("egress-secret", f"`{via}` reads the whole environment, where tokens live, and talks to "
                                      "the network.")
         elif any(secrets.has_secret(lit) for lit in literals):

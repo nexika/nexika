@@ -48,7 +48,10 @@ hide the target.
 - **Data leaving the machine:** what `curl`, `wget`, `scp`, `rsync`, `nc`, `ssh`, `gh`, web
   searches, web fetches and MCP tools send is checked for secrets (the same rules as hafiz's
   redaction, in a copy a test keeps identical). A secret file, a secret read by another command
-  (`cat .env | curl -d @-`, `$(cat ~/.ssh/id_rsa)`) or a literal key is **refused**. So is a
+  (`cat .env | curl -d @-`, `$(cat ~/.ssh/id_rsa)`) or a literal key is **refused**, and so is
+  the whole environment (`env | curl`, or inline code that reads all of it and talks to the network:
+  `os.environ` or `from os import environ`, `process.env` or `const {env} = process`, Ruby's `ENV`,
+  PHP's `getenv()` and `$_ENV`). So is a
   file an earlier command in the session filled with the whole environment or a secret (`env >
   /tmp/e`, `cp ~/.aws/credentials /tmp/c`, `env | tee f`): sending it later is sending the secret.
   A push to a remote added or pointed at a new address earlier in the session asks, like one
