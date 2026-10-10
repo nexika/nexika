@@ -11,9 +11,10 @@ import json
 
 from . import config, family, i18n, status
 
-NOTE = ("mizan: branch, PRs, CI, device, context, cost and task step show above the prompt (/mizan opens "
-        "details). Keep a TodoWrite list. At full context mizan saves a hafiz handoff and puts /clear in the "
-        "prompt for the user; never clear or compact by yourself. Helper: python3 {helper}")
+# Read again on every turn (#345): the band shows itself, so the note keeps only what changes what
+# Claude does. The context warning itself comes from the band and the Stop hook when it fills.
+NOTE = ("mizan: keep a TodoWrite list (the band shows its step). At full context mizan saves a handoff and "
+        "offers /clear to the user; never clear or compact by yourself. Helper: python3 {helper}")
 MID_EVERY = 3
 
 

@@ -272,12 +272,17 @@ def test_siyaq_can_be_turned_off(repo, monkeypatch):
 
 
 def test_session_start_note(repo, tmp_path):
+    """#345: knowledge comes with the prompts and files it matches; the note only says so, with the
+    helper (the skills run it and `match` searches on demand). Counts and tips are not repeated."""
     note = hooks.on_session_start({"session_id": "s1", "source": "startup", "cwd": str(repo)}, "python3 x")
-    assert "5 knowledge entries from 4 sources (1 hand-written)" in note and "siyaq helper: python3 x" in note
+    assert "siyaq helper: python3 x" in note and "match TEXT" in note and "matches" in note
+    assert "knowledge entries" not in note
+    assert len(note.replace("python3 x", "")) <= 160, note
     empty = tmp_path / "empty"
     empty.mkdir()
     _git(empty, "init", "-q")
-    assert "No knowledge entries yet" in hooks.on_session_start({"cwd": str(empty)}, "h")
+    empty_note = hooks.on_session_start({"cwd": str(empty)}, "h")
+    assert "siyaq helper: h" in empty_note and "No knowledge entries yet" not in empty_note
 
 
 # ---------------------------------------------------------------- CLI and stats
@@ -536,7 +541,7 @@ def test_first_prompt_on_a_slow_repo_never_waits_for_the_index(repo, slow_build)
     assert slow_build.started == [repo]
     assert hooks.on_tool(tool_event(repo, "src/Orders/DiscountService.cs", tool="Edit")) is None
     note = hooks.on_session_start({"session_id": "s1", "source": "startup", "cwd": str(repo)}, "helper")
-    assert "being built in the background" in note
+    assert note == hooks.NOTE.format(helper="helper")  # the same short note while the index builds (#345)
 
 
 def test_background_build_writes_the_index(repo):

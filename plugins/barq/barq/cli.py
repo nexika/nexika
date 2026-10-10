@@ -13,7 +13,7 @@ from pathlib import Path
 from . import __version__, files, ops_git, ops_project, ops_read, ops_search, stats
 from .cache import Cache
 from .core import READ, Context, OpError, OpSpec, Result
-from .mask import mask_text
+from .mask import MASK, mask_text
 
 BUILTIN: list[OpSpec] = [*ops_read.OPS, *ops_search.OPS, *ops_project.OPS, *ops_git.OPS, *stats.OPS]
 UNLOGGED = {"stats"}
@@ -126,15 +126,22 @@ def execute(requests: list, specs: dict[str, OpSpec], ctx: Context) -> list[Resu
     return [j if isinstance(j, Result) else run_one(j[0], j[1], ctx) for j in jobs]
 
 
+MASKED_NOTE = "don't copy [masked] lines into an edit; Read the file"
+
+
+def title_of(r: Result) -> str:
+    """A block's title. Output with masked secrets warns about them itself, where it matters (#345)."""
+    title = r.label if r.ok else f"{r.label} [ERROR]"
+    if MASK in r.text and "masked" not in r.label:
+        title += f" ({MASKED_NOTE})"
+    return title
+
+
 def render(results: list[Result], as_json: bool) -> str:
     if as_json:
         return json.dumps([{"label": r.label, "ok": r.ok, "hit": r.hit, "text": r.text}
                            for r in results], ensure_ascii=False, indent=1)
-    blocks = []
-    for r in results:
-        title = r.label if r.ok else f"{r.label} [ERROR]"
-        blocks.append(f"=== {title} ===\n{r.text}")
-    return "\n\n".join(blocks)
+    return "\n\n".join(f"=== {title_of(r)} ===\n{r.text}" for r in results)
 
 
 def _list_ops(specs: dict[str, OpSpec]) -> str:

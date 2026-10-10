@@ -13,14 +13,15 @@ sys.path.insert(0, str(PLUGIN))
 
 # barq complements the built-in tools, it doesn't replace them: Read, Grep and Glob stay Claude's
 # way to look at files (Edit needs a prior Read), and barq covers what they can't do in one call.
-USAGE = """## barq ⚡ (Nexika): test results, git status and code outlines, short
-Keep using Read, Grep and Glob to look at files (Edit needs a Read first). Use barq for:
-  {cmd} run:test  run:build  run:lint      only the verdict, the failures and the errors
-  {cmd} git-status                         branch, ahead/behind, changes, and the next step
+# The note is read again on every turn (#345), so it keeps only what changes what Claude does; what
+# matters in one situation is said by the output where it happens (masked secrets, a cut-short read).
+USAGE = """## barq (Nexika): test results, git status and code outlines, short
+Keep using Read, Grep and Glob for files (Edit needs a Read first). Use barq for:
+  {cmd} run:test  run:build  run:lint    only the verdict, failures and errors
+  {cmd} git-status                       branch, ahead/behind, changes, next step
   {cmd} 'read:PATH:outline' 'read:PATH@Symbol' 'map[:PATH]'   signatures, one symbol, a folder
-  {cmd} info                               languages, stacks and the build/test/lint commands
-Several ops in one command run in one call. Quote every op (the shell would expand `*` and `@`).
-Never copy a [masked] line into an edit; Read the file instead."""
+  {cmd} info                             the build, test and lint commands
+Quote every op; several ops in one command run in one call."""
 
 
 def main() -> None:

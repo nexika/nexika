@@ -161,40 +161,39 @@ def read_handoff(folder: Path, branch: str) -> str:
 
 
 def start_card(root: Path, branch: str, helper: str, session: str = "", budget: int = CARD_CHARS) -> str:
+    """Read again on every turn (#345): what was remembered, and the helper the skills run. With
+    nothing remembered yet, only the helper; the skills say how to use it."""
     memory = store.Memory(root)
     items = memory.all()
     last = last_session(memory.dir, branch, exclude=session)
+    if not items and not last:
+        return f"hafiz (Nexika): no memories of this project yet. hafiz helper: `{helper}`"
     issue = issue_from_branch(branch)
     head = f"## hafiz (Nexika): memory of this project, branch {branch or '(none)'}"
     if issue:
         head += f" (issue #{issue})"
-    lines = [head]
-    if not items and not last:
-        lines.append("No memories yet. Decisions, tasks, problems, files and links are captured as you "
-                     "work; nothing is sent anywhere.")
-    else:
-        lines.append(f"{len(items)} memories. Use them only when relevant; check the code before relying "
-                     "on one.")
-        elsewhere = {} if last else last_session(memory.dir, exclude=session)
-        for state, where in ((last, "here"), (elsewhere, f"on {elsewhere.get('branch') or '(no branch)'}")):
-            if state:
-                when = state.get("updated", "")[:16].replace("T", " ")
-                latest = working_on(state)
-                lines.append(f"Last session {where} ({when}, {state['session'][:8]}): {latest}")
-        mine = search.newest_first([i for i in items if search.keep(i, branch=branch)])
-        todo = [i["text"] for i in mine if i["type"] == "task" and i.get("status") == "open"]
-        failing = [problem_title(i["text"]) for i in mine
-                   if i["type"] == "problem" and i.get("status") == "open"]
-        decisions = [i["text"] for i in mine if i["type"] == "decision"]
-        if todo:
-            lines.append("Open tasks: " + _join(todo, 4))
-        if failing:
-            lines.append("Open problems: " + _join(failing, 2, 140))
-        if decisions:
-            lines.append("Recent decisions: " + _join(decisions, 3, 140))
-        if last.get("files"):
-            lines.append("Files in play: " + _join(files(last), 6, 60))
-    lines.append(f"Recall: `{helper} recall \"words\"` (or /hafiz:recall); handoff: /hafiz:handoff.")
+    lines = [head, f"{len(items)} memories. Use them only when relevant; check the code before relying "
+                   "on one."]
+    elsewhere = {} if last else last_session(memory.dir, exclude=session)
+    for state, where in ((last, "here"), (elsewhere, f"on {elsewhere.get('branch') or '(no branch)'}")):
+        if state:
+            when = state.get("updated", "")[:16].replace("T", " ")
+            latest = working_on(state)
+            lines.append(f"Last session {where} ({when}, {state['session'][:8]}): {latest}")
+    mine = search.newest_first([i for i in items if search.keep(i, branch=branch)])
+    todo = [i["text"] for i in mine if i["type"] == "task" and i.get("status") == "open"]
+    failing = [problem_title(i["text"]) for i in mine
+               if i["type"] == "problem" and i.get("status") == "open"]
+    decisions = [i["text"] for i in mine if i["type"] == "decision"]
+    if todo:
+        lines.append("Open tasks: " + _join(todo, 4))
+    if failing:
+        lines.append("Open problems: " + _join(failing, 2, 140))
+    if decisions:
+        lines.append("Recent decisions: " + _join(decisions, 3, 140))
+    if last.get("files"):
+        lines.append("Files in play: " + _join(files(last), 6, 60))
+    lines.append(f"Recall more: `{helper} recall \"words\"`.")
     return fit(lines, budget)
 
 

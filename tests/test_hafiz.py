@@ -299,6 +299,21 @@ def test_start_card_is_short_and_points_to_the_last_session(log, capsys, repo):
     assert "Last session on feat/12-login" in text and "hafiz recall" in text
 
 
+def test_start_card_without_memories_is_one_line(capsys, repo):
+    """#345: with nothing remembered yet the card only names the helper (the skills run it)."""
+    text = hook("session-start", {"session_id": "new", "source": "startup", "cwd": str(repo)}, capsys)
+    helper = cli.helper_command()
+    assert helper in text and "no memories" in text
+    assert "\n" not in text and len(text.replace(helper, "")) <= 100, text
+
+
+def test_start_card_leaves_out_what_the_skills_say(log, capsys, repo):
+    stop(work_session(log), capsys)
+    text = hook("session-start", {"session_id": "new-session", "source": "startup", "cwd": str(repo)}, capsys)
+    assert "Last session here" in text and f"{cli.helper_command()} recall" in text
+    assert "/hafiz:handoff" not in text and "/hafiz:recall" not in text
+
+
 def test_compaction_snapshot_is_restored(log, capsys, repo):
     work_session(log)
     hook("pre-compact", {"session_id": SESSION, "transcript_path": log.write(), "cwd": str(repo)}, capsys)
