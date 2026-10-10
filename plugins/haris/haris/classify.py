@@ -280,11 +280,12 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
                       secret="secret" in getattr(heredoc, "marks", ()))
     program = os.path.basename(argv[0]).lower()
     if program in PRINTERS:
+        into = printed_into(cmd, ctx)
         for w in cmd.words[1:]:
             for name in var_names(w):
                 if SECRET_VAR.search(name):
-                    ctx.add("secret-read", f"Prints ${name}, which looks like a secret, into the "
-                                           f"conversation.")
+                    ctx.add("secret-read", f"Writes ${name}, which looks like a secret, into {into}."
+                            if into else f"Prints ${name}, which looks like a secret, into the conversation.")
     ctx.prefix = {name: str(value) for name, value in assigns}
     try:
         stage = run(argv, ctx, stdin)
@@ -307,6 +308,22 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
             else:
                 ctx.written.pop(path, None)
     return stage
+
+
+def printed_into(cmd: shell.Simple, ctx: Ctx) -> str:
+    """The file a printer's output goes to (`echo ... >> .npmrc`), said plainly; "" for the conversation."""
+    for r in cmd.redirects:
+        if r.body is None and r.target and r.op in (">", ">>", ">|", "&>", "&>>") and r.fd in ("", "1"):
+            values_ = expand(r.target, ctx)
+            path = ctx.where.resolve(values_[0], ctx.cwd) if values_ and UNKNOWN not in values_[0] else None
+            if not path or ctx.where.place(path) == "null":
+                return ""
+            shown = ctx.show(path)
+            if path.startswith(ctx.where.root + "/") and \
+                    ctx.git.try_run("ls-files", "--error-unmatch", "--", path) is not None:
+                return f"{shown}, which git tracks (it would be committed)"
+            return shown
+    return ""
 
 
 DOWNLOADERS = {"curl", "wget", "http", "https", "xh", "aria2c", "fetch"}
@@ -660,7 +677,7 @@ def reader(program: str, argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stag
         return Stage()
     if pattern_first and stdin is not None and stdin.environ:  # `env | grep -i token` (#139)
         patterns = values(opts, "-e", "--regexp") or pos[:1]
-        if any(SECRET_VAR.search(p) for p in patterns):
+        if any(SECRET_VAR.search(p) or picks_secret_var(p) for p in patterns):
             ctx.add("secret-read", f"Picks the variables that look like secrets out of the environment "
                                    f"({program}) and prints them into the conversation.")
     if pattern_first and pos and not has(opts, "-e", "--regexp", "-f", "--file"):
@@ -694,6 +711,25 @@ def reader(program: str, argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stag
         root = ctx.where.resolve(pos[-1], ctx.cwd) if program in ("ls", "tree") else ctx.cwd
         return Stage(paths_root=root, filtered=program != "ls")
     return Stage()
+
+
+# Variables that setup-node, npm, gh and the cloud CLIs put in the environment with a secret in them (#215).
+SECRET_ENV_NAMES = ("npm_token", "node_auth_token", "npm_config__authtoken",
+                    "npm_config_//registry.npmjs.org/:_authtoken", "github_token", "gh_token",
+                    "gh_enterprise_token", "gitlab_token",
+                    "aws_secret_access_key", "aws_session_token", "aws_access_key_id",
+                    "azure_client_secret", "google_application_credentials", "anthropic_api_key",
+                    "openai_api_key", "docker_password", "twine_password", "pypi_token", "codecov_token",
+                    "heroku_api_key", "slack_token", "vercel_token", "netlify_auth_token")
+
+
+def picks_secret_var(pattern: str) -> bool:
+    """`env | grep -i npm` lets NPM_TOKEN through: a piece of the pattern is part of a secret's name."""
+    for piece in re.split(r"\\?\|", pattern.lower()):
+        piece = re.sub(r"[\\^$()\[\]?*+{}]|=.*", "", piece).strip()
+        if len(piece) >= 3 and any(piece in name for name in SECRET_ENV_NAMES):
+            return True
+    return False
 
 
 def jq_args(argv: list[Arg]) -> list[Arg]:
@@ -754,7 +790,8 @@ YARN_OTHER = {"add", "remove", "install", "upgrade", "up", "dlx", "exec", "confi
 
 def h_node_pm(argv, ctx, stdin):
     program = argv[0]
-    opts, pos = options(argv[1:], {"-w", "--workspace", "--filter", "-C", "--prefix", "--dir", "--cwd"})
+    opts, pos = options(argv[1:], {"-w", "--workspace", "--filter", "-C", "--prefix", "--dir", "--cwd",
+                                   "-L", "--location", "--userconfig"})
     sub = pos[0] if pos else "install"
     rest = pos[1:]
     if sub in ("publish", "unpublish", "deprecate", "owner", "dist-tag", "access", "team") or \
@@ -790,7 +827,30 @@ def h_node_pm(argv, ctx, stdin):
     if sub in ("config", "c") and rest[:1] and rest[0] in ("get", "list", "ls"):
         ctx.add("read", f"Shows {program} settings.")
         return Stage()
+    if sub in ("config", "c") and rest[:1] and rest[0] in ("set", "delete", "rm", "edit", "fix"):
+        return npm_config_write(program, rest[0], opts, ctx)
     ctx.add("exec", f"Runs `{program} {sub}` (installs or changes packages).")
+    return Stage()
+
+
+def npm_config_write(program: str, verb: str, opts: list, ctx: Ctx) -> Stage:
+    """`npm config set` writes the user's ~/.npmrc (or the project's, or the global one): judged as that
+    write, since ~/.npmrc holds the registry tokens (#216)."""
+    location = str((values(opts, "-L", "--location") or [arg("user")])[-1])
+    if has(opts, "-g", "--global"):
+        location = "global"
+    if program == "yarn":
+        target = "~/.yarnrc.yml" if has(opts, "-H", "--home") else ".yarnrc.yml"
+    elif values(opts, "--userconfig"):
+        target = values(opts, "--userconfig")[-1]
+    elif location == "project":
+        target = os.path.join(ctx.where.root, ".npmrc")
+    elif location == "global":
+        ctx.add("write-outside", f"`{program} config {verb}` changes the global npmrc, outside the project.")
+        return Stage()
+    else:
+        target = os.environ.get("NPM_CONFIG_USERCONFIG") or "~/.npmrc"
+    write_paths([arg(target)], ctx, f"`{program} config {verb}` writes to")
     return Stage()
 
 
@@ -1738,6 +1798,17 @@ def reaches_self(text: str, literals: list[str], ctx: Ctx, data: list[tuple[int,
         for lit in literals if lit and "\n" not in lit and len(lit) < 400 and PATH_LIKE.match(lit))
 
 
+INTERPRETER_BEFORE = re.compile(r"""(?:\bsys\.executable|process\.execPath"""
+                                r"""|['"](?:[\w./-]*/)?(?:python[\d.]*|pypy3?|node|ruby|perl)['"])"""
+                                r"""\s*,\s*['"]-[ce]['"]\s*,\s*$""")
+
+
+def interpreter_code(text: str, start: int) -> bool:
+    """`[sys.executable, '-c', 'pass']`: the string is code for Python or another interpreter that is not
+    a shell (Python's `pass` statement, not the pass password manager) (#266)."""
+    return bool(INTERPRETER_BEFORE.search(text[max(0, start - 200):start]))
+
+
 def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
     """Code given inline (python -c, node -e ...): find what it does, and never approve it."""
     if UNKNOWN in code:
@@ -1747,7 +1818,8 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
             ctx.add("dynamic", f"`{via}` runs code that is only known when it runs.")
         return Stage()
     text = str(code)
-    literals = [next(g for g in m.groups() if g is not None) for m in STRING_LITERAL.finditer(text)]
+    matches = list(STRING_LITERAL.finditer(text))
+    literals = [next(g for g in m.groups() if g is not None) for m in matches]
     # In Python that never runs text as code, what sits in plain strings is data: a file's new contents.
     data = python_strings(text) if re.search(r"python|pypy", lang) and not RUNS_TEXT.search(text) else []
     if reaches_self(text, literals, ctx, data):
@@ -1761,10 +1833,10 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
     executes = bool(code_matches(CODE_EXEC, text, data) or (not NO_BACKTICK_EXEC.search(lang or via)
                                                             and BACKTICK_EXEC.search(text)))
     paths: list[Arg] = []
-    for lit in literals:
+    for i, lit in enumerate(literals):
         if not lit or len(lit) > 400:
             continue
-        if executes and re.match(r"^[\w./~-]", lit):
+        if executes and re.match(r"^[\w./~-]", lit) and not interpreter_code(text, matches[i].start()):
             inner = ctx.child(findings=[])
             try:
                 walk(shell.parse(lit, shell.MAX_DEPTH - 2), inner)
@@ -2253,7 +2325,7 @@ def h_git(argv, ctx, stdin, depth: int = 0):
             key, _, value = args.pop(0).partition("=")
             if key.lower().startswith("alias."):
                 ctx.git_aliases = {**ctx.git_aliases, key[6:].lower(): value}
-            elif GIT_EXEC_KEYS.match(key):
+            elif runs_program(key, value):
                 ctx.add("risky", f"`git -c {key}=...` makes git run another program.")
         elif a.startswith(("--exec-path=", "--config-env")):
             ctx.add("risky", f"`git {a.split('=')[0]}` makes git run programs from elsewhere.")
@@ -2522,13 +2594,21 @@ def git_config(sub, rest, ctx, stdin):
     key = pos[0] if pos else ""
     value = pos[1] if len(pos) > 1 else ""
     is_alias = key.lower().startswith("alias.")
-    if GIT_EXEC_KEYS.match(key) and (not is_alias or value.startswith("!")):
+    if runs_program(key, value) and (not is_alias or value.startswith("!")):
         ctx.add("persistence", f"Sets git's {key}, which makes git run a program later on its own.")
     elif has(opts, "--global", "--system") or values(opts, "-f", "--file"):
         write_paths(values(opts, "-f", "--file") or [arg("~/.gitconfig")], ctx, "changes git settings in")
     else:
         ctx.add("write", f"Changes the project's git setting {key}.")
     return Stage()
+
+
+def runs_program(key: str, value: str) -> bool:
+    """A git setting that makes git run a program. core.hooksPath=/dev/null runs none: it only switches the
+    hooks off, which the maintainer decided is not worth an ask (#267)."""
+    if key.lower() == "core.hookspath" and value in ("/dev/null", "NUL", "nul"):
+        return False
+    return bool(GIT_EXEC_KEYS.match(key))
 
 
 def git_runs(sub, rest, ctx, stdin):

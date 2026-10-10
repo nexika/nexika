@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 import subprocess
 
-LOCKFILES = re.compile(r"(?:^|/)(?:package-lock\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock|"
+LOCKFILES = re.compile(r"(?:^|/)(?:package(?:-lock)?\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock|"
                        r"poetry\.lock|uv\.lock|Pipfile(?:\.lock)?|requirements[\w.-]*\.(?:txt|in)|"
                        r"pyproject\.toml|setup\.(?:cfg|py)|go\.(?:mod|sum)|Cargo\.(?:toml|lock)|"
                        r"packages\.lock\.json|[^/]+\.csproj|Directory\.Packages\.props|Gemfile(?:\.lock)?|"
@@ -19,7 +19,8 @@ SHA = re.compile(r"^[0-9a-f]{7,64}$")
 ECOSYSTEMS = {
     "python": re.compile(r"(?:^|/)(?:poetry\.lock|uv\.lock|Pipfile(?:\.lock)?|"
                          r"requirements[\w.-]*\.(?:txt|in)|pyproject\.toml|setup\.(?:cfg|py))$"),
-    "node": re.compile(r"(?:^|/)(?:package-lock\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock)$"),
+    "node": re.compile(r"(?:^|/)(?:package(?:-lock)?\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|"
+                       r"yarn\.lock)$"),
     "go": re.compile(r"(?:^|/)go\.(?:mod|sum)$"),
     "rust": re.compile(r"(?:^|/)Cargo\.(?:toml|lock)$"),
     "dotnet": re.compile(r"(?:^|/)(?:packages\.lock\.json|[^/]+\.csproj|Directory\.Packages\.props)$"),

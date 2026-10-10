@@ -66,7 +66,7 @@ CONFIG_EXEC_PROJECT = (".mcp.json", ".envrc", ".vscode/tasks.json", ".vscode/set
                        ".devcontainer", ".claude/agents", ".claude/commands", ".claude/skills")
 SYSTEM_DIRS = ("/etc", "/usr", "/bin", "/sbin", "/lib", "/lib32", "/lib64", "/boot", "/sys", "/proc", "/dev",
                "/var", "/opt", "/root", "/srv", "/snap", "/System", "/Library", "/private/etc",
-               "/private/var", "/Applications", "/Volumes", "/mnt", "/media", "C:/Windows",
+               "/private/var", "/Volumes", "/mnt", "/media", "C:/Windows",
                "C:/Program Files", "/c/Windows", "/cygdrive/c/Windows")
 NULL_DEVICES = ("/dev/null", "/dev/stdout", "/dev/stderr", "/dev/stdin", "/dev/tty", "/dev/zero",
                 "/dev/random", "/dev/urandom")
@@ -279,7 +279,9 @@ class Where:
 
     def critical(self, path: str) -> bool:
         """Deleting this would wipe far more than one project: /, home, a parent of the project."""
-        if path in ("/", "/home", "/Users", "C:", "C:/") or path in SYSTEM_DIRS:
+        # /Applications holds apps the user installed (the OS's own are in /System/Applications): writing
+        # there is a write outside the project, but deleting all of it is not (#224).
+        if path in ("/", "/home", "/Users", "/Applications", "C:", "C:/") or path in SYSTEM_DIRS:
             return True
         return under(self.root, path) or under(self.home, path)
 

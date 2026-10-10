@@ -192,6 +192,101 @@ def test_an_error_line_without_a_type_test_is_not_tstyche():
     assert parse.failures(["Error: Type 'a' is not the same as type 'b'", "    at ./src/a.ts:3:4"]) == []
 
 
+# fastify run 36249120349 (#251): node:test's spec reporter, then its "✖ failing tests:" block.
+NODE_TEST_LOG = [
+    "✔ should throw error if invalid logger is returned (3.74486ms)",
+    "✖ request child loggers inherit the level without resetting it (17.548394ms)",
+    "##[error]AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+    "✔ diagnostics channel sync events fire in expected order (138.408605ms)",
+    "ℹ tests 2347", "ℹ pass 2342", "ℹ fail 1", "",
+    "✖ failing tests:", "",
+    "test at test/child-logger-factory.test.js:130:1",
+    "✖ request child loggers inherit the level without resetting it (17.548394ms)",
+    "  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+    "  ",
+    "  2 !== 1",
+    "  ",
+    "      at assert.<computed> [as strictEqual] (node:internal/test_runner/test:347:18)",
+    "      at TestContext.<anonymous> (/home/runner/work/fastify/fastify/test/child-logger-factory.test.js:156:12)",
+    "      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+    "      at async Test.run (node:internal/test_runner/test:1409:7) {",
+    "    generatedMessage: true,",
+    "  }",
+    "##[group]Test results (2342 passed, 1 failed)",
+    "##[error]Process completed with exit code 1.",
+]
+# fastify run 31715959264: borp lists each test file; no "failing tests" block on Windows or Linux.
+BORP_LOG = [
+    "passed: D:\\a\\fastify\\fastify\\test\\internals\\request-validate.test.js (987.7 ms)",
+    "failed: D:\\a\\fastify\\fastify\\test\\internals\\reply.test.js (1,093 ms)",
+    "passed: D:\\a\\fastify\\fastify\\test\\close.test.js (8,396 ms)",
+    "##[error]AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:",
+    "+ actual - expected", "", "+ 'undefined'", "- 'string'", "",
+    "    at assert.<computed> [as strictEqual] (node:internal/test_runner/test:341:18)",
+    "    at TestContext.<anonymous> (D:\\a\\fastify\\fastify\\test\\internals\\reply.test.js:52:12)",
+    "##[error]Process completed with exit code 1.",
+]
+
+
+def test_node_test_runner_failures_are_read():
+    found = parse.read_log(gh_log("Test pino compatibility (^9)", NODE_TEST_LOG))
+    failures = found["Test pino compatibility (^9)"]["failures"]
+    assert [(f["framework"], f["kind"], f["test"], f["file"], f["line"]) for f in failures] == [
+        ("node:test", "tests", "request child loggers inherit the level without resetting it",
+         "test/child-logger-factory.test.js", 156)]
+    assert failures[0]["message"] == "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:"
+    assert classify.classify({"failures": failures})["kind"] == "code"
+
+
+def test_borp_names_the_failed_test_file():
+    failures = parse.read_log(gh_log("coverage-win / check-coverage", BORP_LOG))[
+        "coverage-win / check-coverage"]["failures"]
+    assert [(f["framework"], f["file"], f["line"]) for f in failures] == [
+        ("borp", "test/internals/reply.test.js", 52)]
+    assert failures[0]["message"].startswith("AssertionError [ERR_ASSERTION]")
+
+
+# fastify run 31128098312 (#253): two listen tests pass node:test's 30 s timeout in one job of the matrix.
+NODE_TIMEOUT_LOG = [
+    "✖ /home/runner/work/fastify/fastify/test/listen.5.test.js (30001.935644ms)",
+    "##[error]^[[32m'test timed out after 30000ms'^[[39m",
+    "✖ /home/runner/work/fastify/fastify/test/listen.4.test.js (30001.567056ms)",
+    "##[error]^[[32m'test timed out after 30000ms'^[[39m",
+    "ℹ tests 2347", "ℹ fail 0", "",
+    "✖ failing tests:", "",
+    "test at test/listen.5.test.js:1:1",
+    "✖ /home/runner/work/fastify/fastify/test/listen.5.test.js (30001.935644ms)",
+    "  'test timed out after 30000ms'", "",
+    "test at test/listen.4.test.js:1:1",
+    "✖ /home/runner/work/fastify/fastify/test/listen.4.test.js (30001.567056ms)",
+    "  'test timed out after 30000ms'",
+    "##[error]Process completed with exit code 1.",
+]
+
+
+def test_a_test_s_own_timeout_is_not_a_ci_time_limit():
+    found = parse.read_log(gh_log("test-unit (22, ubuntu-latest)", NODE_TIMEOUT_LOG))["test-unit (22, ubuntu-latest)"]
+    assert [(f["test"], f["file"], f["line"], f.get("timeout")) for f in found["failures"]] == [
+        ("test/listen.5.test.js", "test/listen.5.test.js", 1, True),
+        ("test/listen.4.test.js", "test/listen.4.test.js", 1, True)]
+    assert found["signals"] == []
+    for line in ["Exceeded timeout of 5000 ms for a test.", "E   Failed: Timeout >10.0s"]:
+        assert parse.signals([line]) == []
+    for line in ["##[error]The action has timed out.", "##[error]The job has timed out after 30 minutes"]:
+        assert [s["kind"] for s in parse.signals([line])] == ["timeout"]
+    verdict = classify.classify({"failures": [{**f, "job": "test-unit (22, ubuntu-latest)"}
+                                              for f in found["failures"]]})
+    assert verdict["kind"] == "code"   # flaky or not is the maintainer's open question (#253)
+    assert any("test runner's own time limit" in e for e in verdict["evidence"])
+
+
+def test_node_test_runner_with_only_passes_has_no_failure():
+    lines = ["✔ chainable - get (3.459827ms)", "▶ Buffer test", "  ✔ should return 200 (18.4ms)",
+             "✔ Buffer test (66.3ms)", "ℹ tests 2347", "ℹ pass 2347", "ℹ fail 0",
+             "passed: /home/runner/work/fastify/fastify/test/close.test.js (7,985 ms)"]
+    assert parse.failures(lines) == []
+
+
 def test_mypy_errors_are_read(tmp_path):
     lines = ["src/cart.py:12: error: Incompatible types in assignment (expression has type \"str\", "
              "variable has type \"int\")  [assignment]",
@@ -258,6 +353,19 @@ def test_signals_are_named_by_the_most_specific_line():
     assert parse.signals(["E   assert 'Killed' == 'Alive'"]) == []
     for line in ["Killed", "/home/runner/work/_temp/x.sh: line 1:  2345 Killed                  pytest -q"]:
         assert [s["kind"] for s in parse.signals([line])] == ["oom"], line
+
+
+@pytest.mark.parametrize("line", [
+    # fastify (#252): a passing test's name matched the network signal in four runs.
+    "✔ default clientError handler ignores ECONNRESET (19ms)",
+    "  ✓ retries after ECONNREFUSED (3 ms)",
+    "ok 12 - handles ETIMEDOUT",
+    "PASS test/econnreset.test.js (5.2 s)",
+    "passed: /home/runner/work/x/x/test/econnreset.test.js (120 ms)",
+    "tests/test_net.py::test_retry_on_ECONNRESET PASSED                 [ 50%]",
+])
+def test_a_passing_test_s_name_is_not_a_signal(line):
+    assert parse.signals([line]) == []
 
 
 def test_excerpt_shows_the_lines_around_a_failure():
@@ -349,6 +457,8 @@ def test_a_test_failing_in_many_jobs_counts_once():
     ({"signals": [{"kind": "auth", "line": "Bad credentials"}]}, "infra"),
     ({"failures": FAIL, "signals": [{"kind": "dependency", "line": "No matching distribution"}]}, "dependency"),
     ({"failures": FAIL, "jobs": jobs(("t (py3.10)", "failure"), ("t (py3.12)", "success"))}, "matrix"),
+    # fastify run 34748583815 (#255): CodeQL's javascript job failed with nothing read: no matrix verdict.
+    ({"jobs": jobs(("Analyze (javascript)", "failure"), ("Analyze (actions)", "success"))}, "unknown"),
     ({"failures": FAIL}, "code"),
     ({}, "unknown"),
 ])
@@ -617,6 +727,38 @@ def test_a_fail_fast_cancel_does_not_hide_the_failed_job(ci, project, monkeypatc
     record = diagnosis.triage(ci)
     assert record["kind"] == "dependency"
     assert record["rerun"] == ""
+
+
+# fastify runs 36796415356 (monthly lock-threads on main) and 30015524264 (dependabot automerge) (#262).
+LOCK_THREADS_LOG = [
+    "##[group]Run dessant/lock-threads@89ae32b08ed1a541efecbab17912962a5e38981c", "with:",
+    "  log-output: false", "##[endgroup]",
+    "##[error]Request failed due to following response errors:", " - Resource not accessible by integration",
+    "Cleaning up orphan processes",
+]
+AUTOMERGE_LOG = [
+    "##[group]Run fastify/github-action-merge-dependabot@1b2ed42db8f9d81a46bac83adedfc03eb5149dff",
+    "##[endgroup]",
+    "PUT /repos/fastify/fastify/pulls/6866/merge - 405 with id 2441:1569B8 in 1765ms",
+    "##[error]Repository rule violations found", "",
+    "At least 2 approving reviews are required by reviewers with write access.",
+]
+
+
+@pytest.mark.parametrize("lines, event, fork, kind", [
+    (LOCK_THREADS_LOG, "schedule", None, "setup"),
+    (LOCK_THREADS_LOG, "push", False, "setup"),
+    (LOCK_THREADS_LOG, "pull_request", True, "infra"),   # a fork's pull request gets no secrets
+    (LOCK_THREADS_LOG, "pull_request", None, "infra"),   # not known to be the repository's own
+    (AUTOMERGE_LOG, "pull_request", False, "setup"),
+])
+def test_a_token_without_a_permission_is_setup(lines, event, fork, kind):
+    found = parse.read_log(gh_log("lock-threads / Lock Threads", lines))["lock-threads / Lock Threads"]
+    verdict = classify.classify({"failures": found["failures"], "signals": found["signals"], "event": event,
+                                 "from_fork": fork})
+    assert verdict["kind"] == kind
+    if kind == "setup":
+        assert any("token cannot do this" in e for e in verdict["evidence"])
 
 
 def test_a_cancel_alone_is_still_a_cancelled_run():
@@ -1070,6 +1212,50 @@ def test_the_change_s_own_errors_beside_an_upstream_warning_are_code(ci, project
     assert diagnosis.triage(ci)["kind"] == "code"
 
 
+# fastify run 29506411975 (#261): dependabot bumps TypeScript and eslint crashes inside node_modules.
+NODE_CRASH_LOG = [
+    "##[group]Run npm run lint", "npm run lint", "##[endgroup]",
+    "> fastify@5.6.2 lint", "> eslint", "",
+    "Oops! Something went wrong! :(", "",
+    "ESLint: 9.39.1", "",
+    "TypeError: Cannot read properties of undefined (reading 'Intrinsic')",
+    "    at Object.<anonymous> (/home/runner/work/fastify/fastify/node_modules/ts-api-utils/lib/index.cjs:787:57)",
+    "    at Module._compile (node:internal/modules/cjs/loader:1554:14)",
+    "    at Object.<anonymous> (/home/runner/work/fastify/fastify/node_modules/neostandard/node_modules/"
+    "@typescript-eslint/typescript-estree/dist/convert-comments.js:37:30)",
+    "##[error]Process completed with exit code 2.",
+]
+
+
+def test_a_crash_inside_node_modules_after_a_dependency_change_is_a_dependency_failure(ci, project, monkeypatch):
+    found = parse.read_log(gh_log("quality-check / Lint Code", NODE_CRASH_LOG))["quality-check / Lint Code"]
+    assert [(r["package"], r["error"]) for r in found["raised"]] == [("ts-api-utils", "TypeError")]
+    assert compare.deps_changed(["package.json"]) == ["package.json"]
+    assert compare.deps_changed(["web/package.json"], "jest") == ["web/package.json"]
+    facts = {"raised": [{**r, "job": "quality-check / Lint Code"} for r in found["raised"]],
+             "lock_changed": True}
+    verdict = classify.classify(facts)
+    assert (verdict["kind"], verdict["detail"]) == ("dependency", {"package": "ts-api-utils"})
+    assert any("Dependency files changed" in e for e in verdict["evidence"])
+    assert classify.classify({**facts, "lock_changed": False})["kind"] == "unknown"
+    # Live, from the branch name alone (no green run to compare with).
+    upstream_run(project, monkeypatch, gh_log("quality-check / Lint Code", NODE_CRASH_LOG), jobs=[
+        {"id": 1, "name": "quality-check / Lint Code", "conclusion": "failure", "failed_step": ""}])
+    run = {**fake_run(project), "branch": "dependabot/npm_and_yarn/dev-dependencies-typescript-b7ceb5d816",
+           "jobs": [{"id": 1, "name": "quality-check / Lint Code", "conclusion": "failure", "failed_step": ""}]}
+    monkeypatch.setattr(forge, "find_run", lambda info, run_id=None: run)
+    monkeypatch.setattr(forge, "history", lambda info, run: {"same_commit_passed": None, "last_green": None})
+    record = diagnosis.triage(ci)
+    assert (record["kind"], record["detail"]) == ("dependency", {"package": "ts-api-utils"})
+    assert any("dependabot" in e for e in record["evidence"])
+
+
+def test_an_assertion_inside_node_modules_is_not_a_dependency_failure():
+    lines = ["AssertionError [ERR_ASSERTION]: expected 1 to equal 2",
+             "    at Proxy.assertEqual (/home/runner/work/x/x/node_modules/chai/lib/chai/core/assertions.js:10:5)"]
+    assert parse.read_log("\n".join(lines))[""]["raised"] == []
+
+
 # A workflow that cannot work as written (#127): a re-run fails the same way.
 SETUP_LOGS = {
     # flypythoncom/python run 34004132950: `uv pip install --system` on the runner's own Python.
@@ -1175,9 +1361,26 @@ def test_a_run_with_no_jobs_gets_a_kind_and_advice(ci, monkeypatch, project):
     monkeypatch.setattr(forge, "find_run", lambda info, run_id=None: {**fake_run(project), "jobs": []})
     monkeypatch.setattr(forge, "failed_log", no_log)
     record = diagnosis.triage(ci)
-    assert record["kind"] == "setup" and record["rerun"] == ""
+    assert (record["kind"], record["detail"], record["confidence"]) == ("unknown", {"jobs": 0}, "low")
+    assert record["rerun"] == ""
     text = cli.report(record, "en")
-    assert "no jobs" in text and "workflow file" in text and record["run"]["url"] in text
+    assert "no jobs or logs" in text and "nothing to diagnose" in text and record["run"]["url"] in text
+    # #263 (maintainer's decision): no guessed cause, only what tabib can see.
+    assert "broken" not in text and "workflow file" not in text and "re-run fails" not in text
+    assert "push" in text
+    assert cli.summary(record, "en")["label"] == "the CI run has no jobs or logs: nothing to diagnose"
+
+
+def test_a_fork_run_with_no_jobs_says_it_is_a_fork(ci, monkeypatch, project):
+    """fastify run 37051739916 (#263): a fork's pull request whose run GitHub never started."""
+    from tabib import cli
+    monkeypatch.setattr(forge, "find_run", lambda info, run_id=None: {
+        **fake_run(project), "jobs": [], "event": "pull_request"})
+    monkeypatch.setattr(forge, "from_fork", lambda info, run: True)
+    record = diagnosis.triage(ci)
+    assert record["kind"] == "unknown"
+    text = cli.report(record, "ar")
+    assert "fork" in cli.report(record, "en") and "pull_request" in text
 
 
 def test_an_expired_log_says_so(ci, monkeypatch):
