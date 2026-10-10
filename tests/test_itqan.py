@@ -171,6 +171,60 @@ def test_skipping_a_pre_commit_hook_asks_beside_haris(guard, repo, tmp_path, mon
     assert guard.decide(event)[:2] == ("ask", "skip-hooks")
 
 
+# fastify (#267, cases G81-G83): release lines N.x and `next` are protected by default
+@pytest.mark.parametrize("command", [
+    "git push --force origin 5.x", "git push origin +4.x", "git push -f origin next",
+    "git push -f origin 10.x",
+])
+def test_node_release_branches_are_protected_by_default(guard, repo, command):
+    assert bash(guard, repo, command)[:2] == ("deny", "force-push-protected")
+
+
+# #267, decided: these do not ask (G71, G72, G80)
+@pytest.mark.parametrize("command", [
+    "git push -f origin feat.x", 'HUSKY=0 git commit -m "wip"',
+    'git -c core.hooksPath=/dev/null commit -m "wip"',
+    "npm unpublish fastify@6.0.0-alpha.4", 'npm deprecate fastify@6.0.0-alpha.4 "use alpha.5"',
+])
+def test_decided_node_commands_pass(guard, repo, command):
+    _git(repo, "switch", "-q", "-c", "feat.x")
+    assert bash(guard, repo, command) is None
+
+
+# #267 (case G36): turning off ignore-scripts in .npmrc turns install scripts back on, so it asks
+def test_turning_off_ignore_scripts_asks(guard, repo):
+    npmrc = repo / ".npmrc"
+    npmrc.write_text("ignore-scripts=true\nmin-release-age=7\npackage-lock=false\n")
+    edits = [
+        {"file_path": str(npmrc), "old_string": "ignore-scripts=true\n", "new_string": ""},
+        {"file_path": str(npmrc), "old_string": "ignore-scripts=true",
+         "new_string": "ignore-scripts=false"},
+        {"file_path": str(npmrc), "old_string": "min-release-age=7", "new_string": "ignore-scripts = false"},
+    ]
+    for tool_input in edits:
+        decision = guard.decide({"tool_name": "Edit", "tool_input": tool_input, "cwd": str(repo)})
+        assert decision[:2] == ("ask", "npmrc-ignore-scripts"), tool_input
+    assert edit(guard, repo, file_path=str(npmrc), content="min-release-age=7\n")[:2] == (
+        "ask", "npmrc-ignore-scripts")
+    for command in ("npm config set ignore-scripts false",
+                    "npm config set ignore-scripts=false --location=project",
+                    "npm set ignore-scripts false", "npm config delete ignore-scripts"):
+        assert bash(guard, repo, command)[:2] == ("ask", "npmrc-ignore-scripts"), command
+
+
+def test_other_npmrc_changes_pass(guard, repo):
+    npmrc = repo / ".npmrc"
+    npmrc.write_text("ignore-scripts=true\nmin-release-age=7\n")
+    tool_input = {"file_path": str(npmrc), "old_string": "min-release-age=7",
+                  "new_string": "min-release-age=14"}
+    assert guard.decide({"tool_name": "Edit", "tool_input": tool_input, "cwd": str(repo)}) is None
+    kept = "ignore-scripts=true\nmin-release-age=14\n"
+    assert edit(guard, repo, file_path=str(npmrc), content=kept) is None
+    assert edit(guard, repo, file_path=str(repo / "x" / ".npmrc"), content="package-lock=false\n") is None
+    assert bash(guard, repo, "npm config set ignore-scripts true") is None
+    assert bash(guard, repo, "npm config get ignore-scripts") is None
+
+
 def test_protected_branches_are_configurable(guard, repo):
     (repo / ".itqan.json").write_text(json.dumps({"guard": {"protected_branches": ["trunk"]}}))
     assert bash(guard, repo, "git push -f origin main") is None
