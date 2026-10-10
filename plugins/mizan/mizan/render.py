@@ -113,6 +113,8 @@ def tabib_label(found: dict, lang: str) -> str:
         return t("tk_matrix", lang, value=clean(detail.get("value"), 30))
     if kind == "infra":
         return t(f"ts_{detail.get('signal', 'runner')}", lang)
+    if kind == "unknown" and detail.get("jobs") == 0:   # no log exists to see (#331)
+        return t("tk_nojobs", lang)
     return t(f"tk_{kind or 'unknown'}", lang)
 
 
