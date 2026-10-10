@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""A scripted stand-in for `claude -p` on the hafiz benchmark's export task, for offline tests.
+"""A scripted stand-in for `claude -p` on the hafiz benchmark's export task (v1), for offline tests.
+The v2 loans tasks are scripted in fake_loans.py.
 
 It edits the work repo the way an agent would at each call and prints stream-json events in the
 shape Claude Code prints them. FAKE_SCENARIO picks the behaviour after the compaction:
@@ -109,6 +110,10 @@ def write(repo, rel, text, tools):
 
 
 def main(argv):
+    if (Path.cwd() / "data" / "loans.tsv").is_file():  # the v2 loans tasks
+        import fake_loans
+
+        return fake_loans.main(argv, Path.cwd())
     prompt = argv[argv.index("-p") + 1]
     flag = "--session-id" if "--session-id" in argv else "--resume"
     session = argv[argv.index(flag) + 1]

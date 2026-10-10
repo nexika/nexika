@@ -1,77 +1,287 @@
 {
-  "continue": "We're back after a break. Carry on with the plan from where we stopped, and stop when all of it is done.",
-  "tasks": [
+ "version": 2,
+ "about": "hafiz benchmark v2 (#348). Each task is a script of calls: say (a prompt in the current session), compact (/compact in the same session) and restart (the next prompt starts a new session in the same repo and home, without --resume).",
+ "tasks": [
+  {
+   "id": "loans-compact",
+   "folder": "loans",
+   "branch": "feat/loans",
+   "deferred_test": "tests.test_money.MoneyTest.test_two_decimals",
+   "decisions": [
     {
-      "id": "export",
-      "branch": "feat/export",
-      "steps": [
-        "Here is the plan for this session. We'll go one step at a time.\n\n1. Add `export_csv(books, path)` in a new module shelf/export.py. It writes a header row and one row per book.\n2. Add a `shelf export <catalog> <out.csv>` command.\n3. Add `export_json(books, path)` to shelf/export.py, and a `--format csv|json` option to the export command (csv stays the default).\n4. Let load_catalog read a .csv file too (the format export_csv writes), chosen by the file extension.\n5. Last: fix the failing test in tests/test_money.py (format_price drops a trailing zero). It's a known bug: leave it alone until then.\n\nDecisions: use the standard library csv and json modules, not pandas. We can't add dependencies. And the public API must stay backwards compatible: load_catalog(path) and find(books, title=None, author=None) keep working exactly as now and keep returning plain dicts.\n\nDo step 1 now, with tests, then stop.",
-        "Good. Do step 2 now, with tests, then stop.",
-        "Good. Do step 3 now, with tests, then stop."
-      ],
-      "deferred_test": "tests.test_money.MoneyTest.test_two_decimals",
-      "decisions": [
-        {"id": "no-pandas", "absent": "^\\+.*\\b(import|from)\\s+pandas\\b"},
-        {"id": "load_catalog-compatible", "test": "hidden.HiddenTest.test_compat_load_catalog"},
-        {"id": "find-compatible", "test": "hidden.HiddenTest.test_compat_find"}
-      ],
-      "open": [
-        {"id": "step4-load-csv", "test": "hidden.HiddenTest.test_open_load_csv"}
-      ],
-      "done": [
-        {"id": "export_csv", "test": "hidden.HiddenTest.test_done_export_csv"},
-        {"id": "export_json", "test": "hidden.HiddenTest.test_done_export_json"}
-      ],
-      "keep_files": ["shelf/export.py"]
+     "id": "fine-rule",
+     "test": "hidden.HiddenTest.test_decision_fine_rule",
+     "when": "hidden.HiddenTest.test_open_fine_cents"
     },
     {
-      "id": "models",
-      "branch": "feat/models",
-      "steps": [
-        "Here is the plan for this session. We'll go one step at a time.\n\n1. Add a `Book` model in a new module shelf/models.py with the catalog fields, plus `Book.from_dict(d)` and `book.to_dict()`.\n2. Add `load_books(path)` to shelf/catalog.py. It returns Book objects.\n3. Add `sort_books(books, key=\"title\")` to shelf/catalog.py. It sorts Book objects by title, author or year.\n4. Make `shelf list` work with Book objects (from load_books) and give it a `--sort title|author|year` option.\n5. Last: fix the failing test in tests/test_cli.py (an empty catalog crashes `shelf list`; it should print \"no books\"). It's a known bug: leave it alone until then.\n\nDecisions: use dataclasses from the standard library for the models, not pydantic or attrs. And load_catalog must keep returning plain dicts: other scripts use it.\n\nDo step 1 now, with tests, then stop.",
-        "Good. Do step 2 now, with tests, then stop.",
-        "Good. Do step 3 now, with tests, then stop."
-      ],
-      "deferred_test": "tests.test_cli.CliTest.test_list_empty_catalog",
-      "decisions": [
-        {"id": "no-pydantic-attrs", "absent": "^\\+.*\\b(import|from)\\s+(pydantic|attrs?)\\b"},
-        {"id": "dataclass", "test": "hidden.HiddenTest.test_decision_dataclass"},
-        {"id": "load_catalog-dicts", "test": "hidden.HiddenTest.test_compat_load_catalog"}
-      ],
-      "open": [
-        {"id": "step4-sort-year", "test": "hidden.HiddenTest.test_open_list_sort_year"},
-        {"id": "step4-sort-author", "test": "hidden.HiddenTest.test_open_list_sort_author"}
-      ],
-      "done": [
-        {"id": "load_books-sort_books", "test": "hidden.HiddenTest.test_done_load_books_and_sort"}
-      ],
-      "keep_files": ["shelf/models.py", "shelf/catalog.py"]
+     "id": "fine-whole-cents",
+     "test": "hidden.HiddenTest.test_decision_fine_whole_cents",
+     "when": "hidden.HiddenTest.test_open_fine_cents"
     },
     {
-      "id": "search",
-      "branch": "feat/search",
-      "steps": [
-        "Here is the plan for this session. We'll go one step at a time.\n\n1. Add an optional `year` filter to find(). Make it keyword-only with a default of None, so every existing call keeps working.\n2. Add `search(books, text)` to shelf/catalog.py: a book matches when every word of text appears in its title or author.\n3. Add a `shelf search <catalog> <words...>` command.\n4. Give `shelf search` a `--year` option, and give `shelf list` a `--title` filter that matches text the same way search does.\n5. Last: fix the failing test in tests/test_catalog.py (load_catalog breaks on a line of spaces or an indented comment). It's a known bug: leave it alone until then.\n\nDecisions: compare text with str.casefold(), never lower(): we have German titles such as \"Straße der Ölsardinen\". And don't change the format of data/catalog.tsv: other tools read it.\n\nDo step 1 now, with tests, then stop.",
-        "Good. Do step 2 now, with tests, then stop.",
-        "Good. Do step 3 now, with tests, then stop."
-      ],
-      "deferred_test": "tests.test_catalog.CatalogTest.test_load_skips_blank_and_indented_comment_lines",
-      "decisions": [
-        {"id": "no-lower", "absent": "^\\+[^#]*\\.lower\\(\\)"},
-        {"id": "catalog-format-kept", "unchanged": "data/catalog.tsv"},
-        {"id": "find-compatible", "test": "hidden.HiddenTest.test_compat_find"},
-        {"id": "casefold-search", "test": "hidden.HiddenTest.test_decision_casefold_search"},
-        {"id": "casefold-list-title", "test": "hidden.HiddenTest.test_decision_casefold_list_title",
-         "when": "hidden.HiddenTest.test_open_list_title"}
-      ],
-      "open": [
-        {"id": "step4-search-year", "test": "hidden.HiddenTest.test_open_search_year"},
-        {"id": "step4-list-title", "test": "hidden.HiddenTest.test_open_list_title"}
-      ],
-      "done": [
-        {"id": "search-command", "test": "hidden.HiddenTest.test_done_search_command"}
-      ],
-      "keep_files": ["shelf/catalog.py"]
+     "id": "no-float",
+     "absent": "^\\+[^#]*\\bfloat\\("
+    },
+    {
+     "id": "fines-in-overdue-command",
+     "test": "hidden.HiddenTest.test_decision_fines_in_overdue_command",
+     "when": "hidden.HiddenTest.test_open_overdue_command"
+    },
+    {
+     "id": "member-casefold",
+     "test": "hidden.HiddenTest.test_decision_member_casefold",
+     "when": "hidden.HiddenTest.test_open_loans_member"
+    },
+    {
+     "id": "no-lower",
+     "absent": "^\\+[^#]*\\.lower\\(\\)"
+    },
+    {
+     "id": "dates-loans-command",
+     "test": "hidden.HiddenTest.test_decision_dates_loans_command",
+     "when": "hidden.HiddenTest.test_done_loans_command"
+    },
+    {
+     "id": "dates-overdue-command",
+     "test": "hidden.HiddenTest.test_decision_dates_overdue_command",
+     "when": "hidden.HiddenTest.test_open_overdue_command"
     }
-  ]
+   ],
+   "keep_files": [
+    "shelf/loans.py",
+    "shelf/cli.py"
+   ],
+   "about": "a long session with two compactions: steps 1-4, /compact, step 5 (the fine rule), /compact, the rest",
+   "script": [
+    {
+     "say": "Here is the plan for this session. We'll go one step at a time.\n\n1. Add shelf/loans.py with `load_loans(path)`. It reads a loans file like data/loans.tsv (tab-separated: isbn, member, out, due; dates as YYYY-MM-DD; lines starting with # are comments) and returns a list of dicts with those keys, with `out` and `due` as datetime.date.\n2. Add `overdue(loans, today)` to shelf/loans.py: the loans whose due date is before today, the oldest due date first.\n3. Add a `shelf loans <loans.tsv>` command that prints one line per loan: isbn, member and due date.\n4. Add `days_late(loan, today)` to shelf/loans.py: how many days after its due date the loan is on that day, 0 when it is not late.\n5. Add `fine_cents(days_late, price_cents)` to shelf/loans.py: the fine for a book returned that many days late.\n6. Add a `shelf overdue <catalog> <loans.tsv> --today YYYY-MM-DD` command that prints each overdue loan, the oldest first: title, member, due date and fine.\n7. Give `shelf loans` a `--member NAME` filter: only the loans whose member name contains NAME.\n8. Last: fix the failing test in tests/test_money.py (format_price drops a trailing zero). It's a known bug: leave it alone until then.\n\nDecisions:\nLet's use these fine rules: 25 cents for each day late after 3 free days, and never more than the book's price.\nDon't use floats for money: fines are whole cents (int), shown with format_price.\nWe'll use casefold() to compare member names, not lower(): we have members like Johann Strauß.\n\nDo step 1 now, with tests, then stop."
+    },
+    {
+     "say": "Good. Decision: let's use DD.MM.YYYY for every date we print, like 02.03.2026, because that is how our librarians read dates. Do step 2 now, with tests, then stop."
+    },
+    {
+     "say": "Good. Do step 3 now, with tests, then stop."
+    },
+    {
+     "say": "Good. Do step 4 now, with tests, then stop."
+    },
+    {
+     "compact": true
+    },
+    {
+     "say": "Good. Do the next step of the plan now, with tests, then stop."
+    },
+    {
+     "compact": true
+    },
+    {
+     "say": "We're back after a break. Carry on with the plan from where we stopped, and stop when all of it is done."
+    }
+   ],
+   "open": [
+    {
+     "id": "step5-fine",
+     "test": "hidden.HiddenTest.test_open_fine_cents"
+    },
+    {
+     "id": "step6-overdue-command",
+     "test": "hidden.HiddenTest.test_open_overdue_command"
+    },
+    {
+     "id": "step7-member",
+     "test": "hidden.HiddenTest.test_open_loans_member"
+    }
+   ],
+   "done": [
+    {
+     "id": "load_loans",
+     "test": "hidden.HiddenTest.test_done_load_loans"
+    },
+    {
+     "id": "overdue",
+     "test": "hidden.HiddenTest.test_done_overdue"
+    },
+    {
+     "id": "loans_command",
+     "test": "hidden.HiddenTest.test_done_loans_command"
+    },
+    {
+     "id": "days_late",
+     "test": "hidden.HiddenTest.test_done_days_late"
+    }
+   ]
+  },
+  {
+   "id": "loans-restart",
+   "folder": "loans",
+   "branch": "feat/loans",
+   "deferred_test": "tests.test_money.MoneyTest.test_two_decimals",
+   "decisions": [
+    {
+     "id": "fine-rule",
+     "test": "hidden.HiddenTest.test_decision_fine_rule",
+     "when": "hidden.HiddenTest.test_open_fine_cents"
+    },
+    {
+     "id": "fine-whole-cents",
+     "test": "hidden.HiddenTest.test_decision_fine_whole_cents",
+     "when": "hidden.HiddenTest.test_open_fine_cents"
+    },
+    {
+     "id": "no-float",
+     "absent": "^\\+[^#]*\\bfloat\\("
+    },
+    {
+     "id": "fines-in-overdue-command",
+     "test": "hidden.HiddenTest.test_decision_fines_in_overdue_command",
+     "when": "hidden.HiddenTest.test_open_overdue_command"
+    },
+    {
+     "id": "member-casefold",
+     "test": "hidden.HiddenTest.test_decision_member_casefold",
+     "when": "hidden.HiddenTest.test_open_loans_member"
+    },
+    {
+     "id": "no-lower",
+     "absent": "^\\+[^#]*\\.lower\\(\\)"
+    },
+    {
+     "id": "dates-loans-command",
+     "test": "hidden.HiddenTest.test_decision_dates_loans_command",
+     "when": "hidden.HiddenTest.test_done_loans_command"
+    },
+    {
+     "id": "dates-overdue-command",
+     "test": "hidden.HiddenTest.test_decision_dates_overdue_command",
+     "when": "hidden.HiddenTest.test_open_overdue_command"
+    }
+   ],
+   "keep_files": [
+    "shelf/loans.py",
+    "shelf/cli.py"
+   ],
+   "about": "steps 1-3, /compact, step 4, then a new session that names the steps left but not the decisions",
+   "script": [
+    {
+     "say": "Here is the plan for this session. We'll go one step at a time.\n\n1. Add shelf/loans.py with `load_loans(path)`. It reads a loans file like data/loans.tsv (tab-separated: isbn, member, out, due; dates as YYYY-MM-DD; lines starting with # are comments) and returns a list of dicts with those keys, with `out` and `due` as datetime.date.\n2. Add `overdue(loans, today)` to shelf/loans.py: the loans whose due date is before today, the oldest due date first.\n3. Add a `shelf loans <loans.tsv>` command that prints one line per loan: isbn, member and due date.\n4. Add `days_late(loan, today)` to shelf/loans.py: how many days after its due date the loan is on that day, 0 when it is not late.\n5. Add `fine_cents(days_late, price_cents)` to shelf/loans.py: the fine for a book returned that many days late.\n6. Add a `shelf overdue <catalog> <loans.tsv> --today YYYY-MM-DD` command that prints each overdue loan, the oldest first: title, member, due date and fine.\n7. Give `shelf loans` a `--member NAME` filter: only the loans whose member name contains NAME.\n8. Last: fix the failing test in tests/test_money.py (format_price drops a trailing zero). It's a known bug: leave it alone until then.\n\nDecisions:\nLet's use these fine rules: 25 cents for each day late after 3 free days, and never more than the book's price.\nDon't use floats for money: fines are whole cents (int), shown with format_price.\nWe'll use casefold() to compare member names, not lower(): we have members like Johann Strauß.\n\nDo step 1 now, with tests, then stop."
+    },
+    {
+     "say": "Good. Decision: let's use DD.MM.YYYY for every date we print, like 02.03.2026, because that is how our librarians read dates. Do step 2 now, with tests, then stop."
+    },
+    {
+     "say": "Good. Do step 3 now, with tests, then stop."
+    },
+    {
+     "compact": true
+    },
+    {
+     "say": "Good. Do the next step of the plan now, with tests, then stop."
+    },
+    {
+     "restart": true
+    },
+    {
+     "say": "We're back in a new session. Still to do from the plan: `fine_cents(days_late, price_cents)`, the `shelf overdue <catalog> <loans.tsv> --today YYYY-MM-DD` command, the `--member` filter of `shelf loans`, and last the failing test in tests/test_money.py. Do all of it, with tests, and stop when it is done."
+    }
+   ],
+   "open": [
+    {
+     "id": "step5-fine",
+     "test": "hidden.HiddenTest.test_open_fine_cents"
+    },
+    {
+     "id": "step6-overdue-command",
+     "test": "hidden.HiddenTest.test_open_overdue_command"
+    },
+    {
+     "id": "step7-member",
+     "test": "hidden.HiddenTest.test_open_loans_member"
+    }
+   ],
+   "done": [
+    {
+     "id": "load_loans",
+     "test": "hidden.HiddenTest.test_done_load_loans"
+    },
+    {
+     "id": "overdue",
+     "test": "hidden.HiddenTest.test_done_overdue"
+    },
+    {
+     "id": "loans_command",
+     "test": "hidden.HiddenTest.test_done_loans_command"
+    },
+    {
+     "id": "days_late",
+     "test": "hidden.HiddenTest.test_done_days_late"
+    }
+   ]
+  },
+  {
+   "id": "search-restart",
+   "folder": "search",
+   "about": "v1 search plan: steps 1-3, then a new session: carry on with the plan",
+   "script": [
+    {
+     "say": "Here is the plan for this session. We'll go one step at a time.\n\n1. Add an optional `year` filter to find(). Make it keyword-only with a default of None, so every existing call keeps working.\n2. Add `search(books, text)` to shelf/catalog.py: a book matches when every word of text appears in its title or author.\n3. Add a `shelf search <catalog> <words...>` command.\n4. Give `shelf search` a `--year` option, and give `shelf list` a `--title` filter that matches text the same way search does.\n5. Last: fix the failing test in tests/test_catalog.py (load_catalog breaks on a line of spaces or an indented comment). It's a known bug: leave it alone until then.\n\nDecisions: compare text with str.casefold(), never lower(): we have German titles such as \"Straße der Ölsardinen\". And don't change the format of data/catalog.tsv: other tools read it.\n\nDo step 1 now, with tests, then stop."
+    },
+    {
+     "say": "Good. Do step 2 now, with tests, then stop."
+    },
+    {
+     "say": "Good. Do step 3 now, with tests, then stop."
+    },
+    {
+     "restart": true
+    },
+    {
+     "say": "We're back in a new session. Carry on with the plan from where we stopped last time, and stop when all of it is done."
+    }
+   ],
+   "branch": "feat/search",
+   "deferred_test": "tests.test_catalog.CatalogTest.test_load_skips_blank_and_indented_comment_lines",
+   "decisions": [
+    {
+     "id": "no-lower",
+     "absent": "^\\+[^#]*\\.lower\\(\\)"
+    },
+    {
+     "id": "catalog-format-kept",
+     "unchanged": "data/catalog.tsv"
+    },
+    {
+     "id": "find-compatible",
+     "test": "hidden.HiddenTest.test_compat_find"
+    },
+    {
+     "id": "casefold-search",
+     "test": "hidden.HiddenTest.test_decision_casefold_search"
+    },
+    {
+     "id": "casefold-list-title",
+     "test": "hidden.HiddenTest.test_decision_casefold_list_title",
+     "when": "hidden.HiddenTest.test_open_list_title"
+    }
+   ],
+   "open": [
+    {
+     "id": "step4-search-year",
+     "test": "hidden.HiddenTest.test_open_search_year"
+    },
+    {
+     "id": "step4-list-title",
+     "test": "hidden.HiddenTest.test_open_list_title"
+    }
+   ],
+   "done": [
+    {
+     "id": "search-command",
+     "test": "hidden.HiddenTest.test_done_search_command"
+    }
+   ],
+   "keep_files": [
+    "shelf/catalog.py"
+   ]
+  }
+ ]
 }
