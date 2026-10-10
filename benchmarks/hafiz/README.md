@@ -39,9 +39,10 @@ results.
 | `loans-restart` | 3 steps, `/compact`, "do the next step", **new session**: "still to do: fine_cents, the overdue command, the --member filter, the failing test" (6 calls) | the same | the same three steps and the deferred test; the new prompt names the steps but none of the decisions |
 | `search-restart` | v1's `search` plan: 3 steps, **new session**: "carry on with the plan" (4 calls) | `casefold()`, never `lower()`; `data/catalog.tsv` keeps its format; `find(year=)` is keyword-only | step 4 (`search --year`, `list --title`) and the deferred test; the new session has neither the plan nor the decisions unless a memory brings them |
 
-The loans decisions are worded the way hafiz's capture rules recognise ("Let's use ...", "Don't use
-...", "We'll use ..."); `search-restart` keeps v1's wording, which the rules do not capture (see
-[Found by the benchmark](#found-by-the-benchmark)). The checks the agent never sees are in
+Every decision is worded as a plain instruction ("Fines are ...", "Compare member names with casefold(),
+not lower()", "Print every date as DD.MM.YYYY"), not in the forms hafiz's capture rules look for ("Let's
+use ...", "Decision: ..."). The benchmark measures whether hafiz keeps decisions as people write them, not
+whether a prompt was written for it (see [Found by the benchmark](#found-by-the-benchmark)). The checks the agent never sees are in
 `tasks/<folder>/hidden_test.py`. Version 1's tasks are kept in [`tasks-v1.json`](tasks-v1.json) so
 its runs can be scored again.
 

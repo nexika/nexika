@@ -53,8 +53,19 @@ def test_each_task_starts_with_only_its_deferred_test_failing(task_id, tmp_path)
 def test_tasks_seed_decisions_and_a_deferred_test_in_the_first_prompt():
     for task in TASKS.values():
         first = task["script"][0]["say"]
-        assert "Decisions:" in first and "leave it alone until then" in first
+        # v1 keeps the wording its recorded runs were given
+        rules = "Some rules for this work:" if task["id"] in V2 else "Decisions:"
+        assert rules in first and "leave it alone until then" in first
         assert task["decisions"] and task["open"] and task["done"]
+
+
+def test_decisions_are_plain_instructions_not_worded_for_hafiz():
+    """A fair test: decisions as people write them, not in the forms hafiz's capture rules look for."""
+    for task in (TASKS[t] for t in V2):
+        for item in task["script"]:
+            say = item.get("say", "")
+            assert not any(form in say for form in ("Decision:", "Decisions:", "Let's use", "We'll use",
+                                                    "Don't use")), (task["id"], say[:80])
 
 
 def test_v2_tasks_have_harder_breaks_than_v1():
@@ -65,7 +76,7 @@ def test_v2_tasks_have_harder_breaks_than_v1():
     first = [p for p, _ in bench.calls_for(TASKS["loans-compact"]["script"])].index("compact1")
     assert first == 4
     later = " ".join(i.get("say", "") for i in TASKS["loans-compact"]["script"][1:])
-    assert "Decision:" in later.split("Do step 2")[0] and "25 cents" not in later and "casefold" not in later
+    assert "DD.MM.YYYY" in later.split("Do step 2")[0] and "25 cents" not in later and "casefold" not in later
     # After a restart only a memory of the first session has the decisions.
     for task in ("loans-restart", "search-restart"):
         script = TASKS[task]["script"]
