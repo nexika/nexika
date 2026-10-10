@@ -146,8 +146,8 @@ def match(failure: dict, wanted: dict) -> dict:
         out["test"] = same_name(failure.get("test"), wanted["test"])
     if wanted.get("file"):
         out["file"] = same_name(failure.get("file"), wanted["file"])
-    if wanted.get("line"):
-        out["line"] = int(failure.get("line") or 0) == int(wanted["line"])
+    if "line" in wanted:   # 0: the log names no line in that file, so tabib must name none (#362)
+        out["line"] = int(failure.get("line") or 0) == int(wanted["line"] or 0)
     if wanted.get("message"):   # a check with no test or file: its own message
         out["message"] = wanted["message"].lower() in (failure.get("message") or "").lower()
     return out

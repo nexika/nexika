@@ -450,6 +450,59 @@ def test_a_test_failing_in_many_jobs_counts_once():
     assert i18n.label("code", verdict["detail"], "en") == "1 failing test(s), in 4 jobs"
 
 
+# fastify run 31128098312 (#362): the full matrix of that run. Only (22, ubuntu) failed, (20, ubuntu) and
+# (26, macos) passed, fail-fast cancelled the rest.
+FASTIFY_MATRIX = jobs(("test-unit (20, windows-latest)", "cancelled"), ("test-unit (26, macos-latest)", "success"),
+                      ("test-unit (20, ubuntu-latest)", "success"), ("test-unit (22, ubuntu-latest)", "failure"),
+                      ("test-unit (24, ubuntu-latest)", "cancelled"), ("test-types", "success"))
+
+
+def test_a_timeout_in_one_job_is_not_a_version_difference():
+    job = "test-unit (22, ubuntu-latest)"
+    found = parse.read_log(gh_log(job, NODE_TIMEOUT_LOG))[job]["failures"]
+    timeouts = [{**f, "job": job} for f in found]
+    verdict = classify.classify({"failures": timeouts, "jobs": FASTIFY_MATRIX})
+    assert (verdict["kind"], verdict["confidence"]) == ("flaky", "low")
+    assert any("time limit" in e and "re-run" in e for e in verdict["evidence"])
+    assert i18n.label(verdict["kind"], verdict["detail"], "en") == "likely flaky: timed out in one job only"
+    # The same failures without a timeout: still only Node 22 failed.
+    plain = [{**f, "message": "AssertionError", "timeout": False} for f in timeouts]
+    assert classify.classify({"failures": plain, "jobs": FASTIFY_MATRIX})["kind"] == "matrix"
+    # Timeouts in two jobs that share the version: the version, not chance.
+    two = FASTIFY_MATRIX + jobs(("test-unit (22, macos-latest)", "failure"))
+    both = timeouts + [{**f, "job": "test-unit (22, macos-latest)"} for f in timeouts]
+    assert classify.classify({"failures": both, "jobs": two})["kind"] == "matrix"
+
+
+# psf/black run 33071276460 (#362): the test fails in unittest's case.py before its body runs, so no
+# frame is in the test file.
+UNITTEST_FRAME_LOG = [
+    "=================================== FAILURES ===================================",
+    "____________________ BlackTestCase.test_is_filesystem_root _____________________",
+    "self = <unittest.case._Outcome object at 0x7fdf8f8d8b20>",
+    ">           yield",
+    "/opt/python/cp310-cp310/lib/python3.10/unittest/case.py:59: ",
+    "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ",
+    "/opt/python/cp310-cp310/lib/python3.10/unittest/case.py:591: in run",
+    "    self._callTestMethod(testMethod)",
+    ">       method()",
+    "E       TypeError: BlackTestCase.test_is_filesystem_root() missing 1 required positional argument: 'tmp_path'",
+    "/opt/python/cp310-cp310/lib/python3.10/unittest/case.py:549: TypeError",
+    "=========================== short test summary info ============================",
+    "FAILED tests/test_black.py::BlackTestCase::test_is_filesystem_root",
+    "================== 1 failed, 536 passed, 3 skipped in 12.92s ===================",
+]
+
+
+def test_a_frame_outside_the_test_file_gives_the_test_no_line():
+    found = parse.failures(UNITTEST_FRAME_LOG)
+    assert [(f["file"], f["line"]) for f in found] == [("tests/test_black.py", 0)]
+    # A frame in the test file itself, after a library frame, still places it; a checkout prefix too.
+    placed = UNITTEST_FRAME_LOG[:6] + ["/home/runner/work/black/black/tests/test_black.py:2104: in test_x",
+                                       "    assert x"] + UNITTEST_FRAME_LOG[6:]
+    assert [(f["file"], f["line"]) for f in parse.failures(placed)] == [("tests/test_black.py", 2104)]
+
+
 @pytest.mark.parametrize("facts,kind", [
     ({"failures": FAIL, "same_commit_passed": 99}, "flaky"),
     ({"jobs": jobs(("test", "cancelled"), ("lint", "success"))}, "infra"),
@@ -976,7 +1029,22 @@ def test_a_coverage_threshold_that_is_not_met_is_a_code_failure():
     assert (verdict["kind"], verdict["detail"]["what"]) == ("code", "coverage")
     assert i18n.label("code", verdict["detail"], "en") == "coverage below the threshold in 1 file(s)"
     files = [(f["file"], f["line"]) for f in parse.failures(COVERAGE_LOG)]
-    assert files == [("lib/request.js", 234), ("test/types/validation.js", 132)]
+    assert files == [("lib/request.js", 234), ("test/types/validation.js", 134)]
+
+
+@pytest.mark.parametrize("uncovered,line", [
+    ("...22-132,134-144", 134),   # fastify run 33784186713 (#362): the first full range, not a cut one's end
+    ("...22-132", 0),             # nothing but a cut range: no line
+    ("...7", 0),
+    ("12-20,31", 12),
+    ("5", 5),
+])
+def test_a_truncated_coverage_range_gives_the_first_full_range(uncovered, line):
+    row = f"  validation.js                |      93 |    96.25 |     100 |      93 | {uncovered} "
+    found = parse.coverage(["ERROR: Coverage for lines (99.67%) does not meet global threshold (100%)",
+                            " lib                           |   99.67 |    99.83 |     100 |   99.67 |                   ",
+                            row])
+    assert [(f["file"], f["line"]) for f in found] == [("lib/validation.js", line)]
 
 
 @pytest.mark.parametrize("line", [

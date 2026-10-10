@@ -852,12 +852,12 @@
     "failures": [
      {
       "test": "tests/test_black.py::BlackTestCase::test_is_filesystem_root",
-      "file": "tests/test_black.py"
+      "file": "tests/test_black.py",
+      "line": 0
      }
     ]
    },
-   "label": "new test uses the pytest 'tmp_path' fixture in a unittest TestCase: 'test_is_filesystem_root() missing 1 required positional argument: 'tmp_path''",
-   "uncertain": "no line is labelled: the TypeError is raised in unittest's case.py before the test body runs"
+   "label": "new test uses the pytest 'tmp_path' fixture in a unittest TestCase: 'test_is_filesystem_root() missing 1 required positional argument: 'tmp_path''; line 0 (no line): the TypeError is raised in unittest's case.py before the test body runs, and no frame in the log is in tests/test_black.py (#362)"
   },
   {
    "id": 33071276460,
@@ -900,12 +900,12 @@
     "failures": [
      {
       "test": "tests/test_black.py::BlackTestCase::test_is_filesystem_root",
-      "file": "tests/test_black.py"
+      "file": "tests/test_black.py",
+      "line": 0
      }
     ]
    },
-   "label": "same tmp_path TestCase bug, run by cibuildwheel's test step in the mypyc wheel job",
-   "uncertain": "no line is labelled: the TypeError is raised in unittest's case.py before the test body runs"
+   "label": "same tmp_path TestCase bug, run by cibuildwheel's test step in the mypyc wheel job; line 0 (no line): the TypeError is raised in unittest's case.py before the test body runs, and no frame in the log is in tests/test_black.py (#362)"
   },
   {
    "id": 32564540905,
