@@ -31,44 +31,57 @@ python3 benchmarks/tabib/bench.py --save-baseline  # after adding cases, or afte
 Each case runs `diagnosis.triage`, tabib's own code, with its GitHub calls answered from the stored case (see
 "What offline leaves out"). No code from the projects runs, nothing is fetched and no model is called.
 
-## Results (2026-10-10, tabib 0.3.0 with #362)
+## Results (2026-10-10, tabib 0.3.0 with #360, #361, #362 and #366)
 
 | | All 170 | Trial set (150) | Held-out set (20) |
 |---|---|---|---|
-| Kind right | 157 = 92.4% | 145 = 96.7% | 12 = 60.0% |
-| Failures right (test, file and line) | 105/111 = 94.6% | 93/93 = 100% | 12/18 = 66.7% |
-| Cause named, runs with a known fix | 21/26 = 80.8% | 21/26 | none labelled |
+| Kind right | 167 = 98.2% | 148 = 98.7% | 19 = 95.0% |
+| Failures right (test, file and line) | 111/111 = 100% | 93/93 = 100% | 18/18 = 100% |
+| Cause named, runs with a known fix | 25/26 = 96.2% | 25/26 | none labelled |
 | Costly kind mistakes | 0 | 0 | 0 |
-| Triage time on the stored excerpts, median / p95 / max | 15 / 72 / 240 ms | | |
+| Triage time on the stored excerpts, median / p95 / max | 21 / 98 / 327 ms | | |
 | Triage time on the whole logs (not stored), median / p95 / max | 55 ms / 1.1 s / 6.0 s | | |
 | Tokens | 0 | | |
 
+Times depend on the machine and its load: the excerpt times were taken on a busy machine (three runs, the
+fastest kept; a quiet one gave 15 / 72 / 240 ms with #359). The whole-log times were measured once, with #359,
+on the trial's own copies of the logs; those logs are not stored here, so this benchmark does not re-run them.
+
 | Project | Set | Runs | Kind right | Failures right |
 |---|---|---|---|---|
-| psf/black | trial | 40 | 39 | 21/22 |
-| fastify/fastify | trial | 40 | 36 | 21/21 |
+| psf/black | trial | 40 | 40 | 22/22 |
+| fastify/fastify | trial | 40 | 38 | 21/21 |
 | pallets/flask | trial | 40 | 40 | 35/35 |
 | flypythoncom/python | trial | 30 | 30 | 15/15 |
 | pallets/click | held-out | 12 | 12 | 12/12 |
-| expressjs/express | held-out | 8 | 0 | 0/6 |
+| expressjs/express | held-out | 8 | 7 | 6/6 |
+
+How it got here, on the same 170 runs:
+
+| | Kind right | Held-out kind right | Failures right | Cause named | Costly mistakes |
+|---|---|---|---|---|---|
+| First run (#359) | 156 = 91.8% | 12/20 | 105/111 | 21/26 | 1 |
+| With #360, #361 and #362 | 165 = 97.1% | 17/20 | 111/111 | 25/26 | 2 |
+| With #366 | 167 = 98.2% | 19/20 | 111/111 | 25/26 | 0 |
+
+#362 removed the first run's costly mistake (a fastify test that timed out in one job, called `matrix`). #360
+taught tabib mocha, which named express's failing tests but also made two flaky express runs `code` instead of
+`unknown`: the two costly mistakes that #366 removes.
 
 **Read the trial number with care.** tabib was fixed against the four trial projects during the two-week trial
-(#53), so 97% there is how well it fits the logs it was tuned on. The held-out set is the honest estimate for a
-new project: click (Python, pytest, pre-commit, mypy: all read) is 12/12, and express (mocha, which tabib does not
-read) is 0/8. With 20 runs it is a small sample; more held-out projects would make it a better one.
+(#53), so 99% there is how well it fits the logs it was tuned on. The held-out set was the honest estimate for a
+new project when it was collected: click (Python, pytest, pre-commit, mypy) was 12/12 and express (mocha) 0/8.
+Since then, #360, #361 and #366 were fixed against express's runs, so its 7/8 is no longer held out in the strict
+sense. With 20 runs it was a small sample anyway; new held-out projects would make it a real one again.
 
 What tabib gets wrong:
-- **express, 8 runs: `unknown` every time.** tabib has no parser for mocha (`N failing`, `1) suite test:`), so
-  it names no failing test, and it does not read npm 10's `npm error code ETARGET` / `notarget` as a dependency
-  failure.
-- **fastify, 4 runs.** A link checker's `[403]` from medium.com, a setup-node download refused with a 403 page,
-  and a CodeQL upload that failed with no message are `unknown`. A backport bot's pull request title is `code`,
-  where the label says `setup`.
-- **black, 1 run.** A yum mirror that would not download (`Failed to download metadata for repo 'epel'`) is
-  `unknown`, where the label says `infra`.
-- **Causes not named.** For the four runs after actions/setup-python 7.0.0 dropped the `pip-install` input, tabib
-  says `setup` but does not quote the `Unexpected input(s) 'pip-install'` warning. For fastify's version test, the
-  fix was in `fastify.js`, which the log never names.
+- **express, 1 run.** Coveralls finding nothing to report (35727627772) is `unknown`, where the label says
+  `setup`.
+- **fastify, 2 runs.** A CodeQL upload that failed with no message (34748583815) is `unknown`, where the label
+  says `infra` (a judgement, low confidence). A backport bot's pull request title (31715822603) is `code`, where
+  the label says `setup`.
+- **Cause not named.** For fastify's version test (33853095623), the fix was in `fastify.js`, which the log
+  never names.
 
 ## The cases
 

@@ -107,6 +107,74 @@ def crashed_in_dependency(failures: list[dict], raised: list[dict]) -> dict:
     return raised[0]
 
 
+MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+# 'Tue, 06 Oct 2026 21:22:43 GMT' (an HTTP date) or '2026-10-06T21:22:43.123Z' (ISO 8601).
+TIMESTAMP = re.compile(
+    r"\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun), (?P<d>\d{1,2})[ -](?P<mon>" + "|".join(MONTHS) +
+    r")[ -](?P<y>\d{4}) (?P<H>\d{2}):(?P<M>\d{2}):(?P<S>\d{2}) GMT\b"
+    r"|\b(?P<iy>\d{4})-(?P<im>\d{2})-(?P<id>\d{2})[T ](?P<iH>\d{2}):(?P<iM>\d{2}):(?P<iS>\d{2})"
+    r"(?P<frac>\.\d+)?(?P<tz>Z|[+-]\d{2}:?\d{2}\b)?")
+QUOTED = re.compile(r"\"([^\"]*)\"|'([^']*)'|`([^`]*)`")
+# What stands between the two sides of a comparison: '==', 'to equal', ', got'.
+COMPARED = re.compile(r"(?i)^[\s,:'\"`]*(?:!==|===|!=|==|<|>|to (?:deeply |strictly )?(?:equal|eql|be)|"
+                      r"(?:but )?got|vs\.?|does not equal|is not)[\s,:'\"`]*$")
+
+
+def _when(m: re.Match):
+    """The moment a TIMESTAMP match names, or None when it cannot be read."""
+    from datetime import datetime, timedelta, timezone
+    try:
+        if m.group("y"):
+            return datetime(int(m["y"]), MONTHS.index(m["mon"]) + 1, int(m["d"]), int(m["H"]), int(m["M"]),
+                            int(m["S"]), tzinfo=timezone.utc)
+        when = datetime(int(m["iy"]), int(m["im"]), int(m["id"]), int(m["iH"]), int(m["iM"]), int(m["iS"]))
+        when += timedelta(seconds=float(m["frac"] or 0))
+        tz = m["tz"]
+        if not tz:
+            return when
+        if tz == "Z":
+            return when.replace(tzinfo=timezone.utc)
+        hours, minutes = int(tz[1:3]), int(tz[-2:])
+        sign = -1 if tz[0] == "-" else 1
+        return when.replace(tzinfo=timezone(sign * timedelta(hours=hours, minutes=minutes)))
+    except ValueError:
+        return None
+
+
+def _sides(message: str) -> list[str]:
+    """The two things a failure message compares, when both hold a time: two quoted strings, or two bare
+    times with only a comparison ('==', 'to equal', ', got') between them."""
+    quoted = [next(g for g in m.groups() if g is not None) for m in QUOTED.finditer(message)]
+    quoted = [q for q in quoted if TIMESTAMP.search(q)]
+    if len(quoted) == 2:
+        return quoted
+    times = list(TIMESTAMP.finditer(message))
+    if len(times) == 2 and COMPARED.match(message[times[0].end():times[1].start()]):
+        return [times[0].group(0), times[1].group(0)]
+    return []
+
+
+def clock_race(message: str) -> int:
+    """Seconds apart (1 or 2) when a failure compares two things that differ only in a time one or two
+    seconds off: the test and the code read the clock a moment apart (#366). 0 otherwise: an hour off is a
+    time zone, and a difference beside the time is a real one."""
+    if not message or len(message) > 2000:
+        return 0
+    sides = _sides(message)
+    if len(sides) != 2 or TIMESTAMP.sub("\0", sides[0]) != TIMESTAMP.sub("\0", sides[1]):
+        return 0
+    a, b = (list(TIMESTAMP.finditer(side)) for side in sides)   # as many in each: the sides match
+    gaps = []
+    for x, y in zip(a, b, strict=True):
+        first, second = _when(x), _when(y)
+        if first is None or second is None or (first.tzinfo is None) != (second.tzinfo is None):
+            return 0
+        gaps.append(abs((second - first).total_seconds()))
+    if not gaps or max(gaps) == 0 or max(gaps) > 2.5:
+        return 0
+    return max(1, round(max(gaps)))
+
+
 def classify(facts: dict) -> dict:
     """{kind, detail, confidence, evidence} from what triage found."""
     failures = facts.get("failures") or []
@@ -230,6 +298,17 @@ def classify(facts: dict) -> dict:
                         "more likely than a version difference: a re-run tells which.")
         return {"kind": "flaky", "detail": {"timeout": True, "value": only}, "confidence": "low",
                 "evidence": evidence}
+    races = [clock_race(f.get("message") or "") for f in failures]
+    if failures and all(races) and one_matrix_job(facts.get("jobs") or []):
+        # A time one or two seconds off, in one job of a matrix: the test and the code read the clock a
+        # moment apart, across a second boundary. "A bug" sends the reader after one that is not there (#366).
+        apart = max(races)
+        evidence += [f"{f['test'] or f['file']}: {f['message']}" for f in failures[:3]]
+        evidence.append(f"Each failing test compares two times {apart} second{'s' if apart > 1 else ''} "
+                        "apart, and nothing else differs, in one job only; the same job passed with other "
+                        "values. Likely a clock race: the test and the code read the clock a moment apart, "
+                        "across a second boundary. A re-run tells.")
+        return {"kind": "flaky", "detail": {"clock": True}, "confidence": "low", "evidence": evidence}
     if only and failures:   # a matrix value names where a known failure happens, not a cause (#255)
         evidence.append(f"Only the jobs with {only} failed; the same job passed with other values.")
         return {"kind": "matrix", "detail": {"value": only, "count": len(failures), "what": what},
