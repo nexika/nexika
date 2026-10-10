@@ -68,6 +68,7 @@ def version_from_tags(root: Path, rel: str) -> bool:
         return False
     end = TOML_HEADER.search(text, start.end())
     return bool(DYNAMIC_VERSION.search(text[start.end(): end.start() if end else len(text)]))
+GITHUB_CHANGELOG = "github"
 XML_VERSION = re.compile(r"(<Version>)([^<]+)(</Version>)")
 
 
@@ -87,6 +88,11 @@ class Project:
 
     def write_version(self, root: Path, rel: str, version: str) -> None:
         write_version(root, rel, version, self.version_patterns.get(rel))
+
+    @property
+    def github_changelog(self) -> bool:
+        """.amin.json "changelog": "github": the release notes live in GitHub releases, no file."""
+        return self.changelog == GITHUB_CHANGELOG
 
     def tag(self, version: str) -> str:
         return self.tag_format.format(name=self.name, version=version)
