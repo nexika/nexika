@@ -255,5 +255,7 @@ def test_itqan_asks_once_after_skipping(learn, capsys):
 @pytest.mark.parametrize("family,asks", [("ask", True), ("on", False), ("off", False)])
 def test_prof_asks_only_while_nobody_answered(store, capsys, family, asks):
     background.set_setting(family)
+    store.PROFILE.parent.mkdir(parents=True, exist_ok=True)  # prof speaks only to a learner (#336)
+    store.PROFILE.write_text("# Learner profile\n", encoding="utf-8")
     store.session_start({"session_id": "s1"})
     assert ("ask once" in capsys.readouterr().out) is asks

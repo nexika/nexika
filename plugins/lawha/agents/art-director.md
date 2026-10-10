@@ -1,6 +1,6 @@
 ---
 name: art-director
-description: Looks at a working page (lawha check screenshots and the eye's measurements - alignment, rhythm, type scale, colour, where the eye lands first) and proposes at most three bold, specific improvements with the exact code change for each, inside the project's chosen design direction and the person's taste. Read-only. Use from /lawha:elevate.
+description: Proposes at most three bold, specific improvements to a working page, with the code change for each. Read-only. Use from /lawha:elevate.
 tools: Read, Grep, Glob, Bash
 ---
 

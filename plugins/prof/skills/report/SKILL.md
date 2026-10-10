@@ -1,10 +1,12 @@
 ---
 name: report
-description: Write the end-of-session learning report - what the learner learned today, exactly what they did, comprehension check results, weak areas and logic gaps, level estimate, and what to review next time - then update the per-topic memory. Use when a tutoring session (a prof lesson, quiz, warm-up, walkthrough or onboarding ran in this session) ends, or when the user says "what did I learn" or runs /prof:report. A goodbye at the end of an ordinary working session is not a reason to run it.
+description: Write the end-of-session learning report and update the per-topic memory. Use when a prof lesson, quiz, warm-up, walkthrough or onboarding ends, or the user says "what did I learn". A goodbye after ordinary work is not a reason.
 argument-hint: "[optional note]"
 ---
 
 # End-of-session report
+
+`<helper>` below is `${CLAUDE_PLUGIN_ROOT}/scripts/prof_store.py`.
 
 ## 1. Build the report from THIS session only
 
@@ -28,8 +30,8 @@ Be honest and specific:
 
 ## 2. Save it
 
-1. Get the file name: `date +%F_%H%M` and the short session id from the "Prof plugin" session
-   context → `~/.claude/nexika/prof/reports/<date>_<HHMM>_<sid8>.md`.
+1. Get the file name: `date +%F_%H%M` and the short session id, the first 8 characters of
+   `${CLAUDE_SESSION_ID}` → `~/.claude/nexika/prof/reports/<date>_<HHMM>_<sid8>.md`.
    The `<sid8>` suffix matters: it tells the SessionEnd hook this session already has a
    report, so no duplicate is generated.
 2. Write the file with exactly this structure:
@@ -64,7 +66,7 @@ Session: <sid8> · Source: in-session
 Keep the `<!-- bayan: off -->` line: it stops writing cleaners from changing the separators.
 
 3. Merge it into the topic memory:
-   `python3 <helper> merge-report <report file>` (helper path is in the session context).
+   `python3 <helper> merge-report <report file>`.
 4. Update the profile with the `progress` skill (log line + move mastered/weak topics).
 
 ## 3. Show the learner

@@ -1,12 +1,13 @@
 ---
 name: figma
-description: Build a Figma design in code, exactly - reads the frames (mobile, tablet, desktop) with as few Figma calls as possible, merges them into one mobile-first spec with tokens, type, photos and icons, builds the page in the project's stack (React, TanStack, Tailwind, shadcn/ui), then checks it against the design at every width until it matches. Use when the user shares a Figma link, says "build this design", "implement this Figma", "figma to code", "lawha figma", "نفّذ هذا التصميم", "حوّل تصميم فيغما إلى كود".
+description: Build a Figma design in code exactly, at every width. Use when the user shares a Figma link or says "build this design", "figma to code", "نفّذ هذا التصميم", "حوّل تصميم فيغما إلى كود".
 argument-hint: "<figma link> [frames]"
 ---
 
 # Figma to code, exactly
 
-The helper is named in the session note ("Helper: .../bin/lawha"); below it is written `lawha`.
+The helper is `sh "${CLAUDE_PLUGIN_ROOT}/bin/lawha"` (in a project with a frontend the session note names it
+too); below it is written `lawha`.
 Run it from the project folder.
 
 ## 0. The token

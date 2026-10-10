@@ -27,6 +27,13 @@ actually mention and cite you**, so you can see what each change did.
 - **Arabic and any language.** `lang`/`dir="rtl"` checks, Arabic passages scored, panel questions
   in every language you sell in.
 
+## Quiet when the project is not a website
+
+manar's session-start note appears only for a website: a web framework (`manar detect` names it),
+a static site, an ASP.NET project with pages, or a `.manar/` folder. The skills work in any
+project, and an audit of a live URL needs no project at all. To turn manar off in a project, see
+"Lean sessions" in the [main README](../../README.md#lean-sessions-what-each-plugin-adds-and-turning-one-off-per-project).
+
 ## Commands (the helper the skills use)
 
 ```

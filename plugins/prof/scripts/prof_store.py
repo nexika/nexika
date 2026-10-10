@@ -380,6 +380,13 @@ def _section(text: str, heading: str, limit: int) -> list[str]:
 
 # ---------------------------------------------------------------- hooks
 
+def has_something_to_say(*, profile: bool, due: bool, role: str) -> bool:
+    """prof speaks at session start only when there is a learner here (#336): a learner profile, a lesson
+    due for review, or a user who said they are learning to code. Otherwise the session is plain work
+    and the skills (/prof:learn, "teach me") are enough."""
+    return profile or due or role == "learner"
+
+
 def session_start(hook: dict) -> None:
     if os.environ.get(GUARD_ENV) or prof_background.in_background():  # no hooks inside a background call
         return
@@ -389,8 +396,10 @@ def session_start(hook: dict) -> None:
     topics = topic_summaries()
     publish_due(topics)
     pending = [t for t in topics if t[3] or t[4]]
-    ask = "" if auto_report_state() is not None else " " + AUTO_REPORT_NOTE[None].format(script=script)
     role = prof_family.role()
+    if not has_something_to_say(profile=PROFILE.is_file(), due=bool(pending), role=role):
+        return
+    ask = "" if auto_report_state() is not None else " " + AUTO_REPORT_NOTE[None].format(script=script)
     profile_ask = "" if role else prof_family.ask_note(f"python3 {Path(prof_family.__file__).resolve()}")
     if role and role != "learner":
         # not learning to code (Nexika profile): a question about code gets an answer, not a lesson

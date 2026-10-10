@@ -361,6 +361,8 @@ def test_no_background_report_until_the_learner_agrees(store, tmp_path, popen_ca
     store.session_end(hook)
     assert popen_calls == []
     assert "not enabled" in store.LOG.read_text()
+    store.PROFILE.parent.mkdir(parents=True, exist_ok=True)  # prof speaks only to a learner (#336)
+    store.PROFILE.write_text("# Learner profile\n", encoding="utf-8")
     store.session_start({"session_id": "s2"})
     assert "auto-report on" in capsys.readouterr().out          # Claude is told to ask once
     assert store.main(["prof_store.py", "auto-report", "off"]) == 0

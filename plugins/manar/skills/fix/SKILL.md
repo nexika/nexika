@@ -1,12 +1,13 @@
 ---
 name: fix
-description: Apply SEO and AI-visibility fixes directly in the project's code - meta tags, canonical, Open Graph, JSON-LD entity schema, sitemap, robots.txt with AI crawler rules, llms.txt, server rendering - using the framework's own conventions (Next.js, Astro, ASP.NET Core, static/GitHub Pages), on a branch with a reviewed pull request. Use when the user says "fix the SEO", "make us visible to ChatGPT/Gemini", "add schema / sitemap / llms.txt", or "manar fix".
+description: Apply SEO and AI-visibility fixes in the project's code (meta tags, schema, sitemap, robots.txt, llms.txt). Use when the user says "fix the SEO", "make us visible to ChatGPT/Gemini", "add schema / sitemap / llms.txt", or "manar fix".
 argument-hint: "[audit file or issue ids]"
 ---
 
 # Fix in the codebase
 
-The manar helper is printed in the session note; below it is written `manar`.
+The manar helper is `python3 "${CLAUDE_PLUGIN_ROOT}/bin/manar"` (for a website the session note
+names it too); below it is written `manar`.
 
 1. **Know the problems.** Use the latest `.manar/audits/*.json` (or run `/manar:audit` first).
 2. **Know the framework.** Run `manar detect` and read the matching guide next to this plugin:

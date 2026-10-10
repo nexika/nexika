@@ -1,7 +1,8 @@
 #!/bin/sh
 # lawha launcher. Skills and agents call it as "lawha <command>"; see `lawha help`.
 #   lawha setup                  install the engine (Playwright + Chromium) once, outside the project
-#   lawha hook session-start     the short note Claude gets at the start of a session
+#   lawha hook session-start     the short note Claude gets at the start of a session (only with a frontend)
+#   lawha has-frontend [dir]     "yes" (exit 0) when the project has a frontend, else "no" (exit 1)
 #   lawha <engine command> ...   check, diff, index, version (run by the engine)
 set -eu
 
@@ -18,7 +19,41 @@ engine_dir() {
   echo ""
 }
 
+# Does the project have a frontend? Looks at the folder and one level down (apps/* and packages/*
+# two levels down) for a package.json that names a UI library, a frontend config file, or lawha's
+# own .lawha folder. Only file tests and a grep per package.json: fast, and any error means "no".
+FRONTEND_DEPS='"(react|react-dom|vue|svelte|@sveltejs/kit|next|nuxt|astro|@angular/core|solid-js|preact|lit|@remix-run/react|@tanstack/react-router|tailwindcss)"[[:space:]]*:'
+FRONTEND_FILES="tailwind.config.js tailwind.config.ts tailwind.config.mjs tailwind.config.cjs components.json
+  vite.config.js vite.config.ts vite.config.mjs next.config.js next.config.mjs next.config.ts nuxt.config.ts
+  nuxt.config.js astro.config.mjs astro.config.ts svelte.config.js angular.json index.html public/index.html
+  src/index.html"
+
+looks_like_frontend() {
+  [ -d "$1" ] || return 1
+  for f in $FRONTEND_FILES; do
+    [ -f "$1/$f" ] && return 0
+  done
+  [ -f "$1/package.json" ] && grep -Eq "$FRONTEND_DEPS" "$1/package.json" 2>/dev/null && return 0
+  return 1
+}
+
+has_frontend() {
+  root=$1
+  [ -d "$root" ] || return 1
+  [ -d "$root/.lawha" ] && return 0
+  looks_like_frontend "$root" && return 0
+  for d in "$root"/*/ "$root"/apps/*/ "$root"/packages/*/; do
+    d=${d%/}
+    case "${d##*/}" in node_modules|vendor|dist|build|htmlcov|coverage|site-packages) continue ;; esac
+    looks_like_frontend "$d" && return 0
+  done
+  return 1
+}
+
 case "${1:-help}" in
+  has-frontend)
+    if has_frontend "${2:-${CLAUDE_PROJECT_DIR:-$PWD}}"; then echo yes; else echo no; exit 1; fi
+    ;;
   setup)
     command -v node >/dev/null 2>&1 || { echo '{"error": "Node.js 20 or newer is needed: https://nodejs.org"}'; exit 3; }
     major=$(node -p 'process.versions.node.split(".")[0]')
@@ -33,6 +68,8 @@ case "${1:-help}" in
     ;;
   hook)
     [ "${NEXIKA_BACKGROUND:-}" = "1" ] && exit 0  # inside a family background model call: no hooks (#45)
+    # Quiet in a project with no frontend (#336): the skills still work, they find the helper themselves.
+    has_frontend "${CLAUDE_PROJECT_DIR:-$PWD}" || exit 0
     if [ -n "$(engine_dir)" ]; then state="ready"; else state="not installed (run: lawha setup, after asking the user)"; fi
     echo "lawha: frontend design, Figma to code and checks on every screen. Helper: $here/bin/lawha · engine $version $state."
     ;;

@@ -1,6 +1,6 @@
 ---
 name: project-cartographer
-description: Read-only codebase mapper for onboarding. Explores a project (or one area of it) and returns a structured map a tutor can teach from - stack, folders, entry points, main flows, data model, run/test commands, conventions, glossary. Use from the onboard skill.
+description: Read-only codebase mapper that returns a map of a project (stack, entry points, flows, commands) a tutor can teach from. Use from the onboard skill.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
