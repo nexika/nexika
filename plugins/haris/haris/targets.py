@@ -293,11 +293,43 @@ def targets(value: Arg, ctx: Ctx) -> list[tuple[str | None, str | None]]:
     return out or [(None, None)]
 
 
+PACKAGE_RC = (".npmrc", ".yarnrc.yml")
+RC_AUTH = re.compile(r"(?im)_auth|_password|^\s*//|npmauth|^\s*(?:cert|key)file\s*=")
+IGNORE_SCRIPTS_ON = re.compile(r"(?im)^\s*ignore-scripts\s*=\s*true\s*$")
+IGNORE_SCRIPTS_OFF = re.compile(r"(?im)^\s*ignore-scripts\s*=\s*false\b")
+IGNORE_SCRIPTS_OFF_REASON = ("Turns off ignore-scripts in {path}: packages' install scripts would run "
+                             "again on the next install.")
+
+
+def public_rc(path: str | None, ctx: Ctx) -> bool:
+    """A project's .npmrc that git tracks and that holds no token is public config, not a secret (#222)."""
+    if not path or os.path.basename(path) not in PACKAGE_RC or not path.startswith(ctx.where.root + "/"):
+        return False
+    try:
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read(65536)
+    except (OSError, UnicodeDecodeError):
+        return False
+    if RC_AUTH.search(text):
+        return False
+    return ctx.git.try_run("ls-files", "--error-unmatch", "--", path) is not None
+
+
+def rc_text(path: str | None) -> str:
+    try:
+        with open(path or "", encoding="utf-8") as fh:
+            return fh.read(65536)
+    except (OSError, UnicodeDecodeError):
+        return ""
+
+
 def read_paths(values_: list[Arg], ctx: Ctx, verb: str = "reads", meta: bool = False) -> None:
     for value in values_:
         for path, contents in targets(value, ctx):
             path = path or (contents + "/_" if contents else None)
             place = ctx.where.place(path)
+            if place == "secret" and public_rc(path, ctx):
+                place = "project"
             if place == "unknown":
                 ctx.add("read-unknown", f"{verb.capitalize()} a path that is only known when it runs.")
             elif (place == "secret" or (path and place in ("persistence", "system", "home", "outside")

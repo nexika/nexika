@@ -1192,6 +1192,67 @@ def test_a_folder_approval_covers_git_in_a_repository_there(world):
 
 
 @pytest.fixture
+def public_npmrc(world, tmp_path):
+    """fastify's committed .npmrc: public settings, no token (#222)."""
+    repo = tmp_path / "npmrc-proj"
+    repo.mkdir()
+    (repo / ".npmrc").write_text("ignore-scripts=true\nmin-release-age=7\npackage-lock=false\n")
+    _git(repo, "init", "-q")
+    _git(repo, "add", ".npmrc")
+    _git(repo, "commit", "-q", "-m", "npmrc")
+    return repo
+
+
+def test_a_tracked_npmrc_without_a_token_is_ordinary_to_read(public_npmrc):
+    assert decide(public_npmrc, "Bash", "cat .npmrc").verdict == "allow"
+    assert decide(public_npmrc, "Read", str(public_npmrc / ".npmrc")).verdict == "allow"
+
+
+def test_an_npmrc_with_a_token_or_untracked_still_asks(public_npmrc, world):
+    home, _ = world
+    (public_npmrc / "sub").mkdir()
+    (public_npmrc / "sub" / ".npmrc").write_text("ignore-scripts=true\n")  # not in git
+    assert decide(public_npmrc, "Bash", "cat sub/.npmrc").verdict == "ask"
+    (public_npmrc / ".npmrc").write_text("//registry.npmjs.org/:_authToken=x\n")
+    _git(public_npmrc, "commit", "-qam", "token")
+    assert decide(public_npmrc, "Bash", "cat .npmrc").verdict == "ask"
+    (home / ".npmrc").write_text("fund=false\n")
+    assert decide(public_npmrc, "Bash", "cat ~/.npmrc").verdict == "ask"
+
+
+@pytest.mark.parametrize("command", [
+    "sed -i 's/ignore-scripts=true/ignore-scripts=false/' .npmrc",
+    "sed -i '/ignore-scripts/d' .npmrc",
+    "echo ignore-scripts=false >> .npmrc",
+    "npm config set ignore-scripts false --location=project",
+    "npm config set ignore-scripts=false -L project",
+    "npm config delete ignore-scripts --location=project",
+])
+def test_turning_off_ignore_scripts_asks(public_npmrc, command):
+    d = decide(public_npmrc, "Bash", command)
+    assert (d.verdict, d.cls) == ("ask", "risky"), d.reason
+
+
+def file_tool(project, tool, tool_input):
+    cfg = policy.effective_config(str(project))
+    return policy.decide({"tool_name": tool, "tool_input": tool_input, "cwd": str(project)}, cfg, None, None)
+
+
+def test_editing_ignore_scripts_out_of_the_npmrc_asks(public_npmrc):
+    path = str(public_npmrc / ".npmrc")
+    d = file_tool(public_npmrc, "Edit", {"file_path": path, "old_string": "ignore-scripts=true\n",
+                                         "new_string": ""})
+    assert (d.verdict, d.cls) == ("ask", "risky"), d.reason
+    d = file_tool(public_npmrc, "Write", {"file_path": path, "content": "package-lock=false\n"})
+    assert (d.verdict, d.cls) == ("ask", "risky"), d.reason
+    d = file_tool(public_npmrc, "Edit", {"file_path": path, "old_string": "min-release-age=7",
+                                         "new_string": "min-release-age=3"})
+    assert d.verdict == "pass", d.reason
+    assert decide(public_npmrc, "Bash", "sed -i 's/package-lock=false/package-lock=true/' .npmrc").verdict \
+        == "pass"
+
+
+@pytest.fixture
 def node_project(world, tmp_path):
     """fastify's shape: package.json scripts call borp, c8 and tstyche from node_modules/.bin (#221)."""
     repo = tmp_path / "node-proj"

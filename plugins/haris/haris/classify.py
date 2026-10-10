@@ -21,6 +21,9 @@ from .targets import (  # noqa: F401  (the light helpers, kept here by name)
     ASK,
     CI_RUNNER_FILES,
     DENY,
+    IGNORE_SCRIPTS_OFF,
+    IGNORE_SCRIPTS_OFF_REASON,
+    IGNORE_SCRIPTS_ON,
     LEVEL,
     LOCAL_HOSTS,
     NOT_APPROVABLE,
@@ -34,6 +37,7 @@ from .targets import (  # noqa: F401  (the light helpers, kept here by name)
     Git,
     arg,
     joined_marks,
+    rc_text,
     read_aliases,
     read_paths,
     targets,
@@ -303,6 +307,10 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
             if downloads:
                 ctx.downloaded.add(path)  # `curl URL > file` saves a download like `curl -o file`
             elif stage is not None and stage.text is not None and UNKNOWN not in stage.text:
+                if os.path.basename(path) == ".npmrc" and (IGNORE_SCRIPTS_OFF.search(stage.text) or (
+                        r.op in (">", ">|", "&>") and IGNORE_SCRIPTS_ON.search(rc_text(path))
+                        and not IGNORE_SCRIPTS_ON.search(stage.text))):
+                    ctx.add("risky", IGNORE_SCRIPTS_OFF_REASON.format(path=ctx.show(path)))
                 before = ctx.written.get(path, "") if r.op in (">>", "&>>") else ""
                 ctx.written[path] = before + stage.text + "\n"
             else:
@@ -899,6 +907,11 @@ def h_node_pm(argv, ctx, stdin):
             ctx.add("exec", f"`{program} audit fix` changes the project's dependencies.")
         else:
             ctx.add("read", f"Only shows information ({program} {sub}{' get' if sub == 'pkg' else ''}).")
+        return Stage()
+    turned_off = rest[1:2] == ["ignore-scripts"] and (rest[0] in ("delete", "rm") or rest[2:3] == ["false"]) \
+        or rest[1:2] == ["ignore-scripts=false"]
+    if sub in ("config", "c") and rest[:1] and rest[0] in ("set", "delete", "rm") and turned_off:
+        ctx.add("risky", IGNORE_SCRIPTS_OFF_REASON.format(path=f"{program}'s config"))
         return Stage()
     if sub in ("exec", "x", "dlx") and rest:
         return npx([arg("npx"), *rest], ctx, stdin)
@@ -1525,6 +1538,9 @@ def h_sed(argv, ctx, stdin):
     in_place = any(o[0] in ("-i", "--in-place") or o[0].startswith("--in-place") for o in opts)
     if in_place:
         write_paths(pos, ctx, "edits")
+        rcs = [p for p in pos if os.path.basename(p) == ".npmrc"]
+        if rcs and any("ignore-scripts" in s for s in scripts):
+            ctx.add("risky", IGNORE_SCRIPTS_OFF_REASON.format(path=rcs[0]))
     elif pos:
         read_paths(pos, ctx)
     else:
