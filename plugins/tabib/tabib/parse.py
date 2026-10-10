@@ -21,14 +21,20 @@ MAX_LINES = 200_000
 # ------------------------------------------------------------------ signals (outside the code)
 
 SIGNALS = [
-    ("timeout", re.compile(r"(?i)exceeded the maximum execution time|timed? ?out after \d|"
-                           r"job .{0,40}timed out|deadline exceeded")),
+    # The job's or a step's time limit, not a test's own ("'test timed out after 30000ms'", #253).
+    ("timeout", re.compile(r"(?i)exceeded the maximum execution time|(?:job|step|action) .{0,40}timed out|"
+                           r"deadline exceeded")),
     # "Killed" only as the shell or the kernel says it, never inside a test's own message.
     ("oom", re.compile(r"(?i)exit code 137\b|^\s*Killed\s*$|line \d+:\s+\d+ Killed\b|Killed process \d+|"
                        r"heap out of memory|\bMemoryError\b|OOMKilled|cannot allocate memory")),
     ("network", re.compile(r"(?i)could not resolve host|ECONNRESET|ETIMEDOUT|ECONNREFUSED|EAI_AGAIN|"
                            r"connection (?:timed out|reset)|TLS handshake timeout|temporary failure in name "
-                           r"resolution|50[234] (?:Bad Gateway|Service Unavailable|Gateway Time-?out)")),
+                           r"resolution|50[234] (?:Bad Gateway|Service Unavailable|Gateway Time-?out)|"
+                           # GitHub's own service errors (#254); a 403 is not one: it may never lift.
+                           r"Failed to resolve action download info|\bHTTP 50[0234]\b|"
+                           r"^##\[error\](?:Service Unavailable|Internal Server Error|Bad Gateway|"
+                           r"Gateway Time-?out)\s*$|"
+                           r"failed to download .{0,60}Status code: 5\d\d\b")),
     ("rate_limit", re.compile(r"(?i)rate limit exceeded|429 Too Many Requests|secondary rate limit")),
     ("runner", re.compile(r"(?i)runner has received a shutdown signal|lost communication with the server|"
                           r"was not acquired by runner|"
@@ -43,6 +49,8 @@ SIGNALS = [
                          r"The version '[^']+' with architecture '[^']+' was not found|"   # setup-python
                          r"(?:^|\s)--[a-z][\w-]+ error: invalid value: '|"   # a tool option from the env
                          r"Artifact directory does not exist|Artifact not found for name")),
+    # A branch rule the workflow's token cannot pass (#262): a re-run fails the same way.
+    ("rules", re.compile(r"(?i)repository rule violations found|\d+ approving reviews? (?:is|are) required")),
     ("segfault", re.compile(r"(?i)segmentation (?:fault|violation)|\bSIGSEGV\b|exit code 139\b|"
                             r"Windows fatal exception: access violation")),
     # GitHub prints this after a timeout, a shutdown and a cancel alike: the weakest sign.
@@ -99,6 +107,8 @@ PW_ERROR = re.compile(r"^\s*(?:\w+)?Error\b")
 JUNIT_START = re.compile(r"<(testsuites|testsuite)\b")
 FAULT_HEADER = re.compile(r"Fatal Python error: Segmentation fault")
 FAULT_FRAME = re.compile(r'^\s*File "([^"]+)", line (\d+) in (test\w*)')
+# GitHub's problem matchers print "##[error]" before a linter's own line (#256).
+MATCHER = re.compile(r"^##\[(?:error|warning)\]")
 ERROR_LINE = re.compile(r"(?i)^(?:##\[error\]|error(?:\[\w+\])?:|fatal:|npm ERR!|E\s{3})"
                         r"|\b\w+(?:Error|Exception): ")
 
@@ -213,9 +223,18 @@ STEP_EXIT = re.compile(r"^##\[error\]Process completed with exit code [1-9]")
 ECHO = re.compile(r"""\becho\s+(?:-e\s+)?(["'])(.+?)\1""")
 
 
+# A JavaScript action's step: "Run owner/action@ref". One that sets up the job (checkout, setup-*, cache,
+# artifacts) is no check of the project when it fails.
+STEP_ACTION = re.compile(r"^##\[group\]Run [\w.-]+/[\w./-]+@\S+\s*$")
+LINK_STATUS = re.compile(r"^\[\d{3}\] \S+")   # a link checker's "[403] <url>": a site's answer, not a check
+SETUP_ACTION = re.compile(r"(?i)^##\[group\]Run [\w.-]+/(?:[\w.-]*setup[\w.-]*|checkout|cache|"
+                          r"(?:upload|download)-artifact)(?:/[\w./-]*)?@")
+
+
 def steps(lines: list[str]):
     """Each step that failed: (its script and env, its output), from GitHub's '##[group]Run ...' header to
-    its '##[error]Process completed with exit code N'."""
+    its '##[error]Process completed with exit code N', or for a JavaScript action (no exit-code line) to
+    its first '##[error]' line, the last line of the output (#260)."""
     header: list[str] = []
     output: list[str] = []
     in_header = False
@@ -229,15 +248,28 @@ def steps(lines: list[str]):
             if header:
                 yield header, output
             header, output = [], []
+        elif header and line.startswith("##[error]") and STEP_ACTION.match(header[0]):
+            yield header, output + [line]
+            header, output = [], []
         elif header:
             output.append(line)
 
 
 def step_message(lines: list[str]) -> list[dict]:
     """A failed step's own message (#172): an output line the step's script prints with echo, such as
-    black's "Please add '(#5235)' change line to CHANGES.md"."""
+    black's "Please add '(#5235)' change line to CHANGES.md", or a JavaScript action's '##[error]' (#260)."""
     found = []
+    signalled: bool | None = None
     for header, output in steps(lines):
+        if STEP_ACTION.match(header[0]):   # core.setFailed(): the action's own '##[error]' line (#260)
+            said = output[-1].removeprefix("##[error]").strip() if output else ""
+            if not said or SETUP_ACTION.match(header[0]) or LINK_STATUS.match(said):
+                continue
+            if signalled is None:   # a sign of trouble outside the code explains the action's error
+                signalled = any(pattern.search(line) for line in lines for _, pattern in SIGNALS)
+            if not signalled:
+                found.append(_failure("step", "check", message=said))
+            continue
         echoed = [m.group(2).split("$")[0].strip() for line in header for m in ECHO.finditer(line)]
         echoed = [e for e in echoed if len(e) >= 10]
         said = [line.strip() for line in output
@@ -285,6 +317,110 @@ def generated(lines: list[str]) -> list[dict]:
             if (m := DIFF_FILE.match(line.strip())) and SAFE_PATH.match(m.group(1)):
                 found.append(_failure("generated", "generated", command, m.group(1),
                                       message="generated file out of date"))
+    return found
+
+
+NODE_BLOCK = re.compile(r"^✖ failing tests:\s*$")
+NODE_AT = re.compile(r"^test at (\S+?):(\d+):\d+\s*$")
+NODE_FAIL = re.compile(r"^\s*✖ (.+?) \(\d+(?:\.\d+)?m?s\)\s*$")
+NODE_FRAME = re.compile(r"\(?(?:file://)?([^\s()]+?\.[cm]?[jt]sx?):(\d+):\d+\)?\s*$")
+NODE_SUBTESTS = re.compile(r"^'?\d+ subtests? failed'?$")
+BORP_FAILED = re.compile(r"^failed: (\S.*?\.[cm]?[jt]sx?) \([\d,.]+ ?m?s\)\s*$")
+
+
+def _checkout_path(path: str) -> str:
+    return CHECKOUT.sub("", path.replace("\\", "/"))
+
+
+def _node_place(body: list[str], file: str, number: int) -> tuple[str, int]:
+    """The first frame of the checkout, in the test's own file when there is one."""
+    places = []
+    for line in body:
+        if (m := NODE_FRAME.search(line.replace("\\", "/"))) and not FOREIGN.search(m.group(1)):
+            places.append((_checkout_path(m.group(1)), int(m.group(2))))
+    same = [p for p in places if file and p[0] == file]
+    return (same or [(file, number)] if file else places or [("", 0)])[0]
+
+
+def node_test(lines: list[str]) -> list[dict]:
+    """Node's built-in test runner (#251): each test of its '✖ failing tests:' block, with its message and
+    the frame in its file; else borp's 'failed: <file>' lines, placed by the frame in that file."""
+    found: list[dict] = []
+    start = next((i for i, line in enumerate(lines) if NODE_BLOCK.match(line.strip())), -1)
+    if start >= 0:
+        at: tuple[str, int] = ("", 0)
+        entry: dict | None = None
+        body: list[str] = []
+
+        def close():
+            if entry is not None and not NODE_SUBTESTS.match(entry["message"]):
+                entry["file"], entry["line"] = _node_place(body, *at)
+                found.append(entry)
+
+        for line in lines[start + 1:]:
+            if line.startswith("##["):
+                break
+            if m := NODE_AT.match(line.strip()):
+                close()
+                entry, body, at = None, [], (_checkout_path(m.group(1)), int(m.group(2)))
+            elif (m := NODE_FAIL.match(line)) and not line.startswith("    "):
+                close()
+                name = m.group(1)
+                if "/" in name or "\\" in name:   # a file that failed as a whole
+                    name = _checkout_path(name)
+                entry, body = _failure("node:test", "tests", name), []
+            elif entry is not None:
+                body.append(line)
+                if not entry["message"] and line.strip():
+                    entry["message"] = _short(line.strip())
+        close()
+        if found:
+            return found
+    for i, line in enumerate(lines):
+        if not (m := BORP_FAILED.match(line.strip())):
+            continue
+        file = _checkout_path(m.group(1))
+        after = lines[i + 1:i + 400]
+        message = next((x[len("##[error]"):].strip() for x in after
+                        if x.startswith("##[error]") and "Process completed with exit code" not in x), "")
+        found.append(_failure("borp", "tests", file, file, _node_place(after, file, 0)[1],
+                              message or "failed"))
+    return found
+
+
+MARKDOWNLINT = re.compile(r"^(?:##\[(?:error|warning)\])?(\S+\.(?:md|markdown)):(\d+)(?::\d+)?\s+"
+                          r"(?:error\s+)?(MD\d{3}(?:/[\w/-]+)?)\s+(.+)$")
+LYCHEE_PAGE = re.compile(r"^#{2,4} Errors in (\S+)\s*$")
+LYCHEE_LINK = re.compile(r"^\* \[(ERROR|\d{3})\] <(\S+)> \| (.+)$")
+LINKINATOR = re.compile(r"^(?:##\[error\])?\s*\[(\d{3})\] (\S+) - HTTP \d{3}\s*$")
+# A link that is gone or a page that is missing is the docs' own; a site that is down or slow is not (#254).
+GONE = ("404", "410")
+
+
+def _link(url: str) -> str:
+    """A link as the docs have it: a local file:// link relative to the checkout."""
+    return CHECKOUT.sub("", url.removeprefix("file://")) if url.startswith("file://") else url
+
+
+def doc_checks(lines: list[str]) -> list[dict]:
+    """Documentation checks (#259): markdownlint's 'file.md:L:C [error] MDxxx/rule message', lychee's broken
+    links under '### Errors in <page>', linkinator's '[404] <url> - HTTP 404'."""
+    found: list[dict] = []
+    page = ""
+    for line in lines:
+        bare = line.strip()
+        if m := MARKDOWNLINT.match(bare):
+            if SAFE_PATH.match(m.group(1)):
+                found.append(_failure("markdownlint", "lint", m.group(3), m.group(1), int(m.group(2)),
+                                      m.group(4)))
+        elif m := LYCHEE_PAGE.match(bare):
+            page = m.group(1) if SAFE_PATH.match(m.group(1)) else ""
+        elif (m := LYCHEE_LINK.match(bare)) and page:
+            status, message = m.group(1), m.group(3)
+            if status in GONE or (status == "ERROR" and message.startswith("Cannot find file")):
+                found.append(_failure("lychee", "links", _link(m.group(2)), page, message=message))
+        elif (m := LINKINATOR.match(bare)) and m.group(1) in GONE:
+            found.append(_failure("linkinator", "links", m.group(2), message=bare.removeprefix("##[error]")))
     return found
 
 
@@ -397,6 +533,10 @@ def crash(lines: list[str]) -> dict | None:
     return failure
 
 
+# A test runner's own time limit for one test (#253): node:test, jest, pytest-timeout.
+TEST_TIMEOUT = re.compile(r"test timed out after \d|Exceeded timeout of \d|^(?:Failed: )?Timeout >\s?\d")
+
+
 def failures(lines: list[str]) -> list[dict]:
     found: list[dict] = []
     py_lines: dict[str, int] = {}
@@ -413,6 +553,7 @@ def failures(lines: list[str]) -> list[dict]:
     ruff_code = ""
     dotnet_last: dict | None = None
     for i, line in enumerate(lines):
+        bare = MATCHER.sub("", line)   # the lint parsers' line, without a problem matcher's prefix
         if m := PY_SECTION.match(line):
             py_section = m.group(1) if "." in m.group(1) or m.group(1).startswith("test") else ""
         if m := PY_LOC.match(line):
@@ -424,7 +565,7 @@ def failures(lines: list[str]) -> list[dict]:
         if m := PYTEST.match(line):
             node = m.group(2) + (m.group(3) or "")
             found.append(_failure("pytest", "tests", node, m.group(2), 0, m.group(4) or m.group(1).lower()))
-        elif m := MYPY.match(line):
+        elif m := MYPY.match(bare):
             found.append(_failure("mypy", "build", m.group(4) or "mypy", m.group(1), int(m.group(2)),
                                   m.group(3)))
         elif m := GO_RUN.match(line):
@@ -467,10 +608,10 @@ def failures(lines: list[str]) -> list[dict]:
                                if f["framework"] == "cargo" and not f["file"]), None)
                 if target:
                     target.update(file=m.group(2), line=int(m.group(3)), message=_short(message))
-        elif m := TSC.match(line):
+        elif m := TSC.match(bare):
             found.append(_failure("tsc", "build", m.group(4), m.group(1), int(m.group(2) or m.group(3)),
                                   m.group(5)))
-        elif m := RUFF.match(line):
+        elif m := RUFF.match(bare):
             found.append(_failure("ruff", "lint", m.group(3), m.group(1), int(m.group(2)), m.group(4)))
         elif m := RUFF_CODE.match(line):
             ruff_code = line
@@ -479,8 +620,8 @@ def failures(lines: list[str]) -> list[dict]:
             found.append(_failure("ruff", "lint", code, m.group(1), int(m.group(2)), message))
             ruff_code = ""
         elif m := ESLINT_FILE.match(line):
-            eslint_file = m.group(1)
-        elif (m := ESLINT.match(line)) and eslint_file:
+            eslint_file = CHECKOUT.sub("", m.group(1).replace("\\", "/"))
+        elif (m := ESLINT.match(bare)) and eslint_file:
             found.append(_failure("eslint", "lint", m.group(3), eslint_file, int(m.group(1)), m.group(2)))
         elif m := JEST_FILE.match(line):
             found.append(_failure("jest", "tests", m.group(2) or "", m.group(1)))
@@ -508,6 +649,8 @@ def failures(lines: list[str]) -> list[dict]:
     found += merge_conflict(lines)
     found += generated(lines)
     found += playwright(lines)
+    found += node_test(lines)
+    found += doc_checks(lines)
     for block in junit_blocks(lines):
         found += junit_xml(block)
     if not found:   # nothing a tool reports: the step's own words, when its script printed them
@@ -516,6 +659,8 @@ def failures(lines: list[str]) -> list[dict]:
         found.append(crashed)  # the tests stopped with the process; nothing else names the failure
     seen, unique = set(), []
     for f in found:
+        if TEST_TIMEOUT.search(f["message"]):
+            f["timeout"] = True
         key = (f["framework"], f["test"], f["file"], f["line"])
         if key not in seen:
             seen.add(key)
@@ -558,8 +703,13 @@ def helper_crash(lines: list[str]) -> str:
     return ""
 
 
+# A test runner's pass line names a test that passed (#252): "✔ ignores ECONNRESET (19ms)" is no signal.
+PASS_LINE = re.compile(r"^\s*(?:✔|✓|√|ok \d+\b|PASS\b|passed: )|\sPASSED(?:\s|$)")
+
+
 def signals(lines: list[str]) -> list[dict]:
     found = []
+    lines = [line for line in lines if not PASS_LINE.search(line)]
     for kind, pattern in SIGNALS:
         hit = next((line for line in lines if pattern.search(line)), None)
         if hit is None and kind == "setup":
@@ -604,6 +754,25 @@ def upstream(lines: list[str]) -> list[dict]:
     return found[:10]
 
 
+NODE_ERROR = re.compile(r"^\s*([A-Z]\w*Error)(?: \[[\w-]+\])?: (.+)$")
+NODE_MODULE_FRAME = re.compile(r"^\s*at .*node_modules/((?:@[\w.-]+/)?[\w.-]+)/(\S+?:\d+)")
+
+
+def raised(lines: list[str]) -> list[dict]:
+    """JavaScript errors whose innermost frame is inside node_modules/<package>/ (#261): a crash in a
+    dependency's own code. Not an assertion: an assertion library throws what the test asked it to."""
+    found: list[dict] = []
+    for i, line in enumerate(lines[:-1]):
+        if not (m := NODE_ERROR.match(line)) or "Assertion" in m.group(1):
+            continue
+        if frame := NODE_MODULE_FRAME.match(lines[i + 1].replace("\\", "/")):
+            item = {"package": frame.group(1), "place": f"{frame.group(1)}/{frame.group(2)}",
+                    "error": m.group(1), "message": _short(m.group(2))}
+            if item not in found:
+                found.append(item)
+    return found[:10]
+
+
 MISSING_MODULE = re.compile(r"No module named '?([\w.]+)'?|Cannot find module '([^'./][^']*)'")
 
 
@@ -619,12 +788,13 @@ def missing_modules(lines: list[str]) -> list[str]:
 
 
 def read_log(text: str) -> dict:
-    """{job: {failures, signals, errors, frames, missing, upstream, lines}} for each job in a failed log."""
+    """{job: {failures, signals, errors, frames, missing, upstream, raised, lines}} for each job in a failed
+    log."""
     out = {}
     for job, lines in split_jobs(text).items():
         out[job] = {"failures": failures(lines), "signals": signals(lines), "errors": errors(lines),
                     "frames": frames(lines), "missing": missing_modules(lines),
-                    "upstream": upstream(lines), "lines": lines}
+                    "upstream": upstream(lines), "raised": raised(lines), "lines": lines}
     return out
 
 

@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 
 import pytest
 from conftest import BARQ_ROOT, _git
@@ -187,6 +188,35 @@ def test_info_keeps_a_root_node_project_first(project, barq_run):
     assert "test   npm test   [node (npm)]" in out
 
 
+def test_node_test_command_skips_a_script_that_lints_first(project, barq_run):
+    # #277 (decided half): fastify's `npm test` runs eslint before the tests, so one lint error
+    # hid the whole suite. A script that runs test code and no linter is the test command.
+    scripts = {"lint": "npm run lint:eslint", "lint:eslint": "eslint", "unit": "borp",
+               "test:types": "tstyche", "test": "npm run lint && npm run unit && npm run test:types",
+               "test:ci": "npm run unit && npm run test:types"}
+    (project / "package.json").write_text(json.dumps({"scripts": scripts}))
+    _, out = barq_run("info")
+    assert "test   npm run test:ci   [node (npm)]" in out
+    assert "lint   npm run lint   [node (npm)]" in out
+
+
+@pytest.mark.parametrize("scripts, expected", [
+    ({"test": "jest"}, "npm test"),
+    ({"test": "node --test"}, "npm test"),
+    ({"test": "eslint . && mocha"}, "npm test"),  # mixed, but no lint-free script exists
+    ({"test": "eslint .", "spec": "node tests/run.js"}, "npm run spec"),
+    ({"test": "echo \"Error: no test specified\" && exit 1"}, None),
+    ({"test": "standard", "check": "node check.js"}, "npm run check"),  # check.js uses node:test
+    ({"test": "npm run lint", "lint": "eslint ."}, None),
+])
+def test_node_test_script_must_run_test_code(project, barq_run, scripts, expected):
+    (project / "check.js").write_text("const test = require('node:test')\ntest('x', () => {})\n")
+    (project / "package.json").write_text(json.dumps({"scripts": scripts}))
+    _, out = barq_run("info")
+    line = next(ln for ln in out.split("\n") if ln.strip().startswith("test "))
+    assert line.split("[")[0].strip() == f"test   {expected or '-'}"
+
+
 def test_info_finds_pre_commit_tox_and_the_build_backend(project, barq_run):
     # #167: on psf/black, info said lint - and build -, and listed docs and fixture pyprojects
     (project / "pyproject.toml").write_text(
@@ -255,6 +285,37 @@ def test_run_timeout(project, barq_run):
                       "timeout": 1})
     code, out = barq_run(req)
     assert code == 1 and "TIMED OUT" in out
+
+
+@pytest.mark.skipif(os.name != "posix", reason="process groups are POSIX")
+def test_run_timeout_kills_children(project, barq_run):
+    # #271: the timeout killed only the shell; `npx borp`'s node children kept running
+    pidfile = project / "pidfile"
+    req = json.dumps({"op": "run", "cmd": f"sh -c 'sleep 300 & echo $! > {pidfile}; wait'",
+                      "timeout": 1})
+    code, out = barq_run(req)
+    pid = int(pidfile.read_text())
+    try:
+        assert code == 1 and "TIMED OUT" in out
+        alive = True
+        for _ in range(50):  # the kill is sent before barq returns; give the kernel a moment
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                alive = False
+                break
+            # a killed child of an exited shell may linger as a zombie until init reaps it
+            stat = f"/proc/{pid}/stat"
+            if os.path.exists(stat) and open(stat).read().split(") ")[-1].startswith("Z"):
+                alive = False
+                break
+            time.sleep(0.1)
+        assert not alive, "the command's child process is still running"
+    finally:
+        try:
+            os.kill(pid, 9)
+        except ProcessLookupError:
+            pass
 
 
 def test_run_does_not_change_the_color_environment(project, barq_run, monkeypatch):
@@ -482,3 +543,16 @@ def test_session_note_leaves_reads_and_searches_to_the_built_in_tools(barq_env):
     assert "Read" in note and "Edit" in note
     for op in ("run:test", "git-status", "read:PATH:outline", "read:PATH@Symbol", "map"):
         assert op in note
+
+
+def test_symbol_ambiguous_short_name_lists_matches(project, barq_run):
+    # #272: @send silently returned a nested `function send ()`, not Reply.prototype.send
+    (project / "reply.js").write_text(
+        "Reply.prototype.send = function (payload) {\n  return this\n}\n\n"
+        "function onSendEnd (reply) {\n  function send () {\n    reply.end()\n  }\n  send()\n}\n")
+    code, out = barq_run("read:reply.js@send")
+    assert code == 1
+    assert "'send' matches 2 symbols" in out
+    assert "Reply.prototype.send (1-3)" in out and "send (6-8)" in out
+    _, out = barq_run("read:reply.js@Reply.send")
+    assert "1\tReply.prototype.send = function (payload) {" in out

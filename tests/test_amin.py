@@ -396,6 +396,46 @@ def test_package_lock_and_cargo_workspaces_are_versioned(tmp_path):
     assert proj.read_version(rust, "Cargo.toml") == "0.4.0"
 
 
+FASTIFY_PACKAGE = '{\n  "name": "fastify",\n  "version": "5.12.5"\n}\n'
+FASTIFY_JS = "'use strict'\n\nconst VERSION = '5.12.5'\n\nmodule.exports = { VERSION }\n"
+
+
+def test_version_file_with_a_custom_pattern_is_read_and_written(tmp_path, monkeypatch, capsys):
+    # issue #237: fastify keeps its version in package.json and in fastify.js (const VERSION = '5.12.5')
+    config = {"projects": [{"name": "fastify", "version_files": [
+        "package.json", {"file": "fastify.js", "pattern": "const VERSION = '(.*)'"}]}]}
+    root = init_repo(tmp_path / "fastify", {"package.json": FASTIFY_PACKAGE,
+                                            "fastify.js": FASTIFY_JS, ".amin.json": json.dumps(config)})
+    [p] = proj.detect(root)
+    assert p.version_files == ["package.json", "fastify.js"]
+    assert proj.read_version(root, "fastify.js", p.version_patterns.get("fastify.js")) == "5.12.5"
+    _git(root, "tag", "-a", "v5.12.5", "-m", "x")
+    fragments.add(root, p, "fixed", "A backport.", "7067")
+    pl = plan_by_name(root)["fastify"]
+    assert (pl.current, pl.next, pl.problems) == ("5.12.5", "5.12.6", [])
+    changed = release.prepare(root, [(pl, pl.next)], date="2026-10-09")
+    assert {"package.json", "fastify.js"} <= set(changed)
+    assert (root / "fastify.js").read_text() == FASTIFY_JS.replace("5.12.5", "5.12.6")
+    with pytest.raises(ValueError, match="one group"):
+        proj.read_version(root, "fastify.js", "const (VERSION) = '(.*)'")
+
+
+def test_projects_warns_about_another_file_holding_the_version(tmp_path, monkeypatch, capsys):
+    # issue #237: amin wrote package.json only and fastify's own version test failed after prepare
+    root = init_repo(tmp_path / "fastify", {"package.json": FASTIFY_PACKAGE,
+                                            "fastify.js": FASTIFY_JS, "lib/other.js": FASTIFY_JS,
+                                            "README.md": "const VERSION = '5.12.5'\n"})
+    [p] = proj.detect(root)
+    assert proj.unlisted_version_files(root, p) == ["fastify.js"]
+    monkeypatch.chdir(root)
+    assert cli.main(["projects"]) == 0
+    out = capsys.readouterr().out
+    assert "fastify.js also contains 5.12.5: add it to version_files in .amin.json" in out
+    _git(root, "tag", "-a", "v5.12.5", "-m", "x")
+    fragments.add(root, p, "fixed", "A backport.", "7067")
+    assert any("fastify.js also contains 5.12.5" in x for x in plan_by_name(root)["fastify"].problems)
+
+
 # ---------------------------------------------------------------- publish
 
 
@@ -438,6 +478,34 @@ def test_publish_resumes_after_the_release_step_failed(market):
     assert report[-1] == "release published: https://github.com/o/r/releases/tag/alpha-v0.1.0"
     with pytest.raises(release.ReleaseError, match="already published"):
         release.publish(market, FakeRunner(market, releases={"alpha-v0.1.0"}), alpha)
+
+
+def test_publish_on_another_branch_is_refused_with_one_true_reason(market):
+    # issue #239: on 5.x publish also said "local main is not the same commit as origin/main", but it had
+    # compared HEAD, not main
+    alpha = released_market(market)
+    _git(market, "switch", "-q", "-c", "5.x")
+    write(market, "more.txt", "x")
+    commit(market)
+    with pytest.raises(release.ReleaseError) as err:
+        release.publish(market, FakeRunner(market), alpha)
+    assert "on branch 5.x; releases are cut from main" in str(err.value)
+    assert "local main is not the same commit" not in str(err.value)
+
+
+def test_old_line_release_is_not_marked_latest(market):
+    # issue #239: a release of an older line must not take "Latest" from a newer final release
+    alpha = released_market(market)
+    _git(market, "tag", "-a", "alpha-v1.0.0", "-m", "x", "HEAD~1")   # a newer final release exists
+    runner = FakeRunner(market)
+    release.publish(market, runner, alpha)
+    create = next(c for c in runner.gh_calls if c[:2] == ("release", "create"))
+    assert "--latest=false" in create
+    runner = FakeRunner(market)
+    _git(market, "tag", "-d", "alpha-v1.0.0")
+    release.publish(market, runner, alpha)
+    create = next(c for c in runner.gh_calls if c[:2] == ("release", "create"))
+    assert "--latest=false" not in create
 
 
 def test_publish_dry_run_creates_nothing(market):
@@ -498,6 +566,23 @@ def test_check_requires_a_note_for_changed_projects(market):
     fragments.add(market, projects_of(market)["alpha"], "fixed", "Fix.", "3")
     commit(market)
     assert run_check(market) == (True, ["alpha: ok (note added)"])
+
+
+def test_check_fragment_hint_names_the_note_file_not_a_repo_path(tmp_path, monkeypatch):
+    # issue #242: in fastify the hint said `python3 plugins/amin/bin/amin ...`, a path only Nexika has
+    root = init_repo(tmp_path / "fastify", {"package.json": '{"name": "fastify", "version": "5.12.5"}',
+                                            "lib/reply.js": "x\n"})
+    feature_branch(root)
+    write(root, "lib/reply.js", "y\n")
+    commit(root)
+    monkeypatch.delenv("GITHUB_REF", raising=False)
+    ok, lines = run_check(root)
+    hint = "\n".join(lines)
+    assert not ok and "plugins/amin/bin/amin" not in hint.replace(cli.helper_command(), "")
+    assert "changelog.d/<PR>.fixed.md" in hint and "one line for users" in hint
+    assert f'{cli.helper_command()} fragment add fastify fixed "What changed, for users" --id <PR>' in hint
+    monkeypatch.setenv("GITHUB_REF", "refs/pull/7068/merge")   # in CI the PR number is known
+    assert "changelog.d/7068.fixed.md" in "\n".join(run_check(root)[1])
 
 
 def test_check_accepts_release_prs_and_unrelated_files(market):
@@ -795,6 +880,61 @@ BLACK_CHANGES = """# Change Log
 """
 
 
+def two_line_repo(tmp_path):
+    """main and a 5.x branch, both after v5.0.0; returns (root, main's commit, 5.x's commit)."""
+    root = init_repo(tmp_path / "app", {"package.json": '{"name": "app", "version": "5.0.0"}', "a.js": "1\n"})
+    _git(root, "tag", "-a", "v5.0.0", "-m", "x")
+    _git(root, "switch", "-q", "-c", "5.x")
+    write(root, "b.js", "backport\n")
+    commit(root, "[Backport 5.x] fix (#11)")
+    on_5x = git_out(root, "rev-parse", "HEAD").strip()
+    _git(root, "switch", "-q", "main")
+    write(root, "a.js", "2\n")
+    commit(root, "fix (#10)")
+    return root, git_out(root, "rev-parse", "HEAD").strip(), on_5x
+
+
+def pr(number, oid, base, day="2099-01-02"):
+    return {"number": number, "title": f"PR {number}", "mergedAt": f"{day}T00:00:00Z", "baseRefName": base,
+            "mergeCommit": {"oid": oid}, "author": {"login": "someone"}, "files": [{"path": "a.js"}]}
+
+
+def test_history_skips_prs_merged_into_another_branch(tmp_path):
+    # issue #240: on fastify's main, history listed the 5 [Backport 5.x] PRs merged into 5.x
+    root, on_main, on_5x = two_line_repo(tmp_path)
+    prs = [pr(10, on_main, "main"), pr(11, on_5x, "5.x"),
+           pr(12, "d" * 40, "main"), pr(13, "e" * 40, "5.x")]   # 12, 13: merge commits not in this clone
+    p = proj.detect(root)[0]
+    lines = release.history(root, FakeRunner(root, prs=prs), p, "v5.0.0")
+    assert lines == ["#10 PR 10 (2099-01-02)", "#12 PR 12 (2099-01-02)"]
+    _git(root, "switch", "-q", "5.x")
+    lines = release.history(root, FakeRunner(root, prs=prs), p, "v5.0.0")
+    assert lines == ["#11 PR 11 (2099-01-02)", "#13 PR 13 (2099-01-02)"]
+
+
+def test_history_between_two_tags(tmp_path, monkeypatch, capsys):
+    # issue #240: "what went into v5.1.0" could not be asked
+    root, on_main, on_5x = two_line_repo(tmp_path)
+    _git(root, "tag", "-a", "v5.1.0", "-m", "x")
+    write(root, "a.js", "3\n")
+    commit(root, "later (#14)")
+    later = git_out(root, "rev-parse", "HEAD").strip()
+    prs = [pr(10, on_main, "main"), pr(11, on_5x, "5.x"), pr(14, later, "main")]
+    runner = FakeRunner(root, prs=prs)
+    p = proj.detect(root)[0]
+    assert release.history(root, runner, p, "v5.0.0", to="v5.1.0") == ["#10 PR 10 (2099-01-02)"]
+    call = next(c for c in runner.gh_calls if c[:2] == ("pr", "list"))
+    assert "merged:<=" in " ".join(call) and "baseRefName" in " ".join(call)
+    monkeypatch.chdir(root)
+    monkeypatch.setattr(gitops, "Runner", lambda r: FakeRunner(r, prs=prs))
+    assert cli.main(["history", "app", "--from", "v5.0.0", "--to", "v5.1.0"]) == 0
+    assert capsys.readouterr().out.strip() == "#10 PR 10 (2099-01-02)"
+    assert cli.main(["history", "app", "--to", "v5.1.0"]) == 0          # from: the tag before v5.1.0
+    assert capsys.readouterr().out.strip() == "#10 PR 10 (2099-01-02)"
+    assert cli.main(["history", "app"]) == 0                             # since the last tag
+    assert capsys.readouterr().out.strip() == "#14 PR 14 (2099-01-02)"
+
+
 def test_changes_md_and_version_headings_are_recognised(tmp_path):
     # issue #154: amin made a new CHANGELOG.md, appended after the oldest release, and found no notes
     black = black_repo(tmp_path, {"CHANGES.md": BLACK_CHANGES})
@@ -866,6 +1006,27 @@ def test_history_skips_the_release_pr_of_the_tag_and_marks_bot_and_ci_prs(tmp_pa
                      "#5143 Fix a crash (2099-01-04)"]
 
 
+def test_history_does_not_mark_backport_prs_as_bot(market):
+    # issue #241: fastify's [Backport 5.x] PRs, opened by github-actions[bot], are the 5.x release notes
+    bot = {"login": "app/github-actions", "is_bot": True}
+    prs = [{"number": 7067, "title": "[Backport 5.x] fix: resolve reply.mediaType", "author": bot,
+            "mergedAt": "2026-10-01T10:00:00Z", "labels": []},
+           {"number": 7048, "title": "fix: a crash (backport #7040)", "author": bot,
+            "mergedAt": "2026-10-02T10:00:00Z", "labels": [{"name": "backport"}]},
+           {"number": 7049, "title": "chore(deps): bump backport-action",
+            "author": {"login": "app/dependabot", "is_bot": True},
+            "mergedAt": "2026-10-03T10:00:00Z", "labels": [{"name": "dependencies"}]}]
+    for pr in prs:
+        pr["files"] = [{"path": "plugins/alpha/main.py"}]
+    runner = FakeRunner(market, prs=prs)
+    lines = release.history(market, runner, projects_of(market)["alpha"], None)
+    assert lines == ["#7067 [Backport 5.x] fix: resolve reply.mediaType (2026-10-01)",
+                     "#7048 fix: a crash (backport #7040) (2026-10-02)",
+                     "#7049 chore(deps): bump backport-action (2026-10-03) [bot]"]
+    call = next(c for c in runner.gh_calls if c[:2] == ("pr", "list"))
+    assert "labels" in call[call.index("--json") + 1]
+
+
 @pytest.mark.parametrize("content", [
     '[project]\nname = "app"\nversion = "2.0.0"\n',
     '[tool.poetry]\nname = "app"\nversion = "2.0.0"\n',
@@ -876,3 +1037,120 @@ def test_pyproject_version_is_read_only_from_project_or_poetry(tmp_path, content
     assert proj.read_version(tmp_path, "pyproject.toml") == "2.0.0"
     proj.write_version(tmp_path, "pyproject.toml", "2.1.0")
     assert (tmp_path / "pyproject.toml").read_text() == content.replace("2.0.0", "2.1.0")
+
+
+# ---------------------------------------------------------------- fastify: an alpha line next to 5.x
+
+
+def fastify_repo(tmp_path):
+    """main at 6.0.0-alpha.4 (the v6 line); 5.x branched at v5.12.4 and tagged v5.12.5 after it."""
+    package = '{\n  "name": "fastify",\n  "version": "5.12.4"\n}\n'
+    root = init_repo(tmp_path / "fastify", {"package.json": package, "fastify.js": "module.exports = 1\n"})
+    _git(root, "tag", "-a", "v5.12.4", "-m", "x")
+    _git(root, "switch", "-q", "-c", "5.x")
+    write(root, "package.json", '{\n  "name": "fastify",\n  "version": "5.12.5"\n}\n')
+    commit(root, "Bumped v5.12.5")
+    _git(root, "tag", "-a", "v5.12.5", "-m", "x")
+    _git(root, "switch", "-q", "main")
+    write(root, "package.json", '{\n  "name": "fastify",\n  "version": "6.0.0-alpha.4"\n}\n')
+    commit(root, "Bumped v6.0.0-alpha.4")
+    _git(root, "tag", "-a", "v6.0.0-alpha.4", "-m", "x")
+    return root
+
+
+def test_alpha_versions_parse_and_sort():
+    # issue #236: only -rc.N was understood, so 6.0.0-alpha.5 was "not a MAJOR.MINOR.PATCH version"
+    order = ["5.13.0", "6.0.0-alpha.4", "6.0.0-alpha.10", "6.0.0-beta.0", "6.0.0-rc.1", "6.0.0", "6.0.1"]
+    assert sorted(order, key=proj.parse) == order
+    assert all(proj.is_prerelease(v) for v in order[1:5]) and not proj.is_prerelease("6.0.0")
+    with pytest.raises(ValueError):
+        proj.parse("6.0.0-")
+
+
+def test_plan_continues_an_alpha_line(tmp_path):
+    # issue #236: main at 6.0.0-alpha.4 was planned as 5.13.0 from the 5.x tag v5.12.5
+    root = fastify_repo(tmp_path)
+    p = proj.detect(root)[0]
+    fragments.add(root, p, "fixed", "A fix.", "7068")
+    fragments.add(root, p, "changed", "A change.", "7071")
+    pl = plan_by_name(root)["fastify"]
+    assert (pl.status, pl.last_tag, pl.next) == ("release", "v6.0.0-alpha.4", "6.0.0-alpha.5")
+    assert not pl.problems and "6.0.0" in pl.reason   # the promotion is offered, not chosen
+    runner = gitops.Runner(root)
+    assert release.prerelease_version(runner, pl, "alpha") == "6.0.0-alpha.5"
+    assert release.prerelease_version(runner, pl, "beta") == "6.0.0-beta.1"
+    assert release.prerelease_version(runner, pl) == "6.0.0-alpha.5"     # the project's own label
+    assert release.rc_version(runner, pl) == "6.0.0-rc.1"
+
+
+def test_prepare_never_lowers_the_version_file(tmp_path):
+    # issue #236: prepare wrote 5.13.0 over 6.0.0-alpha.4
+    root = fastify_repo(tmp_path)
+    fragments.add(root, proj.detect(root)[0], "fixed", "A fix.", "7068")
+    pl = plan_by_name(root)["fastify"]
+    pl.last_tag = "v5.12.5"   # what the old plan saw
+    with pytest.raises(release.ReleaseError, match="lower than 6.0.0-alpha.4"):
+        release.prepare(root, [(pl, "5.13.0")], date="2026-10-09")
+    assert proj.read_version(root, "package.json") == "6.0.0-alpha.4"
+
+
+def test_prepare_an_explicit_alpha_or_beta(tmp_path):
+    root = fastify_repo(tmp_path)
+    fragments.add(root, proj.detect(root)[0], "fixed", "A fix.", "7068")
+    _git(root, "switch", "-q", "-c", "release/x")
+    pl = plan_by_name(root)["fastify"]
+    release.prepare(root, [(pl, "6.0.0-beta.0")], date="2026-10-09")
+    assert proj.read_version(root, "package.json") == "6.0.0-beta.0"
+    assert changelog.extract(root / "CHANGELOG.md", "6.0.0-beta.0") == "### Fixed\n- A fix. (#7068)"
+    assert not (root / "changelog.d/7068.fixed.md").exists()   # an alpha or beta is its own release step
+
+
+def test_cli_prepare_takes_a_prerelease_version(tmp_path, monkeypatch, capsys):
+    root = fastify_repo(tmp_path)
+    fragments.add(root, proj.detect(root)[0], "fixed", "A fix.", "7068")
+    commit(root, "note")
+    _git(root, "switch", "-q", "-c", "release/x")
+    monkeypatch.chdir(root)
+    for args, version in ((["fastify=6.0.0-alpha.5"], "6.0.0-alpha.5"), ([], "6.0.0-alpha.5"),
+                          (["--pre=beta"], "6.0.0-beta.1"), (["--rc"], "6.0.0-rc.1")):
+        assert cli.main(["prepare", *args, "--dry-run"]) == 0, capsys.readouterr().err
+        assert f"Would prepare: fastify {version}" in capsys.readouterr().out
+
+
+def test_publish_marks_alpha_as_prerelease(tmp_path):
+    root = fastify_repo(tmp_path)
+    fragments.add(root, proj.detect(root)[0], "fixed", "A fix.", "7068")
+    pl = plan_by_name(root)["fastify"]
+    release.prepare(root, [(pl, pl.next)], date="2026-10-09")
+    commit(root, "Release fastify 6.0.0-alpha.5")
+    _git(root, "push", "-q", "origin", "main")
+    runner = FakeRunner(root)
+    release.publish(root, runner, proj.detect(root)[0])
+    create = next(c for c in runner.gh_calls if c[:2] == ("release", "create"))
+    assert create[2] == "v6.0.0-alpha.5" and "--prerelease" in create
+
+
+def test_last_tag_ignores_tags_not_on_this_branch(tmp_path):
+    # issue #235: the newest tag of the whole repo was taken, whatever branch it was on
+    root = fastify_repo(tmp_path)
+    runner = gitops.Runner(root)
+    assert gitops.last_tag(runner, "v", final_only=True) == "v5.12.4"   # v5.12.5 is on 5.x only
+    _git(root, "switch", "-q", "5.x")
+    assert gitops.last_tag(runner, "v") == "v5.12.5"                    # not main's v6.0.0-alpha.4
+    fragments.add(root, proj.detect(root)[0], "fixed", "A backport.", "7067")
+    pl = plan_by_name(root)["fastify"]
+    assert (pl.last_tag, pl.next, pl.problems) == ("v5.12.5", "5.12.6", [])
+    assert pl.commits == []
+
+
+def test_maintenance_branch_keeps_its_own_line_after_a_new_major(tmp_path):
+    # issue #235: once v6.0.0 existed, 5.x was planned as 6.0.1 ("last tag says 6.0.0; using the tag")
+    root = fastify_repo(tmp_path)
+    write(root, "package.json", '{\n  "name": "fastify",\n  "version": "6.0.0"\n}\n')
+    commit(root, "Bumped v6.0.0")
+    _git(root, "tag", "-a", "v6.0.0", "-m", "x")
+    _git(root, "switch", "-q", "5.x")
+    fragments.add(root, proj.detect(root)[0], "fixed", "A backport.", "7067")
+    pl = plan_by_name(root)["fastify"]
+    assert (pl.last_tag, pl.next, pl.problems) == ("v5.12.5", "5.12.6", [])
+    assert gitops.released_versions(gitops.Runner(root), "v") == ["5.12.5", "5.12.4"]

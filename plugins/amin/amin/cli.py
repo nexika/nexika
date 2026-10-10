@@ -14,12 +14,14 @@ USAGE = f"""amin {__version__} - repository maintainer; you always merge (Nexika
 
   amin projects                          projects, versions, version files, last tags
   amin plan                              what would be released, from the change notes
-  amin prepare [NAME[=VERSION] ...] [--rc] [--umbrella] [--dry-run] [--allow-lower]
-                                         bump versions, write CHANGELOGs, consume notes (then: a PR)
+  amin prepare [NAME[=VERSION] ...] [--rc | --pre[=LABEL]] [--umbrella] [--dry-run] [--allow-lower]
+                                         bump versions, write CHANGELOGs, consume notes (then: a PR);
+                                         --pre: the next alpha/beta/... (default: the project's own)
   amin publish NAME [--dry-run]          after the release PR is merged: checks, tag, GitHub Release
   amin fragment add NAME TYPE TEXT [--id ID]   add a change note (TYPE: {', '.join(proj.TYPES)})
   amin fragment list                     notes waiting to be released
-  amin history NAME                      merged PRs touching NAME since its last tag
+  amin history NAME [--from TAG] [--to TAG]
+                                         merged PRs touching NAME since its last tag (or between tags)
   amin triage                            unlabeled issues, possible duplicates, stale issues
   amin work start ISSUE                  branch + isolated worktree for an issue
   amin check-fragment --base REF [--labels a,b]   CI rule: changed projects need a note
@@ -66,12 +68,13 @@ def cmd_projects(root: Path, runner: gitops.Runner) -> str:
     for p in projects:
         tag = gitops.last_tag(runner, p.tag_prefix())
         if p.version_files:
-            version = proj.read_version(root, p.version_files[0])
+            version = p.read_version(root, p.version_files[0])
         else:
             version = tag[len(p.tag_prefix()):] if tag else None
         rows.append(f"{p.name:<12} {version or '?':<8} path={p.path} "
                     f"version={','.join(p.version_files) or 'from tags'} "
                     f"changelog={p.changelog} notes={p.fragments}/ last tag={tag or 'none'}")
+        rows += [f"    ! {line}" for line in release._unlisted(root, p, version)] if version else []
     return "\n".join(rows)
 
 
@@ -79,7 +82,8 @@ def cmd_prepare(root: Path, runner: gitops.Runner, args: list[str]) -> str:
     projects = proj.detect(root)
     plans = {pl.project.name: pl for pl in release.plan(root, runner, projects)}
     flags = {a for a in args if a.startswith("--")}
-    unknown = flags - {"--allow-lower", "--umbrella", "--dry-run", "--rc"}
+    unknown = {f for f in flags if not f.startswith("--pre=")} - {
+        "--allow-lower", "--umbrella", "--dry-run", "--rc", "--pre"}
     if unknown:
         raise ValueError(f"unknown option {sorted(unknown)[0]}")
     args = [a for a in args if not a.startswith("--")]
@@ -98,8 +102,10 @@ def cmd_prepare(root: Path, runner: gitops.Runner, args: list[str]) -> str:
         pl = plans[name]
         if not (version or pl.next):
             raise release.ReleaseError(f"{name}: no proposed version ({pl.reason})")
-        if "--rc" in flags and not version:
-            version = release.rc_version(runner, pl)
+        pre = next((f.partition("=")[2] or None for f in flags if f == "--pre" or f.startswith("--pre=")),
+                   "rc" if "--rc" in flags else "")
+        if pre != "" and not version:
+            version = release.prerelease_version(runner, pl, pre)
         chosen.append((pl, version or pl.next))
     release.preflight(runner)
     dry_run, blocks = "--dry-run" in flags, []
@@ -189,8 +195,15 @@ def run(argv: list[str]) -> int:
                 print(f"{p.name:<12} PROBLEM    {problem}")
     elif cmd == "history" and len(argv) > 1:
         p = proj.find(projects, argv[1])
-        tag = gitops.last_tag(runner, p.tag_prefix())
-        lines = release.history(root, runner, p, tag)
+        to = argv[argv.index("--to") + 1] if "--to" in argv[2:-1] else None
+        if "--from" in argv[2:-1]:
+            tag = argv[argv.index("--from") + 1]
+        elif to:   # the release before `to`
+            tag = runner.git("describe", "--tags", "--abbrev=0", "--match", f"{p.tag_prefix()}*", f"{to}^",
+                             check=False).strip() or None
+        else:
+            tag = gitops.last_tag(runner, p.tag_prefix())
+        lines = release.history(root, runner, p, tag, to)
         print("\n".join(lines) or "no merged PRs found for this project")
         if not tag:
             print(f"(no {p.tag('X.Y.Z')} tag found: only the latest {release.UNTAGGED_LIMIT} merged PRs "

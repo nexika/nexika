@@ -43,6 +43,64 @@ def _package_manager(folder: Path) -> str:
     return "npm"
 
 
+# Which package.json script is "test" (#277, maintainer's decision): one that runs test code -
+# files under a test directory or files written with test syntax. A linter alone is not a test.
+_TEST_RUNNERS = re.compile(
+    r"(?:^|[\s/])(?:jest|vitest|mocha|ava|tap|tape|borp|uvu|jasmine|karma|tstyche|tsd|playwright"
+    r"|cypress|node\s+(?:[^|&;]*\s)?--test)(?:\s|$)")
+_TEST_PATHS = re.compile(r"(?:^|[\s'\"=/])(?:test|tests|__tests__|spec)(?:/|\s|$|['\"])"
+                         r"|\.(?:test|spec)\.[cm]?[jt]sx?\b|\btest\b")
+_LINTERS = re.compile(r"^(?:npx\s+)?(?:eslint|prettier|standard|neostandard|xo|stylelint|biome|"
+                      r"markdownlint(?:-cli2?)?|tslint|oxlint|jshint|semistandard|ts-standard)\b")
+_TEST_SYNTAX = re.compile(r"\bnode:test\b|\brequire\(['\"]assert|from ['\"](?:node:)?assert"
+                          r"|^\s*(?:test|it|describe)\(|\bexpect\(", re.M)
+_SCRIPT_REF = re.compile(r"^(?:npm|pnpm|yarn|bun)\s+(?:run(?:-script)?\s+)?([\w:.-]+)")
+_NODE_FILE = re.compile(r"^node\s+(?:-\S+\s+)*([\w./-]+\.[cm]?js)\b")
+
+
+def _script_parts(name: str, scripts: dict, folder: Path, seen: frozenset = frozenset()) -> set[str]:
+    """The kinds of work a script does: 'test', 'lint' and 'other', following `npm run x`."""
+    kinds: set[str] = set()
+    body = scripts.get(name)
+    if not isinstance(body, str) or name in seen:
+        return {"other"}
+    for part in re.split(r"&&|\|\||;|\|", body):
+        part = part.strip()
+        ref = _SCRIPT_REF.match(part)
+        target = ref and ("test" if ref.group(1) == "test" else ref.group(1))
+        if target and target in scripts:
+            kinds |= _script_parts(target, scripts, folder, seen | {name})
+        elif not part or part.startswith(("echo", "exit")):
+            kinds.add("other")
+        elif _LINTERS.match(part):
+            kinds.add("lint")
+        elif _TEST_RUNNERS.search(part) or _TEST_PATHS.search(part):
+            kinds.add("test")
+        else:
+            node = _NODE_FILE.match(part)
+            try:
+                code = (folder / node.group(1)).read_text(encoding="utf-8", errors="replace") if node else ""
+            except OSError:
+                code = ""
+            kinds.add("test" if _TEST_SYNTAX.search(code) else "other")
+    return kinds
+
+
+def node_test_script(scripts: dict, folder: Path) -> str | None:
+    """The script to run as "test": `test` when it runs tests and no linter; otherwise the first
+    script that does (test:ci, test:unit, unit, then any other); `test` itself when it runs tests
+    but also lints and nothing else qualifies; None when no script runs test code."""
+    kinds = {n: _script_parts(n, scripts, folder) for n in scripts}
+    pure = [n for n, k in kinds.items() if "test" in k and "lint" not in k]
+    if "test" in pure:
+        return "test"
+    preferred = ("test:ci", "test:unit", "unit", "test:all")
+    for name in [*preferred, *sorted(pure, key=lambda n: (not n.startswith("test"), n))]:
+        if name in pure:
+            return name
+    return "test" if "test" in kinds.get("test", set()) else None
+
+
 FIXTURE_DIRS = {"docs", "doc", "fixtures", "__fixtures__", "testdata", "test_data"}
 
 
@@ -103,8 +161,11 @@ def _stacks(root: Path, all_files: list[Path]) -> list[dict]:
         pm = _package_manager(folder)
         prefix = "" if folder == root else f"cd {shlex.quote(files.rel(folder, root))} && "
         cmds = {}
-        if "test" in scripts:
+        test_script = node_test_script(scripts, folder) if isinstance(scripts, dict) else None
+        if test_script == "test":
             cmds["test"] = f"{prefix}{pm} test"
+        elif test_script:
+            cmds["test"] = f"{prefix}{pm} run {test_script}"
         for name in ("build", "lint"):
             if name in scripts:
                 cmds[name] = f"{prefix}{pm} run {name}"
@@ -227,12 +288,47 @@ def _execute(cmd: str, cwd: Path, timeout: int) -> tuple[str, int | None, float]
     # (#165). Color codes in the output are stripped afterwards by compress.clean.
     env = dict(os.environ, CI="1", DOTNET_NOLOGO="1", DOTNET_CLI_TELEMETRY_OPTOUT="1")
     started = time.monotonic()
+    # The command runs in its own process group, so a timeout ends the whole tree: killing only
+    # the shell left `npx borp`'s node processes running (#271).
+    group = ({"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt"
+             else {"start_new_session": True})
+    proc = subprocess.Popen(cmd, shell=True, cwd=cwd, env=env, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, **group)
     try:
-        proc = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, timeout=timeout, env=env)
-        out, rc = proc.stdout + b"\n" + proc.stderr, proc.returncode
-    except subprocess.TimeoutExpired as exc:
-        out, rc = (exc.stdout or b"") + b"\n" + (exc.stderr or b""), None
+        stdout, stderr = proc.communicate(timeout=timeout)
+        rc = proc.returncode
+    except subprocess.TimeoutExpired:
+        _kill_tree(proc)
+        try:
+            stdout, stderr = proc.communicate(timeout=5)
+        except subprocess.TimeoutExpired:  # a grandchild that left the group still holds the pipes
+            stdout, stderr = b"", b""
+        rc = None
+    out = (stdout or b"") + b"\n" + (stderr or b"")
     return out.decode("utf-8", "replace"), rc, time.monotonic() - started
+
+
+def _kill_tree(proc: subprocess.Popen) -> None:
+    """End a timed-out command and everything it started: SIGTERM to its group, then SIGKILL."""
+    if os.name == "nt":
+        subprocess.run(["taskkill", "/T", "/F", "/PID", str(proc.pid)], capture_output=True)
+        proc.kill()
+        return
+    import signal
+
+    for sig, grace in ((signal.SIGTERM, 2.0), (signal.SIGKILL, 0)):
+        try:
+            os.killpg(proc.pid, sig)
+        except (ProcessLookupError, PermissionError):
+            return
+        deadline = time.monotonic() + grace
+        while time.monotonic() < deadline:
+            proc.poll()  # reap the shell, so only live members keep the group
+            try:
+                os.killpg(proc.pid, 0)
+            except (ProcessLookupError, PermissionError):
+                return
+            time.sleep(0.05)
 
 
 def op_run(ctx: Context, what: str = "test", cmd: str | None = None, timeout=RUN_TIMEOUT) -> Result:

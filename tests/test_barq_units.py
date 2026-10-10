@@ -584,3 +584,466 @@ def test_a_symbol_without_a_closing_brace_is_marked_partial():
     text = "function broken() {\n" + "  x();\n" * 80
     sym = outline(text, ".js")[0]
     assert sym.partial
+
+
+# ---------------------------------------------------------------- tstyche (#270)
+
+TSTYCHE_FAILED = """\
+\x1b[90m····\x1b[0m TSTyche 7.2.5\x1b[90m at /work\x1b[0m
+
+\x1b[34muses\x1b[0m TypeScript 6.0.3\x1b[90m with ./test/types/tsconfig.json\x1b[0m
+
+\x1b[32mpass\x1b[0m \x1b[90m./test/types/\x1b[0mrequest.tst.ts
+\x1b[31mfail\x1b[0m \x1b[90m./test/types/\x1b[0mreply.tst.ts
+
+Targets:    \x1b[31m1 failed\x1b[0m, 1 total
+Test files: \x1b[31m1 failed\x1b[0m, \x1b[32m15 passed\x1b[0m, 16 total
+Tests:      \x1b[32m2 passed\x1b[0m, 2 total
+Assertions: \x1b[31m1 failed\x1b[0m, \x1b[32m1283 passed\x1b[0m, 1284 total
+Suppressed: \x1b[32m60 matched\x1b[0m, 60 total
+Duration:   18.9s
+
+\x1b[31mError: \x1b[0mCannot find name 'PlantedMissingType'.\x1b[90m ts(2304)\x1b[0m
+
+\x1b[31m  129\x1b[0m\x1b[90m | \x1b[0m  prefix: PlantedMissingType;
+     \x1b[90m | \x1b[0m          \x1b[31m~~~~~~~~~~~~~~~~~~\x1b[0m
+
+       \x1b[90m at \x1b[0m\x1b[36m./types/instance.d.ts\x1b[0m\x1b[90m:129:11\x1b[0m
+
+\x1b[31mError: \x1b[0mType 'string' is not the same as type 'number'.
+
+  299 | expect<string>().type.toBe<number>()
+
+        at ./test/types/reply.tst.ts:299:28
+"""
+
+
+def test_tstyche_failure_keeps_location_and_counts():
+    verdict, details, _ = compress.summarize(TSTYCHE_FAILED, 1)
+    assert verdict == "tstyche: Test files 1 failed, 15 passed; Assertions 1 failed, 1283 passed"
+    assert details == [
+        "./types/instance.d.ts:129:11: Cannot find name 'PlantedMissingType'. ts(2304)",
+        "./test/types/reply.tst.ts:299:28: Type 'string' is not the same as type 'number'.",
+    ]
+
+
+def test_tstyche_clean_counts_assertions():
+    verdict, details, _ = summarize("""\
+        Targets:    1 passed, 1 total
+        Test files: 16 passed, 16 total
+        Tests:      2 passed, 2 total
+        Assertions: 1283 passed, 1283 total
+        Suppressed: 60 matched, 60 total
+        Duration:   19.1s
+    """, rc=0)
+    assert verdict == "tstyche: Test files 16 passed; Assertions 1283 passed"
+    assert details == ""
+
+
+def test_a_failed_exit_is_never_reported_as_only_passed():
+    # #270: the jest parser said "Tests: 2 passed, 2 total" for a run that exited 1
+    verdict, _, _ = summarize("""\
+        Tests:       2 passed, 2 total
+        Error: something else broke
+    """, rc=1)
+    assert verdict.startswith("failed (exit 1): ") and "2 passed" in verdict
+# ---------------------------------------------------------------- node:test / borp (#268)
+
+NODE_SUMMARY = """\
+ℹ tests {tests}
+ℹ suites 22
+ℹ pass {passed}
+ℹ fail {failed}
+ℹ cancelled 0
+ℹ skipped 3
+ℹ todo 0
+ℹ duration_ms 30890.5451
+"""
+
+NODE_FAILURE = """\
+✖ failing tests:
+
+test at test/x.test.js:6:1
+✖ case insensitive (452.505044ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+\x20\x20
+    {
+  +   hello: 'world'
+  -   hello: 'WORLD-planted'
+    }
+\x20\x20
+      at assert.<computed> [as deepStrictEqual] (node:internal/test_runner/test:320:18)
+      at TestContext.<anonymous> (/work/test/x.test.js:26:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+parsed config: test/**/*.test.js test/**/*.test.mjs
+"""
+
+
+def _node_passing(n):
+    return "".join(f"✔ should catch error inside formatter {i} (1.2ms)\n" for i in range(n))
+
+
+def test_node_test_spec_one_failure():
+    text = (_node_passing(300) + "✖ case insensitive (452.505044ms)\n"
+            + NODE_SUMMARY.format(tests=304, passed=300, failed=1) + "\n" + NODE_FAILURE)
+    verdict, details, _ = compress.summarize(text, 1)
+    shown = "\n".join(details)
+    assert verdict == "node:test: 1 failed, 300 passed, 3 skipped (304 tests)"
+    assert "test at test/x.test.js:6:1" in shown and "✖ case insensitive (452.505044ms)" in shown
+    assert "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:" in shown
+    assert "-   hello: 'WORLD-planted'" in shown and "/work/test/x.test.js:26:12" in shown
+    assert "✔" not in shown and "node:internal" not in shown
+    assert len(details) < 20
+
+
+def test_node_test_spec_green_has_counts():
+    text = _node_passing(50) + NODE_SUMMARY.format(tests=53, passed=50, failed=0)
+    verdict, details, _ = compress.summarize(text, 0)
+    assert verdict == "node:test: 0 failed, 50 passed, 3 skipped (53 tests)"
+    assert details == []
+
+
+def test_node_test_tap_not_ok():
+    verdict, details, _ = summarize("""\
+        TAP version 13
+        # Subtest: test/zz-hang.test.js
+        not ok 1 - test/zz-hang.test.js
+          ---
+          duration_ms: 3007.358804
+          type: 'test'
+          location: '/work/test/zz-hang.test.js:1:1'
+          failureType: 'testTimeoutFailure'
+          error: 'test timed out after 3000ms'
+          code: 'ERR_TEST_FAILURE'
+          ...
+        1..1
+        # tests 1
+        # suites 0
+        # pass 0
+        # fail 0
+        # cancelled 1
+        # skipped 0
+        # todo 0
+        # duration_ms 3023.196252
+    """)
+    assert verdict == "node:test: 0 failed, 0 passed, 1 cancelled (1 tests)"
+    assert details.split("\n") == [
+        "not ok 1 - test/zz-hang.test.js",
+        "  location: /work/test/zz-hang.test.js:1:1",
+        "  failureType: testTimeoutFailure",
+        "  error: test timed out after 3000ms",
+    ]
+
+
+def test_node_test_crash_outside_tests_is_shown_once():
+    # t2-require: every test file dies on the same require error; the failing-tests block
+    # only says 'test failed', so the error printed before it must be kept
+    crash = """\
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module './lib/does-not-exist'
+Require stack:
+- /work/fastify.js
+- /work/test/{name}.test.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at Object.<anonymous> (/work/fastify.js:48:1)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14) {{
+  code: 'MODULE_NOT_FOUND',
+}}
+
+Node.js v22.23.1
+✖ /work/test/{name}.test.js (493.6ms)
+"""
+    names = [f"t{i}" for i in range(40)]
+    failing = "".join(f"test at test/{n}.test.js:1:1\n✖ /work/test/{n}.test.js (493.6ms)\n"
+                      f"  'test failed'\n\n" for n in names)
+    text = ("".join(crash.format(name=n) for n in names)
+            + NODE_SUMMARY.format(tests=80, passed=37, failed=40) + "\n✖ failing tests:\n\n" + failing)
+    verdict, details, _ = compress.summarize(text, 1)
+    shown = "\n".join(details)
+    assert verdict.startswith("node:test: 40 failed, 37 passed")
+    assert shown.count("Error: Cannot find module './lib/does-not-exist'") == 1
+    assert "at Object.<anonymous> (/work/fastify.js:48:1)" in shown
+    assert "test at test/t0.test.js:1:1" in shown and "more failing tests" in shown
+    assert len(details) <= 80
+# ---------------------------------------------------------------- JS outlines on fastify (#272-#276)
+
+REPLY_JS = textwrap.dedent('''\
+    'use strict'
+
+    function Reply (res, request, log) {
+      this.raw = res
+    }
+
+    Reply.prototype.send = function (payload) {
+      if (payload === undefined) {
+        return this
+      }
+      return this
+    }
+
+    Reply.prototype['code'] = function (code) {
+      return this
+    }
+
+    Reply.prototype.then = async (fulfilled) => {
+      return fulfilled()
+    }
+
+    function onSendEnd (reply) {
+      function send () {
+        reply.raw.end()
+      }
+      send()
+    }
+
+    module.exports = Reply
+''')
+
+
+def test_js_outline_prototype_methods():
+    syms = {s.name: (s.line, s.end) for s in outline(REPLY_JS, ".js")}
+    assert syms["Reply.prototype.send"] == (7, 12)
+    assert syms["Reply.prototype.code"] == (14, 16)
+    assert syms["Reply.prototype.then"] == (18, 20)
+    assert "module.exports" not in syms  # an assignment of a name, not a function
+
+
+def test_js_symbol_prototype_lookup():
+    assert [(s.line, s.end) for s in find_symbol(REPLY_JS, ".js", "Reply.prototype.send")] == [(7, 12)]
+    assert [(s.line, s.end) for s in find_symbol(REPLY_JS, ".js", "Reply.send")] == [(7, 12)]
+
+
+def test_js_outline_module_exports_function():
+    text = "'use strict'\n\nmodule.exports = function noopSet () {\n  return {\n    add () {}\n  }\n}\n"
+    syms = outline(text, ".js")
+    assert [(s.name, s.line, s.end) for s in syms][0] == ("noopSet", 3, 7)
+    assert syms[0].signature == "module.exports = function noopSet ()"
+
+
+def test_js_assignments_inside_functions_are_not_outlined():
+    text = "function f () {\n  this.cb = function () {\n    return 1\n  }\n}\n"
+    assert [s.name for s in outline(text, ".js")] == ["f"]
+
+
+def test_js_destructured_params_range():
+    # #273: the first `{` on the line was the parameter's, so the symbol ended on its first line
+    text = ("function f ({ a, b = {} }) {\n  return a\n}\n"
+            "const g = ({ a }) => {\n  return a\n}\n"
+            "function printRoutes (opts = {}) {\n  return opts\n}\n"
+            "function addNewRoute ({\n  path,\n  prefixing = false\n}) {\n  return path\n}\n")
+    syms = {s.name: (s.line, s.end) for s in outline(text, ".js")}
+    assert syms == {"f": (1, 3), "g": (4, 6), "printRoutes": (7, 9), "addNewRoute": (10, 15)}
+
+
+def test_js_regex_literal_with_quotes():
+    # #274: lib/content-type.js - the ' and ` inside the regex hid every symbol after it
+    text = ('const keyValuePairsReg = /(?:^|;)\\s*([\\w!#$%&\'*+.^`|~-]+)=("(?:[\\t\\u00'
+            '20\\u0021\\u0023-\\u005b\\u005d-\\u007e\\u0080-\\u00ff]|\\\\[\\t\\u0020-\\u00ff])*'
+            '"|[\\w!#$%&\'*+.^`|~-]+)/gu\n'
+            "const half = total / 2 / count\n"
+            "class ContentType {\n"
+            "  constructor (s) {\n    this.s = s.split(/[/'\"]/)\n  }\n\n"
+            "  get type () {\n    return this.s\n  }\n"
+            "}\n")
+    syms = {s.name: (s.line, s.end) for s in outline(text, ".js")}
+    assert syms == {"ContentType": (3, 11), "ContentType.constructor": (4, 6),
+                    "ContentType.type": (8, 10)}
+
+
+def test_js_object_of_calls_not_symbols():
+    # #275: lib/errors.js had 95 "symbols", each `FST_ERR_X: createError(` running to the end
+    text = textwrap.dedent('''\
+        const codes = {
+          FST_ERR_NOT_FOUND: createError(
+            'FST_ERR_NOT_FOUND',
+            'Not Found',
+            404
+          ),
+          FST_ERR_OPTIONS_NOT_OBJ: createError(
+            'FST_ERR_OPTIONS_NOT_OBJ',
+            'Options must be an object',
+            TypeError
+          )
+        }
+
+        function fastify (options) {
+          const supported = {
+            bodyless: new Set([
+              'GET'
+            ])
+          }
+          hookRunnerApplication('preClose', boot, fastify, function () {
+            return 1
+          })
+          eos(this.raw, (err) => {
+            done(err)
+          })
+          const x = ok
+            ? appendStackTrace(err, new Error(err.message))
+            : err
+          return supported
+        }
+    ''')
+    assert [s.name for s in outline(text, ".js")] == ["fastify"]
+
+
+def test_js_object_literal_function_property_named_by_key():
+    text = textwrap.dedent('''\
+        const fastify = {
+          delete: function _delete (url, options, handler) {
+            return router.prepareRoute('DELETE', url)
+          },
+          hasPlugin: function (name) {
+            return true
+          },
+          closeRoutes: () => { closing = true },
+          prefix: {
+            configurable: true,
+            get () { return this[kRoutePrefix] }
+          }
+        }
+    ''')
+    syms = {s.name: (s.line, s.end) for s in outline(text, ".js")}
+    assert syms == {"delete": (2, 4), "hasPlugin": (5, 7), "closeRoutes": (8, 8), "get": (11, 11)}
+
+
+# ---------------------------------------------------------------- .d.ts (#276, #277)
+
+UTILS_DTS = textwrap.dedent('''\
+    import * as http from 'node:http'
+
+    type AutocompletePrimitiveBaseType<T> =
+      T extends string ? string :
+        T extends number ? number :
+          never
+
+    export type Autocomplete<T> = T | (AutocompletePrimitiveBaseType<T> & Record<never, never>)
+
+    type _HTTPMethods = 'DELETE' | 'GET' |
+      'PROPFIND' | 'REPORT'
+
+    export type HTTPMethods = Autocomplete<_HTTPMethods | Lowercase<_HTTPMethods>>
+
+    export type RawRequestDefaultExpression<
+      RawServer extends RawServerBase = RawServerDefault
+    > = RawServer extends http.Server ? http.IncomingMessage
+      : never
+
+    export interface Shape {
+      a: string
+    }
+
+    export type FastifyHttpOptions<
+      Server extends http.Server,
+      Logger extends FastifyBaseLogger = FastifyBaseLogger
+    > = FastifyServerOptions<Server, Logger> & {
+      http?: http.ServerOptions | null
+      http2?: false
+    }
+''')
+
+
+def test_ts_one_line_alias_range():
+    syms = {s.name: (s.line, s.end) for s in outline(UTILS_DTS, ".ts")}
+    assert syms["AutocompletePrimitiveBaseType"] == (3, 6)
+    assert syms["Autocomplete"] == (8, 8)
+    assert syms["_HTTPMethods"] == (10, 11)
+    assert syms["HTTPMethods"] == (13, 13)
+
+
+def test_ts_multiline_generic_alias():
+    syms = {s.name: (s.line, s.end) for s in outline(UTILS_DTS, ".ts")}
+    assert syms["RawRequestDefaultExpression"] == (15, 18)
+    assert syms["FastifyHttpOptions"] == (24, 30)
+    assert syms["Shape"] == (20, 22)
+
+
+def test_ts_overload_ranges():
+    text = textwrap.dedent('''\
+        declare namespace fastify {
+          export type TrustProxyFunction = (address: string, hop: number) => boolean
+        }
+
+        declare function fastify<
+          Server extends http2.Http2SecureServer,
+          Logger extends FastifyBaseLogger = FastifyBaseLogger
+        > (opts: fastify.FastifyHttp2SecureOptions<Server, Logger>): FastifyInstance<Server,
+          Logger> & SafePromiseLike<FastifyInstance<Server, Logger>>
+
+        declare function fastify<
+          Server extends http.Server
+        > (opts?: fastify.FastifyHttpOptions<Server>): FastifyInstance<Server>
+
+        // CJS export
+        export = fastify
+    ''')
+    syms = [(s.name, s.line, s.end, s.partial) for s in outline(text, ".ts")]
+    assert syms == [("fastify", 1, 3, False), ("fastify.TrustProxyFunction", 2, 2, False),
+                    ("fastify", 5, 9, False), ("fastify", 11, 13, False)]
+
+
+INSTANCE_DTS = textwrap.dedent('''\
+    export interface FastifyInstance<
+      RawServer extends RawServerBase = RawServerDefault,
+      Logger extends FastifyBaseLogger = FastifyBaseLogger
+    > {
+      server: RawServer;
+      readonly prefix?: string;
+      addresses(): AddressInfo[]
+      withTypeProvider<Provider extends FastifyTypeProvider>(): FastifyInstance<RawServer, Logger,
+        Provider>;
+
+      after(): FastifyInstance<RawServer, Logger> & SafePromiseLike<undefined>;
+      after(afterListener: (err: Error | null) => void): FastifyInstance<RawServer,
+        Logger>;
+
+      // @ts-ignore - type only available for @types/node >=17
+      [Symbol.asyncDispose](): Promise<undefined>;
+      [key: string]: unknown;
+      (req: Request): void;
+      decorate: DecorationMethod<FastifyInstance<RawServer, Logger>>;
+      addHttpMethod(method: string, methodOptions?: {
+        hasBody: boolean,
+      }): FastifyInstance<RawServer, Logger>;
+      routeOptions: {
+        url: string
+      }
+    }
+
+    export interface Empty {}
+''')
+
+
+def test_dts_interface_members_are_outlined():
+    # #277 (decided): .d.ts interface members (method and property signatures) are outlined
+    syms = [(s.name, s.kind, s.line, s.end) for s in outline(INSTANCE_DTS, ".ts")]
+    assert syms == [
+        ("FastifyInstance", "interface", 1, 26),
+        ("FastifyInstance.server", "property", 5, 5),
+        ("FastifyInstance.prefix", "property", 6, 6),
+        ("FastifyInstance.addresses", "method", 7, 7),
+        ("FastifyInstance.withTypeProvider", "method", 8, 9),
+        ("FastifyInstance.after", "method", 11, 11),
+        ("FastifyInstance.after", "method", 12, 13),
+        ("FastifyInstance.[Symbol.asyncDispose]", "method", 15, 16),
+        ("FastifyInstance.decorate", "property", 19, 19),
+        ("FastifyInstance.addHttpMethod", "method", 20, 22),
+        ("FastifyInstance.routeOptions", "property", 23, 25),
+        ("Empty", "interface", 28, 28),
+    ]
+
+
+def test_dts_interface_member_lookup_returns_all_overloads():
+    found = find_symbol(INSTANCE_DTS, ".ts", "FastifyInstance.after")
+    assert [(s.line, s.end) for s in found] == [(11, 11), (12, 13)]

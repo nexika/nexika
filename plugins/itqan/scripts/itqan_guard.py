@@ -79,7 +79,8 @@ def needs_quality_check(event: dict) -> bool:
         return True
     command = str((event.get("tool_input") or {}).get("command") or "")
     return tool in ("Bash", "PowerShell") and "git" in command and (
-        "--no-verify" in command or " -n" in command or "SKIP=" in command)
+        "--no-verify" in command or "SKIP=" in command
+        or any(w[:1] == "-" and w[1:2] != "-" and "n" in w for w in command.split()))
 
 
 if __name__ == "__main__":
@@ -102,7 +103,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import itqan_files  # noqa: E402
 import itqan_secrets  # noqa: E402
 
-DEFAULT_PROTECTED = ["main", "master", "develop", "production", "stable", "release/*"]
+DEFAULT_PROTECTED = ["main", "master", "develop", "production", "stable", "release/*", "[0-9]*.x", "next"]
 
 # The family's shared secret shapes (common/secrets.py), so the guard and the redactor agree on what
 # a secret is.
@@ -197,23 +198,59 @@ def find_secret(text: str) -> str | None:
 # ---------------------------------------------------------------- Bash rules
 
 
-def _check_rm(words: list[str], cwd: Path, root: Path):
-    if not words or Path(words[0]).name != "rm":
+NODE_DELETE_TOOLS = {"rimraf", "del", "del-cli"}  # always delete recursively
+
+
+def _unwrap_npx(words: list[str]) -> list[str]:
+    """`npx [-y] tool ...` and `npm exec [--] tool ...` give `tool ...`."""
+    if words and Path(words[0]).name == "npx":
+        rest = words[1:]
+    elif len(words) > 1 and Path(words[0]).name == "npm" and words[1] in ("exec", "x"):
+        rest = words[2:]
+    else:
+        return words
+    while rest and rest[0].startswith("-"):
+        rest = rest[1:]
+    return rest
+
+
+def _delete_targets(words: list[str]) -> tuple[str, list[str]] | None:
+    """What a recursive delete (`rm -r`, `shx rm -r`, rimraf, del-cli) names, with the word that
+    labels it; None when the command is not one."""
+    words = _unwrap_npx(words)
+    if not words:
+        return None
+    name = Path(words[0]).name.split("@", 1)[0]
+    if name in NODE_DELETE_TOOLS:
+        return name, [w for w in words[1:] if not w.startswith("-")]
+    if name == "shx" and len(words) > 1 and words[1] == "rm":
+        name, words = "shx rm -r", words[1:]
+    elif name == "rm":
+        name = "rm -r"
+    else:
         return None
     short = "".join(w[1:] for w in words[1:] if w.startswith("-") and not w.startswith("--"))
     if "r" not in short.lower() and "--recursive" not in words:
         return None
-    for t in (w for w in words[1:] if not w.startswith("-")):
+    return name, [w for w in words[1:] if not w.startswith("-")]
+
+
+def _check_rm(words: list[str], cwd: Path, root: Path):
+    found = _delete_targets(words)
+    if not found:
+        return None
+    label, targets = found
+    for t in targets:
         if t in HOME_TARGETS or t.startswith(("~/", "$HOME/", "${HOME}/")):
-            return "deny", "rm-dangerous-target", f"`rm -r {t}` would delete far more than the project."
+            return "deny", "rm-dangerous-target", f"`{label} {t}` would delete far more than the project."
         resolved = (cwd / t).resolve()
         if resolved == root:
-            return "deny", "rm-project-root", f"`rm -r {t}` would delete the whole project."
+            return "deny", "rm-project-root", f"`{label} {t}` would delete the whole project."
         try:
             resolved.relative_to(root)
         except ValueError:
             return ("deny", "rm-outside-project",
-                    f"`rm -r {t}` targets {resolved}, outside the project ({root}).")
+                    f"`{label} {t}` targets {resolved}, outside the project ({root}).")
     return None
 
 
@@ -236,8 +273,36 @@ def _check_push(rest: list[str], cwd: Path, protected: list[str]):
     return None
 
 
+COMMIT_VALUE_SHORT = set("mFCct")  # short options of `git commit` that take a value
+COMMIT_VALUE_LONG = {"--message", "--file", "--reuse-message", "--reedit-message", "--template",
+                     "--author", "--date", "--cleanup", "--fixup", "--squash", "--trailer"}
+
+
+def _commit_skips_hooks(rest: list[str]) -> bool:
+    """`git commit` arguments with `-n`/`--no-verify`, also inside a cluster such as `-nm` or `-anm`.
+    A cluster is read left to right up to the first letter that takes a value: `-mn` is `-m "n"`."""
+    i = 0
+    while i < len(rest):
+        word = rest[i]
+        i += 1
+        if word == "--":
+            break
+        if word == "--no-verify":
+            return True
+        if word in COMMIT_VALUE_LONG:
+            i += 1
+        elif word.startswith("-") and not word.startswith("--"):
+            for pos, ch in enumerate(word[1:], start=1):
+                if ch == "n":
+                    return True
+                if ch in COMMIT_VALUE_SHORT:
+                    i += pos == len(word) - 1  # the value is the next word
+                    break
+    return False
+
+
 def _check_commit(rest: list[str], cwd: Path):
-    if "--no-verify" in rest or "-n" in rest:
+    if _commit_skips_hooks(rest):
         return "ask", "skip-hooks", "`git commit --no-verify` skips pre-commit checks."
     all_flag = any(a in ("-a", "--all") or (a.startswith("-") and not a.startswith("--") and "a" in a)
                    for a in rest)
@@ -309,7 +374,7 @@ def skip_hooks(command: str):
             args = args[2:]
         if args and args[0] == "commit" and skip:
             return "ask", "skip-hooks", _skip_env_reason(skip)
-        if args and args[0] == "commit" and ("--no-verify" in args or "-n" in args):
+        if args and args[0] == "commit" and _commit_skips_hooks(args[1:]):
             return "ask", "skip-hooks", "`git commit --no-verify` skips pre-commit checks."
         if args and args[0] == "push" and "--no-verify" in args:
             return "ask", "skip-hooks", "`git push --no-verify` skips the repository's push hooks."
@@ -385,7 +450,7 @@ def check_bash(command: str, cwd: Path, config: dict, depth: int = 0):
             if not words:
                 continue
             decision = (_check_rm(words, cwd, root) or _check_git(words, cwd, config)
-                        or _check_publish(words))
+                        or _check_publish(words) or _check_npm_config(words))
             script = _shell_script(words) if depth < 3 else None
             if not decision and script:
                 decision = check_bash(script, cwd, config, depth + 1)
@@ -398,6 +463,52 @@ def check_bash(command: str, cwd: Path, config: dict, depth: int = 0):
             hit = pattern.search(command)
         if hit:
             return "ask", rule, reason
+    return None
+
+
+IGNORE_SCRIPTS = re.compile(r"(?mi)^\s*ignore-scripts\s*=\s*[\"']?(\w*)")
+IGNORE_SCRIPTS_REASON = ("Turns off ignore-scripts: npm will run the install scripts of every dependency "
+                         "again (a supply-chain risk).")
+
+
+def _ignore_scripts(text: str) -> str | None:
+    """The last ignore-scripts value an .npmrc text sets ("true", "false", ...), or None."""
+    values = IGNORE_SCRIPTS.findall(text)
+    return values[-1].lower() if values else None
+
+
+def _turns_off_ignore_scripts(path: str, tool_input: dict) -> bool:
+    """An .npmrc edit that sets ignore-scripts to false, or removes an ignore-scripts=true."""
+    pairs = [(str(tool_input.get("old_string") or ""), str(tool_input.get("new_string") or ""))]
+    pairs += [(str(e.get("old_string") or ""), str(e.get("new_string") or ""))
+              for e in tool_input.get("edits") or [] if isinstance(e, dict)]
+    if "content" in tool_input:
+        try:
+            current = Path(path).read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            current = ""
+        pairs.append((current, str(tool_input.get("content") or "")))
+    for old, new in pairs:
+        after = _ignore_scripts(new)
+        if (after is not None and after != "true") or (_ignore_scripts(old) == "true" and after is None):
+            return True
+    return False
+
+
+def _check_npm_config(words: list[str]):
+    """`npm config set ignore-scripts false` (also `npm set`, `ignore-scripts=false`) and
+    `npm config delete ignore-scripts`."""
+    if not words or Path(words[0]).name != "npm":
+        return None
+    args = [w for w in words[1:] if not w.startswith("-")]
+    if args[:1] == ["config"]:
+        args = args[1:]
+    if not args or args[0] not in ("set", "delete", "rm"):
+        return None
+    pairs = " ".join(args[1:]).replace("= ", "=").replace(" =", "=")
+    values = re.findall(r"(?:^|\s)ignore-scripts(?:=|\s+)?(\S*)", pairs)
+    if any(args[0] != "set" or v.lower().strip("\"'") != "true" for v in values):
+        return "ask", "npmrc-ignore-scripts", IGNORE_SCRIPTS_REASON
     return None
 
 
@@ -415,6 +526,8 @@ def check_edit(tool_input: dict):
     if name in LOCK_FILES:
         return ("ask", "edit-lock-file",
                 f"{name} is generated by the package manager; change dependencies with it instead.")
+    if name == ".npmrc" and _turns_off_ignore_scripts(path, tool_input):
+        return "ask", "npmrc-ignore-scripts", IGNORE_SCRIPTS_REASON
     new_text = "\n".join(str(tool_input.get(k) or "") for k in ("content", "new_string", "new_source"))
     for edit in tool_input.get("edits") or []:
         if isinstance(edit, dict):

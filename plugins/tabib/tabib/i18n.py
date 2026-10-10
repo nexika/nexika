@@ -12,12 +12,15 @@ TEXT = {
         "k_code_build": "{count} build error(s)", "k_code_check": "{count} failed check(s)",
         "k_code_merge": "the branch does not merge into its base: rebase",
         "k_code_generated": "{count} generated file(s) out of date",
+        "k_code_links": "{count} broken link(s)",
         "k_code_": "{count} failure(s)", "one_job": "{label}, in one job",
         "k_matrix": "fails only on {value}", "k_flaky": "likely flaky: the same commit passed",
         "k_infra": "outside the code: {signal}", "k_dependency": "a dependency problem",
         "k_dependency_module": "a dependency problem: {module} is not installed",
         "k_setup": "the CI setup is broken",
         "k_unknown_expired": "the log has expired",
+        "k_unknown_nojobs": "the CI run has no jobs or logs: nothing to diagnose",
+        "next_nojobs": "Nothing to diagnose here; the run page is the only place GitHub may say more: {url}",
         "k_dependency_package": "a dependency problem: raised inside {package}",
         "next_package": "The error is raised inside {package}, not in the code this change touched: check "
                         "what changed in {package} (a new release, or the version this job installs), "
@@ -56,12 +59,15 @@ TEXT = {
         "k_code_build": "{count} خطأ بناء", "k_code_check": "{count} فحص فاشل",
         "k_code_merge": "الفرع لا يندمج في الفرع الأساسي: أعد بناءه (rebase)",
         "k_code_generated": "{count} ملف مولَّد غير محدَّث",
+        "k_code_links": "{count} رابط معطّل",
         "k_code_": "{count} إخفاق", "one_job": "{label}، في مهمة واحدة",
         "k_matrix": "يفشل فقط على {value}", "k_flaky": "متقلّب على الأرجح: نفس التعديل نجح",
         "k_infra": "خارج الكود: {signal}", "k_dependency": "مشكلة في الاعتماديات",
         "k_dependency_module": "مشكلة في الاعتماديات: {module} غير مثبّت",
         "k_setup": "إعداد CI معطّل",
         "k_unknown_expired": "انتهت صلاحية السجل",
+        "k_unknown_nojobs": "تشغيل CI بلا مهام ولا سجلات: لا شيء يُشخَّص",
+        "next_nojobs": "لا شيء يُشخَّص هنا؛ صفحة التشغيل هي المكان الوحيد الذي قد يقول فيه GitHub المزيد: {url}",
         "k_dependency_package": "مشكلة في الاعتماديات: الخطأ من داخل {package}",
         "next_package": "الخطأ يُرفع من داخل {package} لا من الكود الذي غيّره هذا التعديل: راجع ما تغيّر في "
                         "{package} (إصدار جديد أو النسخة التي تثبّتها هذه المهمة)، ثم كيّف الكود معه أو ثبّت النسخة.",
@@ -140,6 +146,8 @@ def label(kind: str, detail: dict, language: str = "") -> str:
         return t("k_dependency_module", language, module=detail["module"])
     if kind == "unknown" and detail.get("log") == "expired":
         return t("k_unknown_expired", language)
+    if kind == "unknown" and detail.get("jobs") == 0:
+        return t("k_unknown_nojobs", language)
     if kind == "matrix":
         return t("k_matrix", language, value=detail.get("value", "?"))
     return t(f"k_{kind}", language)
