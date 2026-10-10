@@ -263,6 +263,42 @@ def test_review_bypasses_in_powershell(rich, command):
     assert d.verdict in ("ask", "deny") and d.unattended != "passed", (d.verdict, d.cls, d.reason)
 
 
+@pytest.mark.parametrize("command", ["find -L dist -delete", "find dist -follow -delete", "rm -rf dist",
+                                     "Remove-Item -Recurse -Force dist"])
+@pytest.mark.parametrize("planted", ["link", "secret", "repo"])
+def test_a_build_folder_with_a_link_out_a_secret_or_a_repository_is_not_lifted(rich, command, planted):
+    """Re-check of the review: `find -L build -delete` followed a link planted in build to ~/.ssh."""
+    home, project = rich
+    dist = project / "dist"
+    dist.mkdir()
+    try:
+        if planted == "link":
+            (dist / "l").symlink_to(home / ".ssh")
+        elif planted == "secret":
+            (dist / ".env").write_text("TOKEN=x\n")
+        else:
+            (dist / "pkg" / ".git").mkdir(parents=True)
+        tool = "PowerShell" if command.startswith("Remove-Item") else "Bash"
+        d = decide(project, tool, command, away(project, "strict"))
+        assert d.verdict in ("ask", "deny") and d.unattended != "passed", (d.verdict, d.cls, d.reason)
+    finally:
+        import shutil
+        shutil.rmtree(dist)
+
+
+def test_a_build_folder_with_a_link_inside_it_still_passes(rich):
+    home, project = rich
+    dist = project / "dist"
+    (dist / "bin").mkdir(parents=True)
+    (dist / "lib.js").write_text("x\n")
+    (dist / "bin" / "tool").symlink_to(dist / "lib.js")
+    try:
+        assert decide(project, "Bash", "rm -rf dist", away(project, "strict")).unattended == "passed"
+    finally:
+        import shutil
+        shutil.rmtree(dist)
+
+
 def test_a_submodule_cannot_declare_the_session_unattended(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
     clone = tmp_path / "home" / "work" / "clone"

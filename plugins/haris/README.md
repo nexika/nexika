@@ -125,7 +125,8 @@ folder above it, below home) does not count, and an unknown session is attended.
 - a reversible change inside the project that the profile asks about passes without a question.
   Today that is one thing, a delete under `strict`, and only when git or a rebuild gives it back: a
   file git tracks with no uncommitted change, or a build folder (`build`, `dist`, `node_modules`,
-  `__pycache__` ...) with nothing tracked in it. Not a pattern (`find -name`, a glob), a link, a
+  `__pycache__` ...) with nothing tracked in it and, looked through up to 5000 entries, no link out
+  of it, no repository and no secret (a bigger folder is not lifted). Not a pattern (`find -name`, a glob), a link, a
   path that does not exist yet, another worktree, `.git`, CI, `.claude` or other files that make
   tools run commands, and only when the command does nothing else but read. Each one is logged.
 - every other ask is refused by haris itself, with its reason, so the agent learns why: secrets,

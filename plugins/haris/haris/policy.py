@@ -313,8 +313,27 @@ def restorable(path: str, ctx: c.Ctx) -> bool:
         clean = git.try_run("status", "--porcelain", "--ignored", "--untracked-files=all", "--", raw)
         return bool(tracked and tracked.strip()) and clean == ""
     if os.path.isdir(raw) and os.path.basename(raw) in REGENERATED:
-        return git.try_run("ls-files", "--", raw) == "" and not os.path.lexists(os.path.join(raw, ".git"))
+        return git.try_run("ls-files", "--", raw) == "" and only_build_output(raw, where)
     return False
+
+
+WALK_LIMIT = 5000
+
+
+def only_build_output(folder: str, where: Where) -> bool:
+    """Nothing in the folder that a delete could reach beyond it or lose for good: no link out of it
+    (`find -L` and Windows junctions follow them), no repository, no secret. A folder too big to look
+    through in time is not lifted."""
+    seen = 0
+    for top, dirs, files in os.walk(folder):
+        for name in dirs + files:
+            seen += 1
+            full = os.path.join(top, name)
+            if seen > WALK_LIMIT or name == ".git" or where.is_secret(full):
+                return False
+            if os.path.islink(full) and not under(os.path.realpath(full), folder):
+                return False
+    return True
 
 
 OUTSIDE_ASKS_KEPT = 50
