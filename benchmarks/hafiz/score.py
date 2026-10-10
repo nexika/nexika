@@ -2,19 +2,24 @@
 
 Standard library only. A run folder holds:
 
-    meta.json                    task, arm, run, session, repo path, the calls in order
-    call-<n>.jsonl               claude's stream-json output for each call (steps, /compact, continue)
-    transcript.jsonl             the session transcript, copied from the run's throwaway home
+    meta.json                    task, arm, run, sessions, repo path, the calls and the breaks in order
+    call-<n>.jsonl               claude's stream-json output for each call (the steps, each /compact)
+    transcript-<s>.jsonl         each session's transcript, copied from the run's throwaway home
     diff.patch                   everything the agent changed, against the starting commit
-    snap-{base,compact,final}.json   the repo's text files at the start, before /compact, at the end
-    tests-{compact,final}.json   runtests.py output (the repo's tests and the task's hidden checks)
+    snap-{base,final}.json       the repo's text files at the start and at the end
+    snap-break<k>.json, tests-break<k>.json   the files and test results just before break k
+                                 (a /compact, or a restart in a new session)
+    tests-final.json             runtests.py output (the repo's tests and the task's hidden checks)
+
+A v1 run has one break, a /compact, recorded as snap-compact.json, tests-compact.json and
+transcript.jsonl; it is read the same way.
 
 Three groups, each scored from 0 to 1, and the continuity score is their mean:
 
     decisions   the seeded decisions still hold at the end
-    open_work   the plan's open step was done and the deferred failing test was fixed (without
+    open_work   the plan's open steps were done and the deferred failing test was fixed (without
                 editing the test)
-    no_redo     work finished before the compaction was not redone after it
+    no_redo     work finished before a break still works and was not rewritten or copied after it
 """
 from __future__ import annotations
 
@@ -110,11 +115,14 @@ def read_call(path: Path) -> dict:
     return out
 
 
-def transcript_compacted(path: Path) -> bool:
+def transcript_compactions(path: Path) -> int:
+    """How many times the session in this transcript was compacted (its summaries or its
+    boundaries, whichever the transcript records more of)."""
+    summaries = boundaries = 0
     for event in events(path):
-        if event.get("isCompactSummary") or event.get("subtype") == "compact_boundary":
-            return True
-    return False
+        summaries += bool(event.get("isCompactSummary"))
+        boundaries += event.get("subtype") == "compact_boundary"
+    return max(summaries, boundaries)
 
 
 # ---- the code checks ------------------------------------------------------------------------------
@@ -156,35 +164,93 @@ def added_lines(diff: str) -> list[str]:
     return [line for line in diff.splitlines() if line.startswith("+") and not line.startswith("+++")]
 
 
-def redone(task: dict, base: dict, compact: dict, final: dict, later_tools: list[dict], repo: str) -> dict:
-    """What finished work was done again after the compaction.
+def _nodes(source: str | None) -> list:
+    """Top-level functions and classes of a module (none when it is missing or does not parse)."""
+    if not source:
+        return []
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return []
+    return [n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))]
 
-    changed     a function or class in a keep_files module that was added or changed before the
-                compaction, and is different (or gone) at the end
-    rewritten   a file the agent had changed before the compaction, written again whole (Write)
-    duplicated  a name defined twice in one module at the end
-    """
-    changed = []
+
+def symbol_sources(source: str | None) -> dict[str, str]:
+    """name -> the normalized source of its (last) definition."""
+    return {node.name: ast.unparse(node) for node in _nodes(source)}
+
+
+def body_lines(node) -> list[str]:
+    """The statements of a function or class as normalized, stripped lines, without its def line
+    and docstring: what "the same code" means when comparing two versions."""
+    body = list(node.body)
+    if body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant) \
+            and isinstance(body[0].value.value, str):
+        body = body[1:]
+    return [line.strip() for stmt in body for line in ast.unparse(stmt).splitlines() if line.strip()]
+
+
+def _code_paths(snap: dict) -> list[str]:
+    return sorted(p for p in snap if p.endswith(".py") and not p.startswith("tests/"))
+
+
+def finished(task: dict, base: dict, snap: dict) -> list[tuple[str, object]]:
+    """(path, node) for every function or class of the task's keep_files that the agent added or
+    changed before this break."""
+    out = []
     for path in task.get("keep_files", []):
-        before, start, end = symbols(compact.get(path)), symbols(base.get(path)), symbols(final.get(path))
-        for name, dumps in before.items():
-            if dumps == start.get(name):
-                continue  # not touched before the compaction: changing it later is new work
-            if end.get(name) != dumps:
-                changed.append(f"{path}:{name}")
-    worked_on = {p for p in compact if compact.get(p) != base.get(p)}
-    rewritten = set()
-    prefix = repo.rstrip("/") + "/"
-    for tool in later_tools:
-        if tool.get("name") != "Write":
-            continue
-        path = str((tool.get("input") or {}).get("file_path") or "")
-        path = path[len(prefix):] if path.startswith(prefix) else path
-        if path in worked_on:
-            rewritten.add(path)
-    duplicated = [f"{path}:{name}" for path, text in sorted(final.items()) if path.endswith(".py")
-                  for name, dumps in symbols(text).items() if len(dumps) > 1]
-    return {"changed": sorted(changed), "rewritten": sorted(rewritten), "duplicated": duplicated}
+        start = {}
+        for node in _nodes(base.get(path)):
+            start.setdefault(node.name, ast.dump(node))
+        out += [(path, node) for node in _nodes(snap.get(path)) if ast.dump(node) != start.get(node.name)]
+    return out
+
+
+REWRITTEN_BELOW = 0.5   # less than half of a finished symbol's lines are left anywhere: rewritten
+COPIED_FROM = 0.8       # a new symbol holds 80% of a finished symbol's lines, still in place: a copy
+COPY_MIN_LINES = 3
+
+
+def redone(task: dict, base: dict, breaks: list[dict], final: dict, tests_final: dict) -> dict:
+    """What work finished before a break (a compaction or a new session) was done again after it,
+    judged by behaviour, not by any change of text. breaks: [{"snap": files, "tests": outcomes}].
+
+    broken      a test that passed at a break (the hidden checks or the repo's own) fails at the end;
+                a test that is gone is not counted
+    rewritten   a function or class finished before a break whose lines are mostly gone: fewer than
+                half are left in its final version or in code added after the break (a helper it
+                was moved to). Extending it, or moving code into a helper, keeps its lines.
+    duplicated  a name defined twice in one module, or a function or class added after a break that
+                copies one finished before it while the original stays in place
+    """
+    broken = sorted({t for brk in breaks for t, outcome in (brk.get("tests") or {}).items()
+                     if outcome == "pass" and tests_final.get(t) in ("fail", "error")})
+    final_nodes = {path: _nodes(final.get(path)) for path in _code_paths(final)}
+    rewritten, copies = set(), set()
+    for brk in breaks:
+        snap = brk.get("snap") or {}
+        before = {(path, node.name) for path in _code_paths(snap) for node in _nodes(snap.get(path))}
+        added = [(path, node) for path, nodes in final_nodes.items() for node in nodes
+                 if (path, node.name) not in before]
+        added_lines = {line for _, node in added for line in body_lines(node)}
+        for path, node in finished(task, base, snap):
+            lines = body_lines(node)
+            if not lines:
+                continue
+            same = [n for n in final_nodes.get(path, []) if n.name == node.name]
+            own = set(body_lines(same[-1])) if same else set()
+            kept = sum(1 for line in lines if line in own or line in added_lines)
+            if kept / len(lines) < REWRITTEN_BELOW:
+                rewritten.add(f"{path}:{node.name}")
+            if len(lines) < COPY_MIN_LINES or sum(1 for line in lines if line in own) / len(lines) < 0.5:
+                continue  # moved away, not copied
+            for new_path, new in added:
+                theirs = set(body_lines(new))
+                if sum(1 for line in lines if line in theirs) / len(lines) >= COPIED_FROM:
+                    copies.add(f"{new_path}:{new.name} copies {path}:{node.name}")
+    twice = [f"{path}:{name}" for path, text in sorted(final.items()) if path.endswith(".py")
+             for name, dumps in symbols(text).items() if len(dumps) > 1]
+    return {"broken": broken, "rewritten": sorted(rewritten), "duplicated": twice + sorted(copies)}
 
 
 def _mean(values):
@@ -208,30 +274,57 @@ def check(spec: dict, tests: dict, diff: str, base: dict, final: dict) -> bool |
 
 # ---- one run --------------------------------------------------------------------------------------
 
+def breaks_of(run_dir: Path, meta: dict) -> list[dict]:
+    """Every break of a run, in order: {"kind": "compact" | "restart", "at": the index of the first
+    call made at or after it, "snap": the repo's files, "tests": test outcomes}. A v1 run has one
+    compaction, recorded as snap-compact.json and tests-compact.json."""
+    if meta.get("breaks"):
+        return [{"kind": b["kind"], "at": b["at"], "snap": _json(run_dir / b["snap"], {}),
+                 "tests": _json(run_dir / b["tests"], {}).get("tests", {})} for b in meta["breaks"]]
+    calls = meta.get("calls", [])
+    at = next((i for i, c in enumerate(calls) if c["phase"] == "compact"), None)
+    if at is None:
+        return []
+    return [{"kind": "compact", "at": at, "snap": _json(run_dir / "snap-compact.json", {}),
+             "tests": _json(run_dir / "tests-compact.json", {}).get("tests", {})}]
+
+
 def score_run(run_dir: Path, task: dict) -> dict:
     run_dir = Path(run_dir)
     meta = _json(run_dir / "meta.json", {})
-    calls = [dict(read_call(run_dir / c["file"]), phase=c["phase"]) for c in meta.get("calls", [])]
+    calls = [dict(read_call(run_dir / c["file"]), phase=c["phase"],
+                  kind=c.get("kind") or ("compact" if c["phase"] == "compact" else "say"))
+             for c in meta.get("calls", [])]
     base = _json(run_dir / "snap-base.json", {})
-    compact = _json(run_dir / "snap-compact.json", {})
     final = _json(run_dir / "snap-final.json", {})
-    tests_compact = _json(run_dir / "tests-compact.json", {}).get("tests", {})
     tests_final = _json(run_dir / "tests-final.json", {}).get("tests", {})
+    breaks = breaks_of(run_dir, meta)
     try:
         diff = (run_dir / "diff.patch").read_text(encoding="utf-8", errors="replace")
     except OSError:
         diff = ""
 
-    compact_calls = [c for c in calls if c["phase"] == "compact"]
-    compacted = any(c["compacted"] for c in compact_calls) or (
-        bool(compact_calls) and transcript_compacted(run_dir / "transcript.jsonl"))
     invalid = []
     if not calls or any(c["result"] is None for c in calls):
         invalid.append("a call did not finish")
     if any(c["is_error"] and API_FAILURE.search(c["result_text"]) for c in calls):
         invalid.append("API failure")
+    # Every /compact must have compacted: from its own stream, else from the transcripts.
+    wanted = sum(1 for c in calls if c["kind"] == "compact")
+    seen = sum(1 for c in calls if c["kind"] == "compact" and c["compacted"])
+    if seen < wanted:
+        seen = max(seen, sum(transcript_compactions(t) for t in run_dir.glob("transcript*.jsonl")))
+    compacted = seen >= wanted
     if not compacted:
         invalid.append("no compaction")
+    # A restart must start a session claude has not seen in this run.
+    for brk in breaks:
+        if brk["kind"] != "restart":
+            continue
+        earlier = {c["session_id"] for c in calls[: brk["at"]]}
+        later = calls[brk["at"]]["session_id"] if brk["at"] < len(calls) else ""
+        if not later or later in earlier:
+            invalid.append("restart did not start a new session")
     loaded = set().union(*(set(c["plugins"]) for c in calls)) if calls else set()
     if meta.get("arm") == "hafiz" and "hafiz" not in loaded:
         invalid.append("hafiz arm without hafiz")
@@ -244,41 +337,46 @@ def score_run(run_dir: Path, task: dict) -> dict:
                  for s in task.get("open", [])]
     deferred = task["deferred_test"]
     path = deferred.rsplit(".", 2)[0].replace(".", "/") + ".py"
-    fixed_early = tests_compact.get(deferred) == "pass"
+    fixed_early = bool(breaks) and breaks[0]["tests"].get(deferred) == "pass"
     test_edited = test_source(base.get(path), deferred) != test_source(final.get(path), deferred)
     open_work.append({"id": "deferred-test-fixed",
                       "ok": None if fixed_early
                       else tests_final.get(deferred) == "pass" and not test_edited})
     done = [{"id": s["id"], "ok": check(s, tests_final, diff, base, final)} for s in task.get("done", [])]
 
-    later = [t for c in calls if c["phase"] == "continue" for t in c["tool_uses"]]
-    redo = redone(task, base, compact, final, later, meta.get("repo", ""))
+    redo = redone(task, base, breaks, final, tests_final)
     no_redo = 0.0 if any(redo.values()) else 1.0
 
     groups = {"decisions": _mean(c["ok"] for c in decisions),
               "open_work": _mean(c["ok"] for c in open_work),
               "no_redo": no_redo}
 
-    def phase_sum(key, phases):
-        return sum(c[key] or 0 for c in calls if c["phase"] in phases)
+    first = breaks[0]["at"] if breaks else len(calls)
+    after = [c for c in calls[first:] if c["kind"] == "say"]
 
-    # The restore is the SessionStart hook that runs with source "compact".
+    def after_sum(*keys):
+        return sum(c[k] or 0 for c in after for k in keys)
+
+    # What hafiz gives back at a break: the SessionStart hook after a compaction (source "compact"),
+    # and the start card of the new session after a restart.
     restore = sum(h["chars"] for c in calls for h in c["hooks"] if h["name"] == "SessionStart:compact")
+    restart_card = sum(h["chars"] for b in breaks if b["kind"] == "restart" and b["at"] < len(calls)
+                       for h in calls[b["at"]]["hooks"] if h["name"] == "SessionStart:startup")
     hook_chars = sum(h["chars"] for c in calls for h in c["hooks"])
-    later_calls = [c for c in calls if c["phase"] == "continue"]
     return {
         "task": meta.get("task", task["id"]), "arm": meta.get("arm", ""), "run": meta.get("run"),
+        "version": meta.get("version", 1),
         "valid": not invalid, "invalid": invalid, "compacted": compacted,
+        "breaks": [b["kind"] for b in breaks],
         "continuity": _mean(groups.values()), **groups,
         "checks": {"decisions": decisions, "open_work": open_work, "done": done},
         "fixed_early": fixed_early, "test_edited": test_edited, "redo": redo,
         "cost_usd": round(sum(c["cost_usd"] or 0 for c in calls), 4),
-        "tokens_after": sum(phase_sum(k, {"continue"}) for k in (
-            "input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens")),
-        "output_tokens_after": phase_sum("output_tokens", {"continue"}),
-        "turns_after": phase_sum("turns", {"continue"}),
-        "first_prompt_after": later_calls[0]["first_prompt_tokens"] if later_calls else None,
-        "restore_chars": restore, "hook_chars": hook_chars,
+        "tokens_after": after_sum("input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens"),
+        "output_tokens_after": after_sum("output_tokens"),
+        "turns_after": after_sum("turns"),
+        "first_prompt_after": after[0]["first_prompt_tokens"] if after else None,
+        "restore_chars": restore, "restart_card_chars": restart_card, "hook_chars": hook_chars,
     }
 
 
@@ -295,43 +393,58 @@ def _spread(values):
     return statistics.mean(values), (statistics.stdev(values) if len(values) > 1 else 0.0)
 
 
+def _arm_summary(rows: list[dict], arm: str) -> dict:
+    mine = [r for r in rows if r["arm"] == arm and r["valid"]]
+    cont, sd = _spread(r["continuity"] for r in mine)
+    return {
+        "runs": len(mine), "invalid": sum(1 for r in rows if r["arm"] == arm and not r["valid"]),
+        "continuity": cont, "continuity_sd": sd,
+        **{g: _spread(r[g] for r in mine)[0] for g in ("decisions", "open_work", "no_redo")},
+        "cost_usd": sum(r["cost_usd"] for r in rows if r["arm"] == arm),
+        "tokens_after": _spread(r["tokens_after"] for r in mine)[0],
+        "first_prompt_after": _spread(r["first_prompt_after"] for r in mine)[0],
+        "restore_chars": _spread(r["restore_chars"] for r in mine)[0],
+        "restart_card_chars": _spread(r.get("restart_card_chars", 0) for r in mine)[0],
+        "hook_chars": _spread(r["hook_chars"] for r in mine)[0],
+    }
+
+
 def summarize(rows: list[dict]) -> dict:
     """Per arm: valid runs, the mean of each score and the cost, and hafiz's added context."""
-    out = {}
-    for arm in sorted({r["arm"] for r in rows}):
-        mine = [r for r in rows if r["arm"] == arm and r["valid"]]
-        cont, sd = _spread(r["continuity"] for r in mine)
-        out[arm] = {
-            "runs": len(mine), "invalid": sum(1 for r in rows if r["arm"] == arm and not r["valid"]),
-            "continuity": cont, "continuity_sd": sd,
-            **{g: _spread(r[g] for r in mine)[0] for g in ("decisions", "open_work", "no_redo")},
-            "cost_usd": sum(r["cost_usd"] for r in rows if r["arm"] == arm),
-            "tokens_after": _spread(r["tokens_after"] for r in mine)[0],
-            "first_prompt_after": _spread(r["first_prompt_after"] for r in mine)[0],
-            "restore_chars": _spread(r["restore_chars"] for r in mine)[0],
-            "hook_chars": _spread(r["hook_chars"] for r in mine)[0],
-        }
-    return out
+    return {arm: _arm_summary(rows, arm) for arm in sorted({r["arm"] for r in rows})}
+
+
+def by_task(rows: list[dict]) -> dict:
+    """The same per task and arm: a difference can hide in one kind of break."""
+    pairs = sorted({(r["task"], r["arm"]) for r in rows})
+    return {(task, arm): _arm_summary([r for r in rows if r["task"] == task], arm) for task, arm in pairs}
 
 
 def markdown(rows: list[dict]) -> str:
-    arms = summarize(rows)
     lines = ["| Arm | Valid runs | Continuity | Decisions kept | Open work done | No redo | "
-             "Restore note (chars) | All hafiz context (chars) | 1st request after compaction (tokens) "
-             "| Tokens after compaction | Cost (USD) |",
-             "|---|---|---|---|---|---|---|---|---|---|---|"]
-    for arm, s in arms.items():
+             "Restore note (chars) | Start card after restart (chars) | All hafiz context (chars) | "
+             "1st request after the first break (tokens) | Tokens after the first break | Cost (USD) |",
+             "|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    for arm, s in summarize(rows).items():
         lines.append(
             f"| {arm} | {s['runs']} ({s['invalid']} invalid) | {_fmt(s['continuity'])} "
             f"± {_fmt(s['continuity_sd'])} | {_fmt(s['decisions'])} | {_fmt(s['open_work'])} | "
-            f"{_fmt(s['no_redo'])} | {_fmt(s['restore_chars'], 0)} | {_fmt(s['hook_chars'], 0)} | "
-            f"{_fmt(s['first_prompt_after'], 0)} | {_fmt(s['tokens_after'], 0)} | {_fmt(s['cost_usd'])} |")
+            f"{_fmt(s['no_redo'])} | {_fmt(s['restore_chars'], 0)} | {_fmt(s['restart_card_chars'], 0)} | "
+            f"{_fmt(s['hook_chars'], 0)} | {_fmt(s['first_prompt_after'], 0)} | "
+            f"{_fmt(s['tokens_after'], 0)} | {_fmt(s['cost_usd'])} |")
+    lines += ["", "| Task | Arm | Valid runs | Continuity | Decisions kept | Open work done | No redo | "
+              "Cost (USD) |", "|---|---|---|---|---|---|---|---|"]
+    for (task, arm), s in by_task(rows).items():
+        lines.append(f"| {task} | {arm} | {s['runs']} ({s['invalid']} invalid) | {_fmt(s['continuity'])} | "
+                     f"{_fmt(s['decisions'])} | {_fmt(s['open_work'])} | {_fmt(s['no_redo'])} | "
+                     f"{_fmt(s['cost_usd'])} |")
     lines += ["", "| Task | Arm | Run | Continuity | Decisions | Open work | No redo | Failed checks |",
               "|---|---|---|---|---|---|---|---|"]
     for r in sorted(rows, key=lambda r: (r["task"], r["arm"], r["run"] or 0)):
         failed = [c["id"] for group in ("decisions", "open_work") for c in r["checks"][group]
                   if c["ok"] is False]
-        failed += [f"redo {x}" for kind in ("changed", "rewritten", "duplicated") for x in r["redo"][kind]]
+        failed += [f"redo {kind} {x}" for kind in ("broken", "rewritten", "duplicated")
+                   for x in r["redo"].get(kind, [])]
         note = ", ".join(failed) if r["valid"] else "invalid: " + "; ".join(r["invalid"])
         lines.append(f"| {r['task']} | {r['arm']} | {r['run']} | {_fmt(r['continuity'])} | "
                      f"{_fmt(r['decisions'])} | {_fmt(r['open_work'])} | {_fmt(r['no_redo'])} | {note} |")
