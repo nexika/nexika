@@ -71,9 +71,16 @@ def cmd_projects(root: Path, runner: gitops.Runner) -> str:
             version = p.read_version(root, p.version_files[0])
         else:
             version = tag[len(p.tag_prefix()):] if tag else None
+        if p.github_changelog:
+            log = "GitHub releases"
+        elif (root / p.changelog).is_file():
+            log = p.changelog
+        else:
+            log = (f"{p.changelog} (missing: prepare creates it; if the notes live in GitHub releases, "
+                   f"set \"changelog\": \"github\" in .amin.json)")
         rows.append(f"{p.name:<12} {version or '?':<8} path={p.path} "
                     f"version={','.join(p.version_files) or 'from tags'} "
-                    f"changelog={p.changelog} notes={p.fragments}/ last tag={tag or 'none'}")
+                    f"changelog={log} notes={p.fragments}/ last tag={tag or 'none'}")
         rows += [f"    ! {line}" for line in release._unlisted(root, p, version)] if version else []
     return "\n".join(rows)
 
@@ -115,7 +122,11 @@ def cmd_prepare(root: Path, runner: gitops.Runner, args: list[str]) -> str:
     if dry_run:
         return (f"dry run, nothing was changed. Would prepare: {summary}\nfiles:\n"
                 + "\n".join(f"  {c}" for c in changed) + "\n\n" + "\n".join(blocks))
-    return f"prepared: {summary}\nchanged files:\n" + "\n".join(f"  {c}" for c in changed)
+    out = f"prepared: {summary}\nchanged files:\n" + "\n".join(f"  {c}" for c in changed)
+    if any(pl.project.github_changelog for pl, _ in chosen):
+        out += ("\n\nrelease notes (no changelog file: put them in the release PR body; publish rebuilds "
+                "them from the consumed notes):\n\n" + "\n".join(blocks))
+    return out
 
 
 def cmd_work_start(root: Path, runner: gitops.Runner, number: str) -> str:

@@ -5,6 +5,7 @@ import datetime
 import json
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 from conftest import PLUGINS, _git
@@ -543,6 +544,75 @@ def test_publish_requires_a_changelog_section(market):
     alpha = projects_of(market)["alpha"]
     with pytest.raises(release.ReleaseError, match="has no section for 0.1.0"):
         release.publish(market, FakeRunner(market), alpha)
+
+
+def github_changelog_repo(tmp_path):
+    """fastify: no changelog file, its release notes live in GitHub releases (issue #238)."""
+    config = {"projects": [{"name": "fastify", "version_files": ["package.json"], "changelog": "github"}]}
+    package = '{\n  "name": "fastify",\n  "version": "5.12.5"\n}\n'
+    root = init_repo(tmp_path / "fastify", {"package.json": package, ".amin.json": json.dumps(config)})
+    _git(root, "tag", "-a", "v5.12.5", "-m", "x")
+    p = proj.detect(root)[0]
+    fragments.add(root, p, "fixed", "Copy a set-cookie array.", "7067")
+    fragments.add(root, p, "added", "A new option.", "7072")
+    commit(root, "notes")
+    _git(root, "push", "-q", "origin", "main")
+    return root, p
+
+
+def test_prepare_with_github_changelog_writes_no_file(tmp_path):
+    root, p = github_changelog_repo(tmp_path)
+    pl = plan_by_name(root)["fastify"]
+    blocks = []
+    changed = release.prepare(root, [(pl, pl.next)], date="2026-10-09", blocks=blocks)
+    assert not (root / "CHANGELOG.md").exists() and "CHANGELOG.md" not in changed and "github" not in changed
+    assert proj.read_version(root, "package.json") == "5.13.0"
+    assert not list((root / "changelog.d").glob("*.md"))                 # the notes are consumed
+    assert "### Fixed\n- Copy a set-cookie array. (#7067)" in blocks[0]  # for the release PR body
+
+
+class NotesRunner(FakeRunner):
+    """Keeps the text of the notes file given to gh release create."""
+
+    def gh(self, *args, check=True):
+        if args[:2] == ("release", "create") and "--notes-file" in args:
+            self.notes = Path(args[args.index("--notes-file") + 1]).read_text(encoding="utf-8")
+        return super().gh(*args, check=check)
+
+
+def test_publish_with_github_changelog_uses_the_released_notes(tmp_path):
+    root, p = github_changelog_repo(tmp_path)
+    pl = plan_by_name(root)["fastify"]
+    release.prepare(root, [(pl, pl.next)], date="2026-10-09")
+    commit(root, "Release fastify 5.13.0 (#7080)")
+    write(root, "lib/later.js", "x\n")
+    commit(root, "a later commit")
+    _git(root, "push", "-q", "origin", "main")
+    runner = NotesRunner(root)
+    report = release.publish(root, runner, p)
+    assert report[-1] == "release published: https://github.com/o/r/releases/tag/v5.13.0"
+    assert runner.notes == ("### Added\n- A new option. (#7072)\n\n"
+                            "### Fixed\n- Copy a set-cookie array. (#7067)")
+
+
+def test_publish_with_github_changelog_needs_released_notes(tmp_path):
+    root, p = github_changelog_repo(tmp_path)
+    write(root, "package.json", '{\n  "name": "fastify",\n  "version": "5.13.0"\n}\n')
+    commit(root, "bump by hand")
+    _git(root, "push", "-q", "origin", "main")
+    with pytest.raises(release.ReleaseError, match="no released notes for 5.13.0"):
+        release.publish(root, FakeRunner(root), p)
+
+
+def test_projects_says_when_the_changelog_file_is_missing(tmp_path, monkeypatch, capsys):
+    root = init_repo(tmp_path / "app", {"package.json": '{"name": "app", "version": "1.0.0"}'})
+    monkeypatch.chdir(root)
+    assert cli.main(["projects"]) == 0
+    assert "changelog=CHANGELOG.md (missing" in capsys.readouterr().out
+    root, _ = github_changelog_repo(tmp_path)
+    monkeypatch.chdir(root)
+    assert cli.main(["projects"]) == 0
+    assert "changelog=GitHub releases" in capsys.readouterr().out
 
 
 # ---------------------------------------------------------------- the CI rule

@@ -424,7 +424,85 @@ def run(argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
         return hook_installer(program, argv, ctx)
     if program in RUNNERS:
         return project_run(ctx, f"Runs {program} in the project.")
+    if script_runner(program, first, ctx):
+        return script_runner_run(program, argv, ctx, stdin)
     return generic(argv, ctx, stdin)
+
+
+_SCRIPT_RUNNERS: dict[tuple[str, float], set[str]] = {}
+
+
+def script_runners(root: str) -> set[str]:
+    """Programs that start one of package.json's scripts (`"unit": "borp"`), leaving out release scripts."""
+    path = os.path.join(root, "package.json")
+    try:
+        key = (path, os.stat(path).st_mtime)
+    except OSError:
+        return set()
+    if key not in _SCRIPT_RUNNERS:
+        import json  # only for a program haris does not know, in a folder with a package.json
+        try:
+            with open(path, encoding="utf-8") as fh:
+                scripts = json.load(fh).get("scripts") or {}
+        except (OSError, ValueError, AttributeError):
+            scripts = {}
+        found = set()
+        for name, body in scripts.items() if isinstance(scripts, dict) else ():
+            if not isinstance(body, str) or (RELEASE_WORDS.search(name) and name not in RUN_WORDS):
+                continue
+            for part in re.split(r"&&|\|\||;|\|", body):
+                words = [w for w in part.split() if not re.match(r"^[A-Za-z_]\w*=", w)]
+                if words and words[0] in ("cross-env", "cross-env-shell"):
+                    words = words[1:]
+                if words:
+                    found.add(os.path.basename(words[0]))
+        _SCRIPT_RUNNERS[key] = found
+    return _SCRIPT_RUNNERS[key]
+
+
+def script_runner(program: str, first: str, ctx: Ctx) -> bool:
+    """A program from the project's node_modules/.bin that its package.json scripts run: the project's
+    own test, lint or coverage tool, allowed like `npm run` of that script (#221)."""
+    root = ctx.where.root
+    binary = os.path.join(root, "node_modules", ".bin", program)
+    if "/" in first and ctx.where.resolve(first, ctx.cwd) not in (binary, os.path.realpath(binary)):
+        return False
+    return os.path.exists(binary) and program in script_runners(root)
+
+
+# Words a runner may be handed that are themselves commands (`c8 rm -rf x` runs rm); harmless names
+# that are also haris handlers (watch, init, start ...) are left out.
+NOT_COMMANDS = {"watch", "init", "start", "open", "format", "at", "date", "set", "task", "install", "just",
+                "make", "history", "code", "shift", "local", "export", "test"}
+
+
+def script_runner_run(program: str, argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
+    for i, a in enumerate(argv[1:], 1):
+        if a.startswith("-") or "=" in a:
+            continue
+        name = os.path.basename(a).lower()
+        if (name in HANDLERS and name not in NOT_COMMANDS) or name in INTERPRETERS:
+            return run(argv[i:], ctx, stdin)  # the runner wraps a command: judge that command
+        if " " in a or UNKNOWN in a:
+            return generic(argv, ctx, stdin)
+    return project_run(ctx, f"Runs {program}, the project's own tool from its package.json scripts, in the "
+                            "project.")
+
+
+def h_cross_env(argv, ctx, stdin):
+    """cross-env NAME=value ... CMD: sets variables like `env`, then runs CMD (#221)."""
+    rest = argv[1:]
+    while rest and re.match(r"^[A-Za-z_]\w*=", rest[0]):
+        if rest[0].split("=", 1)[0] in RISKY_ENV:
+            ctx.add("risky", f"Setting {rest[0].split('=', 1)[0]} changes which code the next program loads "
+                             "or runs.")
+        rest = rest[1:]
+    if not rest:
+        ctx.add("read", f"{argv[0]} without a command does nothing.")
+        return Stage()
+    if argv[0] == "cross-env-shell":
+        return shell_string(arg(" ".join(rest), joined_marks(rest)), ctx, [], "cross-env-shell")
+    return run(rest, ctx, stdin)
 
 
 def pre_commit_install(argv: list[Arg], ctx: Ctx) -> Stage:
@@ -3392,7 +3470,8 @@ HANDLERS = {
     "mount": h_system_admin, "umount": h_system_admin, "hostname": h_system_admin, "date": h_system_admin,
     "modprobe": h_system_admin, "insmod": h_system_admin, "rmmod": h_system_admin, "claude": h_claude,
     "haris": h_haris, "open": h_open, "xdg-open": h_open, "start": h_open, "history": h_history,
-    "ssh-keygen": h_ssh_keygen, "op": h_wrapper, "doppler": h_wrapper,
+    "ssh-keygen": h_ssh_keygen, "cross-env": h_cross_env, "cross-env-shell": h_cross_env,
+    "op": h_wrapper, "doppler": h_wrapper,
 }
 for _name in FIREWALLS:
     HANDLERS[_name] = h_system_admin
