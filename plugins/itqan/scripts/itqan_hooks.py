@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """itqan session hooks.
 
-  session-start  Detect the project's stacks and print ONE short note: which checklist
-                 packs apply, the commands, and last session's guard summary if any.
-  session-end    Summarize this session's guard decisions into sessions.jsonl. Silent.
+  session-start  Print ONE short note, read again on every turn (#345): the checklist packs for
+                 the project's stacks, its own check commands, which tests to run before saying
+                 done, the scripts folder the skills use, approved rules and anything waiting.
+  session-end    Summarize this session's guard decisions into sessions.jsonl (for /itqan:insights).
 """
 from __future__ import annotations
 
@@ -52,18 +53,6 @@ def detect_stacks(root: Path) -> list[str]:
 _read_jsonl = itqan_files.read_jsonl
 
 
-def last_session_note(current: str) -> str:
-    sessions = [s for s in _read_jsonl(data_home() / "sessions.jsonl") if s.get("session") != current[:8]]
-    if not sessions:
-        return ""
-    last = sessions[-1]
-    if not (last.get("deny") or last.get("ask")):
-        return ""
-    rules = ", ".join(last.get("rules", [])[:5])
-    return (f"Last session the guard refused {last.get('deny', 0)} and asked about "
-            f"{last.get('ask', 0)} risky action(s): {rules}.")
-
-
 def project_checks(root: Path) -> str:
     """The project's own test and lint commands, the ones /itqan:proof runs (tox envs, pre-commit,
     pytest, ruff, package scripts), so a pack's default commands are not used in their place."""
@@ -81,8 +70,7 @@ def project_checks(root: Path) -> str:
     commands += [short(n["command"].split(" ")) for n in not_run if n["kind"] != "other"]
     if not commands:
         return ""
-    return ("Project checks (what /itqan:proof runs; use these, not a pack's default commands): "
-            + " · ".join(dict.fromkeys(commands)) + ".")
+    return "Project checks (use these, not a pack's default commands): " + " · ".join(dict.fromkeys(commands))
 
 
 def session_start(hook: dict) -> None:
@@ -94,29 +82,21 @@ def session_start(hook: dict) -> None:
         root = cwd
     stacks = detect_stacks(root)
     packs = [(s, PACKS / f"{s}.md") for s in stacks if (PACKS / f"{s}.md").is_file()]
-    lines = ["## itqan (Nexika): plan, test-first, review, ship"]
-    if stacks:
-        lines.append(f"Project stacks: {', '.join(stacks)}.")
+    lines = ["## itqan (Nexika)"]
     if packs:
-        lines.append("Before implementing or reviewing code in these stacks, read the checklist:")
-        lines += [f"  {s}: {p}" for s, p in packs]
+        lines.append("Before implementing or reviewing code, read the checklist: "
+                     + ", ".join(f"{s} {p}" for s, p in packs))
     checks = project_checks(root)
     if checks:
         lines.append(checks)
-    lines.append("Workflows: /itqan:plan (plan only), /itqan:review (review changes), "
-                 "/itqan:ship (plan -> tests first -> implement -> verify -> review), "
-                 "/itqan:learn (approve rules learned from corrections), /itqan:insights.")
-    lines.append("Guard: normal edits are never blocked; only risky actions are refused or need approval.")
-    lines.append(f"itqan helper (for /itqan:learn and /itqan:insights): "
-                 f"python3 {Path(__file__).resolve().parent / 'itqan_learn.py'}")
-    lines.append(f"itqan proof (for /itqan:proof): "
-                 f"python3 {Path(__file__).resolve().parent / 'itqan_proof.py'}")
-    note = last_session_note(str(hook.get("session_id") or ""))
-    if note:
-        lines.append(note)
+    # #344, measured: word for word (the agent ran the edited files' tests in 86% of runs, 63% without)
+    lines.append("Before saying a change is done, run (1) the test that shows it works and (2) the existing "
+                 "tests of every file you edited (its test module, or the tests that import it). "
+                 "If one of them failed before your change, say so: it is not yours.")
+    lines.append(f"itqan scripts (for its skills): {Path(__file__).resolve().parent}")
     try:
         import itqan_learn
-        rules = itqan_learn.session_note(itqan_learn.project_root(cwd))
+        rules = itqan_learn.session_note(root)
         consent = itqan_learn.consent_note()
     except Exception:  # learning data must never break the session note
         rules = consent = ""

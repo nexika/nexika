@@ -6,8 +6,9 @@ argument-hint: "[approve ID | reject ID | rules]"
 
 # Learned rules
 
-The helper command is printed in the itqan session note ("itqan helper: python3
-.../itqan_learn.py"). Run it from the project directory; below it is written `itqan_learn.py`.
+The helper is `python3 <folder>/itqan_learn.py`, where the folder is the one the session note
+names ("itqan scripts (for its skills): ..."). Run it from the project directory; below it is
+written `itqan_learn.py`.
 
 ## With arguments
 - `approve ID` / `reject ID` / `rules`: run that helper command and show the result.

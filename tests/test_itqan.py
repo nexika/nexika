@@ -440,13 +440,11 @@ def test_session_start_points_only_to_matching_packs(tmp_path):
     (proj / "node_modules" / "x").mkdir(parents=True)
     (proj / "node_modules" / "x" / "pyproject.toml").write_text("")
     out = run_hooks("session-start", {"cwd": str(proj), "session_id": "s1"}, tmp_path / "h")
-    assert "Project stacks: dotnet, node." in out
-    assert str(ITQAN / "packs" / "dotnet.md") in out
-    assert "python.md" not in out  # node_modules is skipped, and there is no node pack yet
-    assert "/itqan:ship" in out
+    assert f"dotnet {ITQAN / 'packs' / 'dotnet.md'}" in out and f"node {ITQAN / 'packs' / 'node.md'}" in out
+    assert "python.md" not in out  # node_modules is skipped
 
 
-def test_session_end_summary_shows_once_at_next_start(tmp_path, repo):
+def test_session_end_summary_goes_to_insights_not_the_session_note(tmp_path, repo):
     home = tmp_path / "h"
     run_guard({"tool_name": "Bash", "session_id": "aaaa1111zz", "cwd": str(repo),
                "tool_input": {"command": "git push -f origin main"}}, home)
@@ -457,8 +455,14 @@ def test_session_end_summary_shows_once_at_next_start(tmp_path, repo):
     assert (summary["deny"], summary["ask"]) == (1, 1)
     assert summary["rules"] == ["force-push-protected", "publish-package"]
 
+    # #345: the note is read again on every turn; what the guard did last session is for the user,
+    # who sees it in /itqan:insights
     out = run_hooks("session-start", {"cwd": str(repo), "session_id": "bbbb2222"}, home)
-    assert "Last session the guard refused 1 and asked about 1 risky action(s)" in out
+    assert "Last session" not in out and "guard" not in out
+    insights = subprocess.run([sys.executable, str(ITQAN / "scripts" / "itqan_learn.py"), "insights"],
+                              cwd=repo, capture_output=True, text=True,
+                              env={**os.environ, "ITQAN_HOME": str(home)}).stdout
+    assert "guard (all projects): 1 refused, 1 asked" in insights
 
 
 def test_quiet_session_adds_no_note(tmp_path, repo):
@@ -773,6 +777,42 @@ def test_python_pack_points_to_the_project_s_commands():
     assert "Project checks" in commands and commands.index("Project checks") < commands.index("ruff")
 
 
+def test_session_note_says_which_tests_to_run_before_done(tmp_path):
+    # #344: the agent ran some tests, not the ones that catch what it broke
+    out = run_hooks("session-start", {"cwd": str(tmp_path), "session_id": "s1"}, tmp_path / "h")
+    assert "the test that shows it works" in out
+    assert "existing tests of every file you edited" in out
+    assert "failed before your change, say so" in out
+    # read again on every turn: the fixed part (no helper paths) stays a few lines
+    fixed = [ln for ln in out.splitlines() if "python3 " not in ln]
+    assert len("\n".join(fixed)) <= 520
+
+
+TESTS_LINE = ("Before saying a change is done, run (1) the test that shows it works and (2) the existing "
+              "tests of every file you edited (its test module, or the tests that import it). "
+              "If one of them failed before your change, say so: it is not yours.")
+
+
+def test_session_note_keeps_only_what_changes_behaviour(tmp_path):
+    """#345: the note is read again on every turn. It keeps the #344 line word for word (measured: the
+    agent ran the edited files' tests in 86% of runs, 63% without), the checklists and the project's
+    own checks, and the folder of the scripts the skills run. Skill names and what they do are in the
+    skill list Claude Code already loads; what the guard does comes with each refusal or ask."""
+    scripts = str(ITQAN / "scripts")
+    out = run_hooks("session-start", {"cwd": str(tmp_path), "session_id": "s1"}, tmp_path / "h")
+    assert TESTS_LINE in out.splitlines()
+    assert f"itqan scripts (for its skills): {scripts}" in out
+    for gone in ("Workflows", "/itqan:", "Guard:", "Project stacks", "plan, test-first"):
+        assert gone not in out, gone
+    assert len(out.replace(scripts, "")) <= 290, out
+
+    root = black_like(tmp_path / "b")
+    out = run_hooks("session-start", {"cwd": str(root), "session_id": "s1"}, tmp_path / "h")
+    assert TESTS_LINE in out.splitlines()
+    assert f"python {ITQAN / 'packs' / 'python.md'}" in out
+    assert "Project checks (use these, not a pack's default commands): " in out and ".." not in out
+
+
 # fastify (#231, case S-pack): `npx tsc --noEmit` fails at a root with no tsconfig.json
 def test_node_pack_points_to_the_project_s_commands():
     pack = (ITQAN / "packs" / "node.md").read_text()
@@ -788,7 +828,7 @@ def test_stacks_are_detected_from_the_repo_root(tmp_path, repo):
     (repo / "web").mkdir()
     (repo / "web" / "package.json").write_text("{}")
     out = run_hooks("session-start", {"cwd": str(repo / "web"), "session_id": "s1"}, tmp_path / "h")
-    assert "Project stacks: python, node." in out
+    assert f"python {ITQAN / 'packs' / 'python.md'}, node {ITQAN / 'packs' / 'node.md'}" in out
 
 
 # ---------------------------------------------------------------- gates in code (#76)
