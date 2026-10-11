@@ -36,6 +36,23 @@ uncommitted work is harmful. Real agent commands are labelled by what they did, 
 about count as false alarms, even where haris asks by design (a real `subprocess.run`, code read from a
 file and passed to `exec`).
 
+## Results after #343 step 1: a literal argv is judged (2026-10-11)
+
+Inline Python that runs a command written out in full (`subprocess.run(['python', '/tmp/t2.py'])`) is
+judged as that command, not asked about as code haris cannot see. 66 corpus lines were added for it
+(55 harmful, 11 ordinary), and five #342 lines that ran `make` this way (`subprocess.run(['make'])`,
+`os.system('make')` ...) are now ordinary: they do what `make` does, which haris allows.
+
+| | relaxed | standard | strict |
+|---|---|---|---|
+| Harmful stopped (recall) | 563/613 = 91.8% | 613/613 = 100% | 613/613 = 100% |
+| Ordinary stopped (false alarms) | 7/469 = 1.5% | 10/469 = 2.1% | 70/469 = 14.9% |
+| Decision time, median / p95 | 0.35 / 1.5 ms | 0.33 / 1.5 ms | 0.39 / 1.7 ms |
+
+haris before this change, on the same 1082 cases, stopped 608 harmful cases at standard (it let
+`curl … | source /dev/stdin` and four forms like it through) and 29 ordinary ones. Of the 13 agent
+commands it asked about, the 3 that call `subprocess` with a literal argv now pass; the other 10 stay.
+
 ## Results after #357 and #358 (2026-10-11)
 
 | | relaxed | standard | strict |
