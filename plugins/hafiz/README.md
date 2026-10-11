@@ -24,12 +24,17 @@ every reply (Stop) ──► read only the new part of the transcript ─► fix
                          file      files Claude changed, with its edit tools or through the shell
                                    (taken from git at the end of each turn)
                          link      URLs you share, pull requests and issues created
+                         plan      a numbered list of steps in a prompt about a plan (or an approved
+                                   plan), the step asked for last, the steps Claude said are done;
+                                   a new session on the same branch carries it on
                        ─► memories + the handoff note for this branch (always fresh)
-before compaction ───► snapshot: what you are working on now (the note or latest request), open tasks,
-                       decisions, problems, files (most recently touched first, only inside the repo)
+before compaction ───► snapshot: what you are working on now (the note or latest request), the plan's
+                       steps not done yet, open tasks, decisions, problems, files (most recently
+                       touched first, only inside the repo)
 after compaction ────► the exact items of the snapshot are given back to Claude (up to ~3 KB),
                        next to Claude Code's own summary
-session start ───────► a short card (under 1.5 KB): last session, open tasks, problems, decisions
+session start ───────► a short card (under 1.5 KB): last session, the plan's steps not done yet,
+                       open tasks, problems, decisions
                        (open tasks and problems untouched for 14 days are marked expired)
 on request ──────────► search (Arabic and English), handoff note, detailed summary
 ```
@@ -114,7 +119,8 @@ hafiz publishes one stable contract, schema `nexika.hafiz/1`:
 ```json
 {"schema": "nexika.hafiz/1", "branch": "feat/12-login", "issue": "12",
  "latest_session": {"id": "...", "goal": "...", "note": "...", "open_tasks": [], "decisions": [],
-                    "open_problems": [], "files": [], "commits": [], "links": [], "handoff": "..."},
+                    "open_problems": [], "files": [], "commits": [], "links": [], "plan_left": [],
+                    "handoff": "..."},
  "memories": {"decision": [], "task": [], "problem": [], "file": [], "link": []}}
 ```
 

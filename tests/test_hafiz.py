@@ -1070,3 +1070,68 @@ def test_redirections_are_not_test_targets(log, capsys, repo):
     stop(log, capsys)
     [problem] = [i for i in store.Memory(repo).all() if i["type"] == "problem"]
     assert problem["key"] == "problem|pytest"
+
+
+# ---------------------------------------------------------------- the plan survives a break (#370)
+
+
+def replay_v2(task_id, tmp_path, repo, capsys):
+    """Play a hafiz benchmark v2 script (benchmarks/hafiz/tasks.json) through the hooks, offline: each
+    prompt gets a turn shaped like the recorded runs (a heredoc, `unittest` piped through tail, "Step N
+    is done."). Returns what hafiz gave back at each break: [("compact" | "restart", text), ...]."""
+    tasks = json.loads((BENCH_TASKS / "tasks.json").read_text(encoding="utf-8"))["tasks"]
+    task = next(t for t in tasks if t["id"] == task_id)
+    session, log, given, done = SESSION, Log(tmp_path / "s0.jsonl", repo), [], 0
+    for n, item in enumerate(task["script"]):
+        if item.get("compact"):
+            given.append(("compact", restored(log, capsys, repo)))
+        elif item.get("restart"):
+            hook("session-end", {"session_id": session, "transcript_path": log.write(), "cwd": str(repo)}, capsys)
+            session, log = f"0a1b2c3d-{n:04d}-2222-3333-444455556666", Log(tmp_path / f"s{n}.jsonl", repo)
+            given.append(("restart", hook("session-start", {"session_id": session, "source": "startup",
+                                                            "cwd": str(repo)}, capsys)))
+        else:
+            done += 1
+            log.user(item["say"])
+            log.tool("Bash", {"command": f"cat > src/step{done}.py <<'EOF'\nx = {done}\nEOF\n"
+                                         "python3 -m unittest 2>&1 | tail -4"},
+                     "Ran 9 tests in 0.002s\n\nFAILED (failures=1)")
+            (repo / "src" / f"step{done}.py").write_text(f"x = {done}\n")
+            log.say(f"Step {done} is done. The failing test is the known bug left for later.")
+            stop(log, capsys, session)
+    return given
+
+
+@pytest.mark.parametrize("task_id, kind, left", [
+    # 5 steps, a new session after step 3: steps 4 and 5 are still to do
+    ("search-restart", "restart", ["`--year` option", "tests/test_catalog.py"]),
+    # 8 steps, /compact after step 3, step 4, then a new session: steps 5 to 8
+    ("loans-restart", "restart", ["fine_cents", "shelf overdue", "--member", "tests/test_money.py"]),
+    ("loans-restart", "compact", ["days_late", "fine_cents", "shelf overdue", "--member"]),
+    # 8 steps, /compact after step 4, step 5, /compact again: steps 6 to 8
+    ("loans-compact", "compact", ["shelf overdue", "--member", "tests/test_money.py"]),
+])
+def test_the_plans_later_steps_survive_a_break(tmp_path, repo, capsys, task_id, kind, left):
+    text = [text for k, text in replay_v2(task_id, tmp_path, repo, capsys) if k == kind][-1]
+    for words in left:
+        assert words in text, (words, text)
+
+
+def test_steps_already_done_are_left_out(tmp_path, repo, capsys):
+    text = [t for k, t in replay_v2("loans-compact", tmp_path, repo, capsys) if k == "compact"][-1]
+    assert "load_loans(path)" not in text and "`days_late(loan, today)`" not in text
+    assert "fine_cents" not in text  # step 5 was done between the two compactions
+
+
+def test_a_numbered_list_that_is_not_a_plan_is_not_one(log, capsys, repo):
+    stop(log.user("Two things broke:\n1. the login page\n2. the search box"), capsys)
+    stop(log.user("These tests fail on CI:\n1. test_login\n2. test_logout\n3. test_signup"), capsys)
+    assert not capture.load_state(store.project_dir(repo), SESSION).get("plan", {}).get("steps")
+
+
+def test_the_plan_goes_to_the_handoff_note_and_the_export(log, capsys, repo):
+    stop(log.user("The plan:\n1. Add the model.\n2. Add the view.\n3. Add the tests.\n\nDo step 1 now.")
+         .say("Step 1 is done."), capsys)
+    note = (store.project_dir(repo) / "handoffs" / "feat-12-login.md").read_text(encoding="utf-8")
+    assert "## Plan: steps not done yet\n- 2. Add the view.\n- 3. Add the tests." in note
+    assert export.full(repo)["latest_session"]["plan_left"] == ["2. Add the view.", "3. Add the tests."]

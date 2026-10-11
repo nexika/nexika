@@ -15,6 +15,9 @@ What is captured, and from where:
               `sed -i`, a heredoc, a script), one memory per file
     link      URLs the user shares and pull requests or issues created during the session
     commit    commits made in the session, from `git commit` output or, when it prints nothing, `git log`
+    plan      (session state) the numbered steps of a prompt about a plan, or of an approved plan; the
+              step asked for last ("do step 4", "the next step") and the steps Claude said are done;
+              a new session on the same branch starts from the last one's plan
 
 Every memory keeps its source ("transcript <session> L<line>") so it can be checked.
 """
@@ -127,6 +130,40 @@ FAILED_RUN = re.compile(
     r"--- FAIL:|FAIL\t|Tests:\s+[1-9]\d* failed\b|\s*[1-9]\d* failing\b)", re.M)
 ERROR_LINE = re.compile(r"(error|failed|failure|exception|traceback|assert|panic|fatal|خطأ)", re.I)
 ANSWER = re.compile(r'"([^"\n]{3,300})"\s*=\s*"([^"\n]{1,300})"')
+# The session's plan (#370): a numbered list of steps in a prompt that speaks of a plan or steps, or
+# in an approved plan; which step was asked for last, and which steps Claude said are done.
+PLAN_STEP = re.compile(r"^[ \t]*(?:#+[ \t]*|[-*][ \t]+)?(?:step[ \t]+)?(\d{1,2})[.):][ \t]+(\S.*)$",
+                       re.M | re.I)
+PLAN_WORDS = re.compile(r"\b(?:plan|steps?)\b", re.I)
+STEP_ASKED = re.compile(r"\bsteps? (\d{1,2})(?:\s*(?:-|–|to|and|,)\s*(\d{1,2}))?\b", re.I)
+NEXT_STEP = re.compile(r"\bnext step\b", re.I)
+STEPS_DONE = re.compile(r"\bsteps? ((?:\d{1,2}(?:\s*(?:,|and|&|to|-|–)\s*)?)+?) (?:is|are) (?:now |all )?"
+                        r"(?:done|complete|completed|finished)\b", re.I)
+PLAN_DONE = re.compile(r"\b(?:whole|entire) plan is (?:now )?(?:done|complete|finished)\b|"
+                       r"\ball (?:the )?steps are (?:now )?(?:done|complete|finished)\b", re.I)
+STEP_CHARS = 220
+MAX_STEPS = 20
+
+
+def plan_steps(text: str) -> list[str]:
+    """The steps of a numbered list (1., 2., 3., ... at least three, in order), each on one line."""
+    steps: list[str] = []
+    for match in PLAN_STEP.finditer(text):
+        number = int(match.group(1))
+        if number == len(steps) + 1:
+            steps.append(_short(match.group(2), STEP_CHARS))
+        elif number == 1 and len(steps) >= 3:
+            break  # a second list after the plan
+    return steps[:MAX_STEPS] if len(steps) >= 3 else []
+
+
+def _numbers(text: str) -> set[int]:
+    """{4, 5, 6} from "4 to 6", "4-6", "4, 5 and 6"."""
+    found = set()
+    for low, high in re.findall(r"(\d{1,2})\s*(?:-|–|to)\s*(\d{1,2})", text):
+        found.update(range(int(low), int(high) + 1))
+    found.update(int(n) for n in re.findall(r"\d{1,2}", text))
+    return found
 
 
 def _short(text: str, limit: int) -> str:
@@ -245,6 +282,20 @@ def commit_files(cwd: Path, sha: str) -> list[str]:
     return [p for p in out.split("\0") if p and not GIT_JUNK.search(p)][:MAX_GIT_FILES]
 
 
+def inherited_plan(folder: Path, branch: str, session: str) -> dict:
+    """The plan of the latest earlier session on this branch, for a new session that carries on."""
+    best: dict = {}
+    for path in (folder / "sessions").glob("*.json"):
+        other = store.read_json(path, {})
+        plan = other.get("plan") or {}
+        if (other.get("session") != session and other.get("branch") == branch and plan.get("steps")
+                and other.get("updated", "") > best.get("updated", "")):
+            best = other
+    plan = best.get("plan") or {}
+    return {"steps": list(plan["steps"]), "asked": plan.get("asked", 0), "done": list(plan.get("done", []))} \
+        if plan else {}
+
+
 def _epoch(stamp: str) -> float:
     try:
         return datetime.datetime.fromisoformat(stamp).timestamp()
@@ -257,7 +308,7 @@ def new_state(session: str, transcript_path: str) -> dict:
             "started": store.now(), "updated": "", "ended": "", "branch": "", "cwd": "",
             "first_prompt": "", "prompts": [], "prompt_count": 0, "files": {}, "commits": [],
             "tasks": {}, "task_ids": {}, "problems": {}, "decisions": [], "links": [], "pending": {},
-            "proposal": {}, "touched": {}, "said": [], "since": "", "seen": {},
+            "proposal": {}, "touched": {}, "said": [], "since": "", "seen": {}, "plan": {},
             "note": "", "compactions": 0, "private_salt": "", "private": []}
 
 
@@ -349,6 +400,35 @@ class Capture:
                 found += 1
                 if found >= MAX_DECISIONS_PER_PROMPT:
                     break
+        self._plan_prompt(CODE_BLOCK.sub("\n", text))
+
+    def _plan_prompt(self, text: str, approved: bool = False) -> None:
+        """A numbered plan replaces the one before; "do step 4" or "the next step" moves it on."""
+        steps = plan_steps(text) if approved or PLAN_WORDS.search(text) else []
+        plan = self.state.get("plan") or {}
+        if steps and steps != plan.get("steps"):
+            plan = self.state["plan"] = {"steps": steps, "asked": 0, "done": []}
+        if not plan.get("steps"):
+            return
+        count = len(plan["steps"])
+        asked = [n for match in STEP_ASKED.finditer(text) for n in _numbers(match.group(0)) if 0 < n <= count]
+        if asked:
+            plan["asked"] = max(asked)
+        elif NEXT_STEP.search(text):
+            plan["asked"] = min(count, max([plan.get("asked", 0), *plan.get("done", [])]) + 1)
+
+    def _plan_said(self, prose: str) -> None:
+        """Claude's "Step 3 is done." / "Steps 4 and 5 are done" / "the whole plan is finished"."""
+        plan = self.state.get("plan") or {}
+        if not plan.get("steps"):
+            return
+        count = len(plan["steps"])
+        done = set(plan.get("done", []))
+        if PLAN_DONE.search(prose):
+            done = set(range(1, count + 1))
+        for match in STEPS_DONE.finditer(prose):
+            done.update(n for n in _numbers(match.group(1)) if 0 < n <= count)
+        plan["done"] = sorted(done)
 
     def say(self, event: dict) -> None:
         """Remember Claude's latest proposal, so a "yes" in the next prompt records it as a decision."""
@@ -356,6 +436,7 @@ class Capture:
         sentences = [x.strip(" \t-*>") for x in SENTENCE_END.split(prose)]
         sentences = [x for x in sentences if x]
         self.state["said"] = (self.state.get("said", []) + [_said_key(x) for x in sentences])[-80:]
+        self._plan_said(prose)
         picked = None
         for n, sentence in enumerate(sentences):
             if PROPOSAL.search(sentence) and not sentence.endswith(("?", "؟")):
@@ -401,7 +482,7 @@ class Capture:
         elif name == "AskUserQuestion":
             pass
         elif name == "ExitPlanMode":
-            keep["plan"] = self.clean(str(data.get("plan") or "")[:600])
+            keep["plan"] = self.clean(str(data.get("plan") or "")[:6000])
         else:
             return
         pending = self.state["pending"]
@@ -447,6 +528,7 @@ class Capture:
                 text = self.clean(f"Plan approved: {_short(heading, 200)}")
                 self.state["decisions"].append(text)
                 self._add("decision", text, event, key=f"decision|{self.sid}|plan|{heading[:60]}")
+            self._plan_prompt(call["plan"], approved=True)
 
     def _file(self, rel: str, event: dict) -> None:
         count = self.state["files"].get(rel, 0) + 1
@@ -578,6 +660,8 @@ def _update(memory: store.Memory, root: Path, session: str, transcript_path: str
         state["cwd"] = cwd
     if not state["branch"]:
         state["branch"] = store.branch(Path(state["cwd"] or root))
+    if not state["prompt_count"] and not state["plan"] and state["branch"]:
+        state["plan"] = inherited_plan(memory.dir, state["branch"], session)
     events: list[dict] = []
     if state["transcript"]:
         events, state["offset"], state["line"] = transcript.read_new(
