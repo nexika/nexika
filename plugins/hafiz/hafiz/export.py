@@ -5,7 +5,8 @@ ignore fields they do not know. Text is already redacted (no secrets, no <privat
 
     schema, generated, project {name, root, data}, branch, issue,
     latest_session {id, branch, started, updated, ended, goal, note, open_tasks, done_tasks,
-                    decisions, open_problems, solved_problems, files, commits, links, handoff},
+                    decisions, open_problems, solved_problems, files, commits, links, plan_left,
+                    handoff},
     memories {decision, task, problem, file, link: [{id, type, text, date, branch, commit,
               session, source, status, scope}]}      (export only; open tasks and problems)
     counts {decision, task, problem, file, link}       (export only)
@@ -32,6 +33,7 @@ def session_view(folder: Path, state: dict) -> dict:
         "decisions": state.get("decisions", []), "open_problems": card.problems(state, "open"),
         "solved_problems": card.problems(state, "solved"), "files": card.files(state),
         "commits": state.get("commits", []), "links": state.get("links", []),
+        "plan_left": card.plan_left(state),
         "handoff": str(handoff) if handoff.is_file() else "",
     }
 

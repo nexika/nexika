@@ -11,6 +11,8 @@ from pathlib import Path
 from . import capture, search, store
 
 CARD_CHARS = 1500
+DECISION_CHARS = 700         # the card's decisions, by characters rather than by count (#371)
+DECISION_WIDTH = 160
 RESTORE_CHARS = 3000
 ISSUE_IN_BRANCH = re.compile(r"(?:^|/)(?:issue[-_]?|gh[-_]?|#)?(\d{1,6})(?=[-_/]|$)", re.I)
 DATE_OR_VERSION = re.compile(r"^(?:(?:19|20)\d\d[-_.](?:\d|q\d)|\d+[._]\d)", re.I)
@@ -79,6 +81,32 @@ def _outside(path: str) -> bool:
     return path.startswith(("/", "\\", "~", "../")) or bool(re.match(r"^[A-Za-z]:[\\/]", path))
 
 
+def plan_left(state: dict) -> list[str]:
+    """The plan's steps not done yet ("4. Add ..."): a step before the one asked for last is done, and
+    so is every step Claude said is done. Steps already done are dropped, never the later ones (#370)."""
+    plan = state.get("plan") or {}
+    steps = plan.get("steps") or []
+    asked, done = plan.get("asked", 0), set(plan.get("done", []))
+    return [f"{n}. {text}" for n, text in enumerate(steps, 1) if n >= asked and n not in done]
+
+
+def short_step(step: str, width: int = 110) -> str:
+    """"4. Add `days_late(loan, today)` to shelf/loans.py" from the step with its explanation after ": "."""
+    head, sep, _ = step.partition(": ")
+    if sep and 20 <= len(head) <= width:
+        return head
+    return step if len(step) <= width else step[: width - 1].rsplit(" ", 1)[0] + "…"
+
+
+def plan_lines(state: dict, width: int = 0) -> list[str]:
+    left = plan_left(state)
+    if not left:
+        return []
+    total = len((state.get("plan") or {}).get("steps") or [])
+    return [f"Plan: {len(left)} of {total} steps not done yet:",
+            *[f"  {short_step(step, width) if width else step}" for step in left]]
+
+
 def working_on(state: dict) -> str:
     """What the session is about now: the note, else the latest real request ("yes", "ok" skipped)."""
     if state.get("note"):
@@ -124,6 +152,7 @@ def handoff_text(state: dict) -> str:
     if state.get("first_prompt"):
         lines += ["", "## Goal", state["first_prompt"]]
     sections = [
+        ("Plan: steps not done yet", plan_left(state)),
         ("Latest requests", state.get("prompts", [])[-3:]),
         ("Open tasks", open_tasks(state)),
         ("Done", done_tasks(state)),
@@ -160,6 +189,28 @@ def read_handoff(folder: Path, branch: str) -> str:
 # ------------------------------------------------------------------ start card
 
 
+def decision_lines(items: list[dict], branch: str, session: str, budget: int = DECISION_CHARS) -> list[str]:
+    """Every decision of the current task (this branch, or the last session when there is no branch),
+    in the order they were made, then the newest of the others while `budget` characters last (#371).
+    A count stands for the rest, which `recall` finds."""
+    decisions = [i for i in items if i["type"] == "decision"]
+    here = [i for i in decisions if (i.get("branch") == branch if branch else i.get("session") == session)]
+    here = sorted(here, key=lambda i: i.get("date", ""))
+    others = search.newest_first([i for i in decisions if i not in here])
+    shown, used = [], 0
+    for item in here + others:
+        text = item["text"].removeprefix("User: ")
+        text = text if len(text) <= DECISION_WIDTH else text[: DECISION_WIDTH - 1].rsplit(" ", 1)[0] + "…"
+        if used + len(text) > budget:
+            break
+        shown.append(f"  - {text}")
+        used += len(text)
+    if not shown:
+        return []
+    hidden = len(decisions) - len(shown)
+    return [f"Decisions{f' (+{hidden} more: recall)' if hidden else ''}:", *shown]
+
+
 def start_card(root: Path, branch: str, helper: str, session: str = "", budget: int = CARD_CHARS) -> str:
     """Read again on every turn (#345): what was remembered, and the helper the skills run. With
     nothing remembered yet, only the helper; the skills say how to use it."""
@@ -180,17 +231,16 @@ def start_card(root: Path, branch: str, helper: str, session: str = "", budget: 
             when = state.get("updated", "")[:16].replace("T", " ")
             latest = working_on(state)
             lines.append(f"Last session {where} ({when}, {state['session'][:8]}): {latest}")
+    lines += plan_lines(last, width=110)
     mine = search.newest_first([i for i in items if search.keep(i, branch=branch)])
     todo = [i["text"] for i in mine if i["type"] == "task" and i.get("status") == "open"]
     failing = [problem_title(i["text"]) for i in mine
                if i["type"] == "problem" and i.get("status") == "open"]
-    decisions = [i["text"] for i in mine if i["type"] == "decision"]
     if todo:
         lines.append("Open tasks: " + _join(todo, 4))
     if failing:
         lines.append("Open problems: " + _join(failing, 2, 140))
-    if decisions:
-        lines.append("Recent decisions: " + _join(decisions, 3, 140))
+    lines += decision_lines(mine, branch, last.get("session", "")[:8])
     if last.get("files"):
         lines.append("Files in play: " + _join(files(last), 6, 60))
     lines.append(f"Recall more: `{helper} recall \"words\"`.")
@@ -204,6 +254,7 @@ def snapshot(folder: Path, state: dict) -> Path:
     data = {
         "created": store.now(), "session": state["session"], "branch": state.get("branch", ""),
         "goal": working_on(state), "prompts": state.get("prompts", [])[-3:],
+        "plan": plan_lines(state),
         "note": state.get("note", ""), "tasks": open_tasks(state), "done": done_tasks(state)[-5:],
         "decisions": state.get("decisions", [])[-8:],
         "problems": [problem_title(p) for p in problems(state, "open")],
@@ -228,6 +279,7 @@ def restore_text(folder: Path, session: str, helper: str, budget: int = RESTORE_
         lines.append(f"Where we stopped: {data['note']}")
     if data.get("goal") and data.get("goal") != data.get("note"):
         lines.append(f"Working on: {data['goal']}")
+    lines += data.get("plan") or []
     for title, key, limit in (("Open tasks", "tasks", 8), ("Decisions", "decisions", 6),
                               ("Open problems", "problems", 3), ("Files changed", "files", 12),
                               ("Commits", "commits", 5)):
