@@ -258,6 +258,7 @@ class Ctx:
         self.staged: set[str] = set()
         self.session_remotes: frozenset = frozenset()  # remotes moved earlier in the session
         self.cautious = False  # the session read text that tried to give orders: computed paths ask
+        self.stdin_unknown = False  # a command run from inline code: what it reads is not known (#343)
         # loop bodies one command may judge word by word, shared with every child: nested loops would
         # multiply the work, and a slow check is no check (#342)
         self.unroll_budget = [64]

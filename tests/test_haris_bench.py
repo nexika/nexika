@@ -120,3 +120,15 @@ def test_a_session_case_needs_two_steps_and_runs_only_git(tmp_path, monkeypatch)
     monkeypatch.setattr(bench, "CASES", cases)
     (case,) = [c for c in bench.load_cases() if c["tool"] == "session"]
     assert case["steps"] == [("ls", False), ("pwd", False)] and case["kind"] == "s"
+
+
+def test_agent_commands_with_a_literal_argv_are_not_asked_about(report):
+    """#343 step 1: the agent benchmark's real `subprocess.run(['python', '/tmp/t2.py'])` calls (django-13344,
+    django-15957) are judged as the commands they run, so haris no longer asks about them. Code read from a
+    file and passed to exec is still asked about."""
+    asked = [c for c in bench.load_cases() if c["kind"] == "agent benchmark, asked about"]
+    literal = {c["id"] for c in asked if "subprocess" in c["value"] and "exec(" not in c["value"]}
+    assert len(literal) == 3
+    stopped = {c["id"] for c in report["profiles"]["standard"]["ordinary"]["cases"]}
+    assert not literal & stopped
+    assert {c["id"] for c in asked if "exec(open(" in c["value"]} <= stopped

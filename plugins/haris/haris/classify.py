@@ -1212,12 +1212,12 @@ def shell_string(script: Arg, ctx: Ctx, args: list, via: str) -> Stage:
 
 
 def interpreter_stdin(program: str, ctx: Ctx, stdin: Stage | None, lang: str = "sh") -> Stage:
-    if stdin is None:
+    if stdin is None and not ctx.stdin_unknown:
         ctx.add("exec", f"Starts {program}.")
-    elif stdin.downloads:
+    elif stdin is not None and stdin.downloads:
         ctx.add("download-run", f"Pipes a download straight into {program}: it runs code from the internet "
                                 "without you seeing it first.")
-    elif stdin.text is not None:
+    elif stdin is not None and stdin.text is not None:
         if lang == "sh":
             return shell_string(arg(stdin.text), ctx, [program], program)
         return code_check(arg(stdin.text), ctx, program, lang)
@@ -1255,6 +1255,10 @@ def h_source(argv, ctx, stdin):
     if len(argv) < 2:
         ctx.add("unparsed", f"`{argv[0]}` is missing its file.")
         return Stage()
+    if argv[1] in STDIN_FILES:  # `curl ... | source /dev/stdin` runs what is piped in
+        stage = interpreter_stdin(argv[0], ctx, stdin)
+        ctx.forget(args=True)
+        return stage
     path = ctx.where.resolve(argv[1], ctx.cwd) if UNKNOWN not in argv[1] else None
     if path and ctx.where.place(path) == "secret" and not path.startswith(PLUGIN_ROOT + "/"):
         ctx.add("secret-read", f"Loads {ctx.show(path)}, which holds secrets (keys, tokens or passwords), "
@@ -2034,6 +2038,200 @@ def interpreter_code(text: str, start: int) -> bool:
     return bool(INTERPRETER_BEFORE.search(text[max(0, start - 200):start]))
 
 
+# Python's calls that run a command (#343). An argv: a list of strings, or one string that names the program.
+# A shell string: run by /bin/sh. Any other way to run one (os.exec*, spawn*, pty, asyncio) is not followed.
+PY_RUN_ARGV = {"run", "call", "check_call", "check_output", "Popen"}
+PY_RUN_SHELL = {"getoutput", "getstatusoutput"}
+PY_OS_SHELL = {"system", "popen"}
+PY_SUBPROCESS_NAMES = {"PIPE", "DEVNULL", "STDOUT", "CalledProcessError", "TimeoutExpired", "SubprocessError",
+                       "CompletedProcess"}
+# Keywords that only shape how the call returns; `stdin` and `input` feed the command its input.
+PY_RUN_KEYWORDS = {"capture_output", "text", "universal_newlines", "check", "timeout", "encoding", "errors",
+                   "bufsize", "close_fds", "stdout", "stderr", "stdin", "input", "shell", "cwd", "mode",
+                   "buffering"}
+# Names that run text as code, reach a module or a variable by name, or change what a command inherits
+# (its folder, its environment): code that uses one is never read as only its literal calls.
+PY_OPAQUE = re.compile(r"^(?:exec|eval|compile|execfile|__import__|importlib|getattr|setattr|delattr|globals|"
+                       r"locals|vars|__builtins__|builtins|__dict__|modules|pty|runpy|ctypes|chdir|fchdir|"
+                       r"putenv|unsetenv|startfile|fork|forkpty|create_subprocess_\w+|subprocess|system|popen|"
+                       r"Popen|check_output|check_call|getoutput|getstatusoutput|posix_spawnp?|spawn\w*|"
+                       r"exec[lv]p?e?|environb?|os|_getframe|f_globals|f_locals|f_builtins|f_back|tb_frame|"
+                       r"gi_frame|cr_frame|attrgetter|methodcaller)$")
+# Modules that run text as code (timeit, pickle ...) or reach a function by its name (operator, gc).
+PY_OPAQUE_MODULES = {"pickle", "cPickle", "_pickle", "marshal", "shelve", "dill", "cloudpickle",
+                     "jsonpickle", "yaml", "types", "code", "codeop", "pdb", "bdb", "timeit", "cProfile",
+                     "profile", "trace", "doctest", "_posixsubprocess", "_winapi", "posix", "nt", "gc",
+                     "inspect", "operator", "ctypes", "cffi", "importlib", "runpy", "pty", "imp", "pkgutil",
+                     "zipimport", "builtins"}
+# Python's own internals (().__class__.__base__.__subclasses__() reaches Popen with no name for it).
+PY_DUNDER = re.compile(r"^__(?!(?:name|file|main|doc)__$)\w+__$")
+
+
+def python_literal_runs(text: str) -> list[tuple[str, str | None]] | None:
+    """Every command Python code runs, when each one is written out in the code: [(command, folder)],
+    the command as /bin/sh would read it (an argv is quoted word by word, so nothing in it expands). None
+    when a command is computed (a variable, an f-string, *args, **kwargs), when it gets its own environment
+    or program, or when the code could reach a command any other way (exec, getattr, pickle, os.chdir, a
+    name haris does not follow). A name given one string, once, counts as that string, so `"HEAD:" + p` is
+    known (#343)."""
+    import ast
+    try:
+        tree = ast.parse(text)
+    except Exception:  # SyntaxError, ValueError (a NUL), RecursionError ...
+        return None
+    bound: dict[str, list] = {}
+    sub_names, os_names, fns = set(), set(), {}  # module aliases, and functions imported by name
+    for n in ast.walk(tree):
+        names = []
+        if isinstance(n, ast.Name) and not isinstance(n.ctx, ast.Load):
+            names = [n.id]
+        elif isinstance(n, ast.arg):
+            names = [n.arg]
+        elif isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            names = [n.name]
+        elif isinstance(n, ast.ExceptHandler) and n.name:
+            names = [n.name]
+        elif isinstance(n, (ast.Global, ast.Nonlocal)):
+            names = list(n.names)
+        elif hasattr(ast, "MatchAs") and isinstance(n, (ast.MatchAs, ast.MatchStar)) and n.name:
+            names = [n.name]
+        elif hasattr(ast, "MatchMapping") and isinstance(n, ast.MatchMapping) and n.rest:
+            names = [n.rest]
+        elif isinstance(n, ast.Import):
+            for a in n.names:
+                if a.name.split(".")[0] in PY_OPAQUE_MODULES:
+                    return None
+                bind = a.asname or a.name.split(".")[0]
+                names.append(bind)
+                if a.name == "subprocess":
+                    sub_names.add(bind)
+                elif a.name == "os" or (a.name.startswith("os.") and not a.asname):
+                    os_names.add(bind)
+        elif isinstance(n, ast.ImportFrom):
+            if (n.module or "").split(".")[0] in PY_OPAQUE_MODULES or n.level:
+                return None
+            for a in n.names:
+                bind = a.asname or a.name
+                names.append(bind)
+                if a.name == "*" and n.module in ("subprocess", "os"):
+                    return None
+                if n.module == "subprocess" and a.name in PY_RUN_ARGV | PY_RUN_SHELL:
+                    fns[bind] = a.name
+                elif n.module == "os" and a.name in PY_OS_SHELL:
+                    fns[bind] = a.name
+        for name in names:
+            bound.setdefault(name, []).append(n)
+
+    def const(node) -> str | None:
+        """The string an expression always is, or None."""
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            return node.value
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+            left, right = const(node.left), const(node.right)
+            return left + right if left is not None and right is not None else None
+        if isinstance(node, ast.Name) and len(bound.get(node.id, ())) == 1:
+            only = bound[node.id][0]
+            parent = parents.get(id(only))
+            if isinstance(parent, ast.Assign) and len(parent.targets) == 1 and parent.targets[0] is only:
+                return const(parent.value) if isinstance(parent.value, ast.Constant) else None
+        return None
+
+    parents = {id(child): n for n in ast.walk(tree) for child in ast.iter_child_nodes(n)}
+    runs: list[tuple[str, str | None]] = []
+    seen: set[int] = set()  # nodes accounted for: a run call's function, a module's harmless name
+
+    def fn_of(call: ast.Call) -> str | None:
+        f = call.func
+        if isinstance(f, ast.Name) and f.id in fns and f.id not in sub_names | os_names:
+            seen.add(id(f))
+            return fns[f.id]
+        if isinstance(f, ast.Attribute) and isinstance(f.value, ast.Name):
+            module = f.value.id
+            if module in sub_names and f.attr in PY_RUN_ARGV | PY_RUN_SHELL or \
+                    module in os_names and f.attr in PY_OS_SHELL:
+                seen.update((id(f), id(f.value)))
+                return f.attr
+        return None
+
+    for n in ast.walk(tree):
+        if not isinstance(n, ast.Call):
+            continue
+        fn = fn_of(n)
+        if fn is None:
+            continue
+        positional_ok = len(n.args) == 1 or (fn == "popen" and len(n.args) == 2)
+        if not positional_ok or any(isinstance(a, ast.Starred) for a in n.args):
+            return None
+        kw = {}
+        for k in n.keywords:
+            if k.arg is None or k.arg not in PY_RUN_KEYWORDS:
+                return None  # **kwargs, env=, executable=, preexec_fn= ...
+            kw[k.arg] = k.value
+        shell_kw = kw.get("shell")
+        if shell_kw is not None and not (isinstance(shell_kw, ast.Constant)
+                                         and isinstance(shell_kw.value, bool)):
+            return None
+        folder = None
+        if "cwd" in kw:
+            folder = const(kw["cwd"])
+            if not folder or folder.startswith(("~", "-")) or "$" in folder or "\\" in folder:
+                return None
+        first = n.args[0]
+        if fn in PY_OS_SHELL | PY_RUN_SHELL or (shell_kw is not None and shell_kw.value):
+            command = const(first)
+            if command is None:
+                return None
+            runs.append((command, folder))
+            continue
+        if isinstance(first, (ast.List, ast.Tuple)):
+            argv = [const(e) for e in first.elts]
+        else:
+            argv = [const(first)]
+        if not argv or any(a is None for a in argv):
+            return None
+        runs.append((" ".join("'" + a.replace("'", "'\"'\"'") + "'" for a in argv), folder))
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and id(n) not in seen:
+            module = n.value.id
+            if module in sub_names and n.attr in PY_SUBPROCESS_NAMES:
+                seen.add(id(n.value))
+            elif module in os_names and not PY_OPAQUE.match(n.attr):
+                seen.add(id(n.value))  # os.path, os.getcwd(): not a way to run a command
+            elif module in os_names and n.attr in ("environ", "environb"):
+                parent = parents.get(id(n))
+                read = (isinstance(parent, ast.Subscript) and isinstance(parent.ctx, ast.Load)
+                        or isinstance(parent, ast.Attribute) and parent.attr == "get"
+                        and isinstance(parents.get(id(parent)), ast.Call))
+                if read:  # one variable read, never set: what a command inherits stays the same
+                    seen.update((id(n), id(n.value)))
+    for n in ast.walk(tree):
+        if id(n) in seen:
+            continue
+        name = n.id if isinstance(n, ast.Name) else n.attr if isinstance(n, ast.Attribute) else None
+        if name is not None and (PY_OPAQUE.match(name) or PY_DUNDER.match(name) or name in fns
+                                 or isinstance(n, ast.Attribute) and name in PY_OPAQUE_MODULES
+                                 or isinstance(n, ast.Name) and name in sub_names | os_names):
+            return None
+    return runs
+
+
+def judge_runs(runs: list[tuple[str, str | None]], ctx: Ctx, via: str) -> bool:
+    """Judge each command the code runs as the shell command it is, adding what it finds; True when every
+    one of them passes in the standard profile. A command's input is unknown: `sh` reading it asks."""
+    findings: list[Finding] = []
+    for command, folder in runs:
+        inner = ctx.child(findings=findings)
+        inner.stdin_unknown = True
+        if folder is not None:
+            inner.cwd = ctx.where.resolve(folder, ctx.cwd)
+            if inner.cwd is None:
+                ctx.findings += findings
+                return False
+        shell_string(arg(command), inner, [], via)
+    ctx.findings += findings
+    return all(LEVEL[TABLE.get(f.cls, (ASK,) * 3)[1]] <= LEVEL[PASS] for f in findings)
+
+
 def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
     """Code given inline (python -c, node -e ...): find what it does, and never approve it."""
     if UNKNOWN in code:
@@ -2071,7 +2269,11 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
         if "\n" not in lit and PATH_LIKE.match(lit):
             paths.append(arg(os.path.expanduser(lit) if lit.startswith("~") else lit))
     if executes:
-        ctx.add("dynamic", f"`{via}` runs shell commands from inside the code.")
+        # Python whose every command is written out is judged by those commands (#343); anything else
+        # runs commands haris cannot see
+        runs = python_literal_runs(text) if re.search(r"python|pypy", lang) else None
+        if not runs or not judge_runs(runs, ctx, via):
+            ctx.add("dynamic", f"`{via}` runs shell commands from inside the code.")
     deletes, writes = bool(code_matches(CODE_DELETE, text, data)), bool(code_matches(CODE_WRITE, text, data))
     if deletes:
         delete_paths(code_targets(text, CODE_DELETE, data), ctx)
@@ -2153,7 +2355,7 @@ def h_python(argv, ctx, stdin):
     if has(opts, "-V", "--version", "-h", "--help"):
         ctx.add("read", "Shows the Python version.")
         return Stage()
-    if not pos or pos[0] == "-":
+    if not pos or pos[0] == "-" or pos[0] in STDIN_FILES:
         return interpreter_stdin(argv[0], ctx, stdin, "python")
     return script_run(argv[0], pos[0], ctx, rest=pos[1:])
 
@@ -2208,7 +2410,7 @@ def h_node(argv, ctx, stdin):
         return Stage()
     if program == "bun" and pos[:1] in (["install"], ["add"], ["remove"], ["update"], ["x"]):
         return h_node_pm(argv, ctx, stdin) if pos[0] != "x" else npx([arg("bunx"), *pos[1:]], ctx, stdin)
-    if not pos or pos[0] == "-":
+    if not pos or pos[0] == "-" or pos[0] in STDIN_FILES:
         return interpreter_stdin(program, ctx, stdin, "js")
     return script_run(program, pos[0], ctx)
 
@@ -2236,7 +2438,7 @@ def h_script_lang(argv, ctx, stdin):
     if has(opts, "-v", "--version"):
         ctx.add("read", f"Shows the {program} version.")
         return Stage()
-    if not pos or pos[0] == "-":
+    if not pos or pos[0] == "-" or pos[0] in STDIN_FILES:
         return interpreter_stdin(program, ctx, stdin, program)
     return script_run(program, pos[0], ctx)
 

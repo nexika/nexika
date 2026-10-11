@@ -241,6 +241,9 @@ a harmful case haris stopped before.
   process while it runs. A program or script it cannot see into (a script already on disk,
   `make`, a binary) is left to Claude Code's own permission rules, and code built to hide what
   it does can get past any static check. Inline code (`python -c`, `node -e`) is never approved.
+  Inline Python that runs a command written out in full (`subprocess.run(['python', 't.py'])`,
+  `os.system('git status')`) is judged as that command; a command it builds when it runs is
+  asked about.
   The same holds for what haris guards beside itself: inline code that builds a status-file
   path from pieces, or a copy of mizan's helper run from elsewhere, is left to Claude Code's
   rules (never approved by haris), not refused.
