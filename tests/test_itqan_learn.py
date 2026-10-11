@@ -351,8 +351,7 @@ def test_cli_and_session_note(learn, repo):
     note = run_script("itqan_hooks.py", ["session-start"], repo, home,
                       json.dumps({"cwd": str(repo), "session_id": "s1"})).stdout
     assert "Project rules (.itqan/rules.md), follow them:\n- Use pnpm." in note
-    helper = SCRIPTS / "itqan_learn.py"
-    assert f"itqan helper (for /itqan:learn and /itqan:insights): python3 {helper}" in note
+    assert f"itqan scripts (for its skills): {SCRIPTS}" in note
 
 
 def test_hook_commands_never_fail(tmp_path):

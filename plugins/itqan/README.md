@@ -21,7 +21,7 @@ heavy: it stays out of the way until something is actually risky.
 | Hook | guard (PreToolUse) | Risk-based: silent for normal work, asks or refuses only for risky actions |
 | Hooks | learning (UserPromptSubmit, SessionEnd) | Notices corrections; after the session, extracts general lessons in the background |
 | Hook | usage (PostToolUse) | Records which skills and agents (of any plugin) are used |
-| Hooks | SessionStart / SessionEnd | One short note at start (stacks, packs, which tests to run before calling a change done, project rules, waiting proposals, last guard summary) |
+| Hooks | SessionStart / SessionEnd | One short note at start, read again on every turn, so it keeps only what changes the work: the stack checklists, the project's own checks, which tests to run before calling a change done, project rules, and waiting proposals; the guard summary goes to `/itqan:insights` |
 
 ## Learning from your corrections
 
@@ -71,7 +71,7 @@ A plugin with hundreds of skills of which you used one is a context cost worth q
 | Context | hundreds of skills listed every session | 5 skills, 5 agents; stack checklists are files read on demand, so they cost nothing until used |
 | Learning | patterns saved automatically | lessons proposed only after repeated corrections, applied only after your approval, and measured afterwards |
 | Guard | asks for justification on every first write | never blocks normal edits; stops only risky actions, with the reason |
-| Noise | notices injected during work | silent while you work; one line at the next session start if the guard acted |
+| Noise | notices injected during work | silent while you work; what the guard did is in `/itqan:insights` |
 | Workflow | many overlapping commands | one pipeline with explicit gates |
 
 ## The guard

@@ -25,7 +25,7 @@ fail because the behaviour is missing.
 
 ## 3. Implement (gate: green)
 Implement the plan step by step, smallest change first. After each step run the tests itqan
-detects: `itqan_proof.py checks` (the helper the session note names for `/itqan:proof`) lists
+detects: `itqan_proof.py checks` (in the scripts folder the session note names) lists
 each check with its command; run the `tests:` ones. These are the same checks the proof in step 6
 runs, so the suite you go green on is the one the proof records. On build or type errors, launch
 `itqan:build-fixer`. Never make a test pass by weakening, skipping or deleting it.
