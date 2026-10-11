@@ -6,8 +6,9 @@ argument-hint: "[what was asked, if not clear from the conversation]"
 
 # Make the proof
 
-The helper is named in the session note ("itqan proof (for /itqan:proof): python3
-.../itqan_proof.py"); below it is written `itqan_proof.py`. Run it from the project directory.
+The helper is `python3 <folder>/itqan_proof.py`, where the folder is the one the session note
+names ("itqan scripts (for its skills): ..."); below it is written `itqan_proof.py`. Run it from
+the project directory.
 
 1. **See what will run.** `itqan_proof.py checks` lists the checks itqan found in the project's
    files (tests, lint, build: pytest, ruff, mypy, pre-commit, tox environments, package scripts).

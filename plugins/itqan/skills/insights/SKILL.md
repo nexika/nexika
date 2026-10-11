@@ -6,8 +6,8 @@ argument-hint: "[days, default 30]"
 
 # Insights
 
-1. Run the itqan helper printed in the session note ("itqan helper: python3 .../itqan_learn.py")
-   with `insights $ARGUMENTS`, from the project directory.
+1. Run `python3 <folder>/itqan_learn.py insights $ARGUMENTS` from the project directory, where the
+   folder is the one the session note names ("itqan scripts (for its skills): ...").
 2. Show the report, then add at most three short, concrete recommendations, for example:
    - a rule "corrected again since approval" → propose clearer wording (then `/itqan:learn`);
    - proposals waiting → suggest `/itqan:learn`;
