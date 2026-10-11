@@ -946,6 +946,7 @@ def test_the_agents_own_statements_are_not_decisions(log, capsys, repo):
 
 
 BENCH_TASKS = PLUGINS.parent / "benchmarks" / "hafiz"
+DEV_TASKS = PLUGINS.parent / "tests" / "fixtures" / "hafiz_bench" / "tasks-v2-dev.json"
 V1_SEEDED = {"export": ["not pandas", "backwards compatible"], "models": ["dataclasses", "plain dicts"],
              "search": ["casefold", "data/catalog.tsv"]}
 
@@ -1076,10 +1077,12 @@ def test_redirections_are_not_test_targets(log, capsys, repo):
 
 
 def replay_v2(task_id, tmp_path, repo, capsys):
-    """Play a hafiz benchmark v2 script (benchmarks/hafiz/tasks.json) through the hooks, offline: each
+    """Play a hafiz benchmark v2 script (a frozen copy of its development wording) through the hooks: each
     prompt gets a turn shaped like the recorded runs (a heredoc, `unittest` piped through tail, "Step N
     is done."). Returns what hafiz gave back at each break: [("compact" | "restart", text), ...]."""
-    tasks = json.loads((BENCH_TASKS / "tasks.json").read_text(encoding="utf-8"))["tasks"]
+    # A frozen copy of the prompts hafiz's capture was developed against (#369-#371). The benchmark's own
+    # tasks.json is reworded for each held-out run (#348), so these tests must not read it.
+    tasks = json.loads(DEV_TASKS.read_text(encoding="utf-8"))["tasks"]
     task = next(t for t in tasks if t["id"] == task_id)
     session, log, given, done = SESSION, Log(tmp_path / "s0.jsonl", repo), [], 0
     for n, item in enumerate(task["script"]):
