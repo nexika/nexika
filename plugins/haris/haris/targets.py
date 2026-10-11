@@ -323,6 +323,21 @@ class Ctx:
         self.cd_unsure = False  # a `cd` went where haris may not follow (CDPATH, -P, a link)
         self.cautious = False  # the session read text that tried to give orders: computed paths ask
         self.stdin_unknown = False  # a command run from inline code: what it reads is not known (#343)
+        # code read from a file at decision time (#343 step 2), all shared with every child: what each
+        # file read gave (read once per call), the files read from disk with (size, mtime_ns, ctime_ns,
+        # inode) for the session, the same remembered from earlier calls, files trusted from disk with the
+        # index of the finding that trusted them (a pipeline checks its other stages after), how often
+        # this command wrote each file with known text at its top level, the ones it wrote elsewhere or
+        # only appended to, and findings that are an interpreter starting (not something before it)
+        self.code_files: dict = {}
+        self.read_files: dict = {}
+        self.session_reads: dict = {}
+        self.trusted_files: list = []
+        self.write_counts: dict[str, int] = {}
+        self.write_loose: set[str] = set()
+        self.appended: set[str] = set()
+        self.starts: set[int] = set()
+        self.piped_top = False  # a stage of a pipeline at the top of the call (runs once, beside the others)
         # loop bodies one command may judge word by word, shared with every child: nested loops would
         # multiply the work, and a slow check is no check (#342)
         self.unroll_budget = [64]
@@ -332,6 +347,7 @@ class Ctx:
         c.vars = dict(self.vars)
         c.depth = self.depth + 1
         c.top = False
+        c.piped_top = False
         if c.depth > 30:
             from . import shell  # only the command parser makes children, and it has shell loaded
             raise shell.ParseError("commands are nested too deeply")

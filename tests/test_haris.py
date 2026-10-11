@@ -1678,3 +1678,190 @@ def test_the_pass_password_manager_still_asks(world):
                  "import os, subprocess; subprocess.run([os.environ['SHELL'], '-c', 'pass show x'])"):
         d = decide(project, "Bash", f'python3 -c "{code}"')
         assert any(f.cls == "secret-read" for f in d.findings), (code, d.reason)
+
+
+# ---------------------------------------------------------------- inline code runs a file (#343)
+
+HARMLESS = "import json\nprint(json.dumps({'a': 1}))\n"
+WIPES = "import os, shutil\nshutil.rmtree(os.path.expanduser('~'))\n"
+
+
+def code_file(folder, text=HARMLESS, name="t.py"):
+    path = os.path.realpath(folder) + "/" + name
+    Path(path).write_text(text)
+    return path
+
+
+def runs(path):
+    return f"python3 -c \"exec(open('{path}').read())\""
+
+
+def test_a_file_in_the_temp_folder_is_read_and_judged(world, tmp_path):
+    home, project = world
+    ok, bad = code_file(tmp_path), code_file(tmp_path, WIPES, "w.py")
+    assert decide(project, "Bash", runs(ok)).verdict == "pass"
+    d = decide(project, "Bash", runs(bad))
+    assert (d.verdict, d.cls) == ("deny", "destroy"), d.reason
+    # the slice the code runs is exactly what haris judges: the same string methods, the same arguments
+    both = code_file(tmp_path, HARMLESS + "#cut\n" + WIPES, "both.py")
+    assert decide(project, "Bash", runs(both)).verdict == "deny"
+    sliced = f"python3 -c \"exec(open('{both}').read().split('#cut')[0])\""
+    assert decide(project, "Bash", sliced).verdict == "pass"
+    assert decide(project, "Bash", sliced.replace("[0]", "[1]")).verdict == "deny"
+    assert decide(project, "Bash", sliced.replace("[0]", "[2]")).verdict == "ask"  # no such part
+
+
+@pytest.mark.parametrize("make", ["link", "folder-link", "hard-link", "big", "fifo", "missing", "latin",
+                                  "outside"])
+def test_a_file_haris_may_not_read_keeps_the_code_unknown(world, tmp_path, make):
+    home, project = world
+    real = code_file(tmp_path)
+    path = str(tmp_path / "t2.py")
+    if make == "link":
+        os.symlink(real, path)
+    elif make == "folder-link":
+        os.symlink(str(tmp_path), str(tmp_path / "dir"))
+        path = str(tmp_path / "dir" / "t.py")
+    elif make == "hard-link":
+        os.link(real, path)
+    elif make == "big":
+        Path(path).write_text("x = 1\n" * 11000)  # 66 000 bytes
+    elif make == "fifo":
+        os.mkfifo(path)  # opening it must not hang the hook
+    elif make == "latin":
+        Path(path).write_bytes(b"print('caf\xc3\xa9')\n")  # read with the locale's encoding: not sure
+    elif make == "outside":
+        path = code_file(home, name="outside.py")
+    d = decide(project, "Bash", runs(path))
+    assert (d.verdict, d.cls) == ("ask", "dynamic"), (make, d.reason)
+
+
+def test_a_file_of_exactly_64_kb_is_read(world, tmp_path):
+    home, project = world
+    path = code_file(tmp_path, "x = 1\n" * 10922 + "#" * 4)  # 65 536 bytes
+    assert os.path.getsize(path) == 64 * 1024
+    assert decide(project, "Bash", runs(path)).verdict == "pass"
+    assert decide(project, "Bash", f"python3 -c \"exec(open('{path}', encoding='utf-8').read())\""
+                  ).verdict == "pass"
+
+
+def test_a_file_that_changed_since_an_earlier_check_is_unknown_once(world, tmp_path):
+    home, project = world
+    path = code_file(tmp_path)
+    s = Session(project)
+    assert s(runs(path)) == "pass"
+    assert s(runs(path)) == "pass"
+    Path(path).write_text(HARMLESS + "print(2)\n")
+    d = decide(project, "Bash", runs(path), None, s.data)
+    assert (d.verdict, d.cls) == ("ask", "dynamic") and "changed" in d.reason, d.reason
+    policy.remember(s.data, d)
+    assert s(runs(path)) == "pass"  # read again, as it is now
+    # what the session keeps: the path, its size and times, never what the file holds
+    kept = json.dumps(s.data)
+    assert path in kept and "json.dumps" not in kept
+    st = os.stat(path)
+    assert s.data["read_files"][path][:2] == [st.st_size, st.st_mtime_ns]
+
+
+def test_the_file_is_read_once_per_call(world, tmp_path, monkeypatch):
+    home, project = world
+    path = code_file(tmp_path)
+    reads = []
+    real = classify.read_code_file
+    monkeypatch.setattr(classify, "read_code_file", lambda p: reads.append(p) or real(p))
+    assert decide(project, "Bash", f"{runs(path)}; python3 {path}").verdict == "pass"
+    assert reads == [path]
+    # code run before may have changed it (haris does not see every way code writes a file): unknown
+    reads.clear()
+    assert decide(project, "Bash", f"{runs(path)}; {runs(path)}; python3 {path}").verdict == "ask"
+    assert reads == [path]
+
+
+@pytest.mark.parametrize("command", [
+    "./scripts/build.sh; {run}",                                   # a program haris cannot see first
+    "cp {bad} {path}; {run}",                                      # the file replaced first
+    "mv {bad} {path} && {run}",
+    "{run} | cp {bad} {path}",                                     # beside it in a pipeline
+    "{run} & cp {bad} {path}",
+    "{run} &",
+    "git pull; {run}",                                             # a pull may bring a new text
+    "ls | xargs {run}",                                            # run once per input
+    "find . -name t.py -exec python3 -c \"exec(open('{path}').read())\" \\;",
+    "for i in 1 2; do {run}; cp {bad} {path}; done",               # a loop
+    "f() {{ {run}; }}; f",                                         # a function
+    "python3 -c \"import os; os.rename('{bad}', '{path}'); exec(open('{path}').read())\"",
+    "python3 -c \"import shutil; shutil.copy('{bad}', '{path}'); exec(open('{path}').read())\"",
+    "python3 -c \"open = lambda *a: None; exec(open('{path}').read())\"",
+    "python3 -c \"import builtins; exec(open('{path}').read())\"",
+    "python3 -c \"from os import *; exec(open('{path}').read())\"",
+    "python3 -c \"import os; os.chdir('/'); exec(open('{name}').read())\"",
+    "python3 -c \"import threading; threading.Thread(target=print).start(); exec(open('{path}').read())\"",
+    "python3 -c \"for i in range(2): exec(open('{path}').read())\"",
+    "python3 -c \"def f(): exec(open('{path}').read())↵f()\"",
+    "python3 -c \"exec(open('{path}').read(), {{}})\"",
+    "python3 -c \"exec(open('{path}', 'rb').read())\"",
+    "python3 -c \"exec(open('{path}').read() + input())\"",
+    "python3 -c \"import subprocess; subprocess.run(['true']); exec(open('{path}').read())\"",
+])
+def test_what_may_change_the_file_before_it_runs_keeps_it_unknown(world, tmp_path, command):
+    home, project = world
+    path, bad = code_file(tmp_path), code_file(tmp_path, WIPES, "w.py")
+    cmd = command.format(run=runs(path), path=path, bad=bad, name=os.path.basename(path)).replace("↵", "\n")
+    d = decide(tmp_path if "{name}" in command else project, "Bash", cmd)
+    assert d.verdict in ("ask", "deny"), (cmd, d.verdict, d.reason)
+    assert d.cls != "exec"
+
+
+def test_a_file_written_earlier_in_the_call_is_judged_as_written_and_as_it_is(world, tmp_path):
+    home, project = world
+    path = str(tmp_path / "new.py")
+    write = f"cat > {path} <<'E'\nprint(1)\nE\n"
+    assert decide(project, "Bash", write + runs(path)).verdict == "pass"
+    # the write may fail or not run (`||`, `&&`): what is on disk now may run instead
+    Path(path).write_text(WIPES)
+    assert decide(project, "Bash", write + runs(path)).verdict == "deny"
+    Path(path).write_text(HARMLESS)
+    append = f"cat >> {path} <<'E'\nprint(1)\nE\n"
+    assert decide(project, "Bash", append + runs(path)).verdict == "pass"
+    append_bad = f"cat >> {path} <<'E'\n{WIPES}E\n"
+    assert decide(project, "Bash", append_bad + runs(path)).verdict == "deny"
+    twice = f"{write}cat >> {path} <<'E'\nprint(2)\nE\n"
+    assert decide(project, "Bash", twice + runs(path)).verdict == "ask"  # written twice: not followed
+
+
+def test_runpy_and_a_script_run_by_path_are_read_too(world, tmp_path):
+    home, project = world
+    ok, bad = code_file(tmp_path), code_file(tmp_path, WIPES, "w.py")
+    assert decide(project, "Bash", f"python3 -c \"import runpy; runpy.run_path('{ok}')\"").verdict == "pass"
+    assert decide(project, "Bash", f"python3 -c \"import runpy; runpy.run_path('{bad}')\"").verdict == "deny"
+    assert decide(project, "Bash", f"python3 {ok}").verdict == "pass"
+    assert decide(project, "Bash", f"python3 {bad}").verdict == "deny"
+    # a script haris cannot see into, or may not read, is judged as before: Claude Code's rules apply
+    computed = code_file(tmp_path, "import subprocess, sys\nsubprocess.run(sys.argv[1:])\n", "c.py")
+    assert decide(project, "Bash", f"python3 {computed}").verdict == "pass"
+    os.symlink(bad, str(tmp_path / "l.py"))
+    assert decide(project, "Bash", f"python3 {tmp_path / 'l.py'}").verdict == "pass"
+    # runpy decodes by the file's coding line and runs a zip archive's __main__: neither is followed
+    cookie = code_file(tmp_path, "# -*- coding: utf-7 -*-\nprint(1)\n", "u7.py")
+    run_path = "python3 -c \"import runpy; runpy.run_path('{}')\""
+    assert decide(project, "Bash", run_path.format(cookie)).cls == "dynamic"
+    zipped = code_file(tmp_path, "print(1)\n# PK\x05\x06\n", "z.py")
+    assert decide(project, "Bash", run_path.format(zipped)).cls == "dynamic"
+
+
+def test_code_run_from_the_file_it_runs_is_not_followed(world, tmp_path):
+    home, project = world
+    inner = code_file(tmp_path, HARMLESS, "inner.py")
+    outer = code_file(tmp_path, f"exec(open('{inner}').read())\n", "outer.py")
+    d = decide(project, "Bash", runs(outer))
+    assert (d.verdict, d.cls) == ("ask", "dynamic"), d.reason
+
+
+def test_a_script_run_by_path_is_read_only_up_to_16_kb(world, tmp_path):
+    """`python FILE` only adds refusals, and every script run would pay for judging it: up to 16 KB."""
+    home, project = world
+    small = code_file(tmp_path, "#" * (16 * 1024 - len(WIPES) - 1) + "\n" + WIPES, "s.py")
+    large = code_file(tmp_path, "#" * (16 * 1024) + "\n" + WIPES, "l.py")
+    assert decide(project, "Bash", f"python3 {small}").verdict == "deny"
+    assert decide(project, "Bash", f"python3 {large}").verdict == "pass"
+    assert decide(project, "Bash", runs(large)).verdict == "deny"  # run from inline code: up to 64 KB

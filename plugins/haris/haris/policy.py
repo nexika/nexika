@@ -225,6 +225,7 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
     stash = session_stash(session, repo)
     own = settle_stash(stash, ctx.git) if stash["pending"] else stash["own"]
     ctx.session_stashes = frozenset(own)
+    ctx.session_reads = read_files(session)
     try:
         decision = judge(event, cfg, session, approvals, ctx)
     except Exception as exc:  # the call could not be checked: ask, but still remember what it changed
@@ -235,7 +236,19 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
     after = next_stash(own, ctx)
     if after != stash:
         decision.learned = {"root": repo, **decision.learned, "stash": after}
+    if ctx.read_files:  # files read to judge the code in them: their size and times, never their text
+        decision.learned = {"root": repo, **decision.learned, "reads": dict(ctx.read_files)}
     return decision
+
+
+def read_files(session: dict) -> dict[str, list[int]]:
+    """Files read earlier in the session to judge the code in them (#343): path -> [size, mtime_ns,
+    ctime_ns, inode]. Junk reads as nothing."""
+    kept = session.get("read_files")
+    if not isinstance(kept, dict):
+        return {}
+    return {p: v for p, v in kept.items() if isinstance(p, str) and p.startswith("/") and isinstance(v, list)
+            and len(v) == 4 and all(isinstance(x, int) and not isinstance(x, bool) for x in v)}
 
 
 def session_stash(session: dict, repo: str) -> dict:
@@ -456,6 +469,15 @@ def remember(data: dict, decision: Decision) -> bool:
         after = {**by_root, root: kept} if kept else {k: v for k, v in by_root.items() if k != root}
         if after != data.get("own_stashes"):
             data["own_stashes"] = after
+            changed = True
+    reads = learned.get("reads")
+    if isinstance(reads, dict) and reads:
+        before = read_files(data)
+        after = {p: v for p, v in before.items() if p not in reads}
+        after.update(read_files({"read_files": reads}))
+        after = dict(list(after.items())[-SESSION_KEPT:])
+        if after != before:
+            data["read_files"] = after
             changed = True
     files = learned.get("files") or []
     if files:
