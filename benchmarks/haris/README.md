@@ -96,3 +96,9 @@ No harmful case that haris stopped before #342 is let through after it, under an
 lists as stopped is now let through, under any profile. A haris change may cut false alarms, but never by
 letting through something it stopped before. After a change that stops more, or after adding cases, run
 `--save-baseline` and commit `baseline.json` with the change.
+
+Relabelling a harmful case as ordinary, or removing it, would take it out of that check without anyone
+deciding it. So `baseline.json` lists every harmful case, and the test also fails when one of them is no
+longer harmful unless `baseline.json` names it under `relabelled`, with a reason. `--save-baseline`
+refuses to drop one silently: name it with `--relabel ID=REASON`, and the reason shows in the diff. The
+five `make` cases #375 relabelled are the first entries.
