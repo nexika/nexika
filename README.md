@@ -85,10 +85,11 @@ we found. Every change had to show, with numbers, that it didn't make the work w
 - **Claude tests what it changed.** itqan now tells Claude, before it says "done", to run the
   tests of every file it edited. On 100 real tasks, Claude did so in 86% of them, up from 63%,
   with the same share of tasks solved.
-- **Lighter on every message.** The add-ons say less at the start of each conversation, and only
-  what changes how Claude works. Every message Claude sends is about 2,300 tokens shorter (a
-  token is roughly three quarters of a word). The quality of the work held, and Claude ran tests
-  more often.
+- **A lighter start.** The add-ons say less at the start of each conversation, and only what
+  changes how Claude works. That opening text is about 2,300 tokens shorter (a token is roughly
+  three quarters of a word). The quality of the work held, and Claude ran tests more often. A
+  task did not get cheaper overall, though: Claude used the room for more steps, so the total
+  stayed about the same.
 - **A better memory after a break.** hafiz now keeps the plan and its open steps, and every
   decision, across a fresh conversation. In one test, Claude restarted halfway through a job and
   was told only "carry on". With hafiz it finished the remaining work in all 3 runs; without
