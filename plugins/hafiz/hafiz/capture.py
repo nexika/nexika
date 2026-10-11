@@ -3,11 +3,16 @@
 What is captured, and from where:
     decision  answers to Claude's multiple-choice questions, approved plans, Claude's proposals the
               user agrees to ("I suggest ..." then "yes" / "تمام"), and sentences of user messages
-              that start with a choice ("let's go with", "don't use", "قررنا", "نستخدم" ...), with
-              the reason when one is given ("because ...", "لأن ...")
+              that start with a choice ("let's go with", "don't use", "قررنا", "نستخدم" ...), state
+              a rule in plain words ("compare X with Y, not Z", "never ...", "X must stay ..."), or
+              stand under a label ("Decisions:", "Some rules for this work:"), with the reason when
+              one is given ("because ...", "لأن ..."); never Claude's own words
     task      Claude's task list (TodoWrite, TaskCreate/TaskUpdate), kept up to date
-    problem   a failing test/build/lint command, marked solved when the same command passes
-    file      files Claude changed (Edit, Write, MultiEdit, NotebookEdit), one memory per file
+    problem   a failing test/build/lint command (also when piped through `tail`: the summary line
+              says it failed), marked solved when the same command passes
+    file      files Claude changed (Edit, Write, MultiEdit, NotebookEdit) and, at the end of each
+              turn, files git shows as written since the session began (edits made through Bash:
+              `sed -i`, a heredoc, a script), one memory per file
     link      URLs the user shares and pull requests or issues created during the session
     commit    commits made in the session, from `git commit` output or, when it prints nothing, `git log`
 
@@ -26,6 +31,9 @@ from . import secrets, store, transcript
 EDIT_TOOLS = {"Edit", "Write", "MultiEdit", "NotebookEdit"}
 KEEP_PROMPTS = 6
 PROMPT_CHARS = 400
+MAX_GIT_FILES = 40           # files taken from git at the end of one turn
+GIT_JUNK = re.compile(r"(?:^|/)(?:__pycache__|\.pytest_cache|\.mypy_cache|\.ruff_cache|node_modules|\.venv|"
+                      r"venv|\.tox|\.idea|\.vscode)/|\.py[co]$|(?:^|/)\.DS_Store$")
 
 # A decision is a sentence that *starts* with a choice ("let's use", "we'll go with", "don't use",
 # "use X instead of Y"); the same words in the middle of a request ("explain why it uses X instead
@@ -38,6 +46,43 @@ DECISION_EN = re.compile(
     r"(?:we|i)(?: have|'ve)? decided\b|we decide\b|"
     r"(?:don'?t|do not|never|always) use|stick with|go with|"
     r"(?:use|switch to|move to|change to) [^,;]{1,60}? instead of|prefer [^,;]{1,60}? over)\b", re.I)
+# A rule stated in plain words (#369). Precision matters more than recall: every captured line is
+# read again after each compaction, so a sentence only counts when its shape says how the work is
+# to be done, never because it has "not" in it.
+_LEAD = (r"^(?:[\w-]+:\s+)?(?:(?:ok(?:ay)?|yes|so|and|also|but|then|please|good|great|fine|note|"
+         r"remember|important)\b[,.!:]?\s+)*")
+_HOW = (r"(?:use|compare|store|keep|format|name|represent|round|sort|return|write|parse|encode|match|"
+        r"model|validate|log|raise|handle|treat|prefer|call|save|print|express|measure|count|put)")
+_NOT_A_CHOICE = (r"(?!(?:much|yet|now|sure|bad|really|quite|so|too|very|only|just|always|necessarily|"
+                 r"exactly|all|everything|anything|that|this|here|there|later|today|again|me|us|it)\b)")
+_NOT_A_RULE = (r"(?!(?:worry|forget|hesitate|bother|mind|ask|wait|know|think|understand|see|get|need|"
+               r"panic|apologi[sz]e|stop|reply|respond|explain|summari[sz]e|repeat|be|tell|show|again|"
+               r"seen|been|done|had|heard|the|a|an|this|that|it|so|too|really|sure)\b|\w+ed\b)")
+RULE_EN = re.compile(
+    _LEAD + r"(?:"
+    # how to do it, against an alternative: "compare names with casefold(), not lower()"
+    rf"{_HOW}\s+(?!me\b|us\b|going\b)[^.?!]*?(?:[,;:]\s*(?:and\s+|but\s+)?(?:not|never)\s+{_NOT_A_CHOICE}\S|"
+    r"\s(?:instead of|rather than)\s)"
+    # a standing prohibition: "never mutate ...", "don't change the format of ..."
+    rf"|(?:never|don'?t|do not)\s+{_NOT_A_RULE}\w|always\s+{_HOW}\b"
+    # something that must stay as it is: "the public API must stay backwards compatible"
+    r"|(?!(?:it|this|that|there|these|those|which|what|you|i|he|she|they|we)\b)[\w`'\"./()\[\], -]{2,80}?\s"
+    r"(?:(?:must|has to|have to)\s+(?:always\s+|never\s+|not\s+)?(?:stay|remain|keep|use|return|match|"
+    r"follow|work|accept|support|change)|must (?:not|never) be)\b"
+    # a convention for every case: "print every date as DD.MM.YYYY"
+    rf"|{_HOW}\s+(?:every|all|each|any)\s+[^.?!]{{1,60}}?\s(?:as|in|with|using|like|by)\b"
+    r")", re.I)
+# "Decisions:", "Some rules for this work:", "قواعد:": every sentence of that paragraph is one.
+RULES_LABEL = re.compile(
+    r"^(?:(?:some|a few|few|the|our|my|two|three|four|important|ground|house|key)\s+){0,2}"
+    r"(?:rules?|decisions?|constraints?|conventions?|guidelines?)(?:\s+(?:for|of|in|to)\b[^:\n]{0,30})?\s*:"
+    r"|^(?:ال)?(?:قواعد|قرارات|القواعد|القرارات)[^:\n]{0,30}:", re.I)
+# ... unless it is about this moment or this reply, not the work: "don't commit yet", "write a
+# short summary, not a report", "use git log to see what changed, not blame".
+ONE_OFF = re.compile(r"\b(?:yet|for now|right now|this time|for the moment|summary|summari[sz]e|report|"
+                     r"answer|reply|response|explanation|explain)\b|"
+                     r"\bto (?:see|check|find|look|debug|understand|figure|investigate|reproduce)\b", re.I)
+PARAGRAPH = re.compile(r"\n\s*\n")
 DECISION_AR = re.compile(r"(قررنا|قررت|خلينا|خلّينا|نعتمد|اعتمد|بدلا من|بدل ما|لا تستخدم|لا نستخدم|"
                          r"دايما استخدم|دائما استخدم|نمشي على|امشي على|سنستخدم|"
                          r"(?:^|\s)(?:نستخدم|خلّ?ي|خليه|خليها)(?=\s|$))")
@@ -61,19 +106,25 @@ REASON_NEXT = re.compile(r"^(?:because|that way|this way|it|this|لأن|لان|�
 SENTENCE_END = re.compile(r"(?<=[.!?؟])\s+|\n+")
 CODE_BLOCK = re.compile(r"```.*?(?:```|\Z)|<pasted_content\b.*?(?:</pasted_content[^>]*>|\Z)", re.S | re.I)
 PASTE_TAG = re.compile(r"</?pasted_content\b[^>]*>", re.I)
-MAX_DECISIONS_PER_PROMPT = 3
+MAX_DECISIONS_PER_PROMPT = 6
 QUESTION = re.compile(r"^(why|what|which|how|should|shall|could|can|would|do|does|did|is|are|"
                       r"هل|ليش|لماذا|ليه|كيف|ايش|شو|ماذا)\b", re.I)
 URL = re.compile(r"https?://[^\s<>\"'`)\]]+")
 GH_REF = re.compile(r"https://github\.com/[\w.-]+/[\w.-]+/(?:pull|issues)/\d+")
 COMMIT_LINE = re.compile(r"^\[([^\s\]]+)(?: \(root-commit\))? ([0-9a-f]{7,40})\] (.+)$", re.M)
 RUNNERS = re.compile(
-    r"(?:^|[;&|(]\s*|\b(?:uv run|poetry run|npx|bunx|python3? -m|sudo|time)\s+)"
-    r"(pytest|py\.test|tox|nox|ruff|mypy|flake8|pylint|npm (?:run )?(?:test|build|lint)|"
+    r"(?:^|[;&|(\n]\s*|\b(?:uv run|poetry run|npx|bunx|python3? -m|sudo|time)\s+)"
+    r"(pytest|py\.test|unittest|tox|nox|ruff|mypy|flake8|pylint|npm (?:run )?(?:test|build|lint)|"
     r"pnpm (?:run )?(?:test|build|lint)|yarn (?:test|build|lint)|bun test|vitest|jest|eslint|tsc|"
     r"go (?:test|build|vet)|cargo (?:test|build|clippy|check)|dotnet (?:test|build)|mvn|gradle|"
     r"gradlew|make|ctest|phpunit|rspec|swift (?:test|build)|flutter (?:test|analyze)|"
-    r"claude plugin validate)\b([^;&|]*)")
+    r"claude plugin validate)(?=[\s;&|)]|$)([^;&|\n]*)")
+# The body of a heredoc is a file's text (`cat > test_x.py <<'EOF'`), not commands that ran.
+HEREDOC = re.compile(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n.*?\n\s*\2\s*(?=\n|$)", re.S)
+# A test run piped through `tail` exits 0 even when tests fail: its summary line still says so.
+FAILED_RUN = re.compile(
+    r"^(?:FAILED \((?:failures|errors)=\d+|=+ .*\b[1-9]\d* (?:failed|errors?)\b|[1-9]\d* failed\b|"
+    r"--- FAIL:|FAIL\t|Tests:\s+[1-9]\d* failed\b|\s*[1-9]\d* failing\b)", re.M)
 ERROR_LINE = re.compile(r"(error|failed|failure|exception|traceback|assert|panic|fatal|خطأ)", re.I)
 ANSWER = re.compile(r'"([^"\n]{3,300})"\s*=\s*"([^"\n]{1,300})"')
 
@@ -89,6 +140,37 @@ def _split_reason(sentence: str) -> tuple[str, str]:
     if len(parts) == 2 and parts[1].strip():
         return parts[0].strip().rstrip(","), parts[1].strip().rstrip(".!")
     return sentence, ""
+
+
+def decision_sentences(text: str) -> list[str]:
+    """The sentences of a user's message that state how the work is to be done.
+
+    A sentence counts when it starts with a choice ("let's use", "قررنا"), states a rule in plain
+    words ("compare X with Y, not Z", "never ...", "X must stay ..."), or stands in a paragraph
+    labelled as rules ("Decisions:", "Some rules for this work:"). Quoted lines (">") and code are
+    left out, and so is a question.
+    """
+    text = CODE_BLOCK.sub("\n", text)[:8000]
+    text = "\n".join(ln for ln in text.splitlines() if not ln.lstrip().startswith(">"))
+    found = []
+    for paragraph in PARAGRAPH.split(text):
+        paragraph = paragraph.strip()
+        label = RULES_LABEL.match(paragraph)
+        if label:
+            paragraph = paragraph[label.end():]
+        for sentence in SENTENCE_END.split(paragraph):
+            sentence = sentence.strip(" \t-*>•")
+            if len(sentence) < 12 or sentence.endswith(("?", "؟")) or QUESTION.match(sentence):
+                continue  # a question is not a decision
+            if (label or DECISION_EN.search(sentence) or DECISION_AR.search(sentence)
+                    or (RULE_EN.search(sentence) and not ONE_OFF.search(sentence))):
+                found.append(sentence)
+    return found
+
+
+def _said_key(sentence: str) -> str:
+    flat = re.sub(r"\s+", " ", sentence).strip(" .!").lower()
+    return hashlib.sha1(flat.encode()).hexdigest()[:10]
 
 
 def _approves(prompt: str) -> bool:
@@ -127,12 +209,55 @@ def _rel(path: str, cwd: str, root: Path) -> str:
     return ""
 
 
+def git_changes(top: Path, since: float) -> dict[str, int]:
+    """Files git shows as changed or new in the working tree at `top`, written at or after `since`
+    (seconds since the epoch), as {path: mtime in ns}. Edits made through Bash (`sed -i`, a heredoc,
+    a script) show up here, where no Edit call names them; a file left changed before the session
+    started does not. Caches and build folders are left out."""
+    out = store._git(top, "status", "--porcelain=v1", "-z", "--untracked-files=all", raw=True)
+    records = out.split("\0")
+    found: dict[str, int] = {}
+    skip = False
+    for record in records:
+        if skip:  # the old name of a rename
+            skip = False
+            continue
+        if len(record) < 4:
+            continue
+        code, path = record[:2], record[3:]
+        skip = "R" in code or "C" in code
+        if "D" in code or GIT_JUNK.search(path):
+            continue
+        try:
+            mtime = (top / path).stat().st_mtime_ns
+        except OSError:
+            continue
+        if mtime >= (since - 2) * 1e9:
+            found[path] = mtime
+            if len(found) >= MAX_GIT_FILES:
+                break
+    return found
+
+
+def commit_files(cwd: Path, sha: str) -> list[str]:
+    """The files a commit changed, relative to the repository."""
+    out = store._git(cwd, "diff-tree", "--no-commit-id", "--name-only", "-r", "-z", "--root", sha, raw=True)
+    return [p for p in out.split("\0") if p and not GIT_JUNK.search(p)][:MAX_GIT_FILES]
+
+
+def _epoch(stamp: str) -> float:
+    try:
+        return datetime.datetime.fromisoformat(stamp).timestamp()
+    except (ValueError, TypeError):
+        return 0.0
+
+
 def new_state(session: str, transcript_path: str) -> dict:
     return {"session": session, "transcript": transcript_path, "offset": 0, "line": 0,
             "started": store.now(), "updated": "", "ended": "", "branch": "", "cwd": "",
             "first_prompt": "", "prompts": [], "prompt_count": 0, "files": {}, "commits": [],
             "tasks": {}, "task_ids": {}, "problems": {}, "decisions": [], "links": [], "pending": {},
-            "proposal": {}, "touched": {},
+            "proposal": {}, "touched": {}, "said": [], "since": "", "seen": {},
             "note": "", "compactions": 0, "private_salt": "", "private": []}
 
 
@@ -162,6 +287,7 @@ class Capture:
         self.memories: list[dict] = []
         self._memories: list[dict] | None = None
         self.sid = state["session"][:8]
+        self.edited: set[str] = set()  # files an Edit call (or a commit) counted in this run
 
     def clean(self, text: str) -> str:
         """Secrets replaced, and words the user marked <private> earlier in the session masked."""
@@ -211,14 +337,12 @@ class Capture:
                 self._add("decision", f"Agreed: {sentence}", event, key=f"decision|{self.sid}|a{digest}",
                           reason=proposal.get("reason", ""))
         found = 0
-        for sentence in SENTENCE_END.split(CODE_BLOCK.sub("\n", text)[:8000]):
-            sentence = sentence.strip(" \t-*>")
-            if not (DECISION_EN.search(sentence) or DECISION_AR.search(sentence)):
-                continue
-            if sentence.endswith(("?", "؟")) or QUESTION.match(sentence):
-                continue  # a question is not a decision
+        said = set(state.get("said") or [])
+        for sentence in decision_sentences(text):
+            if _said_key(sentence) in said:
+                continue  # the agent's own words, pasted back
             sentence = _short(sentence, 300)
-            if len(sentence) >= 12 and sentence not in state["decisions"]:
+            if sentence not in state["decisions"]:
                 state["decisions"].append(sentence)
                 self._add("decision", f"User: {sentence}", event, key=f"decision|{self.sid}|{sentence[:80]}",
                           reason=_split_reason(sentence)[1])
@@ -231,6 +355,7 @@ class Capture:
         prose = CODE_BLOCK.sub("\n", event["text"])[-4000:]
         sentences = [x.strip(" \t-*>") for x in SENTENCE_END.split(prose)]
         sentences = [x for x in sentences if x]
+        self.state["said"] = (self.state.get("said", []) + [_said_key(x) for x in sentences])[-80:]
         picked = None
         for n, sentence in enumerate(sentences):
             if PROPOSAL.search(sentence) and not sentence.endswith(("?", "؟")):
@@ -268,7 +393,8 @@ class Capture:
         if name in EDIT_TOOLS:
             keep["path"] = str(data.get("file_path") or data.get("notebook_path") or "")
         elif name == "Bash":
-            keep["command"] = self.clean(str(data.get("command") or "")[:2000])
+            # a script's text can be long: the commands around it are what counts
+            keep["command"] = self.clean(HEREDOC.sub("\n", str(data.get("command") or ""))[:2000])
             keep["time"] = event.get("time", "")
         elif name == "TaskCreate":
             keep["subject"] = self.clean(str(data.get("subject") or ""))
@@ -292,11 +418,8 @@ class Capture:
         if name in EDIT_TOOLS and ok:
             rel = _rel(call.get("path", ""), event.get("cwd") or self.state["cwd"], self.root)
             if rel:
-                count = self.state["files"].get(rel, 0) + 1
-                self.state["files"][rel] = count
-                self.state["touched"][rel] = event["line"]
-                self._add("file", f"Changed {rel} ({count} edit{'s' if count > 1 else ''})", event,
-                          key=f"file|{self.sid}|{rel}")
+                self.edited.add(rel)
+                self._file(rel, event)
         elif name == "Bash":
             self._bash(call["command"], event, ok, call.get("time", ""))
         elif name == "TaskCreate" and ok:
@@ -325,6 +448,35 @@ class Capture:
                 self.state["decisions"].append(text)
                 self._add("decision", text, event, key=f"decision|{self.sid}|plan|{heading[:60]}")
 
+    def _file(self, rel: str, event: dict) -> None:
+        count = self.state["files"].get(rel, 0) + 1
+        self.state["files"][rel] = count
+        self.state["touched"][rel] = event["line"]
+        self._add("file", f"Changed {rel} ({count} edit{'s' if count > 1 else ''})", event,
+                  key=f"file|{self.sid}|{rel}")
+
+    def from_git(self, cwd: Path, event: dict) -> None:
+        """At the end of a turn: files changed through Bash, which no Edit call names (#369).
+
+        A file counts once per turn in which it was written, and not again when an Edit call of the
+        same turn already counted it.
+        """
+        since = _epoch(self.state.get("since") or self.state["started"])
+        if not since:
+            return
+        top = _TOPS.get(str(cwd)) or store.worktree_root(cwd)
+        _TOPS[str(cwd)] = top
+        seen = self.state.setdefault("seen", {})
+        for path, mtime in git_changes(top, since).items():
+            rel = self.clean(path)
+            if seen.get(rel) == mtime:
+                continue
+            seen[rel] = mtime
+            if rel not in self.edited:
+                self._file(rel, event)
+        if len(seen) > 200:
+            self.state["seen"] = dict(list(seen.items())[-200:])
+
     def _task(self, subject: str, status: str, event: dict, source: str = "task") -> str:
         subject = _short(self.clean(subject), 200)
         key = f"task|{subject.lower()[:100]}"  # the same task in a later session is the same memory
@@ -346,6 +498,13 @@ class Capture:
                 if not any(c["hash"][:7] == entry["hash"][:7] for c in self.state["commits"]):
                     self.state["commits"].append(entry)
                     self.commit = sha[:9]
+                    # files committed in the same turn are clean again by the end of it
+                    cwd = Path(event.get("cwd") or self.state["cwd"] or self.root)
+                    for path in commit_files(cwd, sha):
+                        rel = self.clean(path)
+                        if rel not in self.state["files"]:
+                            self.edited.add(rel)
+                            self._file(rel, event)
         if ok and re.search(r"\bgh (pr|issue) create\b", command):
             for url in dict.fromkeys(GH_REF.findall(event["text"])):
                 if url not in self.state["links"]:
@@ -356,7 +515,12 @@ class Capture:
         if not runner:
             return
         family = runner.group(1)
-        targets = sorted(a for a in runner.group(2).split() if not a.startswith("-"))[:6]
+        if ok and FAILED_RUN.search(event["text"]):
+            ok = False
+        targets = sorted(a for a in runner.group(2).split()
+                         if not a.startswith("-") and not any(c in a for c in "<>"))[:6]
+        if family == "unittest" and "discover" in targets:
+            targets = []  # `unittest discover -s tests` runs the whole suite
         name = " ".join([family, *targets])
         key = f"problem|{name}"  # by command, so a pass in any later session closes it
         if not ok:
@@ -424,8 +588,14 @@ def _update(memory: store.Memory, root: Path, session: str, transcript_path: str
             state["branch"] = event["branch"]
         if event.get("cwd"):
             state["cwd"] = event["cwd"]
+        if not state["since"] and event.get("time"):
+            state["since"] = event["time"]  # when the session began: older changes are not its own
         if event["kind"] in ("prompt", "say", "tool", "result"):
             getattr(capture, event["kind"])(event)
+    if events:
+        last = events[-1]
+        capture.from_git(Path(state["cwd"] or root), {"line": last["line"], "time": last.get("time", ""),
+                                                      "branch": state["branch"]})
     memory.upsert(capture.memories)
     save_state(memory.dir, state)
     return state

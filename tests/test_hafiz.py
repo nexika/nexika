@@ -880,3 +880,193 @@ def test_restore_does_not_repeat_what_the_compaction_summary_carries(log, capsys
     assert "Latest request:" not in text and "Done:" not in text      # the summary has both, word for word
     assert "summary" in text.splitlines()[1]                            # it says the built-in summary leads
     assert "argon2" in text and "1a2b3c4" in text and "Add refresh tokens" in text
+
+
+# ---------------------------------------------------------------- ordinary work is captured (#369)
+
+
+@pytest.mark.parametrize("prompt, expected", [
+    ("Decisions: compare text with str.casefold(), never lower(): we have German titles.", "casefold"),
+    ("Use the standard library's csv and json, not pandas.", "not pandas"),
+    ("The public API must stay backwards compatible.", "backwards compatible"),
+    ("And don't change the format of data/catalog.tsv: other tools read it.", "data/catalog.tsv"),
+    ("Never mutate the list you are given.", "mutate"),
+    ("Good. Print every date as DD.MM.YYYY, because that is how our librarians read dates. Do step 2 now.",
+     "DD.MM.YYYY"),
+    ("Return the rows as plain dicts rather than objects.", "plain dicts"),
+])
+def test_decisions_stated_as_plain_rules(log, capsys, repo, prompt, expected):
+    stop(log.user(prompt), capsys)
+    [decision] = decisions_of(repo)
+    assert expected in decision["text"], decision["text"]
+
+
+def test_every_line_of_a_rules_block_is_a_decision(log, capsys, repo):
+    stop(log.user("Here is the plan.\n\n1. Add load_loans.\n2. Add overdue.\n\nSome rules for this work:\n"
+                  "Fines are 25 cents for each day late after 3 free days.\n"
+                  "Money is whole cents (int), never floats.\n\nDo step 1 now, with tests, then stop."), capsys)
+    texts = sorted(d["text"] for d in decisions_of(repo))
+    assert len(texts) == 2, texts
+    assert "25 cents" in texts[0] and "never floats" in texts[1]
+    assert not any("Do step 1" in t or "load_loans" in t for t in texts)
+
+
+@pytest.mark.parametrize("prompt", [
+    "It's not working, the test still fails.",
+    "I'm not sure why the build breaks on CI.",
+    "This is not what I asked for, try again.",
+    "The tests do not pass yet, look at the log.",
+    "Don't worry about the docs for now.",
+    "Never mind, it works now.",
+    "Always the same error after the update.",
+    "Keep going, not much left.",
+    "Show me the diff, not the whole file.",
+    "Use the logs to find out why it is not starting.",
+    "The bug must be in the parser.",
+    "Why not use pandas here?",
+    "> Use pandas, not csv.\nWhat did you mean by this?",
+    "The rules engine fails with: KeyError on start.",
+    "Don't commit yet.",
+    "Write a short summary, not a full report.",
+    "Use git log to see what changed, not blame.",
+])
+def test_sentences_with_not_are_not_all_decisions(log, capsys, repo, prompt):
+    stop(log.user(prompt), capsys)
+    assert decisions_of(repo) == [], [d["text"] for d in decisions_of(repo)]
+
+
+def test_the_agents_own_statements_are_not_decisions(log, capsys, repo):
+    log.user("Fix the search, please.")
+    log.say("I'll compare names with casefold(), not lower(). Never mutate the input list.")
+    stop(log, capsys)
+    assert decisions_of(repo) == []
+    # the user pasting the agent's words back is not a new decision either
+    stop(log.user("Never mutate the input list."), capsys)
+    assert decisions_of(repo) == []
+
+
+BENCH_TASKS = PLUGINS.parent / "benchmarks" / "hafiz"
+V1_SEEDED = {"export": ["not pandas", "backwards compatible"], "models": ["dataclasses", "plain dicts"],
+             "search": ["casefold", "data/catalog.tsv"]}
+
+
+@pytest.mark.parametrize("task_id", sorted(V1_SEEDED))
+def test_a_v1_benchmark_session_is_captured(log, capsys, repo, task_id):
+    """The hafiz benchmark's v1 sessions (#348): the plan's decisions, files written by a heredoc, and
+    `python3 -m unittest 2>&1 | tail` failing on the test left for later. Before #369 all three were
+    missing in every recorded run."""
+    tasks = json.loads((BENCH_TASKS / "tasks-v1.json").read_text(encoding="utf-8"))["tasks"]
+    task = next(t for t in tasks if t["id"] == task_id)
+    log.user(task["steps"][0])
+    script = "cat > src/step1.py <<'EOF'\nimport unittest\n\nclass T(unittest.TestCase):\n    pass\nEOF\n" \
+             "python3 -m unittest 2>&1 | tail -4"
+    log.tool("Bash", {"command": script}, "Ran 10 tests in 0.002s\n\nFAILED (failures=1)")
+    (repo / "src" / "step1.py").write_text("import unittest\n")
+    log.say("Step 1 is done. The one failing test is the known bug left for later.")
+    stop(log, capsys)
+    decisions = " ".join(d["text"] for d in decisions_of(repo))
+    for words in V1_SEEDED[task_id]:
+        assert words in decisions, (words, decisions)
+    assert _file_memories(repo) == ["Changed src/step1.py (1 edit)"]
+    [problem] = [i for i in store.Memory(repo).all() if i["type"] == "problem"]
+    assert problem["status"] == "open" and problem["key"] == "problem|unittest"
+
+
+def _file_memories(repo):
+    return sorted(i["text"] for i in store.Memory(repo).all() if i["type"] == "file")
+
+
+@pytest.mark.parametrize("command, path", [
+    ("sed -i 's/True/False/' src/auth.py", "src/auth.py"),
+    ("cat > src/new.py <<'EOF'\nprint('hi')\nEOF", "src/new.py"),
+    ("python3 - <<'E'\np='src/auth.py'\nopen(p, 'a').write('# x')\nE", "src/auth.py"),
+    ("echo 'x = 1' > src/conf.py", "src/conf.py"),
+])
+def test_files_changed_through_bash_are_taken_from_git(log, capsys, repo, command, path):
+    log.user("Go")
+    log.tool("Bash", {"command": command}, "")
+    target = repo / path
+    target.write_text(target.read_text() + "# changed\n" if target.exists() else "x = 1\n")
+    stop(log, capsys)
+    assert _file_memories(repo) == [f"Changed {path} (1 edit)"]
+    assert capture.load_state(store.project_dir(repo), SESSION)["files"] == {path: 1}
+
+
+def test_git_files_skip_old_changes_caches_and_count_turns(log, capsys, repo):
+    old = repo / "src" / "old.py"
+    old.write_text("dirty before the session\n")
+    os.utime(old, (1_000_000_000, 1_000_000_000))  # 2001: before the session started
+    (repo / "src" / "__pycache__").mkdir()
+    (repo / "src" / "__pycache__" / "auth.cpython-312.pyc").write_bytes(b"\0")
+    log.user("Go").tool("Edit", {"file_path": str(repo / "src" / "auth.py")})
+    (repo / "src" / "auth.py").write_text("def login():\n    return False\n")
+    stop(log, capsys)
+    state = capture.load_state(store.project_dir(repo), SESSION)
+    assert state["files"] == {"src/auth.py": 1}  # the Edit and git agree: one change, not two
+    stop(log.user("Again"), capsys)  # nothing new written: no new edit counted
+    assert capture.load_state(store.project_dir(repo), SESSION)["files"] == {"src/auth.py": 1}
+
+
+def test_files_of_a_commit_made_in_the_turn_are_recorded(log, capsys, repo):
+    (repo / "src" / "pay.py").write_text("def pay():\n    pass\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "Add pay")
+    sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=repo, capture_output=True,
+                         text=True, check=True).stdout.strip()
+    log.user("Go").tool("Bash", {"command": "git add -A && git commit -m 'Add pay'"},
+                        f"[{BRANCH} {sha}] Add pay\n 1 file changed\n")
+    stop(log, capsys)
+    assert "src/pay.py" in capture.load_state(store.project_dir(repo), SESSION)["files"]
+
+
+@pytest.mark.parametrize("command", [
+    "python -m unittest", "python3 -m unittest tests.test_money -v", "python -m pytest -q",
+    "npm test", "go test ./...", "cd app && python3 -m unittest 2>&1 | tail -4",
+])
+def test_common_test_runners_open_a_problem(log, capsys, repo, command):
+    stop(log.user("Go").tool("Bash", {"command": command}, "FAIL: test_x\nFAILED (failures=1)", error=True),
+         capsys)
+    assert [i["status"] for i in store.Memory(repo).all() if i["type"] == "problem"] == ["open"]
+
+
+@pytest.mark.parametrize("output", [
+    "Ran 10 tests in 0.002s\n\nFAILED (errors=1)", "1 failed, 4 passed in 0.12s",
+    "===== 2 failed, 10 passed in 1.02s =====", "--- FAIL: TestLoad (0.00s)\nFAIL\tshelf\t0.01s",
+    "Tests:       1 failed, 3 passed, 4 total",
+])
+def test_a_failing_run_piped_through_tail_is_still_a_failure(log, capsys, repo, output):
+    """`python3 -m unittest 2>&1 | tail -4` exits 0 even when a test fails: read the summary line."""
+    stop(log.user("Go").tool("Bash", {"command": "python3 -m unittest 2>&1 | tail -4"}, output), capsys)
+    [problem] = [i for i in store.Memory(repo).all() if i["type"] == "problem"]
+    assert problem["status"] == "open" and problem["text"].startswith("`unittest` failed")
+    log.tool("Bash", {"command": "python3 -m unittest 2>&1 | tail -4"}, "Ran 11 tests in 0.002s\n\nOK")
+    stop(log, capsys)
+    assert [i["status"] for i in store.Memory(repo).all() if i["type"] == "problem"] == ["solved"]
+
+
+def test_code_written_by_a_heredoc_is_not_a_test_run(log, capsys, repo):
+    command = ("cat > tests/test_loans.py <<'EOF'\nimport unittest\n\nclass LoansTest(unittest.TestCase):\n"
+               "    pass\nEOF\npython3 -m unittest 2>&1 | tail -4")
+    stop(log.user("Go").tool("Bash", {"command": command}, "Ran 3 tests in 0.001s\n\nFAILED (failures=1)"), capsys)
+    [problem] = [i for i in store.Memory(repo).all() if i["type"] == "problem"]
+    assert problem["key"] == "problem|unittest"
+
+
+def test_a_test_run_after_a_long_heredoc_is_seen(log, capsys, repo):
+    log.user("Go").tool("Bash", {"command": "python3 -m unittest"}, "FAILED (failures=1)", error=True)
+    script = "python3 - <<'EOF'\n" + "x = 1\n" * 600 + "EOF\npython3 -m unittest 2>&1 | tail -4"
+    stop(log.tool("Bash", {"command": script}, "Ran 3 tests in 0.001s\n\nOK"), capsys)
+    assert [i["status"] for i in store.Memory(repo).all() if i["type"] == "problem"] == ["solved"]
+
+
+def test_unittest_discover_is_the_whole_suite(log, capsys, repo):
+    log.user("Go").tool("Bash", {"command": "python -m unittest tests.test_cli"}, "FAILED (errors=1)", error=True)
+    stop(log.tool("Bash", {"command": "python3 -m unittest discover -s tests -t ."}, "Ran 25 tests\n\nOK"), capsys)
+    assert [i["status"] for i in store.Memory(repo).all() if i["type"] == "problem"] == ["solved"]
+
+
+def test_redirections_are_not_test_targets(log, capsys, repo):
+    log.user("Go").tool("Bash", {"command": "pytest -q 2>&1 | tail -3\necho done"}, "1 failed", error=True)
+    stop(log, capsys)
+    [problem] = [i for i in store.Memory(repo).all() if i["type"] == "problem"]
+    assert problem["key"] == "problem|pytest"

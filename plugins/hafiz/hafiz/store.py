@@ -49,12 +49,15 @@ def enabled(config: dict | None = None) -> bool:
     return (config or {}).get("mode", "on") != "off"
 
 
-def _git(cwd: Path, *args: str) -> str:
+def _git(cwd: Path, *args: str, raw: bool = False) -> str:
+    """git's output ("" on any failure); `raw` keeps the leading spaces `status` columns need."""
     try:
         res = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, timeout=10)
     except (OSError, subprocess.TimeoutExpired):
         return ""
-    return res.stdout.strip() if res.returncode == 0 else ""
+    if res.returncode != 0:
+        return ""
+    return res.stdout if raw else res.stdout.strip()
 
 
 def project_root(cwd: Path) -> Path:

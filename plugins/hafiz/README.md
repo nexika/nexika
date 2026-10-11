@@ -13,11 +13,16 @@ compaction, a handoff note between sessions, and a search when you ask.
 every reply (Stop) ──► read only the new part of the transcript ─► fixed rules, no AI:
                          decision  answers to Claude's questions, approved plans, proposals
                                    you said yes to ("I suggest ..." -> "yes" / "تمام"),
-                                   "let's go with ...", "don't use ...", "قررنا", "خلينا نستخدم"
+                                   "let's go with ...", "don't use ...", "قررنا", "خلينا نستخدم",
+                                   rules in plain words ("compare X with Y, not Z", "never ...",
+                                   "X must stay ...") and every line under "Decisions:" or
+                                   "Some rules for this work:"; never Claude's own words
                          task      Claude's task list, kept up to date (open / done), in any session
-                         problem   a failing test, build or lint command; solved when it passes again,
-                                   in this session or a later one
-                         file      files Claude changed
+                         problem   a failing test, build or lint command (pytest, unittest, npm test,
+                                   go test, ...; also when piped through tail); solved when it passes
+                                   again, in this session or a later one
+                         file      files Claude changed, with its edit tools or through the shell
+                                   (taken from git at the end of each turn)
                          link      URLs you share, pull requests and issues created
                        ─► memories + the handoff note for this branch (always fresh)
 before compaction ───► snapshot: what you are working on now (the note or latest request), open tasks,
