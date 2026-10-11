@@ -7,6 +7,7 @@
                                                        baseline stopped, in an attended or an
                                                        unattended session (CI runs this as a test)
     python3 benchmarks/haris/bench.py --save-baseline  record today's results as the baseline
+        [--relabel ID=REASON ...]                      naming each harmful case that is no longer harmful
 
 The cases are tests/haris_corpus.tsv (labelled by its expected verdict; the kind is the section it sits
 in) and cases.tsv here (real commands from the agent benchmark and the trial, prompt-injected ones, and
@@ -214,15 +215,41 @@ def regressions(report: dict, baseline: dict) -> list[str]:
         for c in result["harmful"]["cases"]:
             if c["id"] in stopped:
                 out.append(f"{profile}{away}: {c['source']} [{c['kind']}] now {c['verdict']}: {c['value']}")
+    return out + left_quietly(baseline)
+
+
+def left_quietly(baseline: dict, relabel: dict | None = None) -> list[str]:
+    """Harmful cases the baseline knows that are no longer harmful (relabelled ordinary, or removed) and
+    are not named in its "relabelled" list with a reason. Relabelling would otherwise take a case out of
+    the check above without anyone deciding it."""
+    named = {**baseline.get("relabelled", {}), **(relabel or {})}
+    cases = {c["id"]: c for c in load_cases()}
+    out = []
+    harmful_now = {i for i, c in cases.items() if c["set"] == "harmful"}
+    for case_id in sorted(set(baseline.get("harmful", [])) - harmful_now):
+        if not named.get(case_id):
+            c = cases.get(case_id)
+            where = f"{c['source']} is now {c['set']}: {preview(c['value'])}" if c else "was removed"
+            out.append(f"case {case_id} left the harmful set without a reason ({where}); "
+                       f"name it with --relabel {case_id}=REASON")
     return out
 
 
-def to_baseline(report: dict) -> dict:
-    """The ratios for the report, and the harmful cases each profile stopped for the guardrail."""
+def to_baseline(report: dict, old: dict | None = None, relabel: dict | None = None) -> dict:
+    """The ratios for the report, the harmful cases each profile stopped for the guardrail, every harmful
+    case, and the cases relabelled with a reason. Raises ValueError rather than drop a harmful case the old
+    baseline knew without a reason in `relabel`."""
+    old = old or {}
+    lost = left_quietly(old, relabel)
+    if lost:
+        raise ValueError("\n".join(lost))
     harmful = [c for c in load_cases() if c["set"] == "harmful"]
+    relabelled = {**old.get("relabelled", {}), **(relabel or {})}
     out = {"cases": report["cases"],
            "recall": {p: r["recall"] for p, r in report["profiles"].items()},
            "false_alarms": {p: r["false_alarms"] for p, r in report["profiles"].items()},
+           "harmful": sorted(c["id"] for c in harmful),
+           "relabelled": {i: relabelled[i] for i in sorted(relabelled)},
            "stopped": {}}
     for p, r in report["profiles"].items():
         missed = {c["id"] for c in r["harmful"]["cases"]}
@@ -275,11 +302,18 @@ def main(argv=None) -> int:
     ap.add_argument("--json", action="store_true", help="print the results as JSON")
     ap.add_argument("--check", action="store_true", help="exit 1 if recall dropped below the baseline")
     ap.add_argument("--save-baseline", action="store_true", help="record these results as the baseline")
+    ap.add_argument("--relabel", action="append", default=[], metavar="ID=REASON",
+                    help="with --save-baseline: a harmful case that is no longer harmful, and why")
     args = ap.parse_args(argv)
     report = run()
     baseline = json.loads(BASELINE.read_text()) if BASELINE.exists() else None
     if args.save_baseline:
-        BASELINE.write_text(json.dumps(to_baseline(report), indent=1) + "\n")
+        relabel = dict(x.split("=", 1) for x in args.relabel if "=" in x)
+        try:
+            BASELINE.write_text(json.dumps(to_baseline(report, baseline, relabel), indent=1) + "\n")
+        except ValueError as exc:
+            print(f"baseline not saved:\n{exc}", file=sys.stderr)
+            return 1
     print(json.dumps(report, indent=1) if args.json else markdown(report, baseline), end="")
     if args.check:
         lost = regressions(report, baseline or {})

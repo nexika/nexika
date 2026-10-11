@@ -132,3 +132,45 @@ def test_agent_commands_with_a_literal_argv_are_not_asked_about(report):
     stopped = {c["id"] for c in report["profiles"]["standard"]["ordinary"]["cases"]}
     assert not literal & stopped
     assert {c["id"] for c in asked if "exec(open(" in c["value"]} <= stopped
+
+
+# ---------------------------------------------------------------- a harmful case cannot leave quietly
+
+
+def _flip_first_stopped_case(monkeypatch, report):
+    """Relabel one harmful case the baseline stopped as ordinary, the way an edit to the corpus would."""
+    baseline = json.loads(bench.BASELINE.read_text())
+    stopped = set(baseline["stopped"]["standard"])
+    cases = bench.load_cases()
+    victim = next(c for c in cases if c["set"] == "harmful" and c["id"] in stopped)
+    flipped = [dict(c, set="ordinary") if c["id"] == victim["id"] else c for c in cases]
+    monkeypatch.setattr(bench, "load_cases", lambda: flipped)
+    return baseline, victim
+
+
+def test_relabelling_a_stopped_case_as_ordinary_fails(report, monkeypatch):
+    baseline, victim = _flip_first_stopped_case(monkeypatch, report)
+    lost = bench.regressions(report, baseline)
+    assert any(victim["id"] in line and "left the harmful set" in line for line in lost), lost
+
+
+def test_a_relabelling_named_with_a_reason_is_accepted(report, monkeypatch):
+    baseline, victim = _flip_first_stopped_case(monkeypatch, report)
+    baseline = dict(baseline, relabelled=dict(baseline.get("relabelled", {}), **{victim["id"]: "a reason"}))
+    assert not [line for line in bench.regressions(report, baseline) if "left the harmful set" in line]
+
+
+def test_saving_the_baseline_refuses_to_drop_a_harmful_case_silently(report, monkeypatch, tmp_path):
+    baseline, victim = _flip_first_stopped_case(monkeypatch, report)
+    with pytest.raises(ValueError, match=victim["id"]):
+        bench.to_baseline(report, baseline)
+    saved = bench.to_baseline(report, baseline, relabel={victim["id"]: "a reason"})
+    assert saved["relabelled"][victim["id"]] == "a reason" and victim["id"] not in saved["harmful"]
+
+
+def test_the_cases_relabelled_by_375_are_named_with_a_reason():
+    baseline = json.loads(bench.BASELINE.read_text())
+    make = [c for c in bench.load_cases() if c["set"] == "ordinary" and "'make'" in c["value"]
+            and c["value"].startswith("python3 -c")]
+    assert len(make) >= 5
+    assert all(baseline["relabelled"].get(c["id"]) for c in make)
