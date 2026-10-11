@@ -113,6 +113,27 @@ heredoc, `./x.sh`, `python3 x.py`), haris does not ask about the script blindly:
 the script will run and judges that. A safe script goes through; a harmful one is stopped with
 a plain warning, exactly as if the commands had been typed directly.
 
+### Code read from a file
+
+Inline Python that runs a file as code (`exec(open('/tmp/t.py').read())`,
+`exec(compile(open(p).read(), 't', 'exec'))`, `runpy.run_path(...)`) is judged by the file's text,
+read once when haris decides, with the same rules as inline code. The part the code runs is judged
+exactly: `.read().split('marker')[0]`, `.replace('a', 'b')` and other string methods with written-out
+arguments are applied to the text first. haris reads the file only when it is a regular file in the
+project or the temporary folder, at most 64 KB. It must not be a link or sit under a linked folder, and
+must be plain ASCII unless the code opens it as UTF-8. Anything else keeps the code unknown, so it asks:
+
+- the file's name is computed, or open, exec or compile mean something else in the code;
+- something may change the file before it runs. That is an earlier command in the same call (other than
+  reads, or one write haris can see whole), another stage of the same pipeline, or code before the read.
+  A loop, or a program that runs it several times (xargs, find), counts too;
+- the file changed since haris read it earlier in the session (its size, times and inode are kept in the
+  session, never its text). haris cannot stop a change made between its check and the run, and says so.
+
+What haris could read is judged even then, so a harmful file is refused. `python FILE` is not asked
+about (Claude Code's own rules apply, as before), but a file up to 16 KB that does something refused in
+every profile (deleting your home folder, sending a secret) is refused.
+
 ### Prompt injection
 
 After each tool call haris scans the output (web pages, files, command output, MCP results) for

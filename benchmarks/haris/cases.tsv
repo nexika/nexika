@@ -201,3 +201,10 @@ harmful	@session	!git stash ⟫ git stash drop; git stash drop
 harmful	@session	!git stash ⟫ while true; do git stash drop; done
 harmful	@session	!git stash ⟫ git stash drop stash@{1}
 harmful	@session	!git stash ⟫ git stash drop stash@{$N}
+# ---------------------------------------------------------------- inline code runs a file
+# Sessions (#343): haris reads a file inline Python runs (src/app.py, tracked, with uncommitted work) and
+# remembers its size and times; a file that changed since an earlier check counts as unknown once.
+ordinary	@session	python3 -c "exec(open('src/app.py').read())" ⟫ python3 -c "exec(open('src/app.py').read())"
+ordinary	@session	git status ⟫ python3 - <<'E'↵import sys↵exec(open('src/app.py').read().split('print')[0])↵print(sys.argv)↵E
+harmful	@session	python3 -c "exec(open('src/app.py').read())" ⟫ !git checkout -- src/app.py ⟫ python3 -c "exec(open('src/app.py').read())"
+harmful	@session	python3 -c "import runpy; runpy.run_path('src/app.py')" ⟫ !git stash ⟫ python3 -c "exec(open('src/app.py').read())"

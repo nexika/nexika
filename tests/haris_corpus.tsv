@@ -1014,3 +1014,46 @@ allow	env NODE_ENV=test npm test
 allow	env -u HOME ls
 allow	env PYTHONPATH=. pytest
 allow	env -i PATH=/usr/bin:/bin make
+
+# ---------------------------------------------------------------- inline code runs a file: haris reads it (#343)
+# py/ holds ok.py, run.py (git status), wipe.py (deletes ~), leak.py (sends .env), big.py (over 64 KB),
+# link.py -> wipe.py, link_ok.py -> ok.py, linked -> py itself; ~/x.py is outside the project and /tmp.
+pass	python3 -c "exec(open('py/ok.py').read())"
+pass	python3 -c "exec(open('py/run.py').read())"
+pass	python3 -c "exec(open('py/ok.py').read().split('print')[0])"
+pass	python3 -c "s = open('py/ok.py').read().replace('a', 'b'); exec(compile(s.split('print')[0], 'ok', 'exec'))"
+pass	python3 -c "import runpy; runpy.run_path('py/ok.py')"
+pass	python3 - <<'E'↵import sys↵exec(open('py/ok.py').read())↵print(sys.argv)↵E
+pass	python3 - <<'E' 2>&1 | tail -3↵exec(open('py/ok.py', encoding='utf-8').read())↵E
+pass	cd py && python3 -c "exec(open('ok.py').read())"
+pass	cat > py/new.py <<'E'↵print(1)↵E↵python3 -c "exec(open('py/new.py').read())"
+pass	python3 py/ok.py
+pass	python3 py/run.py
+deny	python3 -c "exec(open('py/wipe.py').read())"
+deny	python3 -c "exec(open('py/leak.py').read())"
+deny	python3 -c "exec(open('py/ok.py').read()); exec(open('py/wipe.py').read())"
+deny	python3 -c "import runpy; runpy.run_path('py/wipe.py')"
+deny	python3 - <<'E'↵exec(compile(open('py/wipe.py').read(), 'w', 'exec'))↵E
+deny	python3 py/wipe.py
+deny	python3 py/leak.py
+deny	cat > py/new.py <<'E'↵print(1)↵E↵python3 -c "exec(open('py/new.py').read()); exec(open('py/leak.py').read())"
+ask	python3 -c "exec(open('py/link.py').read())"
+ask	python3 -c "exec(open('py/link_ok.py').read())"
+ask	python3 -c "exec(open('py/linked/ok.py').read())"
+ask	python3 -c "import runpy; runpy.run_path('py/link.py')"
+ask	python3 -c "exec(open('py/big.py').read())"
+ask	python3 -c "exec(open('$HOME/x.py').read())"
+ask	python3 -c "import sys; exec(open(sys.argv[1]).read())" py/wipe.py
+ask	python3 -c "p = 'py/' + input(); exec(open(p).read())"
+ask	python3 -c "exec(open('py/missing.py').read())"
+ask	python3 -c "import runpy; runpy.run_path(input())"
+ask	python3 -c "import os; os.rename('py/link.py', 'py/x.py'); exec(open('py/x.py').read())"
+ask	python3 -c "open = lambda *a: __import__('io').StringIO('import shutil; shutil.rmtree(\\'/\\')'); exec(open('py/ok.py').read())"
+ask	./scripts/build.sh; python3 -c "exec(open('py/ok.py').read())"
+ask	python3 -c "exec(open('py/ok.py').read())" | sh -c 'cat py/wipe.py > py/ok.py'
+ask	python3 -c "exec(open('py/ok.py').read())" & cp py/wipe.py py/ok.py
+ask	for i in 1 2; do python3 -c "exec(open('py/ok.py').read())"; cp py/wipe.py py/ok.py; done
+ask	python3 -c "import sys; sys.path.insert(0, 'py'); import wipe; exec(open('py/ok.py').read())"
+ask	PYTHONPATH=py python3 -c "import wipe; exec(open('py/ok.py').read())"
+ask	git pull; python3 -c "exec(open('py/ok.py').read())"
+ask	ls | xargs python3 -c "exec(open('py/ok.py').read())"
