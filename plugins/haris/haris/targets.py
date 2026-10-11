@@ -118,6 +118,7 @@ class Git:
         self._dirs: tuple[str, str] | None = None
         self._aliases: dict[str, str] | None = None
         self._remotes: set[str] | None = None
+        self._stash: tuple | None = None
 
     def dirs(self) -> tuple[str, str] | None:
         if self._dirs is None:
@@ -187,6 +188,13 @@ class Git:
                     pass
         return self._remotes
 
+    def stash_entries(self) -> list[tuple[str, str]] | None:
+        """The repository's stashes, newest (stash@{0}) first, as (commit, message), read from the stash's
+        reflog in the shared git folder; None when haris cannot read them for sure (#343)."""
+        if self._stash is None:
+            self._stash = (read_stash(self.dirs()),)
+        return self._stash[0]
+
     def run(self, *args: str) -> str:
         """Read-only git; nothing in the repository's config may make it run a program."""
         return self.try_run(*args) or ""
@@ -205,6 +213,50 @@ class Git:
 
     def dirty(self) -> bool:
         return bool(self.run("status", "--porcelain", "--untracked-files=no").strip())
+
+
+OBJECT_ID = re.compile(r"[0-9a-f]{40}(?:[0-9a-f]{24})?")
+
+
+def read_stash(dirs: tuple[str, str] | None) -> list[tuple[str, str]] | None:
+    """(commit, message) for each stash, newest first, from logs/refs/stash; [] when there is none. None
+    when it cannot be read for sure: another ref store (reftable), a line it does not know, or a stash ref
+    that does not name the newest entry."""
+    if not dirs:
+        return None
+    common = dirs[1]
+    if os.path.exists(os.path.join(common, "reftable")):
+        return None
+    top = ""
+    try:
+        with open(os.path.join(common, "refs", "stash"), encoding="utf-8") as fh:
+            top = fh.read().strip()
+    except FileNotFoundError:
+        try:
+            with open(os.path.join(common, "packed-refs"), encoding="utf-8") as fh:
+                top = next((line.split()[0] for line in fh if line.rstrip().endswith(" refs/stash")), "")
+        except FileNotFoundError:
+            pass
+        except (OSError, UnicodeDecodeError, IndexError):
+            return None
+    except (OSError, UnicodeDecodeError):
+        return None
+    try:
+        with open(os.path.join(common, "logs", "refs", "stash"), encoding="utf-8") as fh:
+            lines = fh.read().splitlines()
+    except FileNotFoundError:
+        lines = []
+    except (OSError, UnicodeDecodeError):
+        return None
+    entries = []
+    for line in lines:
+        head, tab, message = line.partition("\t")
+        words = head.split(" ")
+        if not tab or len(words) < 2 or not OBJECT_ID.fullmatch(words[1]):
+            return None
+        entries.append((words[1], message))
+    entries.reverse()
+    return entries if top == (entries[0][0] if entries else "") else None
 
 
 REMOTE_SECTION = re.compile(r'(?m)^\s*\[\s*remote\s+"([^"\n]+)"\s*\]')
@@ -257,6 +309,18 @@ class Ctx:
         self.moved_remotes: set[str] = set()
         self.staged: set[str] = set()
         self.session_remotes: frozenset = frozenset()  # remotes moved earlier in the session
+        # stashes this session made itself, and what this command does to the stash list, shared with
+        # every child: "push" (a stash made here, at the top level), ("drop", commit) (one of the
+        # session's own dropped) or "other" (anything else that changes the list) (#343)
+        self.session_stashes: frozenset = frozenset()
+        self.stash_events: list = []
+        # a command run once, as written, at the top of the call: not in a loop, a function, a
+        # pipeline, the background, a subshell or anything a program runs
+        self.top = True
+        self.written_argv: list | None = None  # the words of the simple command being judged
+        self.as_written = False  # the handler running now runs that command itself, not for a wrapper
+        self.git_plain = False  # the git subcommand being judged runs as written, in the project's repo
+        self.cd_unsure = False  # a `cd` went where haris may not follow (CDPATH, -P, a link)
         self.cautious = False  # the session read text that tried to give orders: computed paths ask
         self.stdin_unknown = False  # a command run from inline code: what it reads is not known (#343)
         # loop bodies one command may judge word by word, shared with every child: nested loops would
@@ -267,6 +331,7 @@ class Ctx:
         c = copy.copy(self)
         c.vars = dict(self.vars)
         c.depth = self.depth + 1
+        c.top = False
         if c.depth > 30:
             from . import shell  # only the command parser makes children, and it has shell loaded
             raise shell.ParseError("commands are nested too deeply")

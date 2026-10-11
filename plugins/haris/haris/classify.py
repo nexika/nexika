@@ -102,7 +102,9 @@ def walk(nodes: list, ctx: Ctx) -> None:
 
 def pipeline(p: shell.Pipeline, ctx: Ctx) -> None:
     if len(p.stages) == 1:
+        top, ctx.top = ctx.top, ctx.top and not p.background  # `x &` runs beside what follows it
         node(p.stages[0], ctx, None)
+        ctx.top = top
         return
     prev: Stage | None = None
     secret = False
@@ -125,6 +127,7 @@ def node(n, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         return Stage()
     if isinstance(n, shell.Group):
         inner = ctx.child() if n.subshell else ctx
+        top, inner.top = inner.top, False  # a loop or a condition may run its body any number of times
         if n.each and ctx.unroll_budget[0] >= len(n.each):
             # judged once per word, for what each would do; a `break` may stop at any word, so after
             # the loop its variables and folder are not known
@@ -139,6 +142,7 @@ def node(n, ctx: Ctx, stdin: Stage | None) -> Stage | None:
                 inner.cwd = None
         else:
             walk(n.body, inner)
+        inner.top = top
         for r in n.redirects:
             redirect(r, ctx, [])
         return Stage(secret="secret" in inner.marks)
@@ -309,10 +313,12 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
                     ctx.add("secret-read", f"Writes ${name}, which looks like a secret, into {into}."
                             if into else f"Prints ${name}, which looks like a secret, into the conversation.")
     ctx.prefix = {name: str(value) for name, value in assigns}
+    ctx.written_argv = argv  # the command as written, not one a wrapper (env, nice ...) runs
     try:
         stage = run(argv, ctx, stdin)
     finally:
         ctx.prefix = {}
+        ctx.written_argv = None
     downloads = (stage is not None and stage.downloads) or program in DOWNLOADERS
     # what this command prints holds the whole environment or a secret: a file it goes to is staged (#357)
     secret_out = (any(s is not None and (s.environ or s.secret) for s in (stage, stdin))
@@ -444,6 +450,7 @@ def run(argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
         family = m.group(1) if m.group(1) != "pypy" else "pypy3"
     handler = HANDLERS.get(family)
     if handler:
+        ctx.as_written = argv is ctx.written_argv  # not run for a wrapper (env NAME=value, nice ...)
         return handler([arg(family, first.marks), *argv[1:]], ctx, stdin)
     if program in READERS:
         return reader(program, argv, ctx, stdin)
@@ -1119,8 +1126,19 @@ def h_terraform(argv, ctx, stdin):
 # ---------------------------------------------------------------- shell builtins and wrappers
 
 
+def plain_cd(target: str, before: str | None, ctx: Ctx) -> bool:
+    """The shell lands where haris thinks a `cd` goes: no option (-P), no CDPATH to search, no link on the
+    way (the shell walks `..` back through a link, haris follows it) (#343)."""
+    if target.startswith("-") or ctx.cwd is None or ctx.vars_lost or before is None:
+        return False
+    if "CDPATH" in ctx.prefix or "CDPATH" in ctx.vars or os.environ.get("CDPATH"):
+        return False
+    return ctx.cwd == os.path.normpath(os.path.join(before, target))
+
+
 def h_cd(argv, ctx, stdin):
     target = argv[1] if len(argv) > 1 and argv[1] != "--" else None
+    before = ctx.cwd
     if argv[0] == "popd" or target == "-":
         ctx.cwd = None
     elif target is None:
@@ -1128,6 +1146,8 @@ def h_cd(argv, ctx, stdin):
             ctx.cwd = ctx.where.home
     else:
         ctx.cwd = ctx.where.resolve(target, ctx.cwd)
+    if target is not None and not plain_cd(str(target), before, ctx):
+        ctx.cd_unsure = True
     ctx.add("read", "Changes the current folder.")
     return Stage()
 
@@ -2764,9 +2784,13 @@ GIT_ELSEWHERE_ENV = {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_CONFIG",
 def h_git(argv, ctx, stdin, depth: int = 0):
     args = list(argv[1:])
     gctx = ctx
+    # git as written in the project's own repository: not run for a wrapper (env NAME=value, nice ...),
+    # not sent elsewhere (-C, --git-dir, --namespace ...); only there may a stash be the session's (#343)
+    plain = ctx.as_written
     while args and args[0].startswith("-"):
         a = args.pop(0)
         if a == "-C" and args:
+            plain = False
             gctx = ctx.child()
             gctx.findings = ctx.findings
             gctx.cwd = ctx.where.resolve(args.pop(0), ctx.cwd)
@@ -2783,8 +2807,12 @@ def h_git(argv, ctx, stdin, depth: int = 0):
             args.pop(0)
             if a in ("--git-dir", "--work-tree"):
                 ctx.repointed.add("*")
+            plain = False
         elif a.startswith(("--git-dir=", "--work-tree=")):
             ctx.repointed.add("*")
+            plain = False
+        elif a.startswith(("--namespace=", "--super-prefix=")):
+            plain = False
     if any(k in GIT_ELSEWHERE_ENV or k.startswith("GIT_CONFIG_") for k in (*ctx.prefix, *ctx.vars)):
         ctx.repointed.add("*")
     if not args:
@@ -2808,7 +2836,11 @@ def h_git(argv, ctx, stdin, depth: int = 0):
     handler = GIT_SUBS.get(sub)
     if handler:
         before = len(gctx.findings)
-        out = handler(sub, rest, gctx, stdin) or Stage()
+        was, gctx.git_plain = gctx.git_plain, plain
+        try:
+            out = handler(sub, rest, gctx, stdin) or Stage()
+        finally:
+            gctx.git_plain = was
         # checkout, reset ... after `cd`/`git -C` elsewhere rewrite files outside the project (#141)
         if sub in GIT_WORKTREE and not gctx.in_project() and \
                 any(f.cls != "read" for f in gctx.findings[before:]):
@@ -3083,8 +3115,13 @@ def git_listing(sub, rest, ctx, stdin):
         moved = {str(n) for n in names[:2 if first == "rename" else 1]}
         ctx.repointed |= moved
         ctx.moved_remotes |= moved
+    own_drop = sub == "stash" and first == "drop" and own_stash_drop(rest[1:], ctx)
+    if sub == "stash":
+        note_stash(first, own_drop, ctx)
     if first in GIT_LIST_READS.get(sub, set()):
         ctx.add("read", f"Only shows information (git {sub} {first}).")
+    elif own_drop:
+        ctx.add("write", f"Drops {own_drop}, a stash this session made itself.")
     elif sub == "stash" and first in ("drop", "clear"):
         ctx.add("discard", f"`git stash {first}` deletes saved work for good.")
     elif sub == "worktree" and first == "remove" and ("--force" in rest or "-f" in rest):
@@ -3094,6 +3131,72 @@ def git_listing(sub, rest, ctx, stdin):
     else:
         ctx.add("write", f"Changes the repository (git {sub} {first}).")
     return Stage()
+
+
+STASH_KEEPS = {"list", "show", "apply", "create"}  # leave the list of stashes as it is
+STASH_INDEX = re.compile(r"stash@\{(\d{1,6})\}|(\d{1,6})")
+STASH_ELSEWHERE_ENV = {"GIT_DIR", "GIT_COMMON_DIR", "GIT_WORK_TREE", "GIT_NAMESPACE",
+                       "GIT_CEILING_DIRECTORIES", "GIT_DISCOVERY_ACROSS_FILESYSTEM"}
+
+
+def note_stash(first: str, own_drop: str, ctx: Ctx) -> None:
+    """What this git stash does to the list of stashes, for the session to remember (#343). A stash is
+    the session's own only when made at the top of the call, in the project's own repository."""
+    if first in STASH_KEEPS:
+        return
+    if own_drop:
+        return  # own_stash_drop noted it
+    if first in ("", "push", "save") or first.startswith("-"):
+        ctx.stash_events.append("push" if ctx.top and stash_here(ctx) else "other")
+    else:
+        ctx.stash_events.append("other")
+
+
+def stash_here(ctx: Ctx) -> bool:
+    """git runs in the project's own repository, the one whose stashes haris reads: the nearest git
+    folder above where it runs is the project's, and nothing in its environment points it elsewhere."""
+    if not ctx.git_plain or ctx.vars_lost or ctx.cd_unsure or not ctx.cwd or UNKNOWN in ctx.cwd:
+        return False
+    if ctx.git.dirs() is None:
+        return False
+    # PATH set in the command: another program may answer to `git`
+    if any(k in STASH_ELSEWHERE_ENV or k == "PATH" for k in (*ctx.prefix, *ctx.vars)) or \
+            any(os.environ.get(k) for k in STASH_ELSEWHERE_ENV):
+        return False
+    probe = os.path.realpath(ctx.cwd)  # git finds its folder from where a link leads
+    while not os.path.exists(os.path.join(probe, ".git")):
+        if os.path.exists(os.path.join(probe, "HEAD")):
+            return False  # git may take this folder itself for a git folder
+        parent = os.path.dirname(probe)
+        if parent == probe:
+            return False
+        probe = parent
+    return os.path.realpath(probe) == os.path.realpath(ctx.where.root)
+
+
+def own_stash_drop(args: list, ctx: Ctx) -> str:
+    """"stash@{N}" when `git stash drop` takes a stash this session made itself (#343), else "". Only a
+    drop run once at the top of the call, after nothing but reads, in the project's own repository,
+    naming its stash by a written index; the index is read from the repository as it is now, so a stash
+    pushed on top by someone else is never taken for the session's."""
+    if not ctx.top or not ctx.session_stashes or any(f.cls != "read" for f in ctx.findings) or \
+            not stash_here(ctx):
+        return ""
+    opts, pos = options(args)
+    if any(name not in ("-q", "--quiet") or value is not None for name, value in opts) or len(pos) > 1:
+        return ""
+    m = STASH_INDEX.fullmatch(str(pos[0])) if pos else None
+    if pos and not m:
+        return ""
+    index = int(m.group(1) or m.group(2)) if m else 0
+    entries = ctx.git.stash_entries()
+    if entries is None or index >= len(entries):
+        return ""
+    commit = entries[index][0]
+    if commit not in ctx.session_stashes or sum(1 for e in entries if e[0] == commit) != 1:
+        return ""
+    ctx.stash_events.append(("drop", commit))
+    return f"stash@{{{index}}}"
 
 
 def git_config(sub, rest, ctx, stdin):

@@ -222,6 +222,9 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
                       staged_files(session)), cwd, cfg)
     repo = repo_key(ctx, root)
     ctx.session_remotes = frozenset(moved_remotes(session, repo))
+    stash = session_stash(session, repo)
+    own = settle_stash(stash, ctx.git) if stash["pending"] else stash["own"]
+    ctx.session_stashes = frozenset(own)
     try:
         decision = judge(event, cfg, session, approvals, ctx)
     except Exception as exc:  # the call could not be checked: ask, but still remember what it changed
@@ -229,7 +232,60 @@ def decide(event: dict, cfg: dict, session: dict | None = None,
                                             "could not check this, so it asks you instead.")
     if ctx.moved_remotes or ctx.staged:
         decision.learned = {"root": repo, "remotes": sorted(ctx.moved_remotes), "files": sorted(ctx.staged)}
+    after = next_stash(own, ctx)
+    if after != stash:
+        decision.learned = {"root": repo, **decision.learned, "stash": after}
     return decision
+
+
+def session_stash(session: dict, repo: str) -> dict:
+    """{"own": the commits of stashes this session made in the repository, "pending": the pushes judged in
+    the last call, not yet seen made} (#343). Junk in the session file reads as nothing."""
+    by_repo = session.get("own_stashes")
+    kept = by_repo.get(repo) if isinstance(by_repo, dict) else None
+    kept = kept if isinstance(kept, dict) else {}
+    own = kept.get("own")
+    own = [s for s in own if isinstance(s, str) and c.OBJECT_ID.fullmatch(s)] if isinstance(own, list) else []
+    p = kept.get("pending")
+    good = isinstance(p, dict) and all(isinstance(p.get(k), int) and not isinstance(p.get(k), bool)
+                                       for k in ("count", "n")) and p["count"] >= 0 and p["n"] > 0 and \
+        isinstance(p.get("top"), str) and isinstance(p.get("branch"), str)
+    return {"own": own, "pending": {k: p[k] for k in ("count", "top", "n", "branch")} if good else None}
+
+
+def settle_stash(stash: dict, git) -> list[str]:
+    """The session's stashes once the pushes judged in its last call are looked at: they are its own only
+    when exactly that many stashes were added on top since, each new, each made on the branch the push
+    ran on. Anything else (a push that saved nothing, a stash someone else pushed or dropped meanwhile)
+    and none of them is."""
+    own, p = list(stash["own"]), stash["pending"]
+    entries = git.stash_entries()
+    if entries is None or len(entries) != p["count"] + p["n"]:
+        return own
+    if p["count"] and entries[p["n"]][0] != p["top"]:
+        return own
+    branch = p["branch"] or "(no branch)"
+    commits = [e[0] for e in entries]
+    new = entries[:p["n"]]
+    if not all(message.startswith((f"WIP on {branch}: ", f"On {branch}: ")) and commits.count(commit) == 1
+               for commit, message in new):
+        return own
+    return own + [commit for commit, _ in reversed(new) if commit not in own]
+
+
+def next_stash(own: list[str], ctx: c.Ctx) -> dict:
+    """What the session keeps of its stashes after this call: its own, less the ones dropped, and the
+    pushes this call makes, when pushes are all it does to the list of stashes."""
+    events = ctx.stash_events
+    dropped = {e[1] for e in events if isinstance(e, tuple)}
+    own = [s for s in own if s not in dropped][-SESSION_KEPT:]
+    pending = None
+    if events and all(e == "push" for e in events):
+        entries = ctx.git.stash_entries()
+        if entries is not None:
+            pending = {"count": len(entries), "top": entries[0][0] if entries else "", "n": len(events),
+                       "branch": ctx.git.branch()}
+    return {"own": own, "pending": pending}
 
 
 def repo_key(ctx: c.Ctx, root: str) -> str:
@@ -392,6 +448,14 @@ def remember(data: dict, decision: Decision) -> bool:
         after = (before + [n for n in names if n not in before])[-SESSION_KEPT:]
         if after != before:
             data["moved_remotes"] = {**by_root, root: after}
+            changed = True
+    stash = learned.get("stash")
+    if root and isinstance(stash, dict):  # commits and counts only, never what a stash holds (#343)
+        by_root = data.get("own_stashes") if isinstance(data.get("own_stashes"), dict) else {}
+        kept = {k: v for k, v in (("own", stash.get("own")), ("pending", stash.get("pending"))) if v}
+        after = {**by_root, root: kept} if kept else {k: v for k, v in by_root.items() if k != root}
+        if after != data.get("own_stashes"):
+            data["own_stashes"] = after
             changed = True
     files = learned.get("files") or []
     if files:
