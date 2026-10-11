@@ -2,6 +2,11 @@
 
 All notable changes to prof are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-10-11
+
+### Changed
+- prof is silent at session start unless there is a learner (a learner profile, a lesson due, or the learner role), and its skill descriptions are one line each, so working sessions start about 600 tokens lighter. The skills still work in any session. (#336)
+
 ## [0.2.0] - 2026-10-08
 
 ### Added

@@ -2,6 +2,11 @@
 
 All notable changes to siyaq are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-10-11
+
+### Changed
+- The session note is one line: knowledge is added when a prompt or file matches it, and the helper. Entry counts and tips for an empty project are no longer added to every session. (#345)
+
 ## [0.2.0] - 2026-10-08
 
 ### Added
