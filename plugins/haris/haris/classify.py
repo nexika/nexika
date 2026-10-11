@@ -281,9 +281,7 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         expanded = expand(value, ctx)
         assigns.append((name, expanded[0] if expanded else arg("")))
     for name, value in assigns:
-        if name in RISKY_ENV or (name == "NODE_OPTIONS" and re.search(r"--(?:require|import|loader)|-r\b",
-                                                                      value)):
-            ctx.add("risky", f"Setting {name} changes which code the next program loads or runs.")
+        risky_assign(name, value, ctx)
     if not argv:
         for name, value in assigns:
             ctx.vars[name] = str(value)
@@ -351,6 +349,14 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
 
 
 WRITES = {"write", "write-temp", "write-outside", "write-memory", "secret-write"}
+
+
+def risky_assign(name: str, value: str, ctx: Ctx) -> None:
+    """A variable given to a command (`NAME=value cmd`, `env NAME=value cmd`) that changes which code the
+    command loads or runs."""
+    if name in RISKY_ENV or (name == "NODE_OPTIONS" and re.search(r"--(?:require|import|loader)|-r\b",
+                                                                  value)):
+        ctx.add("risky", f"Setting {name} changes which code the next program loads or runs.")
 
 
 def printed_into(cmd: shell.Simple, ctx: Ctx) -> str:
@@ -1213,8 +1219,9 @@ def h_trap(argv, ctx, stdin):
     return Stage()
 
 
-def shell_string(script: Arg, ctx: Ctx, args: list, via: str) -> Stage:
-    """Commands given as text (bash -c, eval, su -c, watch, ssh ...): parse and check them too."""
+def shell_string(script: Arg, ctx: Ctx, args: list, via: str, inherit: bool = True) -> Stage:
+    """Commands given as text (bash -c, eval, su -c, watch, ssh ...): parse and check them too. With
+    `inherit`, the variables given to the command (`NAME=value bash -c ...`) are set in there (#380)."""
     if UNKNOWN in script:
         if "download" in getattr(script, "marks", ()):
             ctx.add("download-run", f"`{via}` runs code it downloads, without you seeing it first.")
@@ -1224,6 +1231,8 @@ def shell_string(script: Arg, ctx: Ctx, args: list, via: str) -> Stage:
         return Stage()
     inner = ctx.child()
     inner.args = [str(a) for a in args]
+    if inherit:
+        inner.vars.update(ctx.prefix)
     try:
         walk(shell.parse(str(script), min(ctx.depth // 2, shell.MAX_DEPTH)), inner)
     except shell.ParseError as exc:
@@ -1330,25 +1339,51 @@ def h_wrapper(argv, ctx, stdin):
     return run(pos, ctx, stdin)
 
 
+ENV_WITH_ARG = {"-u", "--unset", "-C", "--chdir", "-S", "--split-string", "-P", "-a", "--argv0"}
+
+
 def h_env(argv, ctx, stdin):
-    opts, pos = options(argv[1:], {"-u", "--unset", "-C", "--chdir", "-S", "--split-string", "-P"},
-                        first_stops=True)
+    """`env [-i] [-u NAME] [NAME=value ...] cmd`: the variables are carried into the prefix that
+    `NAME=value cmd` fills, so every check that reads it sees them (#380)."""
+    opts, pos = options(argv[1:], ENV_WITH_ARG, first_stops=True)
+    clear = has(opts, "-i", "--ignore-environment")
+    if pos[:1] == ["-"]:  # `env -` is `env -i`
+        clear, pos = True, pos[1:]
+    prefix = {} if clear else dict(ctx.prefix)
+    for name in values(opts, "-u", "--unset"):
+        prefix.pop(str(name), None)
+    for value in values(opts, "-P"):  # BSD: where to look for the program, like PATH
+        prefix["PATH"] = str(value)
     for value in values(opts, "-C", "--chdir"):
         ctx = ctx.child()
         ctx.cwd = ctx.where.resolve(value, ctx.cwd)
     split = values(opts, "-S", "--split-string")
-    while pos and re.match(r"^[A-Za-z_]\w*=", pos[0]):
-        name = pos[0].split("=", 1)[0]
-        if name in RISKY_ENV:
-            ctx.add("risky", f"Setting {name} changes which code the next program loads or runs.")
-        pos = pos[1:]
     if split:
-        return shell_string(arg(split[0] + " " + " ".join(shquote(p) for p in pos), split[0].marks), ctx, [],
-                            "env -S")
+        # the string's words take the place of -S, and env goes on reading them as its own: options,
+        # NAME=value, then the command
+        text = " ".join(["env", *(str(s) for s in split), *(shquote(p) for p in pos)])
+        saved, ctx.prefix = ctx.prefix, prefix
+        try:
+            return shell_string(arg(text, joined_marks(split)), ctx, [], "env -S")
+        finally:
+            ctx.prefix = saved
+    # every word with `=` before the command is a variable, whatever its name (`env A-B=1 cmd`)
+    while pos and "=" in pos[0]:
+        name, _, value = str(pos[0]).partition("=")
+        if UNKNOWN in name:
+            ctx.add("dynamic", "Sets a variable whose name is only known when it runs, so haris cannot "
+                               "tell what it changes.")
+        risky_assign(name, value, ctx)
+        prefix[name] = value
+        pos = pos[1:]
     if not pos:
         environ_dump(ctx)
         return Stage(environ=True)
-    return run(pos, ctx, stdin)
+    saved, ctx.prefix = ctx.prefix, prefix
+    try:
+        return run(pos, ctx, stdin)
+    finally:
+        ctx.prefix = saved
 
 
 def environ_dump(ctx: Ctx) -> None:
@@ -2703,7 +2738,7 @@ def remote(script: Arg, ctx: Ctx, where: str) -> None:
     """Commands that run on another machine or in a container: anything risky there is asked about."""
     inner = ctx.child(findings=[])
     inner.cwd = None
-    shell_string(script, inner, [], where)
+    shell_string(script, inner, [], where, inherit=False)
     for f in inner.findings:
         if LEVEL[TABLE.get(f.cls, (ASK,) * 3)[1]] >= LEVEL[ASK]:
             if f.cls in ("egress-secret", "remote-shell", "fork-bomb"):

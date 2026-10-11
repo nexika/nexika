@@ -975,3 +975,42 @@ ask	python3 -c "import subprocess; subprocess.run(['ls']); from mytools import h
 ask	python3 -c "import subprocess; subprocess.run(['ls']); import webbrowser; webbrowser.open('file:///tmp/x')"
 ask	python3 -c "import subprocess, multiprocessing; subprocess.run(['ls']); multiprocessing.Process(target=print).start()"
 pass	python3 -c "import subprocess, json, re; subprocess.run(['ls']); print(json.dumps(re.findall('a', 'abc')))"
+
+# ---------------------------------------------------------------- variables passed through env (#380)
+# `env NAME=value cmd` gets the verdict of `NAME=value cmd`, also behind nice, timeout, nohup, command, exec
+ask	env GIT_DIR=../other/.git git push --all
+ask	env GIT_DIR=../other/.git git push origin feat/x
+ask	env GIT_COMMON_DIR=../other/.git git push origin feat/x
+ask	env GIT_WORK_TREE=/tmp/x git checkout -- .
+ask	env GIT_SSH_COMMAND='ssh -i x' git fetch
+ask	nice env GIT_DIR=../other/.git git push origin feat/x
+ask	timeout 5 env GIT_DIR=../other/.git git push origin feat/x
+ask	nohup env GIT_DIR=../other/.git git push origin feat/x
+ask	command env GIT_DIR=../other/.git git push origin feat/x
+ask	exec env GIT_DIR=../other/.git git push origin feat/x
+ask	env FOO=1 nice -n 5 env GIT_DIR=../other/.git git push origin feat/x
+ask	env -i GIT_DIR=../other/.git git push origin feat/x
+ask	env - GIT_DIR=../other/.git git push origin feat/x
+ask	env -u HOME GIT_DIR=../other/.git git push origin feat/x
+ask	env --unset=HOME GIT_DIR=../other/.git git push origin feat/x
+ask	env -S 'GIT_DIR=../other/.git git push' origin feat/x
+ask	env -S 'GIT_DIR=../other/.git' git push origin feat/x
+ask	env GIT_DIR="$X" git push origin feat/x
+ask	env GIT_DIR=$(cat /tmp/d) git push origin feat/x
+ask	env GIT_DIR=.git git push origin feat/x
+ask	env NODE_OPTIONS='--require /tmp/x.js' node a.js
+ask	env -S 'A=1' -S 'GIT_DIR=../other/.git' git push origin feat/x
+ask	env -v GIT_DIR=../other/.git git push origin feat/x
+ask	env --ignore-signal=PIPE GIT_DIR=../other/.git git push origin feat/x
+ask	xargs env GIT_DIR=../other/.git git push origin feat/x < list.txt
+ask	GIT_DIR=../other/.git bash -c 'git push origin feat/x'
+ask	env GIT_DIR=../other/.git sh -c 'git push origin feat/x'
+deny	env -a sh rm -rf ~
+deny	env --argv0=sh rm -rf ~
+deny	env A-B=1 rm -rf ~
+pass	GIT_DIR=../other/.git env -u GIT_DIR git push origin feat/x
+pass	GIT_DIR=../other/.git env -i git push origin feat/x
+allow	env NODE_ENV=test npm test
+allow	env -u HOME ls
+allow	env PYTHONPATH=. pytest
+allow	env -i PATH=/usr/bin:/bin make

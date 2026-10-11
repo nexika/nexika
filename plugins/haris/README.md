@@ -32,7 +32,9 @@ is refused whether it is written `\rm`, `/bin/rm`, `"rm"`, `$'\x72\x6d'`, after 
 or `sudo`, inside `bash -c '...'`, `eval`, a heredoc piped to `sh`, `find ~ -exec rm {} +`,
 `echo ~ | xargs rm -rf`, `python3 -c "shutil.rmtree(...)"` or a git alias. Paths are resolved
 first (`~`, `$HOME`, `..`, symlinks, globs, `cd` earlier in the line), so a detour does not
-hide the target.
+hide the target. Variables given through `env` (`env GIT_DIR=... git push`, with `-i`, `-u`, `-S`,
+behind `nice`, `timeout` or `nohup`) count exactly like `GIT_DIR=... git push`, and so do variables
+given to a shell (`GIT_DIR=... bash -c '...'`).
 
 ### What it protects
 
