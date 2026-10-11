@@ -53,8 +53,8 @@ def test_each_task_starts_with_only_its_deferred_test_failing(task_id, tmp_path)
 def test_tasks_seed_decisions_and_a_deferred_test_in_the_first_prompt():
     for task in TASKS.values():
         first = task["script"][0]["say"]
-        # v1 keeps the wording its recorded runs were given
-        rules = "Some rules for this work:" if task["id"] in V2 else "Decisions:"
+        # v1 keeps the wording its recorded runs were given; v2 states its rules in plain prose
+        rules = "casefold()" if task["id"] in V2 else "Decisions:"
         assert rules in first and "leave it alone until then" in first
         assert task["decisions"] and task["open"] and task["done"]
 
@@ -76,12 +76,14 @@ def test_v2_tasks_have_harder_breaks_than_v1():
     first = [p for p, _ in bench.calls_for(TASKS["loans-compact"]["script"])].index("compact1")
     assert first == 4
     later = " ".join(i.get("say", "") for i in TASKS["loans-compact"]["script"][1:])
-    assert "DD.MM.YYYY" in later.split("Do step 2")[0] and "25 cents" not in later and "casefold" not in later
+    assert "02.03.2026" in later.split("Do step 2")[0]
+    assert "quarter a day" not in later and "casefold" not in later
     # After a restart only a memory of the first session has the decisions.
     for task in ("loans-restart", "search-restart"):
         script = TASKS[task]["script"]
         after = " ".join(i.get("say", "") for i in script[[i.get("restart") for i in script].index(True):])
-        assert not any(word in after for word in ("25 cents", "casefold", "DD.MM", "lower", "Decision"))
+        rules = ("quarter a day", "25 cents", "casefold", "02.03.2026", "DD.MM", "lower", "Decision")
+        assert not any(word in after for word in rules)
 
 
 def test_v1_calls_are_the_steps_then_compact_then_one_continue():
