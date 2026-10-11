@@ -44,6 +44,9 @@ from haris import policy  # noqa: E402  # isort: skip
 
 
 def case_id(tool: str, value: str) -> str:
+    """The same on every machine: haris's own folder is hashed as its {PLUGIN} placeholder, not as the
+    path of this checkout (an id that differed in CI left that case out of the guardrail)."""
+    value = value.replace(str(haris_world.HARIS_ROOT), "{PLUGIN}")
     return hashlib.sha1(f"{tool}\t{value}".encode()).hexdigest()[:12]
 
 

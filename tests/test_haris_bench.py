@@ -174,3 +174,13 @@ def test_the_cases_relabelled_by_375_are_named_with_a_reason():
             and c["value"].startswith("python3 -c")]
     assert len(make) >= 5
     assert all(baseline["relabelled"].get(c["id"]) for c in make)
+
+
+def test_case_ids_do_not_depend_on_where_the_repository_is(monkeypatch, tmp_path):
+    """A case that names haris's own folder must get the same id in CI as here."""
+    here = [c["id"] for c in bench.load_cases() if "{PLUGIN}" in c["value"]
+            or str(bench.haris_world.HARIS_ROOT) in c["value"]]
+    assert here
+    monkeypatch.setattr(bench.haris_world, "HARIS_ROOT", tmp_path / "elsewhere" / "plugins" / "haris")
+    there = [c["id"] for c in bench.load_cases() if str(tmp_path) in c["value"]]
+    assert here == there
