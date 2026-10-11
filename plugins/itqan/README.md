@@ -21,7 +21,7 @@ heavy: it stays out of the way until something is actually risky.
 | Hook | guard (PreToolUse) | Risk-based: silent for normal work, asks or refuses only for risky actions |
 | Hooks | learning (UserPromptSubmit, SessionEnd) | Notices corrections; after the session, extracts general lessons in the background |
 | Hook | usage (PostToolUse) | Records which skills and agents (of any plugin) are used |
-| Hooks | SessionStart / SessionEnd | One short note at start (stacks, packs, project rules, waiting proposals, last guard summary) |
+| Hooks | SessionStart / SessionEnd | One short note at start (stacks, packs, which tests to run before calling a change done, project rules, waiting proposals, last guard summary) |
 
 ## Learning from your corrections
 
