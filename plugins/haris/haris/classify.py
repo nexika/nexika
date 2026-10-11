@@ -2062,7 +2062,17 @@ PY_OPAQUE_MODULES = {"pickle", "cPickle", "_pickle", "marshal", "shelve", "dill"
                      "jsonpickle", "yaml", "types", "code", "codeop", "pdb", "bdb", "timeit", "cProfile",
                      "profile", "trace", "doctest", "_posixsubprocess", "_winapi", "posix", "nt", "gc",
                      "inspect", "operator", "ctypes", "cffi", "importlib", "runpy", "pty", "imp", "pkgutil",
-                     "zipimport", "builtins"}
+                     "zipimport", "builtins", "multiprocessing", "concurrent", "webbrowser", "distutils",
+                     "ensurepip", "venv"}
+
+
+def py_module_unknown(name: str) -> bool:
+    """A module outside Python's standard library (plumbum, sh, invoke, the project's own code): it may
+    start any command, and haris cannot see into it, so code that imports one is never read as only its
+    literal calls (review of #375). Python 3.10+ lists its own modules."""
+    import sys
+    top = name.split(".")[0]
+    return top not in getattr(sys, "stdlib_module_names", ()) or top in PY_OPAQUE_MODULES
 # Python's own internals (().__class__.__base__.__subclasses__() reaches Popen with no name for it).
 PY_DUNDER = re.compile(r"^__(?!(?:name|file|main|doc)__$)\w+__$")
 
@@ -2099,7 +2109,7 @@ def python_literal_runs(text: str) -> list[tuple[str, str | None]] | None:
             names = [n.rest]
         elif isinstance(n, ast.Import):
             for a in n.names:
-                if a.name.split(".")[0] in PY_OPAQUE_MODULES:
+                if py_module_unknown(a.name):
                     return None
                 bind = a.asname or a.name.split(".")[0]
                 names.append(bind)
@@ -2108,7 +2118,7 @@ def python_literal_runs(text: str) -> list[tuple[str, str | None]] | None:
                 elif a.name == "os" or (a.name.startswith("os.") and not a.asname):
                     os_names.add(bind)
         elif isinstance(n, ast.ImportFrom):
-            if (n.module or "").split(".")[0] in PY_OPAQUE_MODULES or n.level:
+            if not n.module or py_module_unknown(n.module) or n.level:
                 return None
             for a in n.names:
                 bind = a.asname or a.name
