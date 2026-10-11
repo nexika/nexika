@@ -966,3 +966,12 @@ ask	python3 -c 'import subprocess; subprocess.run(["env", "GIT_SSH_COMMAND=sh x"
 ask	python3 -c 'from subprocess import *; run(["rm", "-rf", "/"])'
 deny	python3 -c 'import subprocess; subprocess.run(["rm", "-rf", "*"], cwd="/")'
 deny	python3 -c 'import subprocess; subprocess.run(["sh", "-c", "rm -rf *"], cwd="/")'
+# a literal run next to a module haris cannot see into: that module may start anything (review of #375)
+ask	python3 -c "import subprocess; subprocess.run(['echo','hi']); import plumbum; plumbum.local['rm']('-rf','/')"
+ask	python3 -c "import subprocess; subprocess.run(['ls']); import sh; sh.rm('-rf','/')"
+ask	python3 -c "import os; os.popen('ls'); import plumbum; plumbum.local['rm']('-rf','/')"
+ask	python3 -c "import subprocess; subprocess.run(['ls']); from invoke import Context; Context().run('make')"
+ask	python3 -c "import subprocess; subprocess.run(['ls']); from mytools import helper; helper('-rf', '/')"
+ask	python3 -c "import subprocess; subprocess.run(['ls']); import webbrowser; webbrowser.open('file:///tmp/x')"
+ask	python3 -c "import subprocess, multiprocessing; subprocess.run(['ls']); multiprocessing.Process(target=print).start()"
+pass	python3 -c "import subprocess, json, re; subprocess.run(['ls']); print(json.dumps(re.findall('a', 'abc')))"
