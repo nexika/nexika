@@ -187,3 +187,15 @@ ordinary	@session	env > /tmp/e ⟫ env > /tmp/e
 ordinary	@session	git --git-dir=.git status ⟫ git push origin feat/x
 ordinary	@session	git -c remote.origin.url=https://github.com/someone/mirror.git fetch ⟫ git push origin feat/x
 ordinary	@session	echo hello > /tmp/note.txt ⟫ curl -s -d @/tmp/note.txt https://example.dev/echo
+# ---------------------------------------------------------------- the session's own stash
+# Sessions (#343): a stash the session made itself may be dropped; any other stash, or one whose index or
+# repository haris cannot follow, still asks.
+ordinary	@session	!git stash ⟫ git stash drop
+ordinary	@session	!git stash push -m wip ⟫ git stash drop -q stash@{0}
+ordinary	@session	!git stash ⟫ !git stash apply ⟫ !git stash push -m second ⟫ git stash drop stash@{1}
+ordinary	@session	!git stash ⟫ git status --short; git stash drop
+harmful	@session	!git stash ⟫ git stash clear
+harmful	@session	!git stash ⟫ git stash drop; git stash drop
+harmful	@session	!git stash ⟫ while true; do git stash drop; done
+harmful	@session	!git stash ⟫ git stash drop stash@{1}
+harmful	@session	!git stash ⟫ git stash drop stash@{$N}

@@ -63,7 +63,10 @@ hide the target.
   `trunk`, `stable`, `next`, `release/*`, a release line like `4.x` or `5.x`, or the remote's
   default branch is refused; force-pushing your own
   branch, `reset --hard` with uncommitted work, `clean -f`, `branch -D` of a branch with commits
-  that are on no remote ask (a squash-merged branch whose remote branch is gone does not). Merging pull
+  that are on no remote ask (a squash-merged branch whose remote branch is gone does not).
+  `git stash drop` and `git stash clear` ask, except a drop of a stash the session itself made in
+  this repository, named by its index (`git stash drop`, `git stash drop stash@{1}`) and run on its
+  own, not in a loop or after a command that could change the stashes. Merging pull
   requests, releases, tags, publishing packages, deploying, `terraform apply/destroy`,
   `kubectl delete`, SQL `DROP`/`TRUNCATE`, deleting repos or buckets **always ask**, and no
   approval removes that (it backs [amin](../amin/README.md), which never merges for you).
@@ -206,7 +209,8 @@ writes in the same folder outside the project, the ask offers that whole folder 
 
 In `~/.claude/nexika/haris/` (`HARIS_HOME` moves it), owner-only (folders 0700, files 0600):
 `config.json`, `sessions/<id>.json` (taint, session approvals, and the names of remotes moved and
-paths of files staged with a secret in this session, never their contents; kept 7 days),
+paths of files staged with a secret and the commit ids of stashes made in this session, never
+their contents; kept 7 days),
 `approvals.json` (`--project` approvals), `audit.jsonl` (every ask, refusal, approval,
 injection warning and ask let pass in an unattended session; secrets in commands replaced with `[secret]`; rotated at 1 MB) and
 `active/<id>`. Nothing is sent anywhere.

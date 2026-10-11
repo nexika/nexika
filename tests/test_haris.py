@@ -734,6 +734,224 @@ def test_only_lasting_changes_to_remotes_are_remembered(world):
         assert decide(project, "Bash", command).learned.get("remotes", []) == remotes, command
 
 
+# ---------------------------------------------------------------- the session's own stash (#343)
+
+
+@pytest.fixture
+def stash_world(tmp_path, monkeypatch):
+    """A fresh home and project of its own: these tests make and drop real stashes."""
+    base = tmp_path.resolve()
+    monkeypatch.setenv("HOME", str(base / "home"))
+    monkeypatch.setenv("HARIS_HOME", str(base / "home" / ".claude" / "nexika" / "haris"))
+    monkeypatch.delenv("HARIS", raising=False)
+    home, project = build_world(base)
+    monkeypatch.chdir(project)
+    return home, project
+
+
+class Session:
+    """Calls judged in order in one session, remembered as the hook does; run=True also runs the
+    command (git only) after it is judged."""
+
+    def __init__(self, project):
+        self.project, self.data = project, {}
+
+    def __call__(self, command, run=False, cwd=None):
+        where = cwd or self.project
+        d = decide(where, "Bash", command, None, self.data)
+        policy.remember(self.data, d)
+        if run:
+            subprocess.run(command, shell=True, cwd=where, check=True, capture_output=True)
+        return d.verdict
+
+
+def change(project, text="x"):
+    (project / "src" / "app.py").write_text(f"print({text!r})\n")
+
+
+def stashes(project):
+    out = subprocess.run(["git", "stash", "list", "--format=%H"], cwd=project, capture_output=True,
+                         text=True, check=True).stdout
+    return out.split()
+
+
+def test_a_stash_made_in_the_session_may_be_dropped(stash_world):
+    home, project = stash_world
+    s = Session(project)
+    assert s("git stash", run=True) == "pass"
+    assert s("git status") == "allow"
+    for command in ("git stash drop", "git stash drop -q stash@{0}", "git stash drop 0",
+                    "cd src && git stash drop --quiet"):
+        assert decide(project, "Bash", command, None, json.loads(json.dumps(s.data))).verdict == "pass"
+    assert s("git stash drop") == "pass"
+    assert s("git stash drop") == "ask"  # judged once: the session no longer counts it as its own
+    assert Session(project)("git stash drop") == "ask"  # a new session starts empty
+
+
+def test_a_stash_from_before_the_session_still_asks(stash_world):
+    home, project = stash_world
+    _git(project, "stash")  # someone's saved work, from before the session
+    s = Session(project)
+    assert s("git stash drop") == "ask"
+    change(project)
+    assert s("git stash push -m mine", run=True) == "pass"
+    assert s("git stash drop stash@{0}") == "pass"
+    assert s("git stash drop stash@{1}") == "ask"
+    assert s("git stash clear") == "ask"
+
+
+def test_dropping_by_index_follows_the_stashes_exactly(stash_world):
+    home, project = stash_world
+    s = Session(project)
+    assert s("git stash", run=True) == "pass"
+    change(project, "y")
+    assert s("git stash push", run=True) == "pass"
+    assert s("git stash drop stash@{1}") == "pass"  # both are the session's
+    subprocess.run(["git", "stash", "drop", "stash@{1}"], cwd=project, check=True, capture_output=True)
+    assert s("git stash drop") == "pass"
+
+
+def test_a_stash_pushed_by_someone_else_on_top_is_not_the_sessions(stash_world):
+    home, project = stash_world
+    s = Session(project)
+    assert s("git stash", run=True) == "pass"
+    assert s("git status") == "allow"  # the session saw its stash made
+    change(project, "theirs")
+    _git(project, "stash")  # another session, in the same repository
+    assert s("git stash drop") == "ask"
+    assert s("git stash drop stash@{1}") == "pass"
+
+
+def test_a_stash_that_saved_nothing_lends_no_drop(stash_world):
+    home, project = stash_world
+    _git(project, "stash")  # the old stash; the tree is now clean
+    s = Session(project)
+    assert s("git stash", run=True) == "pass"  # "No local changes to save": no stash made
+    assert len(stashes(project)) == 1
+    assert s("git stash drop") == "ask"
+
+
+def test_a_stash_dropped_in_the_same_call_as_it_is_made_still_asks(stash_world):
+    home, project = stash_world
+    _git(project, "stash")
+    change(project)
+    s = Session(project)
+    # the push may save nothing, and then the drop takes the old stash
+    assert s("git stash && git stash drop") == "ask"
+
+
+def test_only_reads_may_come_before_the_drop_in_its_call(stash_world):
+    home, project = stash_world
+    s = Session(project)
+    assert s("git stash", run=True) == "pass"
+    assert s("git status --short; git stash drop") == "pass"
+    for command in ("make; git stash drop", "git stash drop; git stash drop",
+                    "while true; do git stash drop; done", "for i in 1 2; do git stash drop; done",
+                    "git stash drop & git stash", "git stash list | git stash drop",
+                    "bash -c 'git stash drop'", "echo | xargs git stash drop",
+                    "eval 'git stash drop'", "f() { git stash drop; }; f; f",
+                    "if true; then git stash drop; fi", "git stash drop stash@{$N}",
+                    "git stash drop $(echo 0)", "git stash drop stash@{1.hour.ago}",
+                    "git stash drop stash@{0} stash@{1}", "git stash drop refs/stash@{0}"):
+        assert s(command) == "ask", command
+
+
+def test_a_stash_made_in_one_repository_lends_no_drop_in_another(stash_world, tmp_path):
+    home, project = stash_world
+    other = home / "work" / "other"
+    other.mkdir(parents=True)
+    _git(other, "init", "-q", "-b", "main")
+    (other / "f").write_text("1\n")
+    _git(other, "add", "f")
+    _git(other, "commit", "-q", "-m", "one")
+    (other / "f").write_text("2\n")
+    _git(other, "stash")  # the other repository's saved work
+    s = Session(project)
+    assert s("git stash", run=True) == "pass"
+    assert s("git stash drop", cwd=other) == "ask"
+    for command in (f"git -C {other} stash drop", f"cd {other} && git stash drop",
+                    f"git --git-dir={other}/.git stash drop", f"GIT_DIR={other}/.git git stash drop",
+                    f"export GIT_DIR={other}/.git; git stash drop", f"git --git-dir {other}/.git stash drop",
+                    "git --namespace=x stash drop", "cd src && cd .. && source x.sh && git stash drop",
+                    # found by review: a wrapper's NAME=value, CDPATH, a link followed by `..`
+                    f"env GIT_DIR={other}/.git git stash drop",
+                    f"nice env GIT_DIR={other}/.git git stash drop",
+                    f"command env GIT_DIR={other}/.git git stash drop",
+                    f"exec env GIT_DIR={other}/.git git stash drop",
+                    f"env GIT_COMMON_DIR={other}/.git git stash drop",
+                    f"CDPATH={home / 'work'} cd other && git stash drop",
+                    f"export CDPATH={home / 'work'}; cd other && git stash drop",
+                    "PATH=/tmp:$PATH git stash drop", "export PATH=/tmp:$PATH; git stash drop"):
+        assert s(command) == "ask", command
+    (other / "sub").mkdir()
+    (project / "link").symlink_to(other / "sub")
+    for command in ("cd -P link/.. && git stash drop", "cd link/.. && git stash drop",
+                    "cd link && cd .. && git stash drop", "cd -P link && cd .. && git stash drop",
+                    "cd link; cd -P ..; git stash drop", "cd link && cd ../ && git stash drop"):
+        assert s(command) == "ask", command
+    fake = project / "fake"  # a folder that git takes for a git folder pointing at the other one
+    for name in ("refs", "objects"):
+        (fake / name).mkdir(parents=True)
+    (fake / "HEAD").write_text("ref: refs/heads/main\n")
+    (fake / "commondir").write_text(str(other / ".git") + "\n")
+    assert s("cd fake && git stash drop") == "ask"
+    assert s("cd src && git stash drop") == "pass"  # a folder of the same repository
+
+
+def test_a_nested_repository_inside_the_project_is_another_repository(stash_world):
+    home, project = stash_world
+    nested = project / "vendor" / "lib"
+    nested.mkdir(parents=True)
+    _git(nested, "init", "-q", "-b", "main")
+    (nested / "f").write_text("1\n")
+    _git(nested, "add", "f")
+    _git(nested, "commit", "-q", "-m", "one")
+    (nested / "f").write_text("2\n")
+    _git(nested, "stash")
+    s = Session(project)
+    assert s("git stash", run=True) == "pass"
+    assert s("cd vendor/lib && git stash drop") == "ask"
+    (nested / "sub").mkdir()
+    (project / "into-lib").symlink_to(nested / "sub")  # a link in the project into the other repository
+    assert s("cd into-lib && git stash drop") == "ask"
+
+
+def test_linked_worktrees_share_the_sessions_stashes(stash_world):
+    home, project = stash_world
+    wt = project.parent / "proj-b"
+    _git(project, "worktree", "add", "-q", "-b", "wtbranch", str(wt))
+    s = Session(project)
+    assert s("git stash", run=True) == "pass"
+    assert s("git stash drop", cwd=wt) == "pass"  # one stash for the repository: the session's
+
+
+def test_a_stash_another_worktree_made_in_the_same_moment_is_not_the_sessions(stash_world):
+    """The session's push saved nothing while a session in another worktree pushed: that stash
+    names the other branch, so it is not taken for the session's."""
+    home, project = stash_world
+    wt = project.parent / "proj-c"
+    _git(project, "worktree", "add", "-q", "-b", "wtbranch", str(wt))
+    _git(project, "stash")  # this tree is clean now
+    s = Session(project)
+    assert s("git stash") == "pass"  # judged; it would save nothing
+    (wt / "README.md").write_text("theirs\n")
+    _git(wt, "stash")
+    assert s("git stash drop") == "ask"
+
+
+def test_the_session_keeps_stash_names_only(stash_world):
+    home, project = stash_world
+    s = Session(project)
+    s("git stash", run=True)
+    s("git status")
+    key = os.path.realpath(str(project / ".git"))
+    assert s.data["own_stashes"] == {key: {"own": stashes(project)}}
+    s("git stash drop", run=True)
+    assert s.data["own_stashes"] == {}
+    bad = {"own_stashes": {key: {"own": "junk", "pending": {"count": "x"}}}}
+    assert decide(project, "Bash", "git stash drop", None, bad).verdict == "ask"
+
+
 # ---------------------------------------------------------------- itqan steps aside
 
 
