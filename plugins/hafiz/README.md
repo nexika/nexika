@@ -34,7 +34,8 @@ before compaction ───► snapshot: what you are working on now (the note o
 after compaction ────► the exact items of the snapshot are given back to Claude (up to ~3 KB),
                        next to Claude Code's own summary
 session start ───────► a short card (under 1.5 KB): last session, the plan's steps not done yet,
-                       open tasks, problems, decisions
+                       open tasks, problems, every decision of this branch (up to ~700 characters;
+                       older ones from other branches after them, then a count)
                        (open tasks and problems untouched for 14 days are marked expired)
 on request ──────────► search (Arabic and English), handoff note, detailed summary
 ```

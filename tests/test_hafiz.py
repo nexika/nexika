@@ -1135,3 +1135,33 @@ def test_the_plan_goes_to_the_handoff_note_and_the_export(log, capsys, repo):
     note = (store.project_dir(repo) / "handoffs" / "feat-12-login.md").read_text(encoding="utf-8")
     assert "## Plan: steps not done yet\n- 2. Add the view.\n- 3. Add the tests." in note
     assert export.full(repo)["latest_session"]["plan_left"] == ["2. Add the view.", "3. Add the tests."]
+
+
+# ---------------------------------------------------------------- every decision of this task on the card (#371)
+
+
+def test_the_card_shows_every_decision_of_the_session(log, capsys, repo):
+    rules = ["Fines are 25 cents a day after 3 free days.", "Money is whole cents, never floats.",
+             "Compare member names with casefold(), not lower().", "Print every date as DD.MM.YYYY.",
+             "Never change the format of data/loans.tsv."]
+    stop(log.user("Some rules for this work:\n" + "\n".join(rules)), capsys)
+    text = hook("session-start", {"session_id": "new-session", "source": "startup", "cwd": str(repo)}, capsys)
+    for rule in rules:
+        assert rule.rstrip(".") in text, (rule, text)
+    assert "(+" not in text and len(text.encode()) <= card.CARD_CHARS
+
+
+def test_the_restart_card_of_loans_restart_names_the_casefold_rule(tmp_path, repo, capsys):
+    text = [t for k, t in replay_v2("loans-restart", tmp_path, repo, capsys) if k == "restart"][0]
+    for words in ("25 cents", "never floats", "casefold()", "DD.MM.YYYY"):
+        assert words in text, (words, text)
+    assert len(text.encode()) <= card.CARD_CHARS
+
+
+def test_decisions_of_other_branches_wait_behind_a_count(log, capsys, repo):
+    memory = store.Memory(repo)
+    memory.upsert([store.Memory.make("decision", f"Project rule number {n}: " + "keep it so " * 15, scope="project",
+                                     branch="feat/old", date=f"2026-01-{n + 1:02d}T00:00:00") for n in range(8)])
+    stop(log.user("Use argon2 for passwords, not bcrypt."), capsys)
+    text = hook("session-start", {"session_id": "new-session", "source": "startup", "cwd": str(repo)}, capsys)
+    assert "argon2" in text and "(+" in text and len(text.encode()) <= card.CARD_CHARS

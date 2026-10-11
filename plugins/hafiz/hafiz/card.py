@@ -11,6 +11,8 @@ from pathlib import Path
 from . import capture, search, store
 
 CARD_CHARS = 1500
+DECISION_CHARS = 700         # the card's decisions, by characters rather than by count (#371)
+DECISION_WIDTH = 160
 RESTORE_CHARS = 3000
 ISSUE_IN_BRANCH = re.compile(r"(?:^|/)(?:issue[-_]?|gh[-_]?|#)?(\d{1,6})(?=[-_/]|$)", re.I)
 DATE_OR_VERSION = re.compile(r"^(?:(?:19|20)\d\d[-_.](?:\d|q\d)|\d+[._]\d)", re.I)
@@ -187,6 +189,28 @@ def read_handoff(folder: Path, branch: str) -> str:
 # ------------------------------------------------------------------ start card
 
 
+def decision_lines(items: list[dict], branch: str, session: str, budget: int = DECISION_CHARS) -> list[str]:
+    """Every decision of the current task (this branch, or the last session when there is no branch),
+    in the order they were made, then the newest of the others while `budget` characters last (#371).
+    A count stands for the rest, which `recall` finds."""
+    decisions = [i for i in items if i["type"] == "decision"]
+    here = [i for i in decisions if (i.get("branch") == branch if branch else i.get("session") == session)]
+    here = sorted(here, key=lambda i: i.get("date", ""))
+    others = search.newest_first([i for i in decisions if i not in here])
+    shown, used = [], 0
+    for item in here + others:
+        text = item["text"].removeprefix("User: ")
+        text = text if len(text) <= DECISION_WIDTH else text[: DECISION_WIDTH - 1].rsplit(" ", 1)[0] + "…"
+        if used + len(text) > budget:
+            break
+        shown.append(f"  - {text}")
+        used += len(text)
+    if not shown:
+        return []
+    hidden = len(decisions) - len(shown)
+    return [f"Decisions{f' (+{hidden} more: recall)' if hidden else ''}:", *shown]
+
+
 def start_card(root: Path, branch: str, helper: str, session: str = "", budget: int = CARD_CHARS) -> str:
     """Read again on every turn (#345): what was remembered, and the helper the skills run. With
     nothing remembered yet, only the helper; the skills say how to use it."""
@@ -212,13 +236,11 @@ def start_card(root: Path, branch: str, helper: str, session: str = "", budget: 
     todo = [i["text"] for i in mine if i["type"] == "task" and i.get("status") == "open"]
     failing = [problem_title(i["text"]) for i in mine
                if i["type"] == "problem" and i.get("status") == "open"]
-    decisions = [i["text"] for i in mine if i["type"] == "decision"]
     if todo:
         lines.append("Open tasks: " + _join(todo, 4))
     if failing:
         lines.append("Open problems: " + _join(failing, 2, 140))
-    if decisions:
-        lines.append("Recent decisions: " + _join(decisions, 3, 140))
+    lines += decision_lines(mine, branch, last.get("session", "")[:8])
     if last.get("files"):
         lines.append("Files in play: " + _join(files(last), 6, 60))
     lines.append(f"Recall more: `{helper} recall \"words\"`.")
