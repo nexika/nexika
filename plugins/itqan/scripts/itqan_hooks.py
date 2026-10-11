@@ -103,10 +103,12 @@ def session_start(hook: dict) -> None:
     checks = project_checks(root)
     if checks:
         lines.append(checks)
-    lines.append("Workflows: /itqan:plan (plan only), /itqan:review (review changes), "
-                 "/itqan:ship (plan -> tests first -> implement -> verify -> review), "
-                 "/itqan:learn (approve rules learned from corrections), /itqan:insights.")
-    lines.append("Guard: normal edits are never blocked; only risky actions are refused or need approval.")
+    lines.append("Before saying a change is done, run (1) the test that shows it works and (2) the existing "
+                 "tests of every file you edited (its test module, or the tests that import it). "
+                 "If one of them failed before your change, say so: it is not yours.")
+    lines.append("Workflows: /itqan:plan, /itqan:review, /itqan:ship (plan, tests first, implement, verify, "
+                 "review), /itqan:learn (rules from corrections), /itqan:insights.")
+    lines.append("Guard: only risky actions are refused or need approval.")
     lines.append(f"itqan helper (for /itqan:learn and /itqan:insights): "
                  f"python3 {Path(__file__).resolve().parent / 'itqan_learn.py'}")
     lines.append(f"itqan proof (for /itqan:proof): "
