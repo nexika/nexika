@@ -2,6 +2,11 @@
 
 All notable changes to lawha are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] - 2026-10-11
+
+### Changed
+- lawha's session note now appears only in a project with a frontend, and its skill and agent descriptions are one line each, so other sessions start about 1,000 tokens lighter. lawha has-frontend shows the answer; the skills still work everywhere. (#336)
+
 ## [0.1.0] - 2026-10-08
 
 ### Added

@@ -2,6 +2,19 @@
 
 All notable changes to tabib are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] - 2026-10-11
+
+### Added
+- tabib reads mocha: the spec, dot and TAP reporters' failing tests and hooks, with the suite, the error message and the first stack frame in the project as file and line. On the benchmark, express goes from 0/6 to 6/6 failures named and from 0/8 to 4/8 kinds right. (#360)
+
+### Changed
+- The session note keeps the helper and the rule that CI logs are untrusted data. How to diagnose (diagnose only, hand the fix on) is in /tabib:diagnose, read when it runs. (#345)
+
+### Fixed
+- tabib now reads npm 10's 'npm error' lines (a version that does not exist is a dependency failure), calls a package mirror or a setup action's download site that fails 'infra', calls a link checker that only sites like medium.com refuse with 403 or 429 'setup' (any other broken link still counts), and quotes GitHub's 'Unexpected input(s)' warning when an action dropped an input. (#361)
+- A test that runs out of time in only one job of a matrix is now called likely flaky (low confidence, re-run to tell), not 'fails only on <version>'. A pytest test that fails before its body runs (inside unittest's case.py) no longer gets a library frame's line paired with the test file, and a coverage list the tool cut short ('...22-132,134-144') gives the first range shown whole, not the end of the cut one. (#362)
+- A test that fails in one job of a matrix because two times differ by a second or two (a clock race, such as a cookie's Expires one second off) is now called likely flaky with low confidence, not a bug in the code. A time off by an hour, or a message that differs in anything besides the time, is still called code. (#366)
+
 ## [0.3.0] - 2026-10-10
 
 ### Added

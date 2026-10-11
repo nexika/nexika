@@ -2,6 +2,11 @@
 
 All notable changes to mizan are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] - 2026-10-11
+
+### Changed
+- The session note keeps only what changes what Claude does (the task list and never clearing or compacting by itself) and the helper; it no longer lists what the band shows. (#345)
+
 ## [0.3.0] - 2026-10-10
 
 ### Added

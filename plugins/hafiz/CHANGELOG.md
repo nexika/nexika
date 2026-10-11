@@ -2,6 +2,16 @@
 
 All notable changes to hafiz are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-10-11
+
+### Changed
+- In a project with no memories yet the start card is one line with the helper. With memories, the card no longer repeats the skill names. (#345)
+
+### Fixed
+- hafiz now captures ordinary work: decisions stated as plain rules ("compare X with Y, not Z", "never ...", "X must stay ...", every line under "Decisions:" or "Some rules for this work:"), files changed through the shell (taken from git at the end of each turn), and python -m unittest as a test run, also when its output is piped through tail. (#369)
+- After a compaction or in a new session, hafiz now gives back the plan's steps that are not done yet (from the numbered plan in a prompt or an approved plan), instead of only the first prompt cut at 400 characters. The handoff note and the export (plan_left) list them too. (#370)
+- The start card shows every decision of this branch, by characters (about 700) rather than three and a "(+N)", so a rule like "casefold(), not lower()" is no longer hidden behind recall. (#371)
+
 ## [0.2.0] - 2026-10-08
 
 ### Added

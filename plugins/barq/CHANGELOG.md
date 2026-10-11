@@ -2,6 +2,11 @@
 
 All notable changes to barq are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] - 2026-10-11
+
+### Changed
+- The session note is shorter (686 to 536 characters, read again on every turn). The warning not to copy [masked] lines into an edit now comes with the output that has masked lines, instead of in every session. (#345)
+
 ## [0.3.0] - 2026-10-10
 
 ### Added

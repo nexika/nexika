@@ -2,6 +2,11 @@
 
 All notable changes to bayan are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-10-11
+
+### Changed
+- bayan's check and write descriptions are shorter, and two sentences of its session guide are tighter, with the same writing rules. (#336)
+
 ## [0.2.0] - 2026-10-08
 
 ### Added

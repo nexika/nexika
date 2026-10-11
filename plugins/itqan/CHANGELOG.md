@@ -2,6 +2,12 @@
 
 All notable changes to itqan are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-10-11
+
+### Changed
+- The session note now says which tests to run before calling a change done: the test that shows it works, the existing tests of every edited file, and to say so when one of them already failed before the change. (#344)
+- The session note is shorter (about 375 characters instead of 806 in a project with no stack): it keeps the rule on which tests to run before saying done, the stack checklists, the project's own checks, approved rules and waiting proposals, and one line naming the scripts folder. The list of workflows and the guard line are gone (Claude Code already lists the skills), and last session's guard summary is now only in /itqan:insights. (#345)
+
 ## [0.4.0] - 2026-10-10
 
 ### Changed

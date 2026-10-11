@@ -2,6 +2,11 @@
 
 All notable changes to manar are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-10-11
+
+### Changed
+- manar's session note now appears only when the project is a website, its session-start hook is about twice as fast, and its skill descriptions are shorter, so other sessions start about 400 tokens lighter. The skills still work everywhere. (#336)
+
 ## [0.2.0] - 2026-10-08
 
 ### Added
