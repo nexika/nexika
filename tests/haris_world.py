@@ -80,6 +80,10 @@ def code_files(project, home):
     }
     for name, text in texts.items():
         (py / name).write_text(text)
+    pkg = py / "pkg"  # a package whose __main__ deletes home (#383)
+    pkg.mkdir()
+    (pkg / "__init__.py").write_text("")
+    (pkg / "__main__.py").write_text(texts["wipe.py"])
     (py / "link.py").symlink_to("wipe.py")
     (py / "link_ok.py").symlink_to("ok.py")
     (py / "linked").symlink_to(".", target_is_directory=True)

@@ -1075,7 +1075,7 @@ ask	PATH=/tmp/bin:$PATH git status
 ask	env PATH=/tmp/bin git status
 ask	env -i PATH=/tmp/bin git status
 ask	env -P /tmp/bin git status
-allow	PATH=.:$PATH git status
+ask	PATH=.:$PATH git status
 ask	PATH=tools:$PATH git status
 ask	cd tools && PATH=.:$PATH git status
 allow	PATH=$HOME/bin:$PATH make
@@ -1122,3 +1122,28 @@ deny	python3 py/leak.py
 pass	python3 py/tests.py -q
 pass	python3 py/clean.py build
 pass	python3 py/run.py
+
+# ---------------------------------------------------------------- found in review of #382-#385
+ask	PATH=/nonexist:tools git status
+ask	PATH=$HOME/.nope:tools:$PATH git status
+ask	PATH=/opt/nope:$PWD/tools:$PATH git status
+ask	cp tools/git /tmp/git && PATH=/tmp:$PATH git status
+deny	python3 <> py/wipe.py
+ask	python3 <&3 3< py/wipe.py
+ask	python3 3< py/wipe.py 0<&3
+ask	python3 < py/w*.py
+ask	{ python3; } < py/wipe.py
+ask	( python3 ) < py/wipe.py
+ask	exec < py/wipe.py; python3
+deny	PYTHONPATH=py python3 -c "import os as o, wipe"
+deny	PYTHONPATH=py python3 -c "if 1: import wipe"
+deny	python3 -c "from py import wipe"
+deny	PYTHONPATH=py python3 -c "__import__('wipe')"
+deny	PYTHONPATH=py python3 -c "import importlib; importlib.import_module('wipe')"
+deny	PYTHONPATH=py python3 -c "import a,b,c,d,e,f,g,h,wipe"
+deny	PYTHONPATH=py python3 -m pkg
+ask	cp py/wipe.py .venv/lib/python3.12/site-packages/
+ask	mv py/wipe.py .venv/lib/python3.12/site-packages/json.py
+ask	cp py/wipe.py .venv/lib/python3.12/site-packages/x.PTH
+pass	python3 -c "import os, sys, json"
+allow	cat .venv/lib/python3.12/site-packages/x.pth

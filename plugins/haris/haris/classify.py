@@ -140,6 +140,10 @@ def node(n, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         return Stage()
     if isinstance(n, shell.Group):
         inner = ctx.child() if n.subshell else ctx
+        # `{ python3; } < file`: what runs inside reads the group's input, which haris does not follow (#385)
+        unknown_in = inner.stdin_unknown
+        if any(r.op in INPUT_REDIRECTS and r.fd in ("", "0") for r in n.redirects):
+            inner.stdin_unknown = True
         top, inner.top = inner.top, False  # a loop or a condition may run its body any number of times
         if n.each and ctx.unroll_budget[0] >= len(n.each):
             # judged once per word, for what each would do; a `break` may stop at any word, so after
@@ -156,6 +160,7 @@ def node(n, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         else:
             walk(n.body, inner)
         inner.top = top
+        inner.stdin_unknown = unknown_in
         for r in n.redirects:
             redirect(r, ctx, [])
         return Stage(secret="secret" in inner.marks)
@@ -295,7 +300,10 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         assigns.append((name, expanded[0] if expanded else arg("")))
     for name, value in assigns:
         risky_assign(name, value, ctx)
-    if not argv:
+    if not argv or (len(argv) == 1 and argv[0] == "exec" and any(
+            r.op in INPUT_REDIRECTS and r.fd in ("", "0") for r in cmd.redirects)):
+        if argv:  # `exec < file`: every later command reads that file (#385)
+            ctx.stdin_unknown = True
         for name, value in assigns:
             ctx.vars[name] = str(value)
         for r in cmd.redirects:
@@ -304,6 +312,7 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         return None
     heredoc = None
     from_file = None
+    copied = False
     secret_input = False
     for r in cmd.redirects:
         before = len(ctx.findings)
@@ -311,12 +320,16 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         secret_input = secret_input or any(f.cls == "secret-read" for f in ctx.findings[before:])
         if r.fd in ("", "0") and r.op in INPUT_REDIRECTS:  # the last one written is the stdin (#385)
             heredoc = text
-            from_file = r.target if r.op == "<" else None
+            from_file = r.target if r.op in ("<", "<>") else None
+            copied = r.op == "<&"
     if secret_input:
         stdin = Stage(secret=True)
     if from_file is not None:
         values_ = expand(from_file, ctx)
-        stdin = Stage(secret=secret_input, file=values_[0] if values_ else arg(UNKNOWN))
+        file = values_[0] if values_ and not re.search(r"[*?\[]", values_[0]) else arg(UNKNOWN)
+        stdin = Stage(secret=secret_input, file=file)
+    elif copied:
+        stdin = Stage(secret=secret_input)  # `<&3`: another descriptor, whose file haris does not follow
     elif heredoc is not None:
         stdin = Stage(text=heredoc if UNKNOWN not in heredoc else None,
                       secret="secret" in getattr(heredoc, "marks", ()))
@@ -375,7 +388,7 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
     return stage
 
 
-INPUT_REDIRECTS = {"<", "<<", "<<-", "<<<", "<&"}
+INPUT_REDIRECTS = {"<", "<>", "<<", "<<-", "<<<", "<&"}
 WRITES = {"write", "write-temp", "write-outside", "write-memory", "secret-write"}
 
 
@@ -417,13 +430,20 @@ def python_imports(program: str, names: list[str], ctx: Ctx) -> None:
     value = ctx.prefix["PYTHONPATH"] if "PYTHONPATH" in ctx.prefix else ctx.vars.get("PYTHONPATH", "")
     folders = [ctx.cwd] + [ctx.where.resolve(e, ctx.cwd) for e in str(value).split(":")
                            if e and UNKNOWN not in e]
-    for name in names[:8]:
+    if len(names) > MAX_IMPORTS:
+        ctx.add("dynamic", f"The Python code imports more than {MAX_IMPORTS} modules, too many for haris to "
+                           "read each one.")
+        names = names[:MAX_IMPORTS]
+    for name in names:
         for folder in folders:
             files = module_files(folder, name) if folder else []
             if files:
                 for path in files:
                     script_file_check(program, path, ctx)
                 break
+
+
+MAX_IMPORTS = 32
 
 
 def module_files(folder: str, name: str) -> list[str]:
@@ -441,16 +461,22 @@ def module_files(folder: str, name: str) -> list[str]:
     return files
 
 
-PY_IMPORTS = re.compile(r"(?m)(?:^|;)\s*(?:from\s+([\w.]+)\s+import\b|import\s+([\w.]+(?:\s*,\s*[\w.]+)*))")
+PY_IMPORTS = re.compile(r"\bfrom\s+([\w.]+)\s+import\s+\(?\s*([\w\s,]+)|\bimport\s+([\w.]+(?:\s+as\s+\w+)?"
+                        r"(?:\s*,\s*[\w.]+(?:\s+as\s+\w+)?)*)")
+PY_IMPORT_CALL = re.compile(r"\b(?:__import__|import_module)\(\s*['\"]([\w.]+)['\"]")
 
 
 def imported_names(code: str) -> list[str]:
+    """Every module name the code may import, written out: `import a as b, c`, `from a import b`
+    (a, and a.b in case b is a module), `__import__('a')`, `importlib.import_module('a')`."""
     names = []
     for m in PY_IMPORTS.finditer(code):
         if m.group(1):
             names.append(m.group(1))
+            names += [f"{m.group(1)}.{n.split()[0]}" for n in m.group(2).split(",") if n.split()]
         else:
-            names += [n.strip() for n in m.group(2).split(",")]
+            names += [n.split()[0] for n in m.group(3).split(",") if n.split()]
+    names += PY_IMPORT_CALL.findall(code)
     return [n for n in names if not n.startswith(".")]
 
 
@@ -644,9 +670,12 @@ def other_copy(first: str, program: str, ctx: Ctx) -> str | None:
         if folder in SYSTEM_BIN:
             return None
         path = os.path.join(folder, first)
-        # a missing folder may be made by this same command; a folder without the program is skipped
-        if os.path.isfile(path) or not os.path.isdir(folder):
+        if os.path.isfile(path):
             return unusual_copy(folder, path, ctx)
+        # this same command may put the program there first (`cp x /tmp/git && PATH=/tmp:$PATH git`)
+        doubt = unusual_copy(folder, path, ctx)
+        if doubt:
+            return doubt
     return None
 
 
@@ -3085,7 +3114,7 @@ def h_python(argv, ctx, stdin):
             return Stage()
         ctx.add("exec", f"Runs the Python module {name}.")
         if UNKNOWN not in name:
-            python_imports(argv[0], [str(name)], ctx)
+            python_imports(argv[0], [str(name), f"{name}.__main__"], ctx)  # a package runs its __main__
         return Stage()
     if has(opts, "-V", "--version", "-h", "--help"):
         ctx.add("read", "Shows the Python version.")
