@@ -80,6 +80,7 @@ class Stage:
     paths_root: str | None = None   # it lists paths under this folder (find, ls, git ls-files)
     filtered: bool = True           # those paths are a selection, not everything
     environ: bool = False           # it prints the environment (env, printenv, set, export)
+    file: str | None = None         # it is a file fed in with `< file` (#385)
 
 
 # ---------------------------------------------------------------- walking the parsed command
@@ -139,6 +140,10 @@ def node(n, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         return Stage()
     if isinstance(n, shell.Group):
         inner = ctx.child() if n.subshell else ctx
+        # `{ python3; } < file`: what runs inside reads the group's input, which haris does not follow (#385)
+        unknown_in = inner.stdin_unknown
+        if any(r.op in INPUT_REDIRECTS and r.fd in ("", "0") for r in n.redirects):
+            inner.stdin_unknown = True
         top, inner.top = inner.top, False  # a loop or a condition may run its body any number of times
         if n.each and ctx.unroll_budget[0] >= len(n.each):
             # judged once per word, for what each would do; a `break` may stop at any word, so after
@@ -155,6 +160,7 @@ def node(n, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         else:
             walk(n.body, inner)
         inner.top = top
+        inner.stdin_unknown = unknown_in
         for r in n.redirects:
             redirect(r, ctx, [])
         return Stage(secret="secret" in inner.marks)
@@ -294,7 +300,10 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         assigns.append((name, expanded[0] if expanded else arg("")))
     for name, value in assigns:
         risky_assign(name, value, ctx)
-    if not argv:
+    if not argv or (len(argv) == 1 and argv[0] == "exec" and any(
+            r.op in INPUT_REDIRECTS and r.fd in ("", "0") for r in cmd.redirects)):
+        if argv:  # `exec < file`: every later command reads that file (#385)
+            ctx.stdin_unknown = True
         for name, value in assigns:
             ctx.vars[name] = str(value)
         for r in cmd.redirects:
@@ -302,16 +311,26 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         ctx.add("read", "Sets a variable.")
         return None
     heredoc = None
+    from_file = None
+    copied = False
     secret_input = False
     for r in cmd.redirects:
         before = len(ctx.findings)
         text = redirect(r, ctx, argv)
         secret_input = secret_input or any(f.cls == "secret-read" for f in ctx.findings[before:])
-        if text is not None:
+        if r.fd in ("", "0") and r.op in INPUT_REDIRECTS:  # the last one written is the stdin (#385)
             heredoc = text
+            from_file = r.target if r.op in ("<", "<>") else None
+            copied = r.op == "<&"
     if secret_input:
         stdin = Stage(secret=True)
-    if heredoc is not None:
+    if from_file is not None:
+        values_ = expand(from_file, ctx)
+        file = values_[0] if values_ and not re.search(r"[*?\[]", values_[0]) else arg(UNKNOWN)
+        stdin = Stage(secret=secret_input, file=file)
+    elif copied:
+        stdin = Stage(secret=secret_input)  # `<&3`: another descriptor, whose file haris does not follow
+    elif heredoc is not None:
         stdin = Stage(text=heredoc if UNKNOWN not in heredoc else None,
                       secret="secret" in getattr(heredoc, "marks", ()))
     program = os.path.basename(argv[0]).lower()
@@ -369,6 +388,7 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
     return stage
 
 
+INPUT_REDIRECTS = {"<", "<>", "<<", "<<-", "<<<", "<&"}
 WRITES = {"write", "write-temp", "write-outside", "write-memory", "secret-write"}
 
 
@@ -378,6 +398,88 @@ def risky_assign(name: str, value: str, ctx: Ctx) -> None:
     if name in RISKY_ENV or (name == "NODE_OPTIONS" and re.search(r"--(?:require|import|loader)|-r\b",
                                                                   value)):
         ctx.add("risky", f"Setting {name} changes which code the next program loads or runs.")
+    elif name in PYTHON_LOAD_ENV:
+        python_env(name, value, ctx)
+
+
+PYTHON_LOAD_ENV = {"PYTHONPATH", "PYTHONSTARTUP", "PYTHONHOME", "PYTHONUSERBASE"}
+
+
+def python_env(name: str, value: str, ctx: Ctx) -> None:
+    """A variable that makes Python load code from a folder or file (#383). Pointing it where Claude can
+    write without being asked (a temp folder, or one only known when it runs) asks; so does any of them
+    but PYTHONPATH pointing into the project. PYTHONPATH=src is everyday work: the modules imported from
+    there are judged where they are imported (python_imports)."""
+    for entry in str(value).split(":"):
+        if entry == UNKNOWN:
+            continue  # `$PYTHONPATH`: what it had
+        path = ctx.where.resolve(entry or ".", ctx.cwd) if UNKNOWN not in entry else None
+        place = ctx.where.place(path)
+        if place in ("temp", "unknown") or (place in ("project", "git") and name != "PYTHONPATH"):
+            shown = ctx.show(path) if path else "a folder only known when it runs"
+            ctx.add("risky", f"{name} points Python at {shown}, so it would load code haris has not judged.")
+            return
+
+
+def python_imports(program: str, names: list[str], ctx: Ctx, first: str | None = None) -> None:
+    """The project's own modules that Python code imports, from the folder it runs in or PYTHONPATH (#383):
+    each is judged like `python FILE` (script_file_check), so `PYTHONPATH=py python3 -c "import wipe"` is
+    refused like `python3 py/wipe.py`."""
+    if (first or ctx.cwd) is None:
+        return
+    value = ctx.prefix["PYTHONPATH"] if "PYTHONPATH" in ctx.prefix else ctx.vars.get("PYTHONPATH", "")
+    folders = [first or ctx.cwd] + [ctx.where.resolve(e, ctx.cwd) for e in str(value).split(":")
+                           if e and UNKNOWN not in e]
+    if len(names) > MAX_IMPORTS:
+        ctx.add("dynamic", f"The Python code imports more than {MAX_IMPORTS} modules, too many for haris to "
+                           "read each one.")
+        names = names[:MAX_IMPORTS]
+    for name in names:
+        for folder in folders:
+            files = module_files(folder, name) if folder else []
+            if files:
+                for path in files:
+                    script_file_check(program, path, ctx)
+                break
+
+
+MAX_IMPORTS = 32
+
+
+def module_files(folder: str, name: str) -> list[str]:
+    """The files Python runs to import `name` from `folder`: each package's __init__.py, then the module."""
+    files, base = [], folder
+    for part in name.split("."):
+        package, module = os.path.join(base, part), os.path.join(base, part + ".py")
+        if os.path.isfile(os.path.join(package, "__init__.py")):
+            files.append(os.path.join(package, "__init__.py"))
+        elif os.path.isfile(module):
+            return [*files, module]
+        elif not os.path.isdir(package):
+            return files
+        base = package
+    return files
+
+
+PY_IMPORTS = re.compile(r"\bfrom[ \t]+([\w.]+)[ \t]+import[ \t]*(?:\(([^)]*)\)|([\w \t,]+))"
+                        r"|\bimport[ \t]+([\w.]+(?:[ \t]+as[ \t]+\w+)?"
+                        r"(?:[ \t]*,[ \t]*[\w.]+(?:[ \t]+as[ \t]+\w+)?)*)")
+PY_IMPORT_CALL = re.compile(r"\b(?:__import__|import_module)\(\s*['\"]([\w.]+)['\"]")
+
+
+def imported_names(code: str) -> list[str]:
+    """Every module name the code may import, written out: `import a as b, c`, `from a import b`
+    (a, and a.b in case b is a module), `__import__('a')`, `importlib.import_module('a')`."""
+    names = []
+    for m in PY_IMPORTS.finditer(code):
+        if m.group(1):
+            names.append(m.group(1))
+            names += [f"{m.group(1)}.{n.split()[0]}" for n in (m.group(2) or m.group(3)).split(",")
+                      if n.split()]
+        else:
+            names += [n.split()[0] for n in m.group(4).split(",") if n.split()]
+    names += PY_IMPORT_CALL.findall(code)
+    return [n for n in names if not n.startswith(".")]
 
 
 def printed_into(cmd: shell.Simple, ctx: Ctx) -> str:
@@ -476,6 +578,11 @@ def run(argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
     if m:
         family = m.group(1) if m.group(1) != "pypy" else "pypy3"
     handler = HANDLERS.get(family)
+    if handler or program in READERS or program in RUNNERS:  # judged by its name: is it the usual one?
+        elsewhere = other_copy(str(first), program, ctx)
+        if elsewhere:
+            ctx.add("risky", f"Runs the {program} in {elsewhere}, not the usual one, so haris cannot tell "
+                             "what it does.")
     if handler:
         ctx.as_written = argv is ctx.written_argv  # not run for a wrapper (env NAME=value, nice ...)
         return handler([arg(family, first.marks), *argv[1:]], ctx, stdin)
@@ -537,6 +644,68 @@ def script_runner(program: str, first: str, ctx: Ctx) -> bool:
 # that are also haris handlers (watch, init, start ...) are left out.
 NOT_COMMANDS = {"watch", "init", "start", "open", "format", "at", "date", "set", "task", "install", "just",
                 "make", "history", "code", "shift", "local", "export", "test"}
+
+
+SYSTEM_BIN = {"/bin", "/sbin", "/usr/bin", "/usr/sbin", "/usr/local/bin", "/usr/local/sbin",
+              "/opt/homebrew/bin", "/opt/homebrew/sbin", "/snap/bin"}
+PROJECT_WRAPPERS = {"gradlew", "mvnw"}  # a project's own copy of its build tool, by design
+# names a project's tool folder never needs: a copy there under one of them is not the real thing
+SYSTEM_TOOLS = SHELLS | NETWORK | {"make", "rm", "cp", "mv", "ln", "chmod", "chown", "tar", "sudo", "env",
+                                   "find", "xargs", "sed", "awk", "dd", "docker", "kubectl", "npm", "npx",
+                                   "pnpm", "yarn", "pip", "pip3"}
+
+
+def other_copy(first: str, program: str, ctx: Ctx) -> str | None:
+    """Where a program haris judges by its name runs from, said plainly, when that is not where the name
+    usually leads (#384): `/tmp/bin/git`, `PATH=/tmp/bin git`, `export PATH=tools:$PATH; git`. None when
+    the program found is one Claude could not have put there unasked (see unusual_copy)."""
+    if "/" in first or first.startswith("~"):
+        path = ctx.where.resolve(first, ctx.cwd)
+        return unusual_copy(os.path.dirname(path), path, ctx) if path else "a folder only known when it runs"
+    value = ctx.prefix["PATH"] if "PATH" in ctx.prefix else ctx.vars.get("PATH")
+    if value is None:
+        return None
+    for entry in str(value).split(":"):
+        if entry == UNKNOWN:
+            return None  # `$PATH`: the folders it had, where the name usually leads
+        if UNKNOWN in entry:
+            return "a folder only known when it runs"
+        folder = ctx.where.resolve(entry or ".", ctx.cwd)
+        if not folder:
+            return "a folder only known when it runs"
+        if folder in SYSTEM_BIN:
+            return None
+        path = os.path.join(folder, first)
+        if os.path.isfile(path):
+            return unusual_copy(folder, path, ctx)
+        # this same command may put the program there first (`cp x /tmp/git && PATH=/tmp:$PATH git`): a
+        # temp folder, or one that does not exist yet, is doubted; a project folder without it is skipped
+        if not os.path.isdir(folder) or ctx.where.place(folder) in ("temp", "unknown"):
+            doubt = unusual_copy(folder, path, ctx)
+            if doubt:
+                return doubt
+    return None
+
+
+def unusual_copy(folder: str, path: str, ctx: Ctx) -> str | None:
+    """A copy Claude could have put there without being asked: in the project, in a temp folder, or
+    somewhere only known when it runs. Writing anywhere else asks first or is refused, so a program
+    there was put by the user or a tool they ran (~/.local/bin, ~/.cargo/bin). A project's own tool
+    folders (node_modules/.bin, vendor/bin, bin/, a virtual or conda environment) hold its tools, but
+    never a system tool such as git or ls."""
+    if folder in SYSTEM_BIN or ctx.where.place(folder) not in ("project", "git", "temp", "unknown"):
+        return None
+    name = os.path.basename(path).lower()
+    if name in PROJECT_WRAPPERS or (tool_folder(folder, ctx) and name not in SYSTEM_TOOLS):
+        return None
+    return ctx.show(folder)
+
+
+def tool_folder(folder: str, ctx: Ctx) -> bool:
+    parent = os.path.dirname(folder)
+    return (folder.endswith(("/node_modules/.bin", "/vendor/bin")) or folder == f"{ctx.where.root}/bin"
+            or os.path.isfile(os.path.join(parent, "pyvenv.cfg"))
+            or os.path.isdir(os.path.join(parent, "conda-meta")))
 
 
 def script_runner_run(program: str, argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
@@ -1209,6 +1378,8 @@ def h_export(argv, ctx, stdin):
             ctx.vars[name] = UNKNOWN if ("n" in flags or a[len(name)] == "+") else value
             if name in RISKY_ENV:
                 ctx.add("risky", f"Setting {name} changes which code later programs load or run.")
+            elif name in PYTHON_LOAD_ENV:
+                python_env(name, value, ctx)
         elif program not in ("export", "readonly") or "n" in flags:
             ctx.vars[name] = UNKNOWN if "n" in flags else ""
     ctx.add("read", "Sets variables.")
@@ -1262,6 +1433,8 @@ def shell_string(script: Arg, ctx: Ctx, args: list, via: str, inherit: bool = Tr
 
 
 def interpreter_stdin(program: str, ctx: Ctx, stdin: Stage | None, lang: str = "sh") -> Stage:
+    if stdin is not None and stdin.file is not None:  # `python3 < FILE` runs FILE (#385)
+        return script_run(program, stdin.file, ctx)
     if stdin is None and not ctx.stdin_unknown:
         ctx.add("exec", f"Starts {program}.")
     elif stdin is not None and stdin.downloads:
@@ -2790,6 +2963,9 @@ def script_file_check(program: str, path: str, ctx: Ctx) -> None:
     lexical, real, why = code_file_place(path, ctx)
     if not lexical:
         return
+    if real in ctx.modules_judged or len(ctx.modules_judged) >= MAX_IMPORTS:
+        return
+    ctx.modules_judged.add(real)
     if real not in ctx.code_files:
         ctx.code_files[real] = read_code_file(lexical)
     data = ctx.code_files[real][0]
@@ -2799,6 +2975,40 @@ def script_file_check(program: str, path: str, ctx: Ctx) -> None:
     inner = ctx.child(findings=[])
     code_check(arg(text), inner, f"{ctx.show(real)} (read by haris)", program, files=False)
     ctx.findings += [f for f in inner.findings if f.cls in ALWAYS_NO]
+    python_imports(program, imported_names(text), ctx, os.path.dirname(real))  # its imports, in turn
+    reach = script_reach(text)
+    if reach:
+        ctx.add("risky", f"{ctx.show(real)} {reach}, so haris cannot tell what it would reach.")
+
+
+# What a script builds from parts and runs: a shell command that starts with a delete or a network tool,
+# or a login file it writes by a path it builds (#382). Inline code asks for every computed command; a
+# script file asks only for these, so a project script that runs pytest with its own arguments passes.
+REACH_TOOLS = (r"(rm|rmdir|shred|dd|mkfs\S*|curl|wget|nc|ncat|netcat|socat|scp|rsync|ssh|ftp|crontab|chmod"
+               r"|chown)")
+COMPUTED_SHELL = re.compile(r"(?<!\w)[rbuRBU]{0,2}(['\"])\s*" + REACH_TOOLS
+                            + r"\s[^'\"\n]*\1\s*(?:\+|%|\.format\b)"
+                            r"|\b(?:[rR]?[fF]|[fF][rR])(['\"])\s*" + REACH_TOOLS + r"\s[^'\"\n]*\{")
+RUNS_SHELL = re.compile(r"\bos\.(?:system|popen)\(|shell\s*=\s*True"
+                        r"|['\"](?:ba|z|da)?sh['\"]\s*,\s*['\"]-c['\"]")
+LOGIN_FILE = re.compile(r"\.(?:bash|zsh)rc$|\.(?:bash_)?profile$|\.zprofile$|\.zshenv$|\.bash_login$"
+                        r"|authorized_keys$|/crontabs?(?:/|$)|/cron\.d(?:/|$)|LaunchAgents|systemd/user|autostart"
+                        r"|\.git/hooks")
+FILE_WRITE = re.compile(r"open\([^)]*,\s*['\"][wax]|\.write_(?:text|bytes)\(|shutil\.(?:copy\w*|move)\(")
+
+
+def script_reach(text: str) -> str:
+    m = COMPUTED_SHELL.search(text)
+    if m and RUNS_SHELL.search(text):
+        return f"builds a `{m.group(2) or m.group(4)}` command from parts and runs it"
+    joined = re.sub(r"(['\"])\s*\+\s*(['\"])", "", text)  # '.bash' + 'rc' is '.bashrc'
+    paths = [lit for lit in STRING_LITERAL_TEXT.findall(joined) if re.fullmatch(r"[\w./~-]+", lit)]
+    if FILE_WRITE.search(text) and any(LOGIN_FILE.search(lit) for lit in paths):
+        return "writes to a login file (a shell profile, crontab, authorized_keys ...) by a path it builds"
+    return ""
+
+
+STRING_LITERAL_TEXT = re.compile(r"['\"]([^'\"\n]{1,200})['\"]")
 
 
 def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "", files: bool = True) -> Stage:
@@ -2810,6 +3020,8 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "", files: bool = True
             ctx.add("dynamic", f"`{via}` runs code that is only known when it runs.")
         return Stage()
     text = str(code)
+    if files and re.search(r"python|pypy", lang):
+        python_imports(lang, imported_names(text), ctx)
     # Python that runs a file as code is judged with the file's text, when haris may read it (#343)
     if files and re.search(r"python|pypy", lang) and FILE_RUN_HINT.search(text) and \
             judge_file_runs(text, ctx, via, lang):
@@ -2924,6 +3136,8 @@ def h_python(argv, ctx, stdin):
             ctx.add("exec", "Starts a web server that shares the current folder.")
             return Stage()
         ctx.add("exec", f"Runs the Python module {name}.")
+        if UNKNOWN not in name:
+            python_imports(argv[0], [str(name), f"{name}.__main__"], ctx)  # a package runs its __main__
         return Stage()
     if has(opts, "-V", "--version", "-h", "--help"):
         ctx.add("read", "Shows the Python version.")

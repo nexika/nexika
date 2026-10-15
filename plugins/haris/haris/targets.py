@@ -330,6 +330,7 @@ class Ctx:
         # this command wrote each file with known text at its top level, the ones it wrote elsewhere or
         # only appended to, and findings that are an interpreter starting (not something before it)
         self.code_files: dict = {}
+        self.modules_judged: set[str] = set()  # Python files judged as imported, so a chain ends (#383)
         self.read_files: dict = {}
         self.session_reads: dict = {}
         self.trusted_files: list = []

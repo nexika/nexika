@@ -64,6 +64,9 @@ PERSIST_PROJECT = (".git/hooks", ".git/config", ".claude/settings.json", ".claud
                    ".claude/hooks")
 CONFIG_EXEC_PROJECT = (".mcp.json", ".envrc", ".vscode/tasks.json", ".vscode/settings.json",
                        ".devcontainer", ".claude/agents", ".claude/commands", ".claude/skills")
+# an environment's site-packages: its .pth files and sitecustomize run at every Python start, and a module
+# put there is imported in place of the real one (#383)
+PYTHON_AT_START = re.compile(r"(?i)/(?:site|dist)-packages(?:/|$)")
 SYSTEM_DIRS = ("/etc", "/usr", "/bin", "/sbin", "/lib", "/lib32", "/lib64", "/boot", "/sys", "/proc", "/dev",
                "/var", "/opt", "/root", "/srv", "/snap", "/System", "/Library", "/private/etc",
                "/private/var", "/Volumes", "/mnt", "/media", "C:/Windows",
@@ -270,6 +273,8 @@ class Where:
             return "system"
         if self.memory and under(path, self.memory) and path != self.memory:
             return "memory"
+        if PYTHON_AT_START.search(path):
+            return "config-exec"
         tree = self.project_of(path)
         if tree:
             if any(under(path, f"{tree}/{p}") for p in CONFIG_EXEC_PROJECT):
