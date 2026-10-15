@@ -86,8 +86,8 @@ we found. Every change had to show, with numbers, that it didn't make the work w
   tests of every file it edited. On 100 real tasks, Claude did so in 86% of them, up from 63%,
   with the same share of tasks solved.
 - **A lighter start.** The add-ons say less at the start of each conversation, and only what
-  changes how Claude works. That opening text is about 2,300 tokens shorter (a token is roughly
-  three quarters of a word). The quality of the work held, and Claude ran tests more often. A
+  changes how Claude works. That opening text is about 2,500 tokens shorter than in 0.3 (a token
+  is roughly three quarters of a word; [each add-on's share](benchmarks/agent/context-0.4.md)). The quality of the work held, and Claude ran tests more often. A
   task did not get cheaper overall, though: Claude used the room for more steps, so the total
   stayed about the same.
 - **A better memory after a break.** hafiz now keeps the plan and its open steps, and every

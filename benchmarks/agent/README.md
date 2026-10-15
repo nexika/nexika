@@ -102,7 +102,8 @@ python3 benchmarks/agent/bench.py --pilot benchmarks/agent/pilot-3.json pipeline
   --model sonnet --runs 3 --arms A,B,amin+barq+hafiz+haris+itqan+mizan+siyaq+tabib --jobs 3 \
   --python ~/nexika-bench/venv/bin/python --workers 3 --test-timeout 900
 
-# The prompt tokens each plugin adds, one short session per plugin (14 sessions)
+# The prompt tokens each plugin adds: one short paid session per arm, 14 in all (about $0.30).
+# Add --ref <tag> and a fresh AGENTBENCH_HOME to measure a release; context-0.4.md has 0.3.0 against 0.4.0.
 python3 benchmarks/agent/bench.py context --model sonnet --task django__django-11848
 ```
 
