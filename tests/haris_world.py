@@ -26,12 +26,13 @@ def build_world(base, name="proj"):
     ~/work/<name>: a benchmark session that changes its project gets one of its own)."""
     home = base / "home"
     project = home / "work" / name
-    for d in ("src", "build", "node_modules/.bin", "scripts", "tests"):
+    for d in ("src", "build", "node_modules/.bin", "scripts", "tests", "tools"):
         (project / d).mkdir(parents=True, exist_ok=True)
     files = {
         "src/app.py": "print('hi')\n", "README.md": "# demo\n", "package.json": '{"name": "demo"}\n',
         ".env": "API_KEY=abc\n", ".env.example": "API_KEY=\n", ".env.production": "API_KEY=prod\n",
         "data.txt": "a b\n", "list.txt": "a\n", "node_modules/.bin/jest": "", "scripts/build.sh": "echo\n",
+        "tools/git": "#!/bin/sh\n",  # a program named like git in the project (#384)
     }
     for name, text in files.items():
         (project / name).write_text(text)

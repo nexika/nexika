@@ -483,6 +483,11 @@ def run(argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
     if m:
         family = m.group(1) if m.group(1) != "pypy" else "pypy3"
     handler = HANDLERS.get(family)
+    if handler or program in READERS or program in RUNNERS:  # judged by its name: is it the usual one?
+        elsewhere = other_copy(str(first), program, ctx)
+        if elsewhere:
+            ctx.add("risky", f"Runs the {program} in {elsewhere}, not the usual one, so haris cannot tell "
+                             "what it does.")
     if handler:
         ctx.as_written = argv is ctx.written_argv  # not run for a wrapper (env NAME=value, nice ...)
         return handler([arg(family, first.marks), *argv[1:]], ctx, stdin)
@@ -544,6 +549,51 @@ def script_runner(program: str, first: str, ctx: Ctx) -> bool:
 # that are also haris handlers (watch, init, start ...) are left out.
 NOT_COMMANDS = {"watch", "init", "start", "open", "format", "at", "date", "set", "task", "install", "just",
                 "make", "history", "code", "shift", "local", "export", "test"}
+
+
+SYSTEM_BIN = {"/bin", "/sbin", "/usr/bin", "/usr/sbin", "/usr/local/bin", "/usr/local/sbin",
+              "/opt/homebrew/bin", "/opt/homebrew/sbin", "/snap/bin"}
+PROJECT_WRAPPERS = {"gradlew", "mvnw"}  # a project's own copy of its build tool, by design
+
+
+def other_copy(first: str, program: str, ctx: Ctx) -> str | None:
+    """Where a program haris judges by its name runs from, said plainly, when that is not where the name
+    usually leads (#384): `/tmp/bin/git`, `PATH=/tmp/bin git`, `export PATH=tools:$PATH; git`. None when
+    the program found is one Claude could not have put there unasked (see unusual_copy)."""
+    if "/" in first or first.startswith("~"):
+        path = ctx.where.resolve(first, ctx.cwd)
+        return unusual_copy(os.path.dirname(path), path, ctx) if path else None
+    value = ctx.prefix["PATH"] if "PATH" in ctx.prefix else ctx.vars.get("PATH")
+    if value is None:
+        return None
+    for entry in str(value).split(":"):
+        if entry == UNKNOWN:
+            return None  # `$PATH`: the folders it had, where the name usually leads
+        if UNKNOWN in entry:
+            return "a folder only known when it runs"
+        folder = ctx.where.resolve(entry or ".", ctx.cwd)
+        if not folder:
+            return "a folder only known when it runs"
+        if folder in SYSTEM_BIN:
+            return None
+        path = os.path.join(folder, first)
+        # a missing folder may be made by this same command; a folder without the program is skipped
+        if os.path.isfile(path) or not os.path.isdir(folder):
+            return unusual_copy(folder, path, ctx)
+    return None
+
+
+def unusual_copy(folder: str, path: str, ctx: Ctx) -> str | None:
+    """A copy Claude could have put there without being asked: in the project, in a temp folder, or
+    somewhere only known when it runs. Writing anywhere else asks first or is refused, so a program
+    there was put by the user or a tool they ran (~/.local/bin, ~/.cargo/bin)."""
+    if folder in SYSTEM_BIN or ctx.where.place(folder) not in ("project", "git", "temp", "unknown"):
+        return None
+    if os.path.isfile(os.path.join(os.path.dirname(folder), "pyvenv.cfg")):
+        return None  # a virtual environment's python, pip and installed tools
+    if folder.endswith("/node_modules/.bin") or os.path.basename(path) in PROJECT_WRAPPERS:
+        return None
+    return ctx.show(folder)
 
 
 def script_runner_run(program: str, argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
