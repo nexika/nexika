@@ -1075,7 +1075,7 @@ ask	PATH=/tmp/bin:$PATH git status
 ask	env PATH=/tmp/bin git status
 ask	env -i PATH=/tmp/bin git status
 ask	env -P /tmp/bin git status
-ask	PATH=.:$PATH git status
+allow	PATH=.:$PATH git status
 ask	PATH=tools:$PATH git status
 ask	cd tools && PATH=.:$PATH git status
 allow	PATH=$HOME/bin:$PATH make
@@ -1147,3 +1147,21 @@ ask	mv py/wipe.py .venv/lib/python3.12/site-packages/json.py
 ask	cp py/wipe.py .venv/lib/python3.12/site-packages/x.PTH
 pass	python3 -c "import os, sys, json"
 allow	cat .venv/lib/python3.12/site-packages/x.pth
+deny	PYTHONPATH=py python3 -c $'from os import path\nimport wipe'
+deny	PYTHONPATH=py python3 - <<'EOF'↵from os import path↵import wipe↵EOF
+deny	python3 py/chain.py
+deny	cd py && python3 -c 'import chain'
+ask	python3 py/cmdvar.py
+ask	python3 py/shc.py
+pass	python3 py/cron.py
+allow	bin/rspec spec/x_spec.rb
+pass	bin/rails test
+allow	vendor/bin/phpunit tests
+allow	env/bin/python -m pytest
+allow	env/bin/pytest
+allow	export PATH=$PWD/env/bin:$PATH; pytest -q
+allow	export PATH=$PWD/scripts:$PATH; npm test
+allow	PATH=./scripts:$PATH make
+pass	printf '#!/bin/sh\n' > node_modules/.bin/git && node_modules/.bin/git status
+ask	cp tools/git node_modules/.bin/git; node_modules/.bin/git status
+ask	cd "$X"; tools/git status
