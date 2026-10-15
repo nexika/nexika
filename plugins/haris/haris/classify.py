@@ -385,6 +385,73 @@ def risky_assign(name: str, value: str, ctx: Ctx) -> None:
     if name in RISKY_ENV or (name == "NODE_OPTIONS" and re.search(r"--(?:require|import|loader)|-r\b",
                                                                   value)):
         ctx.add("risky", f"Setting {name} changes which code the next program loads or runs.")
+    elif name in PYTHON_LOAD_ENV:
+        python_env(name, value, ctx)
+
+
+PYTHON_LOAD_ENV = {"PYTHONPATH", "PYTHONSTARTUP", "PYTHONHOME", "PYTHONUSERBASE"}
+
+
+def python_env(name: str, value: str, ctx: Ctx) -> None:
+    """A variable that makes Python load code from a folder or file (#383). Pointing it where Claude can
+    write without being asked (a temp folder, or one only known when it runs) asks; so does any of them
+    but PYTHONPATH pointing into the project. PYTHONPATH=src is everyday work: the modules imported from
+    there are judged where they are imported (python_imports)."""
+    for entry in str(value).split(":"):
+        if entry == UNKNOWN:
+            continue  # `$PYTHONPATH`: what it had
+        path = ctx.where.resolve(entry or ".", ctx.cwd) if UNKNOWN not in entry else None
+        place = ctx.where.place(path)
+        if place in ("temp", "unknown") or (place in ("project", "git") and name != "PYTHONPATH"):
+            shown = ctx.show(path) if path else "a folder only known when it runs"
+            ctx.add("risky", f"{name} points Python at {shown}, so it would load code haris has not judged.")
+            return
+
+
+def python_imports(program: str, names: list[str], ctx: Ctx) -> None:
+    """The project's own modules that Python code imports, from the folder it runs in or PYTHONPATH (#383):
+    each is judged like `python FILE` (script_file_check), so `PYTHONPATH=py python3 -c "import wipe"` is
+    refused like `python3 py/wipe.py`."""
+    if ctx.cwd is None:
+        return
+    value = ctx.prefix["PYTHONPATH"] if "PYTHONPATH" in ctx.prefix else ctx.vars.get("PYTHONPATH", "")
+    folders = [ctx.cwd] + [ctx.where.resolve(e, ctx.cwd) for e in str(value).split(":")
+                           if e and UNKNOWN not in e]
+    for name in names[:8]:
+        for folder in folders:
+            files = module_files(folder, name) if folder else []
+            if files:
+                for path in files:
+                    script_file_check(program, path, ctx)
+                break
+
+
+def module_files(folder: str, name: str) -> list[str]:
+    """The files Python runs to import `name` from `folder`: each package's __init__.py, then the module."""
+    files, base = [], folder
+    for part in name.split("."):
+        package, module = os.path.join(base, part), os.path.join(base, part + ".py")
+        if os.path.isfile(os.path.join(package, "__init__.py")):
+            files.append(os.path.join(package, "__init__.py"))
+        elif os.path.isfile(module):
+            return [*files, module]
+        elif not os.path.isdir(package):
+            return files
+        base = package
+    return files
+
+
+PY_IMPORTS = re.compile(r"(?m)(?:^|;)\s*(?:from\s+([\w.]+)\s+import\b|import\s+([\w.]+(?:\s*,\s*[\w.]+)*))")
+
+
+def imported_names(code: str) -> list[str]:
+    names = []
+    for m in PY_IMPORTS.finditer(code):
+        if m.group(1):
+            names.append(m.group(1))
+        else:
+            names += [n.strip() for n in m.group(2).split(",")]
+    return [n for n in names if not n.startswith(".")]
 
 
 def printed_into(cmd: shell.Simple, ctx: Ctx) -> str:
@@ -1266,6 +1333,8 @@ def h_export(argv, ctx, stdin):
             ctx.vars[name] = UNKNOWN if ("n" in flags or a[len(name)] == "+") else value
             if name in RISKY_ENV:
                 ctx.add("risky", f"Setting {name} changes which code later programs load or run.")
+            elif name in PYTHON_LOAD_ENV:
+                python_env(name, value, ctx)
         elif program not in ("export", "readonly") or "n" in flags:
             ctx.vars[name] = UNKNOWN if "n" in flags else ""
     ctx.add("read", "Sets variables.")
@@ -2869,6 +2938,8 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "", files: bool = True
             ctx.add("dynamic", f"`{via}` runs code that is only known when it runs.")
         return Stage()
     text = str(code)
+    if files and re.search(r"python|pypy", lang):
+        python_imports(lang, imported_names(text), ctx)
     # Python that runs a file as code is judged with the file's text, when haris may read it (#343)
     if files and re.search(r"python|pypy", lang) and FILE_RUN_HINT.search(text) and \
             judge_file_runs(text, ctx, via, lang):
@@ -2983,6 +3054,8 @@ def h_python(argv, ctx, stdin):
             ctx.add("exec", "Starts a web server that shares the current folder.")
             return Stage()
         ctx.add("exec", f"Runs the Python module {name}.")
+        if UNKNOWN not in name:
+            python_imports(argv[0], [str(name)], ctx)
         return Stage()
     if has(opts, "-V", "--version", "-h", "--help"):
         ctx.add("read", "Shows the Python version.")
