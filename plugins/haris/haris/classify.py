@@ -402,9 +402,6 @@ def risky_assign(name: str, value: str, ctx: Ctx) -> None:
         ctx.add("risky", f"Setting {name} changes which code the next program loads or runs.")
     elif name in PYTHON_LOAD_ENV:
         python_env(name, value, ctx)
-    elif name in ("PYTHONWARNINGS", "PYTHONBREAKPOINT") and UNKNOWN not in str(value):
-        # every program that starts Python imports what they name, pytest too (#404)
-        python_imports("python", modules_named(name, str(value)), ctx)
 
 
 PYTHON_LOAD_ENV = {"PYTHONPATH", "PYTHONSTARTUP", "PYTHONHOME", "PYTHONUSERBASE"}
@@ -424,21 +421,43 @@ def python_env(name: str, value: str, ctx: Ctx) -> None:
             shown = ctx.show(path) if path else "a folder only known when it runs"
             ctx.add("risky", f"{name} points Python at {shown}, so it would load code haris has not judged.")
             return
-        if name == "PYTHONPATH" and path:  # every Python start runs these from its path (#405)
-            for start in ("sitecustomize.py", "usercustomize.py"):
-                if os.path.isfile(os.path.join(path, start)):
-                    script_file_check("python", os.path.join(path, start), ctx)
 
 
-def setting_modules(opts: list, ctx: Ctx) -> list[str]:
-    """Modules Python imports at start because a setting names them (#404): the category of a warnings
-    filter (`-W ignore::pkg.Warning`, PYTHONWARNINGS) and the hook in PYTHONBREAKPOINT (`pkg.func`)."""
+def python_start(family: str, argv: list[Arg], ctx: Ctx) -> None:
+    """What a program that starts Python loads because of its environment, judged when it runs, with
+    every variable known: sitecustomize.py and usercustomize.py on PYTHONPATH (#405), and the modules
+    PYTHONWARNINGS and PYTHONBREAKPOINT name (#404). Python's -E and -I ignore these variables, and -S
+    skips sitecustomize."""
     def setting(name):
         value = ctx.prefix[name] if name in ctx.prefix else ctx.vars.get(name, "")
         return str(value) if UNKNOWN not in str(value) else ""
-    names = [n for v in values(opts, "-W") for n in modules_named("PYTHONWARNINGS", str(v))]
-    return [*names, *modules_named("PYTHONWARNINGS", setting("PYTHONWARNINGS")),
-            *modules_named("PYTHONBREAKPOINT", setting("PYTHONBREAKPOINT"))]
+    settings = {n: setting(n) for n in ("PYTHONPATH", "PYTHONWARNINGS", "PYTHONBREAKPOINT")}
+    if not any(settings.values()):
+        return
+    flags, script = "", None
+    if family in ("python", "pypy3"):
+        opts, pos = options(argv[1:], {"-c", "-m", "-W", "-X", "-Q"}, first_stops=True)
+        flags = "".join(n.lstrip("-") for n, _ in opts if not n.startswith("--"))
+        if pos and not has(opts, "-c", "-m") and pos[0] not in ("-", *STDIN_FILES) and UNKNOWN not in pos[0]:
+            script = ctx.where.resolve(pos[0], ctx.cwd)
+    if "E" in flags or "I" in flags:
+        return
+    if "S" not in flags:
+        for entry in settings["PYTHONPATH"].split(":"):
+            path = ctx.where.resolve(entry, ctx.cwd) if entry else None
+            for start in ("sitecustomize.py", "usercustomize.py") if path else ():
+                if os.path.isfile(os.path.join(path, start)):
+                    script_file_check("python", os.path.join(path, start), ctx)
+    names = [*modules_named("PYTHONWARNINGS", settings["PYTHONWARNINGS"]),
+             *modules_named("PYTHONBREAKPOINT", settings["PYTHONBREAKPOINT"])]
+    if names:
+        python_imports("python", names, ctx, os.path.dirname(script) if script else None)
+
+
+def setting_modules(opts: list, ctx: Ctx) -> list[str]:
+    """Modules Python imports at start because an option names them: the category of a warnings filter
+    (`-W ignore::pkg.Warning`, #404). The same from the environment is judged in python_start."""
+    return [n for v in values(opts, "-W") for n in modules_named("PYTHONWARNINGS", str(v))]
 
 
 def modules_named(name: str, value: str) -> list[str]:
@@ -500,7 +519,7 @@ PY_IMPORTS = re.compile(r"\bfrom[ \t]+([\w.]+)[ \t]+import[ \t]*(?:\(([^)]*)\)|(
 PY_IMPORT_CALL = re.compile(r"\b(?:__import__|import_module)\(\s*['\"]([\w.]+)['\"]")
 # inline code that finds site-packages when it runs, and an import whose name is computed (#406)
 SITE_PACKAGES_CALL = re.compile(r"\bsite\.get(?:user)?sitepackages\(|\bsite\.USER_SITE\b"
-                                r"|\bsysconfig\.get_paths?\(\s*['\"]?(?:pure|plat)lib")
+                                r"|\bsysconfig\.get_paths?\(\s*\)?\s*\[?\s*['\"](?:pure|plat)lib")
 COMPUTED_IMPORT = re.compile(r"\b(?:__import__|import_module)\(\s*(?![\s'\"])")
 
 
@@ -614,6 +633,8 @@ def run(argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
     m = re.match(r"^(python|pypy|pip|ruby|perl|php|node)[\d.]+$", program)
     if m:
         family = m.group(1) if m.group(1) != "pypy" else "pypy3"
+    if ctx.prefix or ctx.vars:
+        python_start(family, argv, ctx)
     handler = HANDLERS.get(family)
     if handler or program in READERS or program in RUNNERS:  # judged by its name: is it the usual one?
         elsewhere = other_copy(str(first), program, ctx)
@@ -764,7 +785,9 @@ def h_hash(argv, ctx, stdin):
         for name in names:
             program = os.path.basename(str(name)).lower()
             if (program in HANDLERS or program in READERS or program in RUNNERS) and UNKNOWN not in name:
-                elsewhere = other_copy(str(file), program, ctx) if "/" in file else None
+                # bash runs a FILE without a slash from the current folder
+                elsewhere = ("a file only known when it runs" if UNKNOWN in file else
+                             other_copy(str(file) if "/" in file else f"./{file}", program, ctx))
                 if elsewhere:
                     ctx.add("risky", f"Makes {program} run the copy in {elsewhere}, not the usual one, so "
                                      "haris cannot tell what it does.")
@@ -2048,7 +2071,10 @@ CODE_DELETE = re.compile(r"\b(?:shutil\.rmtree|os\.remove|os\.unlink|os\.rmdir|o
                          r"unlinkSync|"
                          r"rmdirSync|fs\.rm\b|fs\.unlink|rimraf|FileUtils\.rm|File\.delete|rmtree)|"
                          r"\.(?:unlink|rmdir|rm)\s*\(|\bunlink\s*\(")
-NESTED = r"(?:[^()]|\((?:[^()]|\([^()]*\))*\))*?"  # call arguments, with calls two deep inside (#406)
+NESTED = r"[^()]*"
+for _ in range(8):  # call arguments, with calls up to eight deep inside (#406)
+    NESTED = r"(?:[^()]|\(" + NESTED + r"\))*"
+NESTED += "?"
 CODE_WRITE = re.compile(r"\bopen\s*\(" + NESTED + r"['\"][wax]b?\+?['\"]|write_text|write_bytes|"
                         r"writeFileSync|writeFile\b|"
                         r"appendFile|createWriteStream|File\.write|file_put_contents|fopen\s*\([^)]*['\"][wax]|"
@@ -2198,19 +2224,21 @@ def literal_path(expr: str, text: str, depth: int = 0) -> str | None:
         expr = expr[1:-1].strip()  # a bracketed join: (Path.home() / name)
     while tail := re.search(r"\.(?:expanduser|resolve|absolute)\(\)$", expr):
         expr = expr[:tail.start()].strip()
+    m = re.match(r"(?:str|os\.fspath)\s*\(", expr)
+    if m and call_end(expr, m.end()) == len(expr) - 1:
+        return literal_path(expr[m.end():-1], text, depth)  # str(Path.home())
     if HOME_EXPR.fullmatch(expr):
         return "~"
     for op in ("+", "/"):  # '~' + '/x', Path.home() / 'x' (#406)
         parts = split_top(expr, op)
         if len(parts) > 1:
-            found = [literal_path(p, text, depth) for p in parts]
-            if not all(found):
-                return None
-            return "".join(found) if op == "+" else os.path.join(*found)
+            return joined(parts, text, depth, op)
     m = re.match(r"(?:os\.path|posixpath)\.join\s*\(", expr)
     if m and expr.endswith(")") and call_end(expr, m.end()) == len(expr) - 1:
-        found = [literal_path(a, text, depth) for a in arguments(expr, m.end())]
-        return os.path.join(*found) if found and all(found) else None
+        return joined(arguments(expr, m.end()), text, depth, "/")
+    m = re.search(r"\.joinpath\s*\($", expr[:expr.rfind("(") + 1]) if expr.endswith(")") else None
+    if m and call_end(expr, m.end()) == len(expr) - 1:  # Path.home().joinpath('.bashrc')
+        return joined([expr[:m.start()], *arguments(expr, m.end())], text, depth, "/")
     m = PATH_WRAPPER.match(expr)
     if m and expr.endswith(")") and call_end(expr, m.end()) == len(expr) - 1:
         return literal_path(expr[m.end():-1], text, depth)
@@ -2229,7 +2257,25 @@ def literal_path(expr: str, text: str, depth: int = 0) -> str | None:
 
 
 HOME_EXPR = re.compile(r"(?:pathlib\.)?Path\.home\(\)|os\.environ\[['\"]HOME['\"]\]"
-                       r"|os\.(?:environ\.get|getenv)\(['\"]HOME['\"]\)")
+                       r"|os\.(?:environ\.get|getenv)\(\s*['\"]HOME['\"]\s*(?:,[^()]*)?\)")
+MAX_JOINED = 32  # parts of one joined path; more is only known when it runs, and judging it stays fast
+
+
+def joined(parts: list[str], text: str, depth: int, op: str) -> str | None:
+    """The path parts join to, when every part names one (#406); None at the first that does not."""
+    if not parts or len(parts) > MAX_JOINED:
+        return None
+    found = []
+    for p in parts:
+        path = literal_path(p, text, depth)
+        if not path:
+            return None
+        found.append(path)
+    return "".join(found) if op == "+" else os.path.join(*found)
+
+
+JOIN_EXPR = re.compile(r"(?:os\.path|posixpath)\.join\s*\(|\.joinpath\s*\(|['\"]\s*[+/]"
+                       r"|[+/]\s*[rbfRBF]?['\"]")
 
 
 def split_top(expr: str, op: str) -> list[str]:
@@ -2313,9 +2359,27 @@ READ_LITERAL = re.compile(r"""\b(?:open|readFileSync|readFile|fopen|File\.read|f
 
 
 def receiver_of(text: str, at: int) -> str:
-    """The expression a method is called on, just before the dot at `at`."""
-    m = re.search(r"((?:[\w.]+\s*)?(?:\((?:[^()]|\([^()]*\))*\))?)\.?$", text[:at])
-    return m.group(1).rstrip(".") if m else ""
+    """The expression a method is called on, just before the dot at `at`: names, dots and whole bracketed
+    calls, read backwards (Path.home().joinpath('.bashrc'), #406). A scan, not a regex, so a long chain
+    costs one pass."""
+    i = at
+    while i > 0:
+        ch = text[i - 1]
+        if ch == ")":
+            depth, j = 0, i - 1
+            while j >= 0:
+                depth += {")": 1, "(": -1}.get(text[j], 0)
+                if depth == 0:
+                    break
+                j -= 1
+            if j < 0:
+                break
+            i = j
+        elif ch.isalnum() or ch in "_.":
+            i -= 1
+        else:
+            break
+    return text[i:at].strip().rstrip(".")
 
 
 def code_write_targets(text: str, literals: list[str], ctx: Ctx,
@@ -2324,7 +2388,7 @@ def code_write_targets(text: str, literals: list[str], ctx: Ctx,
     (a helper's parameter, a computed name), the path strings the code holds that are not only read,
     and an unknown target when those are none or reach beyond the project."""
     found: list[str] = []
-    unresolved = False
+    unresolved = opaque = False
     for m in code_matches(CODE_WRITE, text, list(data)):
         name = m.group().split("(")[0].strip()
         how = next((h for h, rx in WRITE_TARGET if rx.match(m.group()) or rx.match(name)), "first")
@@ -2341,8 +2405,13 @@ def code_write_targets(text: str, literals: list[str], ctx: Ctx,
             path = literal_path(expr, text)
             if path is None:
                 unresolved = True
+                # a name joined to a base only known when it runs (getenv('X') + '/.bashrc') is no file in
+                # the project: its literal part is not a guess (#406)
+                opaque = opaque or bool(JOIN_EXPR.search(expr))
             else:
                 found.append(path)
+    if opaque:
+        return [arg(os.path.expanduser(f)) for f in found] + [arg(UNKNOWN)]
     if unresolved:
         only_read = {next(g for g in m.groups() if g is not None) for m in READ_LITERAL.finditer(text)}
         guesses = []

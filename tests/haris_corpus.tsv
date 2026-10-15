@@ -1222,3 +1222,17 @@ deny	cd py && PYTHONWARNINGS=ignore::wipe.W python3 -m pytest
 deny	cd py && PYTHONBREAKPOINT=wipe.x pytest -q
 allow	PYTHONWARNINGS=error::DeprecationWarning pytest -q
 allow	enable -n echo
+ask	cd tools && hash -p git git && git status
+ask	hash -p "$F" git; git status
+deny	python3 -c "import os; open(os.path.join(os.path.realpath(os.path.expanduser('~')), '.bashrc'), 'a').write('x')"
+pass	python3 -c "open(((((('x'))))), 'w')"
+ask	python3 -c "import os; open(os.path.join(os.getenv('SOMEDIR', '/tmp'), '.bashrc'), 'a').write('x')"
+deny	python3 -c "import os; open(os.path.join(os.getenv('HOME', '/tmp'), '.bashrc'), 'a').write('x')"
+deny	python3 -c "from pathlib import Path; open(str(Path.home()) + '/.bashrc', 'a').write('x')"
+deny	python3 -c "import os; open(os.environ.get('HOME', '/root') + '/.bashrc', 'a').write('x')"
+deny	python3 -c "from pathlib import Path; Path.home().joinpath('.bashrc').write_text('x')"
+ask	python3 -c "import sysconfig; open(sysconfig.get_paths()['purelib'] + '/x.pth', 'w').write('import os')"
+deny	PYTHONPATH=py PYTHONWARNINGS=ignore::wipe.W pytest -q
+pass	PYTHONPATH=sc python3 -S py/ok.py
+pass	PYTHONPATH=sc python3 -I py/ok.py
+pass	PYTHONPATH=sc python3 -E py/ok.py
