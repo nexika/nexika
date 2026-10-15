@@ -421,6 +421,24 @@ def python_env(name: str, value: str, ctx: Ctx) -> None:
             return
 
 
+def setting_modules(opts: list, ctx: Ctx) -> list[str]:
+    """Modules Python imports at start because a setting names them (#404): the category of a warnings
+    filter (`-W ignore::pkg.Warning`, PYTHONWARNINGS) and the hook in PYTHONBREAKPOINT (`pkg.func`)."""
+    def setting(name):
+        value = ctx.prefix[name] if name in ctx.prefix else ctx.vars.get(name, "")
+        return str(value) if UNKNOWN not in str(value) else ""
+    filters = [str(v) for v in values(opts, "-W")] + setting("PYTHONWARNINGS").split(",")
+    names = []
+    for f in filters:
+        parts = f.split(":")
+        if len(parts) > 2 and "." in parts[2]:
+            names.append(parts[2].strip().rsplit(".", 1)[0])
+    hook = setting("PYTHONBREAKPOINT").strip()
+    if "." in hook:
+        names.append(hook.rsplit(".", 1)[0])
+    return names
+
+
 def python_imports(program: str, names: list[str], ctx: Ctx, first: str | None = None) -> None:
     """The project's own modules that Python code imports, from the folder it runs in or PYTHONPATH (#383):
     each is judged like `python FILE` (script_file_check), so `PYTHONPATH=py python3 -c "import wipe"` is
@@ -3125,6 +3143,11 @@ def h_python(argv, ctx, stdin):
     if h_db_reset(argv, ctx) is not None:
         return Stage()
     opts, pos = options(argv[1:], {"-c", "-m", "-W", "-X", "-Q"}, first_stops=True)
+    named = setting_modules(opts, ctx)
+    if named:  # modules Python imports because a setting names them (#404), from the script's folder
+        script = pos[0] if pos and not has(opts, "-c", "-m") and pos[0] not in ("-", *STDIN_FILES) else None
+        path = ctx.where.resolve(script, ctx.cwd) if script and UNKNOWN not in script else None
+        python_imports(argv[0], named, ctx, os.path.dirname(path) if path else None)
     code = values(opts, "-c")
     if code:
         return code_check(code[0], ctx, f"{argv[0]} -c", "python")

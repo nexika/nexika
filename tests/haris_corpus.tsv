@@ -1176,3 +1176,14 @@ allow	git() { command git "$@"; }; git status
 allow	hash -p /usr/bin/git git; git status
 allow	hash -r
 allow	hash
+
+# ---------------------------------------------------------------- warnings and breakpoint settings that import a module (#404)
+deny	PYTHONWARNINGS=ignore::wipe.W python3 py/ok.py
+deny	python3 -W ignore::wipe.W py/ok.py
+deny	cd py && python3 -W error::wipe.W -c "print(1)"
+deny	PYTHONBREAKPOINT=wipe.x python3 py/ok.py
+deny	export PYTHONWARNINGS=ignore::wipe.W; python3 py/ok.py
+pass	PYTHONWARNINGS=ignore::DeprecationWarning python3 py/ok.py
+pass	python3 -W ignore -c "print(1)"
+pass	PYTHONBREAKPOINT=0 python3 py/ok.py
+allow	PYTHONWARNINGS=error pytest -q
