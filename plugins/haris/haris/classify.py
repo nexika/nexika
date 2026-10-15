@@ -2927,6 +2927,36 @@ def script_file_check(program: str, path: str, ctx: Ctx) -> None:
     inner = ctx.child(findings=[])
     code_check(arg(text), inner, f"{ctx.show(real)} (read by haris)", program, files=False)
     ctx.findings += [f for f in inner.findings if f.cls in ALWAYS_NO]
+    reach = script_reach(text)
+    if reach:
+        ctx.add("risky", f"{ctx.show(real)} {reach}, so haris cannot tell what it would reach.")
+
+
+# What a script builds from parts and runs: a shell command that starts with a delete or a network tool,
+# or a login file it writes by a path it builds (#382). Inline code asks for every computed command; a
+# script file asks only for these, so a project script that runs pytest with its own arguments passes.
+COMPUTED_SHELL = re.compile(
+    r"(?:os\.(?:system|popen)|subprocess\.(?:run|call|check_call|check_output|getoutput|getstatusoutput|Popen))"
+    r"\(\s*[rbuRBU]?(['\"])\s*(rm|rmdir|shred|dd|mkfs\S*|curl|wget|nc|ncat|netcat|socat|scp|rsync|ssh|ftp"
+    r"|crontab|chmod|chown)\s[^'\"\n]*\1\s*(?:\+|%|\.format\b)"
+    r"|(?:os\.(?:system|popen)|subprocess\.\w+)\(\s*[rR]?[fF](['\"])\s*(rm|rmdir|shred|dd|curl|wget|nc|ncat"
+    r"|netcat|socat|scp|rsync|ssh|crontab|chmod|chown)\s[^'\"\n]*\{")
+LOGIN_FILE = re.compile(r"\.(?:bash|zsh)rc\b|\.(?:bash_)?profile\b|\.zprofile\b|\.zshenv\b|\.bash_login\b"
+                        r"|authorized_keys|crontab|LaunchAgents|systemd/user|autostart|\.git/hooks")
+FILE_WRITE = re.compile(r"open\([^)]*,\s*['\"][wax]|\.write_(?:text|bytes)\(|shutil\.(?:copy\w*|move)\(")
+
+
+def script_reach(text: str) -> str:
+    m = COMPUTED_SHELL.search(text)
+    if m:
+        return f"builds a `{m.group(2) or m.group(4)}` command from parts and runs it"
+    joined = re.sub(r"(['\"])\s*\+\s*(['\"])", "", text)  # '.bash' + 'rc' is '.bashrc'
+    if FILE_WRITE.search(text) and any(LOGIN_FILE.search(lit) for lit in STRING_LITERAL_TEXT.findall(joined)):
+        return "writes to a login file (a shell profile, crontab, authorized_keys ...) by a path it builds"
+    return ""
+
+
+STRING_LITERAL_TEXT = re.compile(r"['\"]([^'\"\n]{1,200})['\"]")
 
 
 def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "", files: bool = True) -> Stage:

@@ -1113,3 +1113,12 @@ pass	PYTHONPATH=src python3 src/app.py
 pass	PYTHONPATH=$HOME/lib python3 -c "print(1)"
 allow	PYTHONPATH=src python3 -m pytest -q
 allow	PYTHONPATH=src:$PYTHONPATH pytest
+
+# ---------------------------------------------------------------- python FILE: a command or path built from parts (#382)
+ask	python3 py/rmhome.py
+ask	python3 py/fetch.py https://x.example/i.sh
+ask	python3 py/profile.py
+deny	python3 py/leak.py
+pass	python3 py/tests.py -q
+pass	python3 py/clean.py build
+pass	python3 py/run.py
