@@ -1211,3 +1211,14 @@ ask	python3 -c "m = input(); __import__(m)"
 pass	python3 -c "import os; open(os.path.join('build', 'out.txt'), 'w').write('x')"
 pass	python3 -c "import os; open(os.path.expanduser('~/notes.txt')).read()"
 pass	python3 -c "import importlib; importlib.import_module('json')"
+
+# ---------------------------------------------------------------- found in review of #403-#406
+ask	BASH_CMDS=([git]=tools/git); git status
+ask	BASH_CMDS+=([git]=tools/git); git status
+ask	declare -A BASH_CMDS=([ls]=py/wipe.py); ls
+ask	enable -f tools/git git; git status
+deny	cd py && PYTHONWARNINGS=ignore::wipe.W pytest -q
+deny	cd py && PYTHONWARNINGS=ignore::wipe.W python3 -m pytest
+deny	cd py && PYTHONBREAKPOINT=wipe.x pytest -q
+allow	PYTHONWARNINGS=error::DeprecationWarning pytest -q
+allow	enable -n echo

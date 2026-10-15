@@ -50,7 +50,8 @@ SECRET_VAR = re.compile(r"(?i)(?:token|secret|passw(?:or)?d|passphrase|api_?key|
                         r"|credential|auth|session_?key|client_?secret|_pat$|^pat_)")
 RISKY_ENV = {"LD_PRELOAD", "LD_AUDIT", "DYLD_INSERT_LIBRARIES", "GIT_SSH_COMMAND", "GIT_SSH", "GIT_EXEC_PATH",
              "GIT_ASKPASS", "SSH_ASKPASS", "BASH_ENV", "ENV", "PROMPT_COMMAND", "PERL5OPT", "RUBYOPT",
-             "GIT_CONFIG_PARAMETERS", "GIT_CONFIG_COUNT", "GIT_EXTERNAL_DIFF", "GIT_PROXY_COMMAND"}
+             "GIT_CONFIG_PARAMETERS", "GIT_CONFIG_COUNT", "GIT_EXTERNAL_DIFF", "GIT_PROXY_COMMAND",
+             "BASH_CMDS"}  # BASH_CMDS fills the table `hash -p` does (#403)
 GIT_EXEC_KEYS = re.compile(r"(?i)^(?:core\.(?:sshcommand|pager|editor|fsmonitor|hookspath|gitproxy|askpass)"
                            r"|credential\..*helper|credential\.helper|.*\.(?:command|textconv|cmd|clean|smudge"
                            r"|process)|diff\.external|sequence\.editor|uploadpack\..*|receivepack\..*"
@@ -395,11 +396,15 @@ WRITES = {"write", "write-temp", "write-outside", "write-memory", "secret-write"
 def risky_assign(name: str, value: str, ctx: Ctx) -> None:
     """A variable given to a command (`NAME=value cmd`, `env NAME=value cmd`) that changes which code the
     command loads or runs."""
+    name = name.rstrip("+")  # `BASH_CMDS+=(...)` adds to it
     if name in RISKY_ENV or (name == "NODE_OPTIONS" and re.search(r"--(?:require|import|loader)|-r\b",
                                                                   value)):
         ctx.add("risky", f"Setting {name} changes which code the next program loads or runs.")
     elif name in PYTHON_LOAD_ENV:
         python_env(name, value, ctx)
+    elif name in ("PYTHONWARNINGS", "PYTHONBREAKPOINT") and UNKNOWN not in str(value):
+        # every program that starts Python imports what they name, pytest too (#404)
+        python_imports("python", modules_named(name, str(value)), ctx)
 
 
 PYTHON_LOAD_ENV = {"PYTHONPATH", "PYTHONSTARTUP", "PYTHONHOME", "PYTHONUSERBASE"}
@@ -431,15 +436,21 @@ def setting_modules(opts: list, ctx: Ctx) -> list[str]:
     def setting(name):
         value = ctx.prefix[name] if name in ctx.prefix else ctx.vars.get(name, "")
         return str(value) if UNKNOWN not in str(value) else ""
-    filters = [str(v) for v in values(opts, "-W")] + setting("PYTHONWARNINGS").split(",")
+    names = [n for v in values(opts, "-W") for n in modules_named("PYTHONWARNINGS", str(v))]
+    return [*names, *modules_named("PYTHONWARNINGS", setting("PYTHONWARNINGS")),
+            *modules_named("PYTHONBREAKPOINT", setting("PYTHONBREAKPOINT"))]
+
+
+def modules_named(name: str, value: str) -> list[str]:
+    """The modules a PYTHONWARNINGS (or -W) value or a PYTHONBREAKPOINT value makes Python import."""
+    if name == "PYTHONBREAKPOINT":
+        hook = value.strip()
+        return [hook.rsplit(".", 1)[0]] if "." in hook else []
     names = []
-    for f in filters:
+    for f in value.split(","):
         parts = f.split(":")
         if len(parts) > 2 and "." in parts[2]:
             names.append(parts[2].strip().rsplit(".", 1)[0])
-    hook = setting("PYTHONBREAKPOINT").strip()
-    if "." in hook:
-        names.append(hook.rsplit(".", 1)[0])
     return names
 
 
@@ -732,6 +743,17 @@ def tool_folder(folder: str, ctx: Ctx) -> bool:
     return (folder.endswith(("/node_modules/.bin", "/vendor/bin")) or folder == f"{ctx.where.root}/bin"
             or os.path.isfile(os.path.join(parent, "pyvenv.cfg"))
             or os.path.isdir(os.path.join(parent, "conda-meta")))
+
+
+def h_enable(argv, ctx, stdin):
+    """`enable -f FILE NAME` loads compiled code into the shell as the command NAME (#403)."""
+    opts, _ = options(argv[1:], {"-f"})
+    if has(opts, "-f"):
+        ctx.add("risky", "Loads a compiled file into the shell as a command: its code runs inside the shell, "
+                         "and haris cannot read it.")
+    else:
+        ctx.add("read", "Turns shell built-in commands on or off.")
+    return Stage()
 
 
 def h_hash(argv, ctx, stdin):
@@ -4817,7 +4839,7 @@ def h_ssh_keygen(argv, ctx, stdin):
 
 
 HANDLERS = {
-    "hash": h_hash,
+    "hash": h_hash, "enable": h_enable,
     "cd": h_cd, "pushd": h_cd, "popd": h_cd, "export": h_export, "declare": h_export, "typeset": h_export,
     "local": h_export, "readonly": h_export, "alias": h_export, "unalias": h_export, "trap": h_trap,
     "set": h_set, "shift": h_set, "coproc": h_coproc,
