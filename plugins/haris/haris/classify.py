@@ -171,9 +171,20 @@ def node(n, ctx: Ctx, stdin: Stage | None) -> Stage | None:
             ctx.add("fork-bomb", f"The function `{n.name}` starts copies of itself without end (a fork "
                                  f"bomb), "
                                  "which freezes the computer.")
+        start = len(ctx.findings)
         node(n.body, ctx.child(), None)
+        name = n.name.lower()
+        # a function named like a program haris trusts, whose body runs code haris cannot vouch for
+        # (`git() { sh tools/git; }`): `git` would no longer be the program judged by that name (#403)
+        if (name in HANDLERS or name in READERS or name in RUNNERS) and any(
+                f.cls in RUNS_OTHER for f in ctx.findings[start:]):
+            ctx.add("risky", f"Defines a function named {n.name} that runs other code in its place, so "
+                             f"`{n.name}` would not be the program haris judges by that name.")
         return Stage()
     return Stage()
+
+
+RUNS_OTHER = {"exec", "dynamic", "download-run", "risky", "unparsed"}
 
 
 def calls_itself(body, name: str) -> bool:

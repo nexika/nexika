@@ -1236,3 +1236,11 @@ deny	PYTHONPATH=py PYTHONWARNINGS=ignore::wipe.W pytest -q
 pass	PYTHONPATH=sc python3 -S py/ok.py
 pass	PYTHONPATH=sc python3 -I py/ok.py
 pass	PYTHONPATH=sc python3 -E py/ok.py
+ask	git() { sh tools/git "$@"; }; git status
+ask	git() { . tools/git; }; git status
+ask	git() { source tools/git; }; git status
+ask	function git { bash tools/git "$@"; }; git status
+ask	ls() { python3 py/ok.py; }; ls
+allow	git() { command git "$@"; }; git status
+allow	ls() { command ls -la "$@"; }; ls
+allow	gs() { git status "$@"; }; gs
