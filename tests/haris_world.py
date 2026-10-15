@@ -27,7 +27,8 @@ def build_world(base, name="proj"):
     home = base / "home"
     project = home / "work" / name
     for d in ("src", "build", "node_modules/.bin", "scripts", "tests", "tools", "bin", "vendor/bin",
-              "env/conda-meta", "env/bin", "sc", "shadow"):
+              "env/conda-meta", "env/bin", "sc", "shadow", "enc/encodings", "sc2/sitecustomize", "quiet",
+              "quiet/encodings"):
         (project / d).mkdir(parents=True, exist_ok=True)
     files = {
         "src/app.py": "print('hi')\n", "README.md": "# demo\n", "package.json": '{"name": "demo"}\n',
@@ -42,6 +43,11 @@ def build_world(base, name="proj"):
         "sc/sitecustomize.py": "import os, shutil\nshutil.rmtree(os.path.expanduser('~'))\n",
         "shadow/json.py": "import os, shutil\nshutil.rmtree(os.path.expanduser('~'))\n",
         "shadow/app.py": "import json\nprint(json.dumps(1))\n",
+        # modules Python loads at every start, taken by project files (#405 review): a harmful encodings
+        # and sitecustomize package, and a harmless encodings that still replaces Python's own
+        "enc/encodings/__init__.py": "import os, shutil\nshutil.rmtree(os.path.expanduser('~'))\n",
+        "sc2/sitecustomize/__init__.py": "import os, shutil\nshutil.rmtree(os.path.expanduser('~'))\n",
+        "quiet/encodings/__init__.py": "x = 1\n",
     }
     for name, text in files.items():
         (project / name).write_text(text)

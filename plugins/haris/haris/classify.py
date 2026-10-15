@@ -428,41 +428,87 @@ def python_env(name: str, value: str, ctx: Ctx) -> None:
             continue  # `$PYTHONPATH`: what it had
         path = ctx.where.resolve(entry or ".", ctx.cwd) if UNKNOWN not in entry else None
         place = ctx.where.place(path)
-        if place in ("temp", "unknown") or (place in ("project", "git") and name != "PYTHONPATH"):
+        inside = place in ("project", "git", "config-exec")  # config-exec: sitecustomize.py in the project
+        if place in ("temp", "unknown") or (inside and name != "PYTHONPATH"):
             shown = ctx.show(path) if path else "a folder only known when it runs"
             ctx.add("risky", f"{name} points Python at {shown}, so it would load code haris has not judged.")
             return
 
 
 def python_start(family: str, argv: list[Arg], ctx: Ctx) -> None:
-    """What a program that starts Python loads because of its environment, judged when it runs, with
-    every variable known: sitecustomize.py and usercustomize.py on PYTHONPATH (#405), and the modules
-    PYTHONWARNINGS and PYTHONBREAKPOINT name (#404). Python's -E and -I ignore these variables, and -S
-    skips sitecustomize."""
+    """What a program that starts Python loads because of where it looks, judged when it runs, with every
+    variable known (#404, #405): modules in a PYTHONPATH folder, or in the folder Python itself puts
+    first (the script's, or the current one for -c, -m and stdin), that take the place of a standard
+    module or a startup hook; and the modules PYTHONWARNINGS and PYTHONBREAKPOINT name. Python's -E
+    ignores these variables, -I also the first folder, and -S skips sitecustomize."""
     def setting(name):
         value = ctx.prefix[name] if name in ctx.prefix else ctx.vars.get(name, "")
         return str(value) if UNKNOWN not in str(value) else ""
+    python = family in ("python", "pypy3")
     settings = {n: setting(n) for n in ("PYTHONPATH", "PYTHONWARNINGS", "PYTHONBREAKPOINT")}
-    if not any(settings.values()):
+    if not python and not any(settings.values()):
         return
-    flags, script = "", None
-    if family in ("python", "pypy3"):
+    flags, first = "", None
+    if python:
         opts, pos = options(argv[1:], {"-c", "-m", "-W", "-X", "-Q"}, first_stops=True)
         flags = "".join(n.lstrip("-") for n, _ in opts if not n.startswith("--"))
-        if pos and not has(opts, "-c", "-m") and pos[0] not in ("-", *STDIN_FILES) and UNKNOWN not in pos[0]:
-            script = ctx.where.resolve(pos[0], ctx.cwd)
+        if pos and not has(opts, "-c", "-m") and pos[0] not in ("-", *STDIN_FILES):
+            script = ctx.where.resolve(pos[0], ctx.cwd) if UNKNOWN not in pos[0] else None
+            first = os.path.dirname(script) if script else None
+        else:
+            first = ctx.cwd
     if "E" in flags or "I" in flags:
         return
-    if "S" not in flags:
-        for entry in settings["PYTHONPATH"].split(":"):
-            path = ctx.where.resolve(entry, ctx.cwd) if entry else None
-            for start in ("sitecustomize.py", "usercustomize.py") if path else ():
-                if os.path.isfile(os.path.join(path, start)):
-                    script_file_check("python", os.path.join(path, start), ctx)
+    folders = [ctx.where.resolve(e, ctx.cwd) for e in settings["PYTHONPATH"].split(":") if e]
+    shadowing_modules([f for f in folders if f], ctx, site="S" not in flags)
     names = [*modules_named("PYTHONWARNINGS", settings["PYTHONWARNINGS"]),
              *modules_named("PYTHONBREAKPOINT", settings["PYTHONBREAKPOINT"])]
     if names:
-        python_imports("python", names, ctx, os.path.dirname(script) if script else None)
+        python_imports("python", names, ctx, first if python else None)
+
+
+# What Python runs at start before any code is read, and what common .pth files in site-packages import:
+# a project module by one of these names on Python's path runs in their place (#405)
+STARTUP_MODULES = {"encodings", "site", "sitecustomize", "usercustomize"}
+PTH_HOOKS = {"_distutils_hack", "abrt_exception_handler3"}
+
+
+def shadowing_modules(folders: list[str], ctx: Ctx, site: bool = True) -> None:
+    """Modules in PYTHONPATH folders that Python would import in place of its own. A startup module or a
+    .pth hook runs at every start: it is judged in full, and a startup module taken by a project file
+    asks even when its code looks harmless. A module named like another standard one runs only if the
+    program imports it, which haris cannot know for pip or pytest: harmful code in it asks."""
+    import sys
+    run_always = STARTUP_MODULES | PTH_HOOKS
+    if not site:
+        run_always = run_always - {"sitecustomize", "usercustomize"}
+    standard = set(getattr(sys, "stdlib_module_names", ())) - {"sitecustomize", "usercustomize"}
+    for folder in folders:
+        try:
+            entries = sorted(os.listdir(folder))
+        except OSError:
+            continue
+        for entry in entries:
+            name = entry[:-3] if entry.endswith(".py") else entry if "." not in entry else ""
+            if name not in run_always and name not in standard:
+                continue
+            files = module_files(folder, name)
+            if not files:
+                continue
+            if name in run_always:
+                if name in STARTUP_MODULES:
+                    ctx.add("risky", f"{ctx.show(files[-1])} takes the place of Python's own {name}, which "
+                                     "runs at every Python start.")
+                for path in files:
+                    script_file_check("python", path, ctx)
+                continue
+            inner = ctx.child(findings=[])
+            inner.modules_judged = set(ctx.modules_judged)  # a later import of it is still judged in full
+            for path in files:
+                script_file_check("python", path, inner)
+            if any(f.cls in ALWAYS_NO or f.cls == "risky" for f in inner.findings):
+                ctx.add("risky", f"{ctx.show(files[-1])} takes the place of Python's standard {name}, and "
+                                 "haris would refuse what it does.")
 
 
 def setting_modules(opts: list, ctx: Ctx) -> list[str]:
@@ -484,15 +530,45 @@ def modules_named(name: str, value: str) -> list[str]:
     return names
 
 
-def python_imports(program: str, names: list[str], ctx: Ctx, first: str | None = None) -> None:
+SYS_PATH_ADD = re.compile(r"\bsys\.path\.(?:insert\s*\(\s*-?\d+\s*,|append\s*\()\s*(['\"])([^'\"\n]+)\1")
+SITE_DIR_ADD = re.compile(r"\bsite\.addsitedir\s*\(\s*(['\"])([^'\"\n]+)\1")
+FILE_LOADER = re.compile(r"\b(?:spec_from_file_location|SourceFileLoader|SourcelessFileLoader)\s*\(\s*"
+                         r"[^,()]+,\s*(['\"])([^'\"\n]+)\1")
+
+
+def python_code_loads(text: str, lang: str, ctx: Ctx) -> None:
+    """The project code inline Python loads: its imports, also from folders it adds to sys.path, and the
+    files it loads by path (#383, #405 review); site.main() runs sitecustomize from those folders, and
+    site.addsitedir() runs the folder's .pth files."""
+    added = [ctx.where.resolve(m.group(2), ctx.cwd) for m in SYS_PATH_ADD.finditer(text)]
+    added = [a for a in added if a]
+    names = imported_names(text)
+    if re.search(r"\bsite\.main\s*\(", text):
+        names += ["sitecustomize", "usercustomize"]
+    python_imports(lang, names, ctx, extra=added)
+    for m in SITE_DIR_ADD.finditer(text):
+        folder = ctx.where.resolve(m.group(2), ctx.cwd)
+        try:
+            pth = [e for e in os.listdir(folder) if e.lower().endswith(".pth")] if folder else []
+        except OSError:
+            pth = []
+        if pth or not folder:
+            ctx.add("risky", f"Adds {ctx.show(folder) if folder else 'a folder'} as a site folder: its .pth "
+                             "files run code that haris does not read.")
+    for m in FILE_LOADER.finditer(text):
+        script_file_check(lang, m.group(2), ctx)
+
+
+def python_imports(program: str, names: list[str], ctx: Ctx, first: str | None = None,
+                   extra: list[str] | None = None) -> None:
     """The project's own modules that Python code imports, from the folder it runs in or PYTHONPATH (#383):
     each is judged like `python FILE` (script_file_check), so `PYTHONPATH=py python3 -c "import wipe"` is
     refused like `python3 py/wipe.py`."""
     if (first or ctx.cwd) is None:
         return
     value = ctx.prefix["PYTHONPATH"] if "PYTHONPATH" in ctx.prefix else ctx.vars.get("PYTHONPATH", "")
-    folders = [first or ctx.cwd] + [ctx.where.resolve(e, ctx.cwd) for e in str(value).split(":")
-                           if e and UNKNOWN not in e]
+    folders = [*(extra or []), first or ctx.cwd] + [ctx.where.resolve(e, ctx.cwd)
+                                                    for e in str(value).split(":") if e and UNKNOWN not in e]
     if len(names) > MAX_IMPORTS:
         ctx.add("dynamic", f"The Python code imports more than {MAX_IMPORTS} modules, too many for haris to "
                            "read each one.")
@@ -644,7 +720,7 @@ def run(argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
     m = re.match(r"^(python|pypy|pip|ruby|perl|php|node)[\d.]+$", program)
     if m:
         family = m.group(1) if m.group(1) != "pypy" else "pypy3"
-    if ctx.prefix or ctx.vars:
+    if ctx.prefix or ctx.vars or family in ("python", "pypy3"):
         python_start(family, argv, ctx)
     handler = HANDLERS.get(family)
     if handler or program in READERS or program in RUNNERS:  # judged by its name: is it the usual one?
@@ -2086,7 +2162,8 @@ NESTED = r"[^()]*"
 for _ in range(8):  # call arguments, with calls up to eight deep inside (#406)
     NESTED = r"(?:[^()]|\(" + NESTED + r"\))*"
 NESTED += "?"
-CODE_WRITE = re.compile(r"\bopen\s*\(" + NESTED + r"['\"][wax]b?\+?['\"]|write_text|write_bytes|"
+CODE_WRITE = re.compile(r"\bos\.open\s*\(" + NESTED + r"\bO_(?:WRONLY|RDWR|APPEND|CREAT|TRUNC)\b"
+                        r"|\bopen\s*\(" + NESTED + r"['\"][wax]b?\+?['\"]|write_text|write_bytes|"
                         r"writeFileSync|writeFile\b|"
                         r"appendFile|createWriteStream|File\.write|file_put_contents|fopen\s*\([^)]*['\"][wax]|"
                         r"shutil\.(?:copy|move)|os\.rename|os\.replace|\.rename\s*\(|\bchmod\s*\(|symlink")
@@ -2403,7 +2480,9 @@ def code_write_targets(text: str, literals: list[str], ctx: Ctx,
     for m in code_matches(CODE_WRITE, text, list(data)):
         name = m.group().split("(")[0].strip()
         how = next((h for h, rx in WRITE_TARGET if rx.match(m.group()) or rx.match(name)), "first")
-        if how == "receiver":
+        if name == "open" and m.start() and text[m.start() - 1] == ".":  # Path(p).open('a'): the receiver
+            candidates = [receiver_of(text, m.start() - 1)]
+        elif how == "receiver":
             candidates = [receiver_of(text, m.start())]
         else:
             call = re.compile(r"[\w.]*\s*\(").match(text, m.end())
@@ -3206,7 +3285,7 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "", files: bool = True
         return Stage()
     text = str(code)
     if files and re.search(r"python|pypy", lang):
-        python_imports(lang, imported_names(text), ctx)
+        python_code_loads(text, lang, ctx)
     # Python that runs a file as code is judged with the file's text, when haris may read it (#343)
     if files and re.search(r"python|pypy", lang) and FILE_RUN_HINT.search(text) and \
             judge_file_runs(text, ctx, via, lang):
@@ -3322,6 +3401,8 @@ def h_python(argv, ctx, stdin):
         if name in PYTHON_MODULE_TOOLS:  # `python -m twine upload` is `twine upload` (#138)
             return HANDLERS[name]([arg(name), *pos], ctx, stdin)
         if name in ("json.tool", "tabnanny", "this", "site", "platform", "sysconfig", "pydoc", "timeit"):
+            if UNKNOWN not in name:  # a project json.py in the folder Python looks in first (#405)
+                python_imports(argv[0], [str(name)], ctx)
             ctx.add("read", f"Only shows information (python -m {name}).")
             return Stage()
         if name in ("venv", "virtualenv"):
