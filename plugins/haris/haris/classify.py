@@ -555,7 +555,7 @@ def run(argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
                                 ctx, [], f"alias {first}")
         finally:
             ctx.aliases[str(first)] = body
-    if program in ctx.funcs:
+    if program in ctx.funcs and "/" not in first:  # `tools/git` is that file, never a function `git` (#403)
         ctx.add("read", f"Runs the function {program} (checked where it is defined).")
         ctx.forget()
         return None
@@ -706,6 +706,22 @@ def tool_folder(folder: str, ctx: Ctx) -> bool:
     return (folder.endswith(("/node_modules/.bin", "/vendor/bin")) or folder == f"{ctx.where.root}/bin"
             or os.path.isfile(os.path.join(parent, "pyvenv.cfg"))
             or os.path.isdir(os.path.join(parent, "conda-meta")))
+
+
+def h_hash(argv, ctx, stdin):
+    """`hash -p FILE NAME` makes NAME run FILE, like a PATH entry for that one name (#403)."""
+    opts, names = options(argv[1:], {"-p"})
+    files = values(opts, "-p")
+    for file in files:
+        for name in names:
+            program = os.path.basename(str(name)).lower()
+            if (program in HANDLERS or program in READERS or program in RUNNERS) and UNKNOWN not in name:
+                elsewhere = other_copy(str(file), program, ctx) if "/" in file else None
+                if elsewhere:
+                    ctx.add("risky", f"Makes {program} run the copy in {elsewhere}, not the usual one, so "
+                                     "haris cannot tell what it does.")
+    ctx.add("read", "Only shows information (hash)." if not files else "Tells the shell where a program is.")
+    return Stage()
 
 
 def script_runner_run(program: str, argv: list[Arg], ctx: Ctx, stdin: Stage | None) -> Stage | None:
@@ -4724,6 +4740,7 @@ def h_ssh_keygen(argv, ctx, stdin):
 
 
 HANDLERS = {
+    "hash": h_hash,
     "cd": h_cd, "pushd": h_cd, "popd": h_cd, "export": h_export, "declare": h_export, "typeset": h_export,
     "local": h_export, "readonly": h_export, "alias": h_export, "unalias": h_export, "trap": h_trap,
     "set": h_set, "shift": h_set, "coproc": h_coproc,

@@ -1165,3 +1165,14 @@ allow	PATH=./scripts:$PATH make
 pass	printf '#!/bin/sh\n' > node_modules/.bin/git && node_modules/.bin/git status
 ask	cp tools/git node_modules/.bin/git; node_modules/.bin/git status
 ask	cd "$X"; tools/git status
+
+# ---------------------------------------------------------------- another program under a trusted name: hash -p, functions (#403)
+ask	hash -p tools/git git; git status
+ask	hash -p /tmp/bin/git git; git status
+ask	git() { tools/git "$@"; }; git status
+ask	function git { tools/git "$@"; }; git status
+ask	ls() { /tmp/bin/ls "$@"; }; ls
+allow	git() { command git "$@"; }; git status
+allow	hash -p /usr/bin/git git; git status
+allow	hash -r
+allow	hash
