@@ -80,6 +80,7 @@ class Stage:
     paths_root: str | None = None   # it lists paths under this folder (find, ls, git ls-files)
     filtered: bool = True           # those paths are a selection, not everything
     environ: bool = False           # it prints the environment (env, printenv, set, export)
+    file: str | None = None         # it is a file fed in with `< file` (#385)
 
 
 # ---------------------------------------------------------------- walking the parsed command
@@ -302,16 +303,21 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
         ctx.add("read", "Sets a variable.")
         return None
     heredoc = None
+    from_file = None
     secret_input = False
     for r in cmd.redirects:
         before = len(ctx.findings)
         text = redirect(r, ctx, argv)
         secret_input = secret_input or any(f.cls == "secret-read" for f in ctx.findings[before:])
-        if text is not None:
+        if r.fd in ("", "0") and r.op in INPUT_REDIRECTS:  # the last one written is the stdin (#385)
             heredoc = text
+            from_file = r.target if r.op == "<" else None
     if secret_input:
         stdin = Stage(secret=True)
-    if heredoc is not None:
+    if from_file is not None:
+        values_ = expand(from_file, ctx)
+        stdin = Stage(secret=secret_input, file=values_[0] if values_ else arg(UNKNOWN))
+    elif heredoc is not None:
         stdin = Stage(text=heredoc if UNKNOWN not in heredoc else None,
                       secret="secret" in getattr(heredoc, "marks", ()))
     program = os.path.basename(argv[0]).lower()
@@ -369,6 +375,7 @@ def simple(cmd: shell.Simple, ctx: Ctx, stdin: Stage | None) -> Stage | None:
     return stage
 
 
+INPUT_REDIRECTS = {"<", "<<", "<<-", "<<<", "<&"}
 WRITES = {"write", "write-temp", "write-outside", "write-memory", "secret-write"}
 
 
@@ -1262,6 +1269,8 @@ def shell_string(script: Arg, ctx: Ctx, args: list, via: str, inherit: bool = Tr
 
 
 def interpreter_stdin(program: str, ctx: Ctx, stdin: Stage | None, lang: str = "sh") -> Stage:
+    if stdin is not None and stdin.file is not None:  # `python3 < FILE` runs FILE (#385)
+        return script_run(program, stdin.file, ctx)
     if stdin is None and not ctx.stdin_unknown:
         ctx.add("exec", f"Starts {program}.")
     elif stdin is not None and stdin.downloads:
