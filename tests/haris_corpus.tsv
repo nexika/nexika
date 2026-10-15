@@ -1117,7 +1117,7 @@ allow	PYTHONPATH=src:$PYTHONPATH pytest
 # ---------------------------------------------------------------- python FILE: a command or path built from parts (#382)
 ask	python3 py/rmhome.py
 ask	python3 py/fetch.py https://x.example/i.sh
-ask	python3 py/profile.py
+deny	python3 py/profile.py
 deny	python3 py/leak.py
 pass	python3 py/tests.py -q
 pass	python3 py/clean.py build
@@ -1165,3 +1165,74 @@ allow	PATH=./scripts:$PATH make
 pass	printf '#!/bin/sh\n' > node_modules/.bin/git && node_modules/.bin/git status
 ask	cp tools/git node_modules/.bin/git; node_modules/.bin/git status
 ask	cd "$X"; tools/git status
+
+# ---------------------------------------------------------------- another program under a trusted name: hash -p, functions (#403)
+ask	hash -p tools/git git; git status
+ask	hash -p /tmp/bin/git git; git status
+ask	git() { tools/git "$@"; }; git status
+ask	function git { tools/git "$@"; }; git status
+ask	ls() { /tmp/bin/ls "$@"; }; ls
+allow	git() { command git "$@"; }; git status
+allow	hash -p /usr/bin/git git; git status
+allow	hash -r
+allow	hash
+
+# ---------------------------------------------------------------- warnings and breakpoint settings that import a module (#404)
+deny	PYTHONWARNINGS=ignore::wipe.W python3 py/ok.py
+deny	python3 -W ignore::wipe.W py/ok.py
+deny	cd py && python3 -W error::wipe.W -c "print(1)"
+deny	PYTHONBREAKPOINT=wipe.x python3 py/ok.py
+deny	export PYTHONWARNINGS=ignore::wipe.W; python3 py/ok.py
+pass	PYTHONWARNINGS=ignore::DeprecationWarning python3 py/ok.py
+pass	python3 -W ignore -c "print(1)"
+pass	PYTHONBREAKPOINT=0 python3 py/ok.py
+allow	PYTHONWARNINGS=error pytest -q
+
+# ---------------------------------------------------------------- code Python runs at start, and standard names taken (#405)
+deny	PYTHONPATH=sc python3 py/ok.py
+deny	PYTHONPATH=sc pytest -q
+deny	export PYTHONPATH=sc; python3 -c "print(1)"
+ask	cp py/wipe.py src/usercustomize.py && PYTHONPATH=src python3 py/ok.py
+ask	echo 'import os' > src/sitecustomize.py
+deny	python3 shadow/app.py
+deny	cd shadow && python3 -c "import json"
+pass	python3 py/ok.py
+allow	PYTHONPATH=src pytest -q
+
+# ---------------------------------------------------------------- inline Python writes login files and site-packages (#406)
+deny	python3 -c "import os; open(os.path.expanduser('~/.bashrc'), 'a').write('x')"
+deny	python3 -c "import os; open(os.path.join(os.path.expanduser('~'), '.bashrc'), 'a').write('x')"
+deny	python3 -c "from pathlib import Path; (Path.home() / '.bashrc').write_text('x')"
+deny	python3 -c "import os; open(os.environ['HOME'] + '/.zshrc', 'a').write('x')"
+ask	python3 -c "import site; open(site.getsitepackages()[0] + '/x.pth', 'w').write('import os')"
+ask	python3 -c "import site; open(site.getusersitepackages() + '/x.pth', 'w').write('import os')"
+ask	python3 -c "import importlib, sys; importlib.import_module(sys.argv[1])" wipe
+ask	python3 -c "m = input(); __import__(m)"
+pass	python3 -c "import os; open(os.path.join('build', 'out.txt'), 'w').write('x')"
+pass	python3 -c "import os; open(os.path.expanduser('~/notes.txt')).read()"
+pass	python3 -c "import importlib; importlib.import_module('json')"
+
+# ---------------------------------------------------------------- found in review of #403-#406
+ask	BASH_CMDS=([git]=tools/git); git status
+ask	BASH_CMDS+=([git]=tools/git); git status
+ask	declare -A BASH_CMDS=([ls]=py/wipe.py); ls
+ask	enable -f tools/git git; git status
+deny	cd py && PYTHONWARNINGS=ignore::wipe.W pytest -q
+deny	cd py && PYTHONWARNINGS=ignore::wipe.W python3 -m pytest
+deny	cd py && PYTHONBREAKPOINT=wipe.x pytest -q
+allow	PYTHONWARNINGS=error::DeprecationWarning pytest -q
+allow	enable -n echo
+ask	cd tools && hash -p git git && git status
+ask	hash -p "$F" git; git status
+deny	python3 -c "import os; open(os.path.join(os.path.realpath(os.path.expanduser('~')), '.bashrc'), 'a').write('x')"
+pass	python3 -c "open(((((('x'))))), 'w')"
+ask	python3 -c "import os; open(os.path.join(os.getenv('SOMEDIR', '/tmp'), '.bashrc'), 'a').write('x')"
+deny	python3 -c "import os; open(os.path.join(os.getenv('HOME', '/tmp'), '.bashrc'), 'a').write('x')"
+deny	python3 -c "from pathlib import Path; open(str(Path.home()) + '/.bashrc', 'a').write('x')"
+deny	python3 -c "import os; open(os.environ.get('HOME', '/root') + '/.bashrc', 'a').write('x')"
+deny	python3 -c "from pathlib import Path; Path.home().joinpath('.bashrc').write_text('x')"
+ask	python3 -c "import sysconfig; open(sysconfig.get_paths()['purelib'] + '/x.pth', 'w').write('import os')"
+deny	PYTHONPATH=py PYTHONWARNINGS=ignore::wipe.W pytest -q
+pass	PYTHONPATH=sc python3 -S py/ok.py
+pass	PYTHONPATH=sc python3 -I py/ok.py
+pass	PYTHONPATH=sc python3 -E py/ok.py

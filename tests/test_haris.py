@@ -1865,3 +1865,14 @@ def test_a_script_run_by_path_is_read_only_up_to_16_kb(world, tmp_path):
     assert decide(project, "Bash", f"python3 {small}").verdict == "deny"
     assert decide(project, "Bash", f"python3 {large}").verdict == "pass"
     assert decide(project, "Bash", runs(large)).verdict == "deny"  # run from inline code: up to 64 KB
+
+
+def test_a_path_joined_from_many_parts_is_judged_fast(world):
+    """A join of a thousand variable parts, each of a thousand more, once took seconds (#406 review)."""
+    home, project = world
+    b = "+".join(["c"] * 1000)
+    a = "+".join(["b"] * 1000)
+    code = f"a = {a}\nb = {b}\nc = 'x'\nopen(a, 'w')"
+    start = time.perf_counter()
+    decide(project, "Bash", f"python3 -c \"{code}\"")
+    assert time.perf_counter() - start < 0.2

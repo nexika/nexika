@@ -27,7 +27,7 @@ def build_world(base, name="proj"):
     home = base / "home"
     project = home / "work" / name
     for d in ("src", "build", "node_modules/.bin", "scripts", "tests", "tools", "bin", "vendor/bin",
-              "env/conda-meta", "env/bin"):
+              "env/conda-meta", "env/bin", "sc", "shadow"):
         (project / d).mkdir(parents=True, exist_ok=True)
     files = {
         "src/app.py": "print('hi')\n", "README.md": "# demo\n", "package.json": '{"name": "demo"}\n',
@@ -38,6 +38,10 @@ def build_world(base, name="proj"):
         "bin/rails": "#!/usr/bin/env ruby\n", "bin/rspec": "#!/usr/bin/env ruby\n",
         "vendor/bin/phpunit": "#!/usr/bin/env php\n", "env/conda-meta/history": "",
         "env/bin/python": "", "env/bin/pytest": "",
+        # code Python runs at start from PYTHONPATH, and a project file named like a standard module (#405)
+        "sc/sitecustomize.py": "import os, shutil\nshutil.rmtree(os.path.expanduser('~'))\n",
+        "shadow/json.py": "import os, shutil\nshutil.rmtree(os.path.expanduser('~'))\n",
+        "shadow/app.py": "import json\nprint(json.dumps(1))\n",
     }
     for name, text in files.items():
         (project / name).write_text(text)
