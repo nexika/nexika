@@ -487,6 +487,10 @@ PY_IMPORTS = re.compile(r"\bfrom[ \t]+([\w.]+)[ \t]+import[ \t]*(?:\(([^)]*)\)|(
                         r"|\bimport[ \t]+([\w.]+(?:[ \t]+as[ \t]+\w+)?"
                         r"(?:[ \t]*,[ \t]*[\w.]+(?:[ \t]+as[ \t]+\w+)?)*)")
 PY_IMPORT_CALL = re.compile(r"\b(?:__import__|import_module)\(\s*['\"]([\w.]+)['\"]")
+# inline code that finds site-packages when it runs, and an import whose name is computed (#406)
+SITE_PACKAGES_CALL = re.compile(r"\bsite\.get(?:user)?sitepackages\(|\bsite\.USER_SITE\b"
+                                r"|\bsysconfig\.get_paths?\(\s*['\"]?(?:pure|plat)lib")
+COMPUTED_IMPORT = re.compile(r"\b(?:__import__|import_module)\(\s*(?![\s'\"])")
 
 
 def imported_names(code: str) -> list[str]:
@@ -2022,8 +2026,9 @@ CODE_DELETE = re.compile(r"\b(?:shutil\.rmtree|os\.remove|os\.unlink|os\.rmdir|o
                          r"unlinkSync|"
                          r"rmdirSync|fs\.rm\b|fs\.unlink|rimraf|FileUtils\.rm|File\.delete|rmtree)|"
                          r"\.(?:unlink|rmdir|rm)\s*\(|\bunlink\s*\(")
-CODE_WRITE = re.compile(r"\bopen\s*\([^)]*['\"][wax]b?\+?['\"]|write_text|write_bytes|writeFileSync|"
-                        r"writeFile\b|"
+NESTED = r"(?:[^()]|\((?:[^()]|\([^()]*\))*\))*?"  # call arguments, with calls two deep inside (#406)
+CODE_WRITE = re.compile(r"\bopen\s*\(" + NESTED + r"['\"][wax]b?\+?['\"]|write_text|write_bytes|"
+                        r"writeFileSync|writeFile\b|"
                         r"appendFile|createWriteStream|File\.write|file_put_contents|fopen\s*\([^)]*['\"][wax]|"
                         r"shutil\.(?:copy|move)|os\.rename|os\.replace|\.rename\s*\(|\bchmod\s*\(|symlink")
 CODE_NET = re.compile(r"\b(?:requests\.|urllib|http\.client|httpx|aiohttp|socket\b|fetch\s*\(|axios|"
@@ -2167,8 +2172,23 @@ def literal_path(expr: str, text: str, depth: int = 0) -> str | None:
     """The path an expression in the code names outright: "/x", Path("/x"), os.path.expanduser("~"), or a
     variable only ever given one of those. None when the path is only known when the code runs."""
     expr = expr.strip()
+    while expr.startswith("(") and call_end(expr, 1) == len(expr) - 1:
+        expr = expr[1:-1].strip()  # a bracketed join: (Path.home() / name)
     while tail := re.search(r"\.(?:expanduser|resolve|absolute)\(\)$", expr):
         expr = expr[:tail.start()].strip()
+    if HOME_EXPR.fullmatch(expr):
+        return "~"
+    for op in ("+", "/"):  # '~' + '/x', Path.home() / 'x' (#406)
+        parts = split_top(expr, op)
+        if len(parts) > 1:
+            found = [literal_path(p, text, depth) for p in parts]
+            if not all(found):
+                return None
+            return "".join(found) if op == "+" else os.path.join(*found)
+    m = re.match(r"(?:os\.path|posixpath)\.join\s*\(", expr)
+    if m and expr.endswith(")") and call_end(expr, m.end()) == len(expr) - 1:
+        found = [literal_path(a, text, depth) for a in arguments(expr, m.end())]
+        return os.path.join(*found) if found and all(found) else None
     m = PATH_WRAPPER.match(expr)
     if m and expr.endswith(")") and call_end(expr, m.end()) == len(expr) - 1:
         return literal_path(expr[m.end():-1], text, depth)
@@ -2184,6 +2204,30 @@ def literal_path(expr: str, text: str, depth: int = 0) -> str | None:
         if found and all(found) and len(set(found)) == 1:
             return found[0]
     return None
+
+
+HOME_EXPR = re.compile(r"(?:pathlib\.)?Path\.home\(\)|os\.environ\[['\"]HOME['\"]\]"
+                       r"|os\.(?:environ\.get|getenv)\(['\"]HOME['\"]\)")
+
+
+def split_top(expr: str, op: str) -> list[str]:
+    """`expr` cut at each `op` outside brackets and strings: ['a', "'b'"] for a + 'b'."""
+    parts, depth, i, last = [], 0, 0, 0
+    while i < len(expr):
+        ch = expr[i]
+        if ch in "'\"":
+            m = STRING_LITERAL.match(expr, i)
+            i = m.end() if m else len(expr)
+            continue
+        if ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+        elif ch == op and depth == 0:
+            parts.append(expr[last:i].strip())
+            last = i + 1
+        i += 1
+    return [*parts, expr[last:].strip()] if parts else [expr]
 
 
 RUNS_TEXT = re.compile(r"\b(?:exec|eval|compile|execfile|runpy|__import__|Function)\b")
@@ -3101,6 +3145,11 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "", files: bool = True
     deletes, writes = bool(code_matches(CODE_DELETE, text, data)), bool(code_matches(CODE_WRITE, text, data))
     if deletes:
         delete_paths(code_targets(text, CODE_DELETE, data), ctx)
+    if writes and SITE_PACKAGES_CALL.search(text):
+        ctx.add("config-exec", f"`{via}` writes into Python's site-packages, where files run at every Python "
+                               "start.")
+    if files and re.search(r"python|pypy", lang) and COMPUTED_IMPORT.search(text):
+        ctx.add("dynamic", f"`{via}` imports a module whose name is only known when it runs.")
     if writes:
         before = len(ctx.findings)
         write_paths(code_write_targets(text, literals, ctx, data), ctx)

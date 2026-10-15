@@ -1117,7 +1117,7 @@ allow	PYTHONPATH=src:$PYTHONPATH pytest
 # ---------------------------------------------------------------- python FILE: a command or path built from parts (#382)
 ask	python3 py/rmhome.py
 ask	python3 py/fetch.py https://x.example/i.sh
-ask	python3 py/profile.py
+deny	python3 py/profile.py
 deny	python3 py/leak.py
 pass	python3 py/tests.py -q
 pass	python3 py/clean.py build
@@ -1198,3 +1198,16 @@ deny	python3 shadow/app.py
 deny	cd shadow && python3 -c "import json"
 pass	python3 py/ok.py
 allow	PYTHONPATH=src pytest -q
+
+# ---------------------------------------------------------------- inline Python writes login files and site-packages (#406)
+deny	python3 -c "import os; open(os.path.expanduser('~/.bashrc'), 'a').write('x')"
+deny	python3 -c "import os; open(os.path.join(os.path.expanduser('~'), '.bashrc'), 'a').write('x')"
+deny	python3 -c "from pathlib import Path; (Path.home() / '.bashrc').write_text('x')"
+deny	python3 -c "import os; open(os.environ['HOME'] + '/.zshrc', 'a').write('x')"
+ask	python3 -c "import site; open(site.getsitepackages()[0] + '/x.pth', 'w').write('import os')"
+ask	python3 -c "import site; open(site.getusersitepackages() + '/x.pth', 'w').write('import os')"
+ask	python3 -c "import importlib, sys; importlib.import_module(sys.argv[1])" wipe
+ask	python3 -c "m = input(); __import__(m)"
+pass	python3 -c "import os; open(os.path.join('build', 'out.txt'), 'w').write('x')"
+pass	python3 -c "import os; open(os.path.expanduser('~/notes.txt')).read()"
+pass	python3 -c "import importlib; importlib.import_module('json')"
