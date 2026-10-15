@@ -1187,3 +1187,14 @@ pass	PYTHONWARNINGS=ignore::DeprecationWarning python3 py/ok.py
 pass	python3 -W ignore -c "print(1)"
 pass	PYTHONBREAKPOINT=0 python3 py/ok.py
 allow	PYTHONWARNINGS=error pytest -q
+
+# ---------------------------------------------------------------- code Python runs at start, and standard names taken (#405)
+deny	PYTHONPATH=sc python3 py/ok.py
+deny	PYTHONPATH=sc pytest -q
+deny	export PYTHONPATH=sc; python3 -c "print(1)"
+ask	cp py/wipe.py src/usercustomize.py && PYTHONPATH=src python3 py/ok.py
+ask	echo 'import os' > src/sitecustomize.py
+deny	python3 shadow/app.py
+deny	cd shadow && python3 -c "import json"
+pass	python3 py/ok.py
+allow	PYTHONPATH=src pytest -q

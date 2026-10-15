@@ -419,6 +419,10 @@ def python_env(name: str, value: str, ctx: Ctx) -> None:
             shown = ctx.show(path) if path else "a folder only known when it runs"
             ctx.add("risky", f"{name} points Python at {shown}, so it would load code haris has not judged.")
             return
+        if name == "PYTHONPATH" and path:  # every Python start runs these from its path (#405)
+            for start in ("sitecustomize.py", "usercustomize.py"):
+                if os.path.isfile(os.path.join(path, start)):
+                    script_file_check("python", os.path.join(path, start), ctx)
 
 
 def setting_modules(opts: list, ctx: Ctx) -> list[str]:
@@ -2602,7 +2606,8 @@ def code_file_place(value: str, ctx: Ctx) -> tuple[str, str, str]:
     lexical = norm(value if value.startswith("/") else f"{ctx.cwd}/{value}")
     real = norm(os.path.realpath(lexical))
     where = ctx.where
-    if where.place(lexical) not in ("project", "temp") or where.place(real) not in ("project", "temp"):
+    readable = ("project", "temp", "config-exec")  # config-exec: sitecustomize.py, site-packages (#405)
+    if where.place(lexical) not in readable or where.place(real) not in readable:
         return "", "", "it is outside the project and the temporary folder"
     base = where.project_of(lexical) or max((t for t in where.temps if under(lexical, t)), key=len,
                                             default="")
