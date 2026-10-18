@@ -140,7 +140,9 @@ counts only v2 runs.
 **Options.** `--only loans-restart search-restart` runs some tasks, `--arms plain,hafiz`, `--model
 sonnet`, `--budget 1.5` (USD per call), `--max-total 25` (USD for everything in the data folder),
 `--timeout` (seconds per call), `--ref` (the commit whose hafiz arm `hafiz` loads). A run that already
-has `meta.json` is skipped; one without it is started again.
+has `meta.json` is skipped; one without it is started again, and its folder is kept beside it as
+`<name>.partial-<n>` (its cost still counts toward `--max-total`). `score` marks a run invalid when one of
+its recorded files is missing or damaged, and skips a run whose `meta.json` cannot be read.
 
 **Tests.** `tests/test_hafiz_bench.py` runs offline: it checks the fixture (only the deferred test
 fails at the start, the hidden checks fail until the work is done), the scorer's rules (with v1's

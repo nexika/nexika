@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { lawhaHome } from "./record.js";
+import { isObject, readList, updateList } from "./util.js";
 
 /**
  * Figma access for lawha: as few calls as possible, every answer cached, every call logged.
@@ -43,19 +44,12 @@ function logPath(): string {
   return join(lawhaHome(), "figma-calls.json");
 }
 
-function readLog(): CallLog[] {
-  try {
-    const all = JSON.parse(readFileSync(logPath(), "utf8")) as CallLog[];
-    const cutoff = Date.now() - 62 * 86400_000;
-    return Array.isArray(all) ? all.filter((c) => c.at > cutoff) : [];
-  } catch {
-    return [];
-  }
+function recent(c: unknown): boolean {
+  return isObject(c) && typeof c.at === "number" && c.at > Date.now() - 62 * 86400_000;
 }
 
-function writeLog(log: CallLog[]): void {
-  mkdirSync(lawhaHome(), { recursive: true, mode: 0o700 });
-  writeFileSync(logPath(), JSON.stringify(log), { mode: 0o600 });
+function readLog(): CallLog[] {
+  return readList<CallLog>(logPath(), recent).items;
 }
 
 /** Tier 1 calls in the last minute and the last 30 days, for the budget line. */
@@ -72,9 +66,8 @@ export function budget(): { tier1LastMinute: number; tier1Last30Days: number; ca
 
 async function call<T>(path: string, tier: Tier): Promise<T> {
   const res = await fetch(`${API}${path}`, { headers: { "X-Figma-Token": token() } });
-  const log = readLog();
-  log.push({ at: Date.now(), endpoint: path.split("?")[0]!.replace(/\/files\/[^/]+|\/images\/[^/]+/, (s) => s.split("/").slice(0, 2).join("/") + "/:key"), tier, status: res.status });
-  writeLog(log);
+  const entry: CallLog = { at: Date.now(), endpoint: path.split("?")[0]!.replace(/\/files\/[^/]+|\/images\/[^/]+/, (s) => s.split("/").slice(0, 2).join("/") + "/:key"), tier, status: res.status };
+  updateList<CallLog>(logPath(), recent, (log) => [...log, entry], true);
   if (res.status === 429) {
     const wait = res.headers.get("retry-after");
     throw new Error(`Figma rate limit reached${wait ? `: try again in ${wait} s` : ""} (plan tier ${res.headers.get("x-figma-plan-tier") ?? "unknown"})`);

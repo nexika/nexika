@@ -91,3 +91,11 @@ Then inside Claude Code:
 /plugin marketplace add nexika/nexika
 /plugin install prof@nexika
 ```
+
+## Limits
+- Two sessions that save the same topic at the same moment take turns through a file lock. Where a
+  file can't be locked (Windows, some network drives), one of the two changes can still be lost.
+- A damaged data file (cut short by a crash, a stray byte, a value of the wrong kind) is never an
+  error: prof skips the bad part or reads the file as empty, and the next save replaces it. What the
+  damaged part held is not recovered.
+- If `claude -p` returns text that isn't valid UTF-8, that session's automatic report is skipped.

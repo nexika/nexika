@@ -278,6 +278,12 @@ a harmful case haris stopped before.
   parser is planned.
 - Prompt-injection scanning matches known patterns; it cannot understand every way text can
   try to steer a model.
+- Two sessions that save approvals or a session's caution after a prompt injection at the same
+  moment take turns through a file lock. Where a file can't be locked (Windows, some network
+  drives), one of the two changes can still be lost, including the caution a parallel tool call set.
+- A damaged data file (cut short by a crash, a stray byte, a value of the wrong kind) is never an
+  error: haris skips the bad part or reads the file as empty, and the next save replaces it. What
+  the damaged part held is not recovered.
 
 ## Credit
 

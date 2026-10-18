@@ -100,3 +100,10 @@ GitHub needs `gh` signed in; GitLab needs `glab` signed in. All calls are reads.
 `~/.claude/nexika/tabib/<project>/<run>.json` (schema `nexika.tabib/1`, the last 50 per project) and
 `~/.claude/nexika/status/tabib.json` (the latest per branch). Owner-only. `TABIB_LANG` or
 `"lang"` in `~/.claude/nexika/tabib/config.json` picks English or Arabic.
+
+## Limits
+- Two sessions that save a diagnosis at the same moment take turns through a file lock. Where a file
+  can't be locked (Windows, some network drives), one of the two changes can still be lost.
+- A damaged data file (cut short by a crash, a stray byte, a value of the wrong kind) is never an
+  error: tabib skips the bad part or reads the file as empty, and the next save replaces it. What
+  the damaged part held is not recovered.

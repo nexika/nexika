@@ -102,3 +102,10 @@ the usage events (which hold words from your prompts) are readable only by you a
   Arabic question find English docs and the reverse; other terms match across languages only
   through `keywords` you add (as `/siyaq:add` does).
 - Docs can be wrong; injected text tells Claude to trust the code when they disagree.
+- A damaged data file (cut short by a crash, a stray byte, a value of the wrong kind) is never an
+  error: siyaq skips the bad part or reads the file as empty, and the next save replaces it. What
+  the damaged part held is not recovered.
+- Two sessions rotating the usage log at the same moment can drop about 1 MB of `siyaq stats`
+  history. Knowledge is not affected.
+- A value of the wrong kind in your `.siyaq.json` (say `"exclude": "x"`) makes matching quietly do
+  nothing; `siyaq index` shows the error.

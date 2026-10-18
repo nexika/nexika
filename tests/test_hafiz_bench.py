@@ -497,3 +497,43 @@ def test_runtests_reports_a_module_that_does_not_import(tmp_path):
                           capture_output=True, text=True, check=True)
     data = json.loads(done.stdout)
     assert data["load_errors"] and data["tests"]
+
+
+# ---- keeping the raw files and scoring them again (#394) ---------------------------------------------
+
+def test_recorded_runs_score_again_to_the_same_summary(tmp_path, monkeypatch, capsys):
+    _run(tmp_path, monkeypatch, "good", "hafiz")
+    _run(tmp_path, monkeypatch, "bad", "plain", "loans-restart")
+    assert bench.main(["score", "--home", str(tmp_path)]) == 0
+    first = (tmp_path / "summary.md").read_text(), (tmp_path / "results.json").read_text()
+    assert bench.main(["score", "--home", str(tmp_path)]) == 0
+    assert ((tmp_path / "summary.md").read_text(), (tmp_path / "results.json").read_text()) == first
+
+
+def test_a_damaged_run_is_flagged_or_skipped_and_the_rest_is_scored(tmp_path, monkeypatch, capsys):
+    half, _ = _run(tmp_path, monkeypatch, "good", "hafiz")
+    missing, _ = _run(tmp_path, monkeypatch, "bad", "plain")
+    latin, _ = _run(tmp_path, monkeypatch, "good", "hafiz", "loans-restart")
+    good, _ = _run(tmp_path, monkeypatch, "bad", "plain", "loans-restart")
+    (half / "meta.json").write_text((half / "meta.json").read_text()[:50])     # half written
+    (missing / "tests-final.json").unlink()                                    # a file missing
+    (latin / "snap-final.json").write_bytes(b'{"shelf/loans.py": "caf\xe9"}')  # not UTF-8
+    assert bench.main(["score", "--home", str(tmp_path)]) == 0
+    assert half.name in capsys.readouterr().err
+    rows = {(r["task"], r["arm"]): r for r in json.loads((tmp_path / "results.json").read_text())}
+    assert set(rows) == {("export", "plain"), ("loans-restart", "hafiz"), ("loans-restart", "plain")}
+    assert "missing or damaged: tests-final.json" in rows["export", "plain"]["invalid"]
+    assert "missing or damaged: snap-final.json" in rows["loans-restart", "hafiz"]["invalid"]
+    assert rows["loans-restart", "plain"]["valid"]
+
+
+def test_a_run_started_again_keeps_the_unfinished_attempt(tmp_path, monkeypatch):
+    """A run with no meta.json (stopped by hand, a crash) is started again; its paid calls are kept."""
+    old = tmp_path / "runs" / bench.run_name("export", "plain", 1)
+    old.mkdir(parents=True)
+    (old / "call-1.jsonl").write_text('{"type": "result", "subtype": "success", "total_cost_usd": 0.5}\n')
+    out, row = _run(tmp_path, monkeypatch, "good", "plain")
+    kept = tmp_path / "runs" / "export__plain__r1.partial-1"
+    assert (kept / "call-1.jsonl").is_file() and not (kept / "meta.json").exists()
+    assert row["valid"] and (out / "meta.json").is_file()
+    assert bench.spent(tmp_path / "runs") == pytest.approx(0.5 + row["cost_usd"])   # its cost still counts

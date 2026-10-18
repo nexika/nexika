@@ -134,3 +134,13 @@ Files are readable only by you (0600 in a 0700 folder), known secret shapes are 
 ```bash
 claude --plugin-dir ./plugins/itqan --plugin-dir ./plugins/barq
 ```
+
+## Limits
+- Two sessions that save lessons, approvals or proofs at the same moment take turns through a file
+  lock. Where a file can't be locked (Windows, some network drives), one of the two changes can
+  still be lost.
+- A damaged data file (cut short by a crash, a stray byte, a value of the wrong kind) is never an
+  error: itqan skips the bad part or reads the file as empty, and the next save replaces it. What
+  the damaged part held is not recovered.
+- A project's own `package.json` with odd values in `scripts` can leave out checks itqan would
+  otherwise run.

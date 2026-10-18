@@ -117,7 +117,12 @@ def exec_env():
 
 
 def _sh(args, **kw):
-    return subprocess.run(args, capture_output=True, text=True, **kw)
+    """Text by default, where a byte that is not UTF-8 (in claude's output, which is only logged and
+    parsed) is kept as U+FFFD rather than losing the run. text=False gives the bytes exactly."""
+    kw.setdefault("text", True)
+    if kw["text"]:
+        kw.setdefault("errors", "replace")
+    return subprocess.run(args, capture_output=True, **kw)
 
 
 def export_plugins(repo, sha, dest, sh=_sh):
@@ -132,9 +137,11 @@ def export_plugins(repo, sha, dest, sh=_sh):
 
 def run_one(task, arm, run, cfg, out_dir, sh=_sh, clock=time.monotonic, prompt=None, extra_args=()):
     """Run claude on one task in one arm and write stream.jsonl, stderr.txt, diff.patch and
-    meta.json (last, so a run without meta.json is redone on resume)."""
+    meta.json (last, so a run without meta.json is redone on resume). The files of an earlier attempt
+    (an invalid run, a crash) are moved to attempts/<n>/, never overwritten."""
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    keep_attempt(out_dir)
     name = container_name(task["instance_id"], arm, run)
     sh(["docker", "rm", "-f", name])
     started = sh(["docker", "run", "-d", "--name", name, "-w", WORKDIR,
@@ -160,9 +167,11 @@ def run_one(task, arm, run, cfg, out_dir, sh=_sh, clock=time.monotonic, prompt=N
         wall = clock() - t0
         (out_dir / "stream.jsonl").write_text(stdout)
         (out_dir / "stderr.txt").write_text(stderr)
-        diff = sh(["docker", "exec", "-w", WORKDIR, name, "bash", "-c",
-                   "git add -A >/dev/null 2>&1; git diff --cached HEAD"]).stdout
-        (out_dir / "diff.patch").write_text(diff)
+        # Bytes, saved as they are: a change to a file that is not UTF-8 must apply at grading.
+        raw = sh(["docker", "exec", "-w", WORKDIR, name, "bash", "-c",
+                  "git add -A >/dev/null 2>&1; git diff --cached HEAD"], text=False).stdout or b""
+        (out_dir / "diff.patch").write_bytes(raw)
+        diff = raw.decode(errors="replace")
     finally:
         sh(["docker", "rm", "-f", name])
 
@@ -185,8 +194,24 @@ def run_one(task, arm, run, cfg, out_dir, sh=_sh, clock=time.monotonic, prompt=N
         **metrics.parse_stream(stdout.splitlines()),
     }
     meta["valid"], meta["invalid_reason"] = metrics.validity(meta, arm, arm_plugins(arm))
+    metrics.mark_diff(meta, raw)
     (out_dir / "meta.json").write_text(json.dumps(meta, indent=1) + "\n")
     return meta
+
+
+def keep_attempt(out_dir):
+    """Move an earlier attempt's files into attempts/<n>/. They sit one folder deeper than a run's
+    meta.json, so the summary and the grader never count them."""
+    old = [p for p in Path(out_dir).iterdir() if p.is_file()]
+    if not old:
+        return
+    attempts = Path(out_dir) / "attempts"
+    taken = [int(p.name) for p in attempts.iterdir() if p.name.isdigit()] if attempts.is_dir() else []
+    n = 1 + max(taken, default=0)
+    dest = attempts / str(n)
+    dest.mkdir(parents=True)
+    for path in old:
+        path.rename(dest / path.name)
 
 
 def _prepare(name, arm, cfg, sh):

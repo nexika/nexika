@@ -5,6 +5,7 @@ import { chromium } from "playwright";
 import { PNG } from "pngjs";
 import { revealAll } from "./browser.js";
 import { appRoot, lawhaHome } from "./record.js";
+import { isObject, readList, updateList } from "./util.js";
 
 /**
  * Blind side by side: two versions of a page rendered at the same widths and placed left and right in
@@ -84,20 +85,14 @@ export function reveal(out: string, pick: "left" | "right", by: "user" | "judge"
   let recorded = false;
   if (by === "user") {
     const path = join(lawhaHome(), "taste.json");
-    let taste: Taste[] = [];
-    try { taste = JSON.parse(readFileSync(path, "utf8")) as Taste[]; } catch { taste = []; }
-    taste.push({ at: new Date().toISOString(), project: appRoot(cwd), winner: key[winner].label, loser: key[winner === "a" ? "b" : "a"].label, note: note.slice(0, 300) });
-    mkdirSync(lawhaHome(), { recursive: true, mode: 0o700 });
-    writeFileSync(path, JSON.stringify(taste.slice(-200), null, 1), { mode: 0o600 });
+    // A damaged file is moved aside before the fresh one is written, so earlier picks can be recovered.
+    const entry: Taste = { at: new Date().toISOString(), project: appRoot(cwd), winner: key[winner].label, loser: key[winner === "a" ? "b" : "a"].label, note: note.slice(0, 300) };
+    updateList<Taste>(path, isObject, (taste) => [...taste, entry].slice(-200));
     recorded = true;
   }
   return { winner, label: key[winner].label, recorded };
 }
 
 export function readTaste(): Taste[] {
-  try {
-    return JSON.parse(readFileSync(join(lawhaHome(), "taste.json"), "utf8")) as Taste[];
-  } catch {
-    return [];
-  }
+  return readList<Taste>(join(lawhaHome(), "taste.json"), isObject).items;
 }
