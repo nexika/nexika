@@ -664,3 +664,47 @@ def test_an_attempt_number_left_free_by_hand_does_not_stop_the_run(tmp_path, mon
     stream = "\n".join(json.dumps(e) for e in (INIT_B, RESULT))
     assert runner.run_one(TASK, "B", 1, CFG, tmp_path, sh=FakeSh(stream, DIFF), clock=lambda: 0.0)["valid"]
     assert (tmp_path / "attempts" / "3" / "stream.jsonl").read_text() == "old"
+
+
+def _failed_run(base, task, attempts, meta=True):
+    """A run folder after `attempts` tries that all failed: earlier ones in attempts/<n>/."""
+    d = base / "runs" / runner.run_name(task, "A", 1)
+    for n in range(1, attempts):
+        (d / "attempts" / str(n)).mkdir(parents=True)
+    d.mkdir(parents=True, exist_ok=True)
+    if meta:
+        (d / "meta.json").write_text(json.dumps({"valid": False, "invalid_reason": "API error 529"}))
+    else:
+        (d / "stream.jsonl").write_text("")                   # crashed before writing meta.json
+    return d
+
+
+def test_a_run_that_keeps_failing_is_given_up_after_the_cap(tmp_path, monkeypatch):
+    import bench
+    tired = _failed_run(tmp_path, "t1", 3)
+    _failed_run(tmp_path, "t2", 2)
+    _failed_run(tmp_path, "t3", 3, meta=False)
+    ran = []
+    monkeypatch.setattr(bench.runner, "run_one", lambda task, arm, run, cfg, out: ran.append(task) or
+                        {"valid": True, "result": "success", "cost_usd": 0, "wall_s": 0, "files_changed": 0,
+                         "test_commands": 0, "permission_denials": 0})
+    bench.run_order([("t1", 1, "A"), ("t2", 1, "A"), ("t3", 1, "A")], {t: t for t in ("t1", "t2", "t3")},
+                    {}, tmp_path, 1)
+    assert ran == ["t2"]
+    meta = json.loads((tired / "meta.json").read_text())
+    assert meta["valid"] is False and meta["retry"] is False
+    assert meta["invalid_reason"] == "API error 529; gave up after 3 attempts"
+    ran.clear()
+    bench.run_order([("t1", 1, "A")], {"t1": "t1"}, {}, tmp_path, 1)      # a later start: still given up
+    assert ran == [] and json.loads((tired / "meta.json").read_text())["invalid_reason"].count("gave up") == 1
+
+
+def test_the_attempt_cap_can_be_raised(tmp_path, monkeypatch):
+    import bench
+    _failed_run(tmp_path, "t1", 3)
+    ran = []
+    monkeypatch.setattr(bench.runner, "run_one", lambda task, arm, run, cfg, out: ran.append(task) or
+                        {"valid": True, "result": "success", "cost_usd": 0, "wall_s": 0, "files_changed": 0,
+                         "test_commands": 0, "permission_denials": 0})
+    bench.run_order([("t1", 1, "A")], {"t1": "t1"}, {}, tmp_path, 1, max_attempts=5)
+    assert ran == ["t1"]
