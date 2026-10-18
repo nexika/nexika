@@ -158,10 +158,12 @@ def _stacks(root: Path, all_files: list[Path]) -> list[dict]:
             scripts = json.loads((root / pkg).read_text(encoding="utf-8")).get("scripts", {})
         except (OSError, ValueError, AttributeError):
             scripts = {}
+        if not isinstance(scripts, dict):
+            scripts = {}  # "scripts": "build" would otherwise match a substring
         pm = _package_manager(folder)
         prefix = "" if folder == root else f"cd {shlex.quote(files.rel(folder, root))} && "
         cmds = {}
-        test_script = node_test_script(scripts, folder) if isinstance(scripts, dict) else None
+        test_script = node_test_script(scripts, folder)
         if test_script == "test":
             cmds["test"] = f"{prefix}{pm} test"
         elif test_script:

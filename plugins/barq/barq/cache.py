@@ -7,6 +7,7 @@ a session's cache after compaction, because Claude no longer holds the earlier c
 """
 from __future__ import annotations
 
+import contextlib
 import datetime
 import difflib
 import hashlib
@@ -37,18 +38,62 @@ def _digest(text: str) -> str:
     return hashlib.sha1(text.encode("utf-8", "replace")).hexdigest()
 
 
+def _load_index(path: Path) -> dict[str, dict]:
+    """A session's index; one of the wrong shape reads as empty, entries of the wrong shape are
+    dropped (#394)."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return {k: v for k, v in data.items() if isinstance(v, dict)} if isinstance(data, dict) else {}
+
+
+def _write_whole(path: Path, text: str) -> None:
+    """Readers see the old file or the new one, never half of it: a temp file of this process and
+    thread in the same folder, owner-only, renamed over the file; removed on error (#394)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
+    try:
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as fh:  # CRLF kept: the hash must match
+            fh.write(text)
+        os.replace(tmp, path)
+    except BaseException:
+        with contextlib.suppress(OSError):
+            os.unlink(tmp)
+        raise
+
+
+def _locked(folder: Path):
+    """Hold the index lock while a call reads and saves its session's index, so two barq calls of
+    one session both keep their reads. Without a file lock, saves go through unlocked."""
+    try:
+        import fcntl
+        folder.mkdir(parents=True, exist_ok=True)
+        fd = os.open(folder / ".index.lock", os.O_WRONLY | os.O_CREAT, 0o600)
+    except (ImportError, OSError):
+        return contextlib.nullcontext()
+
+    @contextlib.contextmanager
+    def held():
+        try:
+            with contextlib.suppress(OSError):
+                fcntl.flock(fd, fcntl.LOCK_EX)
+            yield
+        finally:
+            os.close(fd)  # closing releases the lock
+    return held()
+
+
 class Cache:
     def __init__(self, session: str | None):
         self.session = _safe_id(session) if session else ""
         self.enabled = bool(self.session)
         self._lock = threading.Lock()
         self._index: dict[str, dict] = {}
-        self._dirty = False
+        self._mine: set[str] = set()   # keys this call remembered: they win when saving
         if self.enabled:
-            try:
-                self._index = json.loads(self._index_path().read_text(encoding="utf-8"))
-            except (OSError, ValueError):
-                self._index = {}
+            self._index = _load_index(self._index_path())
 
     def _index_path(self) -> Path:
         return _sessions_dir() / f"{self.session}.json"
@@ -71,9 +116,12 @@ class Cache:
         if entry.get("hash") == _digest(text):
             return "unchanged", entry.get("ts", "")
         try:
-            old = self._snap_path(key).read_text(encoding="utf-8")
-        except OSError:
+            with open(self._snap_path(key), encoding="utf-8", newline="") as fh:
+                old = fh.read()
+        except (OSError, ValueError):
             return "changed", None
+        if _digest(old) != entry.get("hash"):
+            return "changed", None  # not the text Claude saw (cut short, or another call's): no diff
         diff = "".join(difflib.unified_diff(
             old.splitlines(keepends=True), text.splitlines(keepends=True),
             "before", "now", n=2,
@@ -85,25 +133,28 @@ class Cache:
     def remember(self, key: str, text: str) -> None:
         if not self.enabled:
             return
-        snap = self._snap_path(key)
-        snap.parent.mkdir(parents=True, exist_ok=True)
-        snap.write_text(text, encoding="utf-8")
+        try:
+            _write_whole(self._snap_path(key), text)
+        except OSError:
+            pass  # no snapshot: the next change is sent whole, never as a diff against nothing
         with self._lock:
             self._index[key] = {
                 "hash": _digest(text),
                 "lines": text.count("\n") + 1,
                 "ts": datetime.datetime.now().strftime("%H:%M"),
             }
-            self._dirty = True
+            self._mine.add(key)
 
     def save(self) -> None:
-        if not (self.enabled and self._dirty):
+        """Save the index. Reads another call of this session saved since this one loaded it are
+        kept; this call's own reads win."""
+        if not (self.enabled and self._mine):
             return
         path = self._index_path()
-        path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(self._index), encoding="utf-8")
-        tmp.replace(path)
+        with self._lock, _locked(path.parent):
+            index = _load_index(path)
+            index.update({key: self._index[key] for key in self._mine})
+            _write_whole(path, json.dumps(index))
 
 
 def reset(session: str) -> None:

@@ -311,7 +311,10 @@ def load_config(root: Path) -> dict:
 
 def _from_config(entries: list[dict]) -> list[Project]:
     projects = []
-    for item in entries:
+    for item in entries if isinstance(entries, list) else [None]:
+        if not (isinstance(item, dict) and item.get("name") and isinstance(item.get("version_files"), list)):
+            raise ValueError('.amin.json: "projects" is a list of {"name": ..., "version_files": [...]} '
+                             "(see /amin:setup)")
         name, path = str(item["name"]), str(item.get("path", "."))
         single = path in (".", "")
         folder = path.rstrip("/")

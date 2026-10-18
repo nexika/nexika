@@ -53,7 +53,11 @@ def pending(root: Path, project: Project) -> tuple[list[Fragment], list[str]]:
             problems.append(f"{project.fragments}/{problem}")
             continue
         m = NAME.match(path.name)
-        text = path.read_text(encoding="utf-8").strip()
+        try:
+            text = path.read_text(encoding="utf-8").strip()
+        except UnicodeDecodeError:
+            problems.append(f"{project.fragments}/{path.name}: not UTF-8 text")
+            continue
         if not text:
             problems.append(f"{project.fragments}/{path.name}: empty note")
             continue

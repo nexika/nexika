@@ -300,18 +300,34 @@ def report(records: list[dict], previous: list[dict] | None = None, domains: lis
 
 def save(path: Path, records: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "a", encoding="utf-8") as fh:
-        for rec in records:
-            fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    text = "".join(json.dumps(rec, ensure_ascii=False) + "\n" for rec in records)
+    with open(path, "ab") as fh:
+        if fh.tell() and _ends_mid_line(path):   # a run stopped mid-line: start ours on a new one (#394)
+            text = "\n" + text
+        fh.write(text.encode("utf-8"))   # one write, so two runs at once don't interleave lines
+
+
+def _ends_mid_line(path: Path) -> bool:
+    try:
+        with open(path, "rb") as fh:
+            fh.seek(-1, os.SEEK_END)
+            return fh.read(1) != b"\n"
+    except OSError:
+        return False
 
 
 def load_runs(path: Path) -> list[list[dict]]:
-    """All stored runs, oldest first."""
+    """All stored runs, oldest first. A damaged line (cut short, bad bytes, not a row) is skipped alone."""
     try:
-        rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
-    except (OSError, ValueError):
+        lines = path.read_bytes().splitlines()
+    except OSError:
         return []
     runs: dict[str, list[dict]] = {}
-    for row in rows:
-        runs.setdefault(row["run"], []).append(row)
+    for line in lines:
+        try:
+            row = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(row, dict) and row.get("run") is not None:
+            runs.setdefault(str(row["run"]), []).append(row)
     return [runs[k] for k in sorted(runs)]

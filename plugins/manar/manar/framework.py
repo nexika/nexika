@@ -12,7 +12,11 @@ def _deps(root: Path) -> set[str]:
             data = json.loads(pkg.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
-        out |= set(data.get("dependencies", {})) | set(data.get("devDependencies", {}))
+        if not isinstance(data, dict):
+            continue
+        for key in ("dependencies", "devDependencies"):
+            if isinstance(data.get(key), dict):   # another shape is skipped, not a crash (#394)
+                out |= set(data[key])
     return out
 
 

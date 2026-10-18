@@ -2128,3 +2128,83 @@ def test_a_crash_is_not_added_when_the_tests_name_their_failure():
              "[signal SIGSEGV: segmentation violation code=0x1 addr=0x0 pc=0x4f1c2a]", "--- FAIL: TestTotal (0.00s)",
              "FAIL\texample.com/shop/cart\t0.012s"]
     assert [f["framework"] for f in parse.failures(lines)] == ["go"]
+
+
+# ---------------------------------------------------------------- shared files and stored data (#394)
+
+def _saved(repo, branch, run_id):
+    """A record on disk, as save leaves it (publish keeps only entries whose record exists)."""
+    record = {"schema": diagnosis.SCHEMA, "repo": repo, "branch": branch,
+              "run": {"id": run_id, "sha": "abc", "attempt": 1, "updated": None},
+              "jobs": [], "failures": [], "errors": [], "evidence": [], "kind": "code", "detail": {},
+              "confidence": "high", "updated": "2026-10-18T09:00:00"}
+    status.write_json(diagnosis.path_for(repo, run_id), record)
+    return record
+
+
+def test_two_publishes_at_once_both_keep_their_entry(env, monkeypatch):
+    # mizan's background triage and a user's diagnose: each read the file, then wrote its own copy
+    import threading
+    first, second = _saved("/r", "feat/a", 1), _saved("/r", "feat/b", 2)
+    real, other = status.read, []
+
+    def read(plugin, *args, **kwargs):
+        data = real(plugin, *args, **kwargs)
+        if plugin == "tabib" and not other:   # the second publish runs between this read and its write
+            other.append(threading.Thread(target=diagnosis.publish, args=(second,)))
+            other[0].start()
+            other[0].join(0.3)                # a lock makes it wait for this one: never a deadlock
+        return data
+    monkeypatch.setattr(status, "read", read)
+    diagnosis.publish(first)
+    other[0].join(10)
+    assert set(real("tabib")["runs"]["/r"]) == {"feat/a", "feat/b"}
+
+
+@pytest.mark.parametrize("runs", [[1], {"/r": [1]}, {"/r": {"feat/a": [1]}}, {"/r": {"feat/a": {"path": 5}}}])
+def test_a_status_file_of_the_wrong_shape_is_no_diagnosis(env, runs):
+    status.publish("tabib", {"runs": runs})
+    assert diagnosis.latest({"repo": "/r", "branch": "feat/a"}) == {}
+    diagnosis.publish(_saved("/r", "feat/b", 2))   # the next save replaces it
+    assert status.read("tabib")["runs"]["/r"]["feat/b"]["run"] == 2
+
+
+@pytest.mark.parametrize("bad", [{"run": [1]}, {"run": {"id": 7001, "attempt": 1}, "cause": "text"},
+                                 {"run": {"id": "7001"}}, {"failures": "x"}])
+def test_a_saved_record_of_the_wrong_shape_is_replaced(ci, bad):
+    good = {k: v for k, v in _saved(ci["repo"], "feat/x", 7001).items() if k not in bad}
+    status.write_json(diagnosis.path_for(ci["repo"], 7001), {**good, **bad})
+    assert diagnosis.latest(ci, 7001) == {}
+    record = diagnosis.triage(ci)
+    assert record["kind"] == "code" and record["run"]["id"] == 7001 and record["cause"] is None
+    assert diagnosis.latest(ci, 7001)["run"]["sha"] == record["run"]["sha"]
+
+
+def test_a_record_removed_while_old_ones_are_pruned_does_not_stop_the_save(env, monkeypatch):
+    record = _saved("/r", "feat/a", 2)
+    real = Path.glob
+    monkeypatch.setattr(Path, "glob", lambda self, pattern: [*real(self, pattern), self / "1.json"])
+    diagnosis.save(record)   # 1.json was in the listing, then another save removed it
+    assert status.read("tabib")["runs"]["/r"]["feat/a"]["run"] == 2
+
+
+@pytest.mark.parametrize("garbage", [b'{"schema": "nexika.tabib/1", "runs": [1]}', b"\xff\xfe{", b"[1]"])
+def test_the_hook_says_its_note_whatever_is_stored(env, garbage):
+    folder = env / "nexika_status_home"
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "tabib.json").write_bytes(garbage)
+    (env / "tabib_home").mkdir(exist_ok=True)
+    (env / "tabib_home" / "config.json").write_bytes(garbage)
+    done = subprocess.run([sys.executable, str(BIN), "hook", "session-start"], input="{}", capture_output=True,
+                          text=True, env={**os.environ, "TABIB_LANG": ""}, timeout=30)
+    assert done.returncode == 0 and done.stderr == ""
+    assert "Helper: python3" in json.loads(done.stdout)["hookSpecificOutput"]["additionalContext"]
+
+
+@pytest.mark.parametrize("installed", ['{"plugins": [1]}', '{"plugins": {"hafiz@x": [{"installPath": 5}]}}',
+                                       '{"plugins": {"hafiz@x": "x"}}', "[1]"])
+def test_an_odd_installed_plugins_file_finds_no_plugin(tmp_path, monkeypatch, installed):
+    (tmp_path / "plugins").mkdir()
+    (tmp_path / "plugins" / "installed_plugins.json").write_text(installed, encoding="utf-8")
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path))
+    assert diagnosis.find_plugin("no-such-plugin") is None

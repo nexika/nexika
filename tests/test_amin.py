@@ -1235,3 +1235,60 @@ def test_maintenance_branch_keeps_its_own_line_after_a_new_major(tmp_path):
     pl = plan_by_name(root)["fastify"]
     assert (pl.last_tag, pl.next, pl.problems) == ("v5.12.5", "5.12.6", [])
     assert gitops.released_versions(gitops.Runner(root), "v") == ["5.12.5", "5.12.4"]
+
+
+# ---------------------------------------------------------------- shared files and stored data (#394)
+
+def test_two_repos_publishing_at_once_both_stay_ready(tmp_path, monkeypatch):
+    # `amin plan` in two repos at once: each read status/amin.json, then wrote its own copy
+    import threading
+    first, second = tmp_path / "a", tmp_path / "b"
+    first.mkdir()
+    second.mkdir()
+    real, other = cli.status.read, []
+
+    def read(plugin, *args, **kwargs):
+        data = real(plugin, *args, **kwargs)
+        if plugin == "amin" and not other:   # the second publish runs between this read and its write
+            other.append(threading.Thread(target=cli.publish_ready, args=(second, None, [])))
+            other[0].start()
+            other[0].join(0.3)               # a lock makes it wait for this one: never a deadlock
+        return data
+    monkeypatch.setattr(cli.status, "read", read)
+    cli.publish_ready(first, None, [])
+    other[0].join(10)
+    assert set(real("amin")["repos"]) == {str(first), str(second)}
+
+
+def test_the_session_hook_never_breaks_a_session(monkeypatch, capsys):
+    def broken():
+        raise RuntimeError("boom")
+    monkeypatch.setattr(cli, "helper_command", broken)
+    monkeypatch.setattr(sys, "argv", ["amin", "hook", "session-start"])
+    with pytest.raises(SystemExit) as done:
+        cli.entry()
+    assert done.value.code == 0 and capsys.readouterr() == ("", "")
+    monkeypatch.setattr(sys, "argv", ["amin", "projects"])   # a command still shows its error
+    monkeypatch.setattr(cli.proj, "detect", lambda root: broken())
+    with pytest.raises(RuntimeError):
+        cli.entry()
+
+
+@pytest.mark.parametrize("config", ['{"projects": [1]}', '{"projects": "alpha"}',
+                                    '{"projects": [{"name": "alpha"}]}',
+                                    '{"projects": [{"name": "a", "version_files": "x"}]}'])
+def test_a_wrong_amin_json_is_named_not_a_traceback(market, monkeypatch, capsys, config):
+    write(market, ".amin.json", config)
+    monkeypatch.chdir(market)
+    assert cli.main(["projects"]) == 1
+    assert ".amin.json" in capsys.readouterr().err
+
+
+def test_a_note_that_is_not_utf8_is_a_problem_not_a_crash(market, monkeypatch, capsys):
+    (market / "changelog.d" / "alpha").mkdir(parents=True)
+    (market / "changelog.d" / "alpha" / "12.fixed.md").write_bytes(b"caf\xe9 fixed\n")
+    notes, problems = fragments.pending(market, projects_of(market)["alpha"])
+    assert notes == [] and problems == ["changelog.d/alpha/12.fixed.md: not UTF-8 text"]
+    monkeypatch.chdir(market)
+    assert cli.main(["fragment", "list"]) == 0
+    assert "PROBLEM    changelog.d/alpha/12.fixed.md: not UTF-8 text" in capsys.readouterr().out

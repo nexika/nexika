@@ -59,10 +59,13 @@ def publish_ready(root: Path, runner: gitops.Runner, plans: list[release.Plan] |
         return
     ready = [{"name": pl.project.name, "next": pl.next} for pl in plans
              if pl.status in ("release", "first-release")]
-    repos = status.read("amin").get("repos")
-    repos = {k: v for k, v in repos.items() if os.path.isdir(k)} if isinstance(repos, dict) else {}
-    repos[str(root)] = {"ready": ready}
-    status.publish("amin", {"repos": repos})
+
+    def change(data: dict) -> None:   # on the file as it is now: another repo may be publishing (#394)
+        repos = data.get("repos")
+        repos = {k: v for k, v in repos.items() if os.path.isdir(k)} if isinstance(repos, dict) else {}
+        repos[str(root)] = {"ready": ready}
+        data["repos"] = repos
+    status.update("amin", change)
 
 
 def cmd_projects(root: Path, runner: gitops.Runner) -> str:
@@ -268,4 +271,11 @@ def entry() -> None:
         sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
     except (AttributeError, ValueError):
         pass
-    sys.exit(main(sys.argv[1:]))
+    argv = sys.argv[1:]
+    if argv[:1] == ["hook"]:   # a hook never breaks the session: any error means no note (#394)
+        try:
+            run(argv)
+        except Exception:
+            pass
+        sys.exit(0)
+    sys.exit(main(argv))

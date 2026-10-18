@@ -16,6 +16,8 @@ def main() -> None:
         hook = json.loads(sys.stdin.read() or "{}")
     except ValueError:
         hook = {}
+    if not isinstance(hook, dict):
+        hook = {}
     agent = "".join(c for c in str(hook.get("agent_id") or "") if c.isalnum() or c in "-_")[:48]
     if not agent:
         return

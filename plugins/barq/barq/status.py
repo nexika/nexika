@@ -48,11 +48,18 @@ def ensure_dir(folder: Path) -> None:
 
 def write_json(path: Path, data: dict) -> None:
     ensure_dir(path.parent)
-    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.{time.monotonic_ns()}.tmp")  # threads too
     fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, "w", encoding="utf-8") as fh:
-        json.dump(data, fh, ensure_ascii=False)
-    os.replace(tmp, path)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(data, fh, ensure_ascii=False)
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def read_json(path: Path) -> dict:
@@ -81,6 +88,46 @@ def publish(plugin: str, data: dict, session: str = "") -> bool:
     except OSError:
         return False
     return True
+
+
+def _locked(path: Path):
+    """Hold path's lock while a change reads and writes it. Without a file lock (Windows, some
+    network homes) the change goes through unlocked."""
+    import contextlib
+    try:
+        import fcntl
+        ensure_dir(path.parent)
+        fd = os.open(path.with_name(f".{path.name}.lock"), os.O_WRONLY | os.O_CREAT, 0o600)
+    except (ImportError, OSError):
+        return contextlib.nullcontext()
+
+    @contextlib.contextmanager
+    def held():
+        try:
+            with contextlib.suppress(OSError):
+                fcntl.flock(fd, fcntl.LOCK_EX)
+            yield
+        finally:
+            os.close(fd)  # closing releases the lock
+    return held()
+
+
+def update(plugin: str, change, session: str = "") -> dict | None:
+    """Change a plugin's status file as it is on disk now, so two sessions publishing at once both
+    keep their part (#394). `change(data)` edits the current data in place ({} when the file is
+    missing or unusable). Returns what was saved, or None when it could not be."""
+    path = path_for(plugin, session)
+    if path is None:
+        return None
+    try:
+        with _locked(path):
+            data = read(plugin, session)
+            change(data)
+            data = {**data, "schema": schema(plugin), "updated": int(time.time())}
+            write_json(path, data)
+    except OSError:
+        return None
+    return data
 
 
 def read(plugin: str, session: str = "", max_age: float = 0) -> dict:

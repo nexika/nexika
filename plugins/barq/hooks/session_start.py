@@ -31,6 +31,8 @@ def main() -> None:
         hook = json.loads(sys.stdin.read() or "{}")
     except ValueError:
         hook = {}
+    if not isinstance(hook, dict):
+        hook = {}
     session = "".join(c for c in str(hook.get("session_id") or "") if c.isalnum() or c in "-_")
     source = hook.get("source", "startup")
 
