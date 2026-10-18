@@ -97,3 +97,11 @@ Anything else: `.amin.json`
   with a pattern whose one group is the version: in `.amin.json` `"version_files"`,
   `{"file": "fastify.js", "pattern": "const VERSION = '(.*)'"}`. `projects` and `plan` warn when
   another source file next to the version file holds the version in a `VERSION` constant.
+- Two sessions that save the projects ready to release at the same moment take turns through a file
+  lock. Where a file can't be locked (Windows, some network drives), one of the two changes can
+  still be lost.
+- A damaged data file (cut short by a crash, a stray byte, a value of the wrong kind) is never an
+  error: amin skips the bad part or reads the file as empty, and the next save replaces it. What the
+  damaged part held is not recovered.
+- `amin check-fragment` reports a change note that isn't UTF-8 text as an empty note. CI fails on it
+  either way; only the message is off.

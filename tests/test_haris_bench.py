@@ -190,3 +190,11 @@ def test_case_ids_do_not_depend_on_where_the_repository_is(monkeypatch, tmp_path
     monkeypatch.setattr(bench.haris_world, "HARIS_ROOT", tmp_path / "elsewhere" / "plugins" / "haris")
     there = [c["id"] for c in bench.load_cases() if str(tmp_path) in c["value"]]
     assert here == there
+
+
+def test_the_json_report_is_enough_to_write_the_summary_again(report):
+    """#394: `--json` keeps every result; the summary and the check come back the same from it."""
+    kept = json.loads(json.dumps(report))
+    baseline = json.loads(bench.BASELINE.read_text())
+    assert bench.markdown(kept, baseline) == bench.markdown(report, baseline)
+    assert bench.regressions(kept, baseline) == bench.regressions(report, baseline)

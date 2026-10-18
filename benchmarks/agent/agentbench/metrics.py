@@ -98,6 +98,21 @@ def diff_stats(diff):
     return {"files_changed": len(files), "lines_added": added, "lines_removed": removed}
 
 
+NOT_UTF8 = "diff is not UTF-8 text; the SWE-bench grader takes it as a JSON string and can't apply it"
+
+
+def mark_diff(meta, raw):
+    """A diff that is not UTF-8 (a change to a Latin-1 file) cannot reach the grader intact, so it would
+    be graded as that arm's failure. The run is invalid instead, and not run again (retry False): the
+    agent would likely make the same change, and a run must never be retried forever."""
+    try:
+        raw.decode("utf-8")
+    except UnicodeDecodeError:
+        if meta.get("valid", True):
+            meta["valid"], meta["invalid_reason"] = False, NOT_UTF8
+        meta["retry"] = False
+
+
 def validity(meta, arm, expected=None):
     """A run that did not test what it claims is kept but left out of the comparison.
     expected: the Nexika plugins the arm should load (default: A none, B all)."""

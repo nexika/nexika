@@ -132,6 +132,15 @@ lawha publishes `~/.claude/nexika/status/lawha.json` (schema `nexika.lawha/1`): 
 path of its latest check record (`nexika.lawha.check/1`) in lawha's own folder. Run `lawha check
 --no-record` for a check you do not want to share.
 
+## Limits
+
+- Two lawha commands that save the same file at the same moment (two checks finishing, two picks)
+  take turns. If the other one holds the turn for more than 2 seconds, lawha saves anyway, and one
+  of the two can be lost.
+- A damaged taste, history or Figma log file (cut short by a crash, a stray byte, the wrong kind
+  of value) is read as empty and set aside as `<name>.broken-<time>` before a fresh one is
+  written, so your past picks can still be recovered by hand.
+
 ## Coming next
 
 lawha is being built in steps (see [DESIGN.md](DESIGN.md)):

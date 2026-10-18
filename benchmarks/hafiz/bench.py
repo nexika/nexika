@@ -254,7 +254,12 @@ def spent(runs_dir: Path) -> float:
 def run_one(task: dict, arm: str, run: int, cfg: dict, script: list[dict], version: int = 2) -> Path:
     out = cfg["runs_dir"] / run_name(task["id"], arm, run)
     if out.exists():
-        shutil.rmtree(out)  # a run without meta.json did not finish: start it again
+        # A run without meta.json did not finish: start it again, keeping its paid calls beside it
+        # (spent() still counts them; score skips a folder without meta.json).
+        k = 1
+        while out.with_name(f"{out.name}.partial-{k}").exists():
+            k += 1
+        out.rename(out.with_name(f"{out.name}.partial-{k}"))
     repo, home = out / "repo", out / "home"
     out.mkdir(parents=True)
     make_home(home)
@@ -356,7 +361,11 @@ def cmd_score(args) -> int:
     home = Path(args.home) if args.home else bench_home()
     rows = []
     for meta in sorted((home / "runs").glob("*/meta.json")):
-        task = json.loads(meta.read_text())["task"]
+        task = score._json(meta, {})
+        task = task.get("task") if isinstance(task, dict) else None
+        if task not in tasks:
+            print(f"skipped {meta.parent.name}: meta.json is damaged or names no known task", file=sys.stderr)
+            continue
         rows.append(score.score_run(meta.parent, tasks[task]))
     (home / "results.json").write_text(json.dumps(rows, indent=1))
     text = score.markdown(rows)

@@ -126,9 +126,15 @@ The summary has one table per ablation arm, compared with A.
 | `runs/<task>__<arm>__r<n>/stream.jsonl` | the whole session, as claude printed it |
 | `runs/.../diff.patch` | what the agent changed |
 | `runs/.../meta.json` | the run's numbers (below) |
+| `runs/.../attempts/<n>/` | an earlier attempt of the same run (an invalid run is run again), kept as it was |
 | `grades.json` | resolved, FAIL_TO_PASS and PASS_TO_PASS counts per run |
 | `results.csv` | one row per run, all of the above |
 | `summary.md` | the paired comparison |
+
+`bench.py summary` writes `results.csv` and `summary.md` again from these files, without running the
+agent. With `--from-raw` it reads each run's numbers again from `stream.jsonl` and `diff.patch`, so a run
+recorded before a measure existed gets it too. A run whose `meta.json` is damaged or whose `diff.patch` is
+missing is skipped and named.
 
 Each run records:
 - the outcome: resolved and regression;

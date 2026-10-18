@@ -156,3 +156,7 @@ under 1.5 KB (`card_chars` in `.hafiz.json` can only make it smaller).
 - Memories describe the past. Claude is told to check them against the code before acting.
 - The transcript format of Claude Code is not a public API; hafiz skips what it does not
   recognize rather than failing.
+- A damaged data file (cut short by a crash, a stray byte, a value of the wrong kind) is never an
+  error: hafiz skips the bad part or reads the file as empty, and the next save replaces it. What
+  the damaged part held is not recovered.
+- Half a character in a transcript (an escaped `\ud800` with no partner) is stored as `?`.

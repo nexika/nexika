@@ -1,8 +1,9 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { chmodSync, existsSync, mkdirSync, openSync, closeSync, readdirSync, readFileSync, renameSync, unlinkSync, writeSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
+import { isObject, withLock, writeAtomic } from "./util.js";
 /**
  * How lawha tells the other Nexika plugins what it checked.
  *
@@ -61,15 +62,7 @@ function ensureDir(folder) {
 /** Atomic, owner-only JSON write. */
 function writeJsonSafe(path, data) {
     ensureDir(dirname(path));
-    const tmp = join(dirname(path), `.${path.split("/").pop()}.${process.pid}.tmp`);
-    const fd = openSync(tmp, "w", 0o600);
-    try {
-        writeSync(fd, JSON.stringify(data, null, 1));
-    }
-    finally {
-        closeSync(fd);
-    }
-    renameSync(tmp, path);
+    writeAtomic(path, JSON.stringify(data, null, 1), 0o600);
 }
 export function record(cwd, data) {
     const project = projectRoot(cwd);
@@ -97,16 +90,23 @@ export function record(cwd, data) {
 /** status/lawha.json: the latest check per project (only files that still exist are kept). */
 export function publish(project, latest) {
     const path = join(statusHome(), "lawha.json");
-    let checks = {};
-    try {
-        const current = JSON.parse(readFileSync(path, "utf8"));
-        for (const [k, v] of Object.entries(current.checks ?? {}))
-            if (typeof v === "string" && existsSync(v))
-                checks[k] = v;
-    }
-    catch {
-        checks = {};
-    }
-    checks[project] = latest;
-    writeJsonSafe(path, { schema: STATUS_SCHEMA, updated: Math.floor(Date.now() / 1000), checks });
+    ensureDir(statusHome());
+    // Read, change and write under a lock, so two projects' checks finishing at once both stay. The
+    // lock file is lawha's own (not Python's fcntl .lawha.json.lock); only lawha writes this file.
+    withLock(join(statusHome(), ".lawha.json.wlock"), () => {
+        const checks = {};
+        try {
+            const current = JSON.parse(readFileSync(path, "utf8"));
+            const old = isObject(current) ? current.checks : undefined;
+            if (isObject(old))
+                for (const [k, v] of Object.entries(old))
+                    if (typeof v === "string" && existsSync(v))
+                        checks[k] = v;
+        }
+        catch {
+            // unreadable: the pointers are rebuilt by the next check of each project
+        }
+        checks[project] = latest;
+        writeJsonSafe(path, { schema: STATUS_SCHEMA, updated: Math.floor(Date.now() / 1000), checks });
+    });
 }

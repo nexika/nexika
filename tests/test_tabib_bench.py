@@ -164,3 +164,32 @@ def test_an_input_the_action_does_not_know_is_quoted_for_setup(run):
     record = _triage(f"black.json:{run}")
     assert record["kind"] == "setup"
     assert any("Unexpected input(s) 'pip-install'" in e for e in record["evidence"])
+
+
+def test_the_json_report_is_enough_to_write_the_summary_again(report):
+    """#394: `--json` keeps every case's result; the summary and the check come back the same from it."""
+    kept = json.loads(json.dumps(report))
+    assert bench.summarise(kept["rows"]) == kept
+    baseline = json.loads(bench.BASELINE.read_text())
+    assert bench.markdown(kept, baseline) == bench.markdown(report, baseline)
+    assert bench.regressions(kept, baseline) == bench.regressions(report, baseline)
+
+
+def test_a_case_whose_log_is_missing_or_not_utf8_is_flagged_and_the_rest_is_scored(tmp_path, monkeypatch):
+    """#394: one damaged case must not stop the report; it counts as wrong and is named."""
+    project = json.loads((bench.CASES / "click.json").read_text())
+    first, second = [r for r in project["runs"] if r.get("log")][:2]
+    latin = tmp_path / "latin.log"
+    latin.write_bytes((bench.HERE / second["log"]).read_bytes() + b"\ncaf\xe9\n")
+    first = {**first, "log": str(tmp_path / "gone.log")}
+    second = {**second, "log": str(latin)}
+    cases = tmp_path / "cases"
+    cases.mkdir()
+    (cases / "click.json").write_text(json.dumps({**project, "runs": [first, second]}))
+    monkeypatch.setattr(bench, "CASES", cases)
+    result = bench.run()
+    rows = {r["id"]: r for r in result["rows"]}
+    assert not rows[int(first["id"])]["kind_right"] and "gone.log" in rows[int(first["id"])]["error"]
+    assert rows[int(second["id"])]["kind_right"] and not rows[int(second["id"])].get("error")
+    text = bench.markdown(result)
+    assert "## Cases that could not be read" in text and "gone.log" in text

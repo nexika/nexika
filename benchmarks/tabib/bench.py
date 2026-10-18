@@ -54,7 +54,8 @@ def load_cases() -> list[dict]:
 
 
 def read_log(case: dict) -> str | None:
-    return (HERE / case["log"]).read_text(encoding="utf-8") if case.get("log") else None
+    """The stored log; a byte that is not UTF-8 is read as U+FFFD, as tabib reads a real log."""
+    return (HERE / case["log"]).read_text(encoding="utf-8", errors="replace") if case.get("log") else None
 
 
 def as_run(case: dict) -> dict:
@@ -214,7 +215,14 @@ def run() -> dict:
     """Diagnose and score every case."""
     rows = []
     for case in load_cases():
-        record, took = diagnose(case)
+        try:
+            log = read_log(case)
+        except OSError as exc:
+            # One unreadable case must not stop the report: it counts as wrong and is named.
+            row = score(case, {"kind": "unreadable", "failures": []}, 0.0)
+            rows.append({**row, "error": f"{case['log']}: {type(exc).__name__}"})
+            continue
+        record, took = diagnose(case, log)
         rows.append(score(case, record, took))
     return summarise(rows)
 
@@ -237,7 +245,7 @@ def summarise(rows: list[dict]) -> dict:
     failures_right = sum(r["failures"]["right"] for r in with_failures)
     no_failures = [r for r in rows if r["none_expected"]]
     causes = [r for r in rows if r["cause"] is not None]
-    times = sorted(r["ms"] for r in rows)
+    times = sorted(r["ms"] for r in rows if not r.get("error"))
 
     def by(key):
         groups = {}
@@ -354,6 +362,10 @@ def markdown(report: dict, baseline: dict | None = None) -> str:
     if f["named_without_failure"]:
         lines += ["", "## Failures named where there are none", ""]
         lines += [f"- {s}" for s in f["named_without_failure"]]
+    unread = [r for r in report["rows"] if r.get("error")]
+    if unread:
+        lines += ["", "## Cases that could not be read", ""]
+        lines += [f"- {r['source']}: {r['error']}" for r in unread]
     no_cause = [r for r in report["rows"] if r["cause"] and not r["cause"]["hit"]]
     if no_cause:
         lines += ["", "## Known fixes the triage does not point at", ""]

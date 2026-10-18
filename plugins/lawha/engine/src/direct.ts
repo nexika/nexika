@@ -3,18 +3,14 @@ import { join, relative, resolve } from "node:path";
 import { chromium } from "playwright";
 import { type Brief, check, contrastRatio, type Direction, type HistoryEntry, historyEntry, previewHtml, type Problem, themeCss } from "./direction.js";
 import { appRoot, lawhaHome } from "./record.js";
+import { isObject, readList, updateList, writeAtomic } from "./util.js";
 
 export function historyPath(): string {
   return join(lawhaHome(), "history.json");
 }
 
 export function readHistory(): HistoryEntry[] {
-  try {
-    const h = JSON.parse(readFileSync(historyPath(), "utf8")) as HistoryEntry[];
-    return Array.isArray(h) ? h : [];
-  } catch {
-    return [];
-  }
+  return readList<HistoryEntry>(historyPath(), isObject).items;
 }
 
 function load(path: string): Direction[] {
@@ -120,14 +116,12 @@ export function choose(directionsPath: string, id: string, cwd: string, themeOut
   const root = appRoot(cwd);
   const theme = resolve(cwd, themeOut);
   mkdirSync(resolve(theme, ".."), { recursive: true });
-  writeFileSync(theme, themeCss(d));
+  writeAtomic(theme, themeCss(d));
   const design = join(root, ".lawha", "design.json");
   mkdirSync(join(root, ".lawha"), { recursive: true });
-  writeFileSync(design, JSON.stringify({ schema: "nexika.lawha.design/1", chosen: new Date().toISOString(), direction: d }, null, 1));
-  const history = readHistory();
-  history.push(historyEntry(d, root));
-  mkdirSync(lawhaHome(), { recursive: true, mode: 0o700 });
-  writeFileSync(historyPath(), JSON.stringify(history.slice(-50), null, 1), { mode: 0o600 });
+  writeAtomic(design, JSON.stringify({ schema: "nexika.lawha.design/1", chosen: new Date().toISOString(), direction: d }, null, 1));
+  const entry = historyEntry(d, root);
+  const history = updateList<HistoryEntry>(historyPath(), isObject, (h) => [...h, entry].slice(-50));
   return { theme, design, history: history.length };
 }
 

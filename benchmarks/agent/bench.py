@@ -28,7 +28,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from agentbench import dashboard, grade, runner, summary, tasks  # noqa: E402
+from agentbench import dashboard, grade, metrics, runner, summary, tasks  # noqa: E402
 
 REPO = HERE.parent.parent
 PILOT = HERE / "pilot.json"
@@ -86,13 +86,41 @@ def cmd_select(args):
     print(f"wrote {out}")
 
 
-def _metas(base):
+def _metas(base, from_raw=False):
+    """Every run's meta.json and diff.patch. A run whose meta.json is damaged or whose diff.patch is
+    missing is skipped and named, so one broken folder never stops the summary. from_raw: the
+    numbers are read again from stream.jsonl and diff.patch, with the current metrics."""
     metas, diffs = [], {}
     for meta_path in sorted((base / "runs").glob("*/meta.json")):
-        meta = json.loads(meta_path.read_text())
+        run = meta_path.parent
+        try:
+            meta = json.loads(meta_path.read_text(errors="replace"))
+            key = (meta["instance_id"], meta["arm"], meta["run"])
+            diff = (run / "diff.patch").read_text(errors="replace")
+            if from_raw:
+                lines = (run / "stream.jsonl").read_text(errors="replace").splitlines()
+                meta.update(metrics.diff_stats(diff), **metrics.parse_stream(lines))
+                meta["valid"], meta["invalid_reason"] = metrics.validity(
+                    meta, meta["arm"], runner.arm_plugins(meta["arm"]))
+                metrics.mark_diff(meta, (run / "diff.patch").read_bytes())
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            say(f"skipped runs/{run.name}: {type(exc).__name__}: {exc}")
+            continue
         metas.append(meta)
-        diffs[(meta["instance_id"], meta["arm"], meta["run"])] = (meta_path.parent / "diff.patch").read_text()
+        diffs[key] = diff
     return metas, diffs
+
+
+def _grades(base):
+    path = base / "grades.json"
+    if not path.exists():
+        return []
+    try:
+        graded = json.loads(path.read_text(errors="replace"))
+        return [g for g in graded if isinstance(g, dict) and "instance_id" in g]
+    except (ValueError, TypeError) as exc:
+        say(f"WARNING: {path} is damaged ({exc}); every run is shown as not graded. Run grade again.")
+        return []
 
 
 def parse_arms(text):
@@ -117,10 +145,17 @@ def make_cfg(args):
 
 def run_order(order, rows, cfg, base, jobs):
     """Run every (task, run, arm) without a valid run yet, `jobs` containers at a time. An invalid
-    run (an API failure, a crash) is run again."""
+    run (an API failure, a crash) is run again, unless it is marked "retry": false (a diff the grader
+    cannot take), which stays invalid."""
     def done(task, run, arm):
         path = base / "runs" / runner.run_name(task, arm, run) / "meta.json"
-        return path.exists() and json.loads(path.read_text()).get("valid")
+        if not path.exists():
+            return False
+        try:
+            meta = json.loads(path.read_text(errors="replace"))
+        except ValueError:
+            return False   # half written: run again (the old files are kept in attempts/)
+        return isinstance(meta, dict) and (bool(meta.get("valid")) or meta.get("retry") is False)
 
     todo = [(n, item) for n, item in enumerate(order, 1) if not done(*item)]
 
@@ -271,10 +306,8 @@ def context_markdown(results, task_id, model):
 def cmd_summary(args):
     pilot = tasks.load_pilot(args.pilot)
     base = home(pilot)
-    metas, _ = _metas(base)
-    grades_path = base / "grades.json"
-    graded = json.loads(grades_path.read_text()) if grades_path.exists() else []
-    grades = {(g["instance_id"], g["arm"], g["run"]): g for g in graded}
+    metas, _ = _metas(base, from_raw=getattr(args, "from_raw", False))
+    grades = {(g["instance_id"], g["arm"], g["run"]): g for g in _grades(base)}
     rows = summary.merge(metas, grades)
     summary.write_csv(rows, base / "results.csv")
     text = summary.markdown(rows, pilot["name"])
@@ -370,6 +403,8 @@ def main(argv=None):
     c.set_defaults(fn=cmd_context)
 
     m = sub.add_parser("summary", help="write results.csv and the paired comparison")
+    m.add_argument("--from-raw", action="store_true",
+                   help="read each run's numbers again from stream.jsonl and diff.patch")
     m.set_defaults(fn=cmd_summary)
 
     d = sub.add_parser("dashboard", help="one HTML page with every pilot (live while one runs)")

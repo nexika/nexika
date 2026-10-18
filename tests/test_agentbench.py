@@ -187,7 +187,10 @@ class FakeSh:
                 raise subprocess.TimeoutExpired(args, kw["timeout"], output=self.stream.encode())
             return SimpleNamespace(returncode=0, stdout=self.stream, stderr="")
         if args[-1].endswith("git diff --cached HEAD"):
-            return SimpleNamespace(returncode=0, stdout=self.diff, stderr="")
+            raw = self.diff if isinstance(self.diff, bytes) else self.diff.encode()
+            # like subprocess.run: bytes when asked with text=False, else text with bad bytes replaced
+            out = raw if kw.get("text") is False else raw.decode(errors="replace")
+            return SimpleNamespace(returncode=0, stdout=out, stderr="")
         return SimpleNamespace(returncode=0, stdout="", stderr="")
 
 
@@ -529,3 +532,135 @@ def test_bench_dashboard_writes_the_page(tmp_path, monkeypatch):
     bench.main(["dashboard", "--root", str(tmp_path), "--out", str(out)])
     page = out.read_text()
     assert "pilot-2" in page and "notes" not in page
+
+
+# --- keeping the raw files and scoring them again (#394) ------------------------------------
+
+def _recorded_pilot(tmp_path, monkeypatch):
+    """A pilot folder as `bench.py run` and `grade` leave it: two tasks, both arms, real run_one output."""
+    import bench
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    base = tmp_path / "pilot-9"
+    monkeypatch.setenv("AGENTBENCH_HOME", str(base))
+    pilot = tmp_path / "pilot-9.json"
+    pilot.write_text(json.dumps({"name": "pilot-9", "seed": 1, "instance_ids": ["o__r-1", "o__r-2"]}))
+    test_call = {"type": "assistant", "message": {"content": [
+        {"type": "tool_use", "name": "Bash", "input": {"command": "python -m pytest -q"}}]}}
+    grades = []
+    for n in (1, 2):
+        task = {**TASK, "instance_id": f"o__r-{n}"}
+        for arm, init in (("A", {**INIT_B, "plugins": []}), ("B", INIT_B)):
+            stream = "\n".join(json.dumps(e) for e in (init, test_call, RESULT))
+            out = base / "runs" / runner.run_name(task["instance_id"], arm, 1)
+            runner.run_one(task, arm, 1, CFG, out, sh=FakeSh(stream, DIFF), clock=lambda: 0.0)
+            grades.append({"instance_id": task["instance_id"], "arm": arm, "run": 1, "graded": True,
+                           "resolved": arm == "B" or n == 1, "regression": False})
+    (base / "grades.json").write_text(json.dumps(grades))
+    return bench, base, ["--pilot", str(pilot)]
+
+
+def test_a_recorded_pilot_scores_again_to_the_same_summary(tmp_path, monkeypatch):
+    bench, base, pilot = _recorded_pilot(tmp_path, monkeypatch)
+    bench.main([*pilot, "summary"])
+    first = (base / "summary.md").read_text(), (base / "results.csv").read_text()
+    bench.main([*pilot, "summary"])
+    assert ((base / "summary.md").read_text(), (base / "results.csv").read_text()) == first
+    assert "Runs: 4 (4 valid)" in first[0]
+
+
+def test_summary_skips_a_damaged_run_and_names_it(tmp_path, monkeypatch, capsys):
+    bench, base, pilot = _recorded_pilot(tmp_path, monkeypatch)
+    runs = base / "runs"
+    meta = runs / "o__r-1__A__r1" / "meta.json"
+    meta.write_text(meta.read_text()[:40])                       # half written
+    (runs / "o__r-1__B__r1" / "diff.patch").unlink()              # a file missing from one run
+    (runs / "o__r-2__A__r1" / "diff.patch").write_bytes(b"+caf\xe9\n")   # not UTF-8
+    bench.main([*pilot, "summary"])
+    err = capsys.readouterr().err
+    assert "o__r-1__A__r1" in err and "o__r-1__B__r1" in err
+    text = (base / "summary.md").read_text()
+    assert "Runs: 2 (2 valid)" in text
+    grades = base / "grades.json"
+    grades.write_text(grades.read_text()[:30])                    # grades.json half written
+    bench.main([*pilot, "summary"])
+    assert "grades.json" in capsys.readouterr().err
+    assert (base / "results.csv").read_text().count("\n") == 3
+
+
+def test_summary_from_raw_recomputes_the_numbers_from_the_stream(tmp_path, monkeypatch):
+    """A run recorded before a measure existed (ran_tests came later) gets it from stream.jsonl."""
+    bench, base, pilot = _recorded_pilot(tmp_path, monkeypatch)
+    for meta_path in (base / "runs").glob("*/meta.json"):
+        meta = json.loads(meta_path.read_text())
+        del meta["ran_tests"], meta["test_commands"]
+        meta_path.write_text(json.dumps(meta))
+    bench.main([*pilot, "summary"])
+    assert "| ran_tests (higher is better) | – |" in (base / "summary.md").read_text()
+    bench.main([*pilot, "summary", "--from-raw"])
+    assert "| ran_tests (higher is better) | 100% | 100% |" in (base / "summary.md").read_text()
+
+
+def test_running_a_task_again_keeps_the_earlier_attempt(tmp_path, monkeypatch):
+    """An invalid run (an API failure) is run again: its stream and diff are moved aside, not overwritten."""
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    failed = {**RESULT, "is_error": True, "result": "API Error: overloaded"}
+    first = "\n".join(json.dumps(e) for e in (INIT_B, failed))
+    assert not runner.run_one(TASK, "B", 1, CFG, tmp_path, sh=FakeSh(first, "x"), clock=lambda: 0.0)["valid"]
+    second = "\n".join(json.dumps(e) for e in (INIT_B, RESULT))
+    assert runner.run_one(TASK, "B", 1, CFG, tmp_path, sh=FakeSh(second, DIFF), clock=lambda: 0.0)["valid"]
+    kept = tmp_path / "attempts" / "1"
+    assert (kept / "stream.jsonl").read_text() == first and (kept / "diff.patch").read_text() == "x"
+    assert not json.loads((kept / "meta.json").read_text())["valid"]
+    assert (tmp_path / "stream.jsonl").read_text() == second
+
+
+def test_output_that_is_not_utf8_does_not_lose_the_run():
+    out = runner._sh([sys.executable, "-c", "import sys; sys.stdout.buffer.write(b'a\\xffb')"])
+    assert out.stdout == "a�b"
+
+
+def test_diff_patch_keeps_the_agents_bytes_exactly(tmp_path, monkeypatch):
+    """A change to a Latin-1 file must reach the grader byte for byte, or it misapplies there."""
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    latin = b"diff --git a/x.py b/x.py\n--- a/x.py\n+++ b/x.py\n@@ -1 +1 @@\n-a = 'caf'\n+a = 'caf\xe9'\n"
+    stream = "\n".join(json.dumps(e) for e in (INIT_B, RESULT))
+    meta = runner.run_one(TASK, "B", 1, CFG, tmp_path, sh=FakeSh(stream, latin), clock=lambda: 0.0)
+    assert (tmp_path / "diff.patch").read_bytes() == latin
+    assert meta["files_changed"] == 1 and meta["lines_added"] == 1 and meta["lines_removed"] == 1
+    # The grader takes the diff as a JSON string and cannot apply it: invalid, never one arm's failure,
+    # and not run again (the agent would likely make the same change).
+    assert not meta["valid"] and "not UTF-8" in meta["invalid_reason"] and meta["retry"] is False
+
+
+def test_a_run_invalid_for_good_is_not_run_again_and_an_api_failure_is(tmp_path, monkeypatch):
+    import bench
+    for task, extra in (("t1", {"retry": False}), ("t2", {})):
+        d = tmp_path / "runs" / runner.run_name(task, "A", 1)
+        d.mkdir(parents=True)
+        (d / "meta.json").write_text(json.dumps({"valid": False, "invalid_reason": "x", **extra}))
+    half = tmp_path / "runs" / runner.run_name("t3", "A", 1)
+    half.mkdir()
+    (half / "meta.json").write_text('{"valid": tr')        # half written: run again
+    ran = []
+    monkeypatch.setattr(bench.runner, "run_one", lambda task, arm, run, cfg, out: ran.append(task) or
+                        {"valid": True, "result": "success", "cost_usd": 0, "wall_s": 0, "files_changed": 0,
+                         "test_commands": 0, "permission_denials": 0})
+    bench.run_order([("t1", 1, "A"), ("t2", 1, "A"), ("t3", 1, "A")], {t: t for t in ("t1", "t2", "t3")},
+                    {}, tmp_path, 1)
+    assert ran == ["t2", "t3"]
+
+
+def test_summary_from_raw_keeps_a_diff_that_is_not_utf8_invalid(tmp_path, monkeypatch):
+    bench, base, pilot = _recorded_pilot(tmp_path, monkeypatch)
+    (base / "runs" / "o__r-1__B__r1" / "diff.patch").write_bytes(b"+caf\xe9\n")
+    bench.main([*pilot, "summary", "--from-raw"])
+    assert "Runs: 4 (3 valid)" in (base / "summary.md").read_text()
+
+
+def test_an_attempt_number_left_free_by_hand_does_not_stop_the_run(tmp_path, monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    (tmp_path / "attempts" / "2").mkdir(parents=True)     # attempts/1 deleted by hand
+    (tmp_path / "stream.jsonl").write_text("old")
+    stream = "\n".join(json.dumps(e) for e in (INIT_B, RESULT))
+    assert runner.run_one(TASK, "B", 1, CFG, tmp_path, sh=FakeSh(stream, DIFF), clock=lambda: 0.0)["valid"]
+    assert (tmp_path / "attempts" / "3" / "stream.jsonl").read_text() == "old"

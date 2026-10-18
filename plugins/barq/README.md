@@ -102,3 +102,12 @@ per-session cache files, deleted after 7 days.
 claude --plugin-dir ./plugins/barq     # from the repo root
 ./plugins/barq/bin/barq info git-status
 ```
+
+## Limits
+- Two sessions that save the same session's read cache at the same moment take turns through a file
+  lock. Where a file can't be locked (Windows, some network drives), one of the two changes can
+  still be lost.
+- A damaged data file (cut short by a crash, a stray byte, a value of the wrong kind) is never an
+  error: barq skips the bad part or reads the file as empty, and the next save replaces it. What the
+  damaged part held is not recovered.
+- A file whose last snapshot barq can't trust is sent whole instead of as a diff.

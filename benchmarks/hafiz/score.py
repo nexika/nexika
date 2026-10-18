@@ -289,6 +289,17 @@ def breaks_of(run_dir: Path, meta: dict) -> list[dict]:
              "tests": _json(run_dir / "tests-compact.json", {}).get("tests", {})}]
 
 
+def damaged(run_dir: Path, meta: dict) -> list[str]:
+    """The recorded files a run needs that are missing or cannot be read. A call's stream is checked
+    on its own (a call that did not finish)."""
+    names = ["snap-base.json", "snap-final.json", "tests-final.json"]
+    names += [name for b in meta.get("breaks") or [] for name in (b["snap"], b["tests"])]
+    if not meta.get("breaks") and any(c["phase"] == "compact" for c in meta.get("calls", [])):
+        names += ["snap-compact.json", "tests-compact.json"]
+    bad = [n for n in names if not isinstance(_json(run_dir / n, None), dict)]
+    return bad + ([] if (run_dir / "diff.patch").is_file() else ["diff.patch"])
+
+
 def score_run(run_dir: Path, task: dict) -> dict:
     run_dir = Path(run_dir)
     meta = _json(run_dir / "meta.json", {})
@@ -304,7 +315,7 @@ def score_run(run_dir: Path, task: dict) -> dict:
     except OSError:
         diff = ""
 
-    invalid = []
+    invalid = [f"missing or damaged: {name}" for name in damaged(run_dir, meta)]
     if not calls or any(c["result"] is None for c in calls):
         invalid.append("a call did not finish")
     if any(c["is_error"] and API_FAILURE.search(c["result_text"]) for c in calls):

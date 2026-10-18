@@ -69,3 +69,10 @@ junior, `writer` → no-code); with no role either, bayan writes for a developer
 - A plugin can't edit Claude's chat replies after they are written. Those follow the guide;
   files are cleaned for certain.
 - Pure Python standard library, nothing sent anywhere.
+- Two sessions that save settings at the same moment take turns through a file lock. Where a file
+  can't be locked (Windows, some network drives), one of the two changes can still be lost.
+- A damaged data file (cut short by a crash, a stray byte, a value of the wrong kind) is never an
+  error: bayan skips the bad part or reads the file as empty, and the next save replaces it. What
+  the damaged part held is not recovered.
+- Claude Code's own `includeCoAuthoredBy` is read as on unless it is `false`, so the word `"false"`
+  in quotes counts as on.

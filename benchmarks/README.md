@@ -134,3 +134,16 @@ ignored); `lawha figma spec` writes them to reproduce the scores.
 4. Do not edit the code.
 
 Then tell Claude, and it runs `node score/score.mjs figma`.
+
+## Where each run's raw files live, and scoring again
+
+Every benchmark keeps what a run produced, so the summary can be written again without running the
+agent. A folder that is damaged (a half-written file, a file missing, a byte that is not UTF-8) is
+skipped or marked invalid and named; it never stops the rest of the summary.
+
+| Benchmark | Raw files | Score again |
+|---|---|---|
+| lawha (this page) | each tool's code in `runs/<task>/<tool>/` (committed); lawha's check output in `.lawha/score/` there (local) | `node score/score.mjs figma` (installs, builds and checks again) |
+| [agent](agent) | `~/nexika-bench/<pilot>/runs/<task>__<arm>__r<n>/`: `stream.jsonl`, `stderr.txt`, `diff.patch`, `meta.json`; an attempt run again is kept in its `attempts/<n>/`; the grader's logs in `grading/` | `bench.py summary` from `meta.json` and `grades.json`; `bench.py summary --from-raw` reads the numbers again from `stream.jsonl` and `diff.patch` |
+| [hafiz](hafiz) | `~/nexika-bench/hafiz/v2/runs/<task>__<arm>__r<n>/`: every call's stream, the transcripts, `diff.patch`, the files and test results at each break and at the end; an unfinished run started again is kept as `<name>.partial-<n>` | `bench.py score` (`--home` for another data folder) |
+| [haris](haris), [tabib](tabib) | the cases are committed; a run makes no files and takes seconds | run `bench.py` again; `--json` keeps every case's result |

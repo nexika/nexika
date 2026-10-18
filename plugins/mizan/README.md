@@ -135,3 +135,10 @@ Nothing leaves your machine except the gh and glab reads you are already signed 
 
 The idea, the levels and the "save, then start fresh" flow come from Loai Elattar's own long
 sessions. The status line fallback reads Claude Code's own status line JSON.
+
+## Limits
+- mizan only reads what the other plugins publish. A status file it can't use leaves that part out
+  of the band without saying why; `/mizan:doctor` lists status files that are stale or unsafe.
+- A damaged data file (cut short by a crash, a stray byte, a value of the wrong kind) is never an
+  error: mizan skips the bad part or reads the file as empty, and the next save replaces it. What
+  the damaged part held is not recovered.

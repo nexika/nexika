@@ -59,3 +59,10 @@ only (never stored). Override models with `MANAR_GEMINI_MODEL` etc. A run refuse
   overlap, and runs with other prompts or models are not compared.
 - JavaScript is not executed; pages that need it are reported as a problem (as crawlers see them).
 - Pure Python standard library; no paid services required.
+- Two sessions that save audit scores of two projects at the same moment take turns through a file
+  lock. Where a file can't be locked (Windows, some network drives), one of the two changes can
+  still be lost.
+- A damaged data file (cut short by a crash, a stray byte, a value of the wrong kind) is never an
+  error: manar skips the bad part or reads the file as empty, and the next save replaces it. What
+  the damaged part held is not recovered.
+- A `panel.json` with a missing or wrong-typed field stops `visibility run` with an error.
