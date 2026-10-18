@@ -30,6 +30,11 @@ def _number(value) -> float | None:
         return None
 
 
+def _list(value) -> list:
+    """A list from another plugin's file, or [] when it holds something else (#394)."""
+    return value if isinstance(value, list) else []
+
+
 def normalize(raw: dict) -> dict:
     """The mod's payload as is; Claude Code's status line JSON mapped onto the same fields."""
     raw = raw if isinstance(raw, dict) else {}
@@ -114,18 +119,18 @@ def _lawha(info: dict) -> tuple[dict, bool]:
     found = family.lawha_check(info.get("repo", "")) if info else {}
     if not found:
         return {}, False
-    counts = found.get("counts") or {}
+    counts = found.get("counts") if isinstance(found.get("counts"), dict) else {}
     commit = str(found.get("commit") or "")
     head = str(info.get("head") or "")
     current = bool(commit) and head.startswith(commit)
     problems = [{"text": render.clean(p.get("message"), 160),
-                 "where": ", ".join(render.clean(w, 30) for w in (p.get("where") or [])[:4])}
-                for p in (found.get("problems") or [])[:5] if isinstance(p, dict)]
+                 "where": ", ".join(render.clean(w, 30) for w in _list(p.get("where"))[:4])}
+                for p in _list(found.get("problems"))[:5] if isinstance(p, dict)]
     view = {"verdict": "pass" if found.get("verdict") == "pass" else "fail", "current": current,
-            "fail": int(counts.get("fail") or 0), "warn": int(counts.get("warn") or 0),
-            "widths": len(found.get("widths") or []),
-            "dirs": [str(d) for d in (found.get("dirs") or [])][:2],
-            "themes": [str(t) for t in (found.get("themes") or [])][:2],
+            "fail": family._int(counts.get("fail")), "warn": family._int(counts.get("warn")),
+            "widths": len(_list(found.get("widths"))),
+            "dirs": [str(d) for d in _list(found.get("dirs"))][:2],
+            "themes": [str(t) for t in _list(found.get("themes"))][:2],
             "url": render.clean(found.get("url"), 200),
             "report": render.clean(found.get("report"), 300),
             "created": render.clean(found.get("created"), 20),
@@ -178,8 +183,8 @@ def build(raw: dict, publish: bool = False) -> dict:
     }
     snap["tabib"], snap["why"] = _tabib(info, ci)
     proof = family.proof(info.get("repo", "")) if info else {}
-    checks = proof.get("checks") or []
-    passed = bool(checks) and all(c.get("passed") for c in checks)
+    checks = _list(proof.get("checks"))
+    passed = bool(checks) and all(isinstance(c, dict) and c.get("passed") for c in checks)
     snap["proof"] = {"available": bool(proof), "passed": passed, "created": proof.get("created", "")}
     snap["lawha"], snap["fix"] = _lawha(info)
     snap["family"] = family.view(info.get("repo", "") if info else "")
@@ -192,7 +197,7 @@ def build(raw: dict, publish: bool = False) -> dict:
     if publish and session:
         found = record(snap, p["transcript"])
         # The status line may publish too; it never hides a mod that published within MOD_FRESH.
-        found["mod_at"] = time.time() if found["mod"] else float(before.get("mod_at") or 0)
+        found["mod_at"] = time.time() if found["mod"] else (_number(before.get("mod_at")) or 0.0)
         found["mod"] = time.time() - found["mod_at"] < MOD_FRESH
         found["transcript"] = found["transcript"] or before.get("transcript", "")
         status.publish("mizan", found, session)

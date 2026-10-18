@@ -71,33 +71,74 @@ def _save(data: dict) -> None:
     os.replace(tmp, target)
 
 
-def read_settings() -> dict:
-    """The family settings. The first read moves an older profile.json in (the settings file wins
-    where both say something) and sets it aside as profile.json.migrated, so it happens once."""
+def _merged() -> tuple[dict | None, bool]:
+    """The settings with an older profile.json folded in (the settings file wins where both say
+    something), and whether that still has to be saved; None when the file is unreadable."""
     data = _load(settings_path())
     if data is None:
-        return {}  # unreadable: a read never overwrites it, only a save does
+        return None, False
     old = _old_profile()
     try:
         moving = old.is_file()
     except OSError:
         moving = False
     if not moving and (not data or data.get("schema") == SETTINGS_SCHEMA):
-        return data
+        return data, False
     profile = (_load(old) or {}) if moving else {}
-    merged = {**{k: profile[k] for k in _FROM_PROFILE if k in profile}, **data}
+    return {**{k: profile[k] for k in _FROM_PROFILE if k in profile}, **data}, True
+
+
+def _save_merged(data: dict) -> None:
+    """Save, and set an older profile.json aside as profile.json.migrated, so it moves in once."""
+    _save(data)
+    old = _old_profile()
+    if old.is_file():
+        os.replace(old, old.with_name(old.name + ".migrated"))
+
+
+def read_settings() -> dict:
+    """The family settings. The first read moves an older profile.json in."""
+    data, pending = _merged()
+    if not pending:
+        return data or {}  # unreadable: a read never overwrites it, only a save does
+    with _locked():
+        data, pending = _merged()  # another session may have moved it in meanwhile
+        try:
+            if pending:
+                _save_merged(data)
+        except OSError:
+            pass  # read-only home: still answer from what was read
+    return data or {}
+
+
+def _locked():
+    """Hold the settings lock while a change reads and saves, so two sessions saving at once both
+    keep their change (#394). Without a file lock (Windows, some network homes) changes go through
+    unlocked."""
+    import contextlib
     try:
-        _save(merged)
-        if moving:
-            os.replace(old, old.with_name(old.name + ".migrated"))
-    except OSError:
-        pass  # read-only home: still answer from what was read
-    return merged
+        import fcntl
+        nexika_home().mkdir(mode=0o700, parents=True, exist_ok=True)
+        fd = os.open(nexika_home() / ".settings.lock", os.O_WRONLY | os.O_CREAT, 0o600)
+    except (ImportError, OSError):
+        return contextlib.nullcontext()
+
+    @contextlib.contextmanager
+    def held():
+        try:
+            with contextlib.suppress(OSError):
+                fcntl.flock(fd, fcntl.LOCK_EX)
+            yield
+        finally:
+            os.close(fd)  # closing releases the lock
+    return held()
 
 
 def update_settings(**changes) -> dict:
-    data = {**read_settings(), **changes}
-    _save(data)
+    with _locked():
+        data, pending = _merged()
+        data = {**(data or {}), **changes}
+        (_save_merged if pending else _save)(data)
     return data
 
 # ---------------------------------------------------------------- end of the family settings file

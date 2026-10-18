@@ -40,7 +40,8 @@ def on_stop(event: dict) -> str:
     level = published.get("level")
     path = _state_path(session)
     state = status.read_json(path)
-    state["stops"] = int(state.get("stops") or 0) + 1
+    stops = state.get("stops")
+    state["stops"] = (stops if isinstance(stops, int) and not isinstance(stops, bool) else 0) + 1
     message = ""
     transcript, cwd = str(event.get("transcript_path") or ""), str(event.get("cwd") or "")
     if level == "mid" and state["stops"] % MID_EVERY == 0:

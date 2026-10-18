@@ -12,6 +12,7 @@ Claude cannot write an approval, clear the taint or edit the log.
 """
 from __future__ import annotations
 
+import contextlib
 import datetime
 import json
 import os
@@ -56,9 +57,39 @@ def save_json(path: Path, data) -> None:
     _ensure(path.parent)
     tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
     fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, "w", encoding="utf-8") as fh:
-        json.dump(data, fh, ensure_ascii=False, indent=1)
-    os.replace(tmp, path)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(data, fh, ensure_ascii=False, indent=1)
+        os.replace(tmp, path)
+    except BaseException:
+        with contextlib.suppress(OSError):
+            os.unlink(tmp)
+        raise
+
+
+@contextlib.contextmanager
+def locked(path: Path):
+    """Hold path's lock while a change reads and saves it, so two sessions (or two hooks of parallel
+    tool calls) writing at once both keep their change (#394). Without a file lock (Windows) changes
+    go through unlocked."""
+    fd = None
+    try:
+        import fcntl
+        _ensure(path.parent)
+        fd = os.open(path.with_name(f".{path.name}.lock"), os.O_WRONLY | os.O_CREAT, 0o600)
+        fcntl.flock(fd, fcntl.LOCK_EX)
+    except (ImportError, OSError):
+        pass
+    try:
+        yield
+    finally:
+        if fd is not None:
+            os.close(fd)  # closing releases the lock
+
+
+def count(value) -> int:
+    """A counter from a file haris wrote; 0 when it holds anything else."""
+    return value if isinstance(value, int) and not isinstance(value, bool) else 0
 
 
 def safe_session(session: str) -> str:
@@ -95,6 +126,17 @@ def save_session(session: str, data: dict) -> None:
         save_json(session_path(session), data)
 
 
+def update_session(session: str, change) -> None:
+    """Apply `change(data) -> bool` to the session as it is now on disk, and save it when that says it
+    changed. Never save a copy loaded earlier: another hook may have set the taint since."""
+    if not safe_session(session):
+        return
+    with locked(session_path(session)):
+        data = load_session(session)
+        if change(data):
+            save_session(session, data)
+
+
 def mark_active(session: str) -> None:
     if not safe_session(session):
         return
@@ -116,9 +158,13 @@ def gc() -> None:
             entries = list(folder.iterdir())
         except OSError:
             continue
-        for path in entries:
+        # A lock file is never touched by opening it: it goes after its file, whatever order the folder lists
+        for path in sorted(entries, key=lambda p: p.name.endswith(".lock")):
             try:
-                if path.stat().st_mtime < cutoff:
+                if path.name.endswith(".lock"):
+                    if not path.with_name(path.name[1:-len(".lock")]).exists():
+                        path.unlink()
+                elif path.stat().st_mtime < cutoff:
                     path.unlink()
             except OSError:
                 pass
@@ -132,45 +178,50 @@ def project_approvals(root: str) -> list[dict]:
     return [a for a in items if isinstance(a, dict)] if isinstance(items, list) else []
 
 
+def _entries(items) -> list[dict]:
+    return [a for a in items if isinstance(a, dict)] if isinstance(items, list) else []
+
+
 def approvals(session: str, root: str) -> list[dict]:
-    items = [a for a in load_session(session).get("approvals", []) if isinstance(a, dict)]
+    items = _entries(load_session(session).get("approvals"))
     return items + [{**a, "scope": "project"} for a in project_approvals(root)]
 
 
 def add_approval(session: str, root: str, entry: dict, project: bool) -> None:
     entry = {**entry, "ts": now()}
+    same = (entry["kind"], entry["value"])
     if project:
-        data = load_json(home() / "approvals.json", {})
-        items = [a for a in data.get(root, []) if (a.get("kind"), a.get("value")) != (entry["kind"],
-                                                                                      entry["value"])]
-        data[root] = (items + [entry])[-200:]
-        save_json(home() / "approvals.json", data)
+        path = home() / "approvals.json"
+        with locked(path):
+            data = load_json(path, {})
+            items = [a for a in _entries(data.get(root)) if (a.get("kind"), a.get("value")) != same]
+            data[root] = (items + [entry])[-200:]
+            save_json(path, data)
     else:
-        state = load_session(session)
-        items = [a for a in state.get("approvals", [])
-                 if (a.get("kind"), a.get("value")) != (entry["kind"], entry["value"])]
-        state["approvals"] = (items + [entry])[-100:]
-        state["project"] = root
-        save_session(session, state)
+        def add(state: dict) -> bool:
+            items = [a for a in _entries(state.get("approvals")) if (a.get("kind"), a.get("value")) != same]
+            state["approvals"] = (items + [entry])[-100:]
+            state["project"] = root
+            return True
+        update_session(session, add)
 
 
 def remove_approval(session: str, root: str, value: str) -> int:
-    removed = 0
-    state = load_session(session)
-    items = state.get("approvals", [])
-    kept = [a for a in items if a.get("value") != value]
-    if len(kept) != len(items):
-        removed += len(items) - len(kept)
-        state["approvals"] = kept
-        save_session(session, state)
-    data = load_json(home() / "approvals.json", {})
-    items = data.get(root, [])
-    kept = [a for a in items if a.get("value") != value]
-    if len(kept) != len(items):
-        removed += len(items) - len(kept)
-        data[root] = kept
-        save_json(home() / "approvals.json", data)
-    return removed
+    removed = []
+
+    def drop(data: dict, key) -> bool:
+        items = _entries(data.get(key))
+        kept = [a for a in items if a.get("value") != value]
+        removed.append(len(items) - len(kept))
+        data[key] = kept
+        return len(kept) != len(items)
+    update_session(session, lambda state: drop(state, "approvals"))
+    path = home() / "approvals.json"
+    with locked(path):
+        data = load_json(path, {})
+        if drop(data, root):
+            save_json(path, data)
+    return sum(removed)
 
 
 # ---------------------------------------------------------------- audit log
@@ -203,8 +254,9 @@ def log(entry: dict) -> None:
         if key in entry:
             entry[key] = secrets.redact(str(entry[key]))[:600 if key == "reason" else 300]
     try:
-        if path.exists() and path.stat().st_size > AUDIT_LIMIT:
-            os.replace(path, folder / "audit.1.jsonl")
+        with locked(path):  # two sessions past the limit at once rotate it once (#394)
+            if path.exists() and path.stat().st_size > AUDIT_LIMIT:
+                os.replace(path, folder / "audit.1.jsonl")
         fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
         with os.fdopen(fd, "a", encoding="utf-8") as fh:
             fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
@@ -216,7 +268,7 @@ def read_audit(limit: int = 0) -> list[dict]:
     out: list[dict] = []
     for name in ("audit.1.jsonl", "audit.jsonl"):
         try:
-            with open(home() / name, encoding="utf-8") as fh:
+            with open(home() / name, encoding="utf-8", errors="replace") as fh:
                 for line in fh:
                     try:
                         item = json.loads(line)

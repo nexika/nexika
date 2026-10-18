@@ -173,7 +173,7 @@ TEXT = {
 
 
 def lang() -> str:
-    chosen = (os.environ.get("MIZAN_LANG") or config.load().get("lang") or "auto").lower()
+    chosen = str(os.environ.get("MIZAN_LANG") or config.load().get("lang") or "auto").lower()
     if chosen in TEXT:
         return chosen
     locale = os.environ.get("LC_ALL") or os.environ.get("LC_MESSAGES") or os.environ.get("LANG") or ""

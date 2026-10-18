@@ -1129,3 +1129,86 @@ def test_an_unknown_run_without_jobs_does_not_send_to_a_log(detail, en, ar):
     assert render.tabib_label(found, "ar") == ar
     snap = {"git": {"branch": "main"}, "tabib": found}
     assert f"tabib: {en}" in [s["text"] for s in render.band(snap, "en")[0]]
+
+
+# ---------------------------------------------------------------- a bad file from another plugin (#394)
+
+def _record(env, repo, plugin, record):
+    """A record in lawha's or itqan's own folder, published as this repository's latest."""
+    if plugin == "lawha":
+        path = env / "lawha" / "checks" / "r.json"
+        record = {"schema": family.LAWHA_SCHEMA, "verdict": "fail", **record}
+        key = "checks"
+    else:
+        path = env / "itqan" / "proofs" / "x" / "latest.json"
+        record = {"schema": family.PROOF_SCHEMA, **record}
+        key = "proofs"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps(record))
+    status.publish(plugin, {key: {str(repo): str(path)}})
+
+
+@pytest.mark.parametrize("plugin, record", [
+    ("lawha", {"counts": [1]}),
+    ("lawha", {"counts": {"fail": "x"}}),
+    ("lawha", {"problems": [{"where": 5, "message": "m"}]}),
+    ("lawha", {"widths": 3, "dirs": 5}),
+    ("itqan", {"checks": ["x"]}),
+    ("itqan", {"checks": {"a": 1}}),
+])
+def test_a_bad_record_from_another_plugin_never_hides_the_band(env, repo, plugin, record):
+    _record(env, repo, plugin, record)
+    snap = snapshot.build({"session_id": "s1", "workspace": {"current_dir": str(repo)}})
+    assert snap["band"] and snap["git"]["branch"] == "main"
+
+
+@pytest.mark.parametrize("plugin, text", [
+    ("manar", '{"audits": {"REPO": {"score": NaN}}}'),
+    ("manar", '{"audits": {"REPO": {"score": Infinity}}}'),
+    ("barq", '{"date": "TODAY", "calls": 1e400, "saved_bytes": "x"}'),
+    ("prof", '{"due": Infinity, "open": [1]}'),
+    ("haris", '{"profile": ["strict"], "mode": {"x": 1}}'),
+    ("tabib", '{"runs": [1]}'),
+])
+def test_a_bad_status_number_never_hides_the_band(env, repo, plugin, text):
+    import datetime
+    text = text.replace("REPO", str(repo)).replace("TODAY", datetime.date.today().isoformat())
+    data = {**json.loads(text), "schema": status.schema(plugin), "updated": int(time.time())}
+    path = status.path_for(plugin, "s1" if plugin == "haris" else "")
+    status.ensure_dir(path.parent)
+    path.write_text(json.dumps(data))
+    snap = snapshot.build({"session_id": "s1", "workspace": {"current_dir": str(repo)}})
+    assert snap["band"] and snap["git"]["branch"] == "main"
+
+
+@pytest.mark.parametrize("before", [{"mod_at": "abc"}, {"cost_usd": [1], "date": "x"}, {"transcript": 5}])
+def test_a_bad_session_file_of_mizan_is_written_over(env, repo, before):
+    status.publish("mizan", before, "s1")
+    snapshot.build({"session_id": "s1", "workspace": {"current_dir": str(repo)}}, publish=True)
+    assert isinstance(status.read("mizan", "s1").get("mod_at"), float)
+
+
+@pytest.mark.parametrize("cache", [{"ci": [1]}, {"prs": "x"}, {"prs": {"fetched": "x"}},
+                                   {"ci": {"main": "x"}}, {"changed": "soon"}])
+def test_a_bad_cache_reads_as_not_fetched(env, repo, cache):
+    info = gitinfo.read(str(repo))
+    forge.save_cache(info["repo"], cache)
+    found = forge.cached(info)
+    assert found["due"] is True
+
+
+def test_a_bad_language_setting_falls_back(env, monkeypatch):
+    monkeypatch.delenv("MIZAN_LANG")
+    monkeypatch.setenv("LANG", "en_US.UTF-8")
+    config.home().mkdir(parents=True, exist_ok=True)
+    (config.home() / "config.json").write_text('{"lang": [1]}')
+    assert i18n.lang() == "en"
+
+
+def test_a_bad_stop_count_starts_again(env):
+    status.publish("mizan", {"level": "fresh"}, "s1")
+    path = hooks._state_path("s1")
+    status.ensure_dir(path.parent)
+    path.write_text('{"stops": "many"}')
+    hooks.on_stop({"session_id": "s1"})
+    assert status.read_json(path)["stops"] == 1
