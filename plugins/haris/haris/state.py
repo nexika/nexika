@@ -158,9 +158,10 @@ def gc() -> None:
             entries = list(folder.iterdir())
         except OSError:
             continue
-        for path in entries:
+        # A lock file is never touched by opening it: it goes after its file, whatever order the folder lists
+        for path in sorted(entries, key=lambda p: p.name.endswith(".lock")):
             try:
-                if path.name.endswith(".lock"):  # opening it never touches it: it goes with its file
+                if path.name.endswith(".lock"):
                     if not path.with_name(path.name[1:-len(".lock")]).exists():
                         path.unlink()
                 elif path.stat().st_mtime < cutoff:
