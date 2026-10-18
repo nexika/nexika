@@ -35,19 +35,27 @@ def publish_today(ops: list[dict]) -> None:
     and bytes sent beyond what the built-in tool would have sent are kept apart, so a day where barq
     cost more shows that; tokens are only an estimate (BYTES_PER_TOKEN)."""
     today = datetime.date.today().isoformat()
-    found = status.read("barq")
     keys = ("calls", "ops", "hits", "avoided_bytes", "extra_bytes")
-    day = {k: int(found.get(k) or 0) for k in keys} if found.get("date") == today else dict.fromkeys(keys, 0)
-    day["calls"] += 1
-    day["ops"] += len(ops)
-    for op in ops:
-        day["hits"] += bool(op.get("hit"))
-        if op.get("baseline") is not None:
-            gain = op["baseline"] - op.get("out", 0)
-            day["avoided_bytes" if gain > 0 else "extra_bytes"] += abs(gain)
-    day["saved_bytes"] = day["avoided_bytes"] - day["extra_bytes"]
-    status.publish("barq", {"date": today, **day, "bytes_per_token": BYTES_PER_TOKEN, "estimated": True})
 
+    def add(found: dict) -> None:  # on the file as it is now: two sessions at once both count (#394)
+        same_day = found.get("date") == today
+        day = {k: _count(found.get(k)) if same_day else 0 for k in keys}
+        day["calls"] += 1
+        day["ops"] += len(ops)
+        for op in ops:
+            day["hits"] += bool(op.get("hit"))
+            if op.get("baseline") is not None:
+                gain = op["baseline"] - op.get("out", 0)
+                day["avoided_bytes" if gain > 0 else "extra_bytes"] += abs(gain)
+        day["saved_bytes"] = day["avoided_bytes"] - day["extra_bytes"]
+        found.clear()
+        found.update({"date": today, **day, "bytes_per_token": BYTES_PER_TOKEN, "estimated": True})
+    status.update("barq", add)
+
+
+def _count(value) -> int:
+    """A count from the status file; 0 when it holds anything else."""
+    return value if isinstance(value, int) and not isinstance(value, bool) else 0
 
 def _since(period: str) -> str:
     today = datetime.date.today()
@@ -59,14 +67,18 @@ def _kb(n: float) -> str:
     return f"{n / 1024 / 1024:.1f} MB" if abs(n) >= 1024 * 1024 else f"{n / 1024:.1f} KB"
 
 
+def _number(value) -> float:
+    return value if isinstance(value, (int, float)) and not isinstance(value, bool) else 0
+
+
 def op_stats(ctx: Context, period: str = "today") -> Result:
     if period not in PERIODS:
         raise OpError(f"period must be one of: {', '.join(PERIODS)}")
     since = _since(period)
     calls = ops = trips = sent = saved = hits = 0
     by_op: Counter = Counter()
-    try:
-        lines = log_path().read_text(encoding="utf-8").splitlines()
+    try:  # a damaged line (a stray byte, another shape) is skipped, not the whole log (#394)
+        lines = log_path().read_text(encoding="utf-8", errors="replace").splitlines()
     except OSError:
         lines = []
     for raw in lines:
@@ -74,19 +86,20 @@ def op_stats(ctx: Context, period: str = "today") -> Result:
             entry = json.loads(raw)
         except ValueError:
             continue
-        if entry.get("ts", "")[:10] < since:
+        if not isinstance(entry, dict) or str(entry.get("ts") or "")[:10] < since:
             continue
         calls += 1
-        entry_ops = entry.get("ops") or []
+        entry_ops = [op for op in entry.get("ops") or [] if isinstance(op, dict)] \
+            if isinstance(entry.get("ops"), list) else []
         ops += len(entry_ops)
         trips += max(len(entry_ops) - 1, 0)
         for op in entry_ops:
-            out = op.get("out", 0)
+            out = _number(op.get("out"))
             sent += out
-            if op.get("baseline") is not None:
+            if isinstance(op.get("baseline"), (int, float)):
                 gain = op["baseline"] - out   # negative when barq sent more than the built-in tool would
                 saved += gain
-                by_op[op.get("op", "?")] += gain
+                by_op[str(op.get("op", "?"))] += gain
             hits += bool(op.get("hit"))
     if not calls:
         return Result(f"stats ({period})", "no barq calls recorded yet for this period")

@@ -1,6 +1,7 @@
 """Claude Code hooks. They must never break the session: any error means "do nothing"."""
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import re
@@ -68,7 +69,9 @@ def session_start(hook: dict) -> str:
     try:
         if not env_file:
             raise OSError
-        existing = Path(env_file).read_text(encoding="utf-8") if Path(env_file).exists() else ""
+        # errors="replace": another tool's stray byte there must not cost the session its note (#394)
+        existing = Path(env_file).read_text(encoding="utf-8", errors="replace") \
+            if Path(env_file).exists() else ""
         if line not in existing:   # resume / clear / compact run this hook again
             with open(env_file, "a", encoding="utf-8") as fh:
                 fh.write(line)
@@ -104,11 +107,16 @@ def _read(path: Path) -> str:
 
 def _write(path: Path, text: str) -> None:
     """Atomic: a killed hook never leaves a half-written file."""
-    tmp = path.with_name(f".{path.name}.bayan-tmp")
-    with open(tmp, "w", encoding="utf-8", newline="") as fh:
-        fh.write(text)
-    shutil.copymode(path, tmp)
-    os.replace(tmp, path)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.bayan-tmp")
+    try:
+        with open(tmp, "w", encoding="utf-8", newline="") as fh:
+            fh.write(text)
+        shutil.copymode(path, tmp)
+        os.replace(tmp, path)
+    except BaseException:   # never leave the temp file in the user's project (#394)
+        with contextlib.suppress(OSError):
+            os.unlink(tmp)
+        raise
 
 
 def _changed(old: str, new: str) -> list[tuple[int, int]]:

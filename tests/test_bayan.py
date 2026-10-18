@@ -405,3 +405,85 @@ def test_deny_signatures_still_wins_over_the_attribution_setting(tmp_path):
     write_settings(project / ".claude", {"attribution": {"commit": "Co-Authored-By: Claude <noreply@anthropic.com>"}})
     config.save(deny_signatures=True)
     assert decision(SIGNED, project) == "deny"
+
+
+# ---------------------------------------------------------------- bad and shared files (#394)
+
+
+def test_settings_of_the_wrong_type_keep_their_defaults():
+    config.home().mkdir(parents=True)
+    (config.home() / "config.json").write_text(json.dumps(
+        {"auto_clean": "false", "block_signatures": "no", "deny_signatures": [1], "level": 5}))
+    cfg = config.load()
+    assert cfg["auto_clean"] is True and cfg["block_signatures"] is True and cfg["deny_signatures"] is False
+    assert cfg["level"] == "developer"
+    config.save(auto_clean=False)
+    assert config.load()["auto_clean"] is False
+
+
+def test_a_switch_written_as_0_or_1_still_counts():
+    """The README says to edit config.json by hand: 1 and 0 meant on and off before, and still do."""
+    config.home().mkdir(parents=True)
+    (config.home() / "config.json").write_text(json.dumps({"auto_clean": 0, "deny_signatures": 1}))
+    cfg = config.load()
+    assert cfg["auto_clean"] is False and cfg["deny_signatures"] is True
+
+
+def test_two_sessions_saving_settings_at_once_both_keep_their_change(monkeypatch):
+    import threading
+    real_stored = config._stored
+    other: list = []
+
+    def stored():
+        data = real_stored()
+        if not other:   # the other session saves between this one's read and its write
+            other.append(threading.Thread(target=config.save, kwargs={"level": "junior"}))
+            other[0].start()
+            other[0].join(timeout=0.5)   # with the lock it waits for this save instead
+        return data
+
+    monkeypatch.setattr(config, "_stored", stored)
+    config.save(auto_clean=False)
+    other[0].join(timeout=5)
+    cfg = config.load()
+    assert cfg["auto_clean"] is False and cfg["level"] == "junior"
+
+
+def test_settings_are_written_whole_and_owner_only(monkeypatch):
+    import os
+    import stat
+    config.save(level="junior")
+    path = config.home() / "config.json"
+    assert stat.S_IMODE(path.stat().st_mode) == 0o600
+
+    def crash(*args, **kwargs):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(os, "replace", crash)
+    with pytest.raises(OSError):
+        config.save(level="no-code")
+    assert config.load()["level"] == "junior"
+    assert sorted(p.name for p in config.home().iterdir() if not p.name.endswith(".lock")) == ["config.json"]
+
+
+def test_session_note_survives_a_stray_byte_in_the_env_file(tmp_path, monkeypatch):
+    env = tmp_path / "env.sh"
+    env.write_bytes(b"export X='\xff'\n")
+    monkeypatch.setenv("CLAUDE_ENV_FILE", str(env))
+    note = hooks.session_start({})
+    assert "Reader level:" in note and "Helper: bayan check FILE" in note
+    assert env.read_bytes().count(b"export PATH=") == 1
+
+
+def test_a_failed_clean_leaves_no_temp_file_in_the_project(tmp_path, monkeypatch):
+    (tmp_path / "proj").mkdir()
+    doc = tmp_path / "proj" / "a.md"
+    doc.write_text("old\n")
+
+    def crash(*args, **kwargs):
+        raise OSError("read-only")
+
+    monkeypatch.setattr(hooks.shutil, "copymode", crash)
+    with pytest.raises(OSError):
+        hooks._write(doc, "new\n")
+    assert doc.read_text() == "old\n" and [p.name for p in doc.parent.iterdir()] == ["a.md"]

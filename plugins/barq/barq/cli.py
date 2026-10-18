@@ -181,7 +181,10 @@ def main(argv: list[str]) -> int:
     started = time.monotonic()
     requests = parse_requests(args, specs)
     results = execute(requests, specs, ctx)
-    ctx.cache.save()
+    try:
+        ctx.cache.save()
+    except OSError:
+        pass  # the cache only saves output later; this call's output must still go out (#394)
 
     output = render(results, as_json)
     if warning:

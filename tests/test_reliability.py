@@ -119,3 +119,38 @@ def test_an_old_profile_moves_in_under_the_lock(family, background, old_profile,
     background.set_setting("on")  # a change saved while the old profile is still there
     assert family.role() == "learner" and background.setting() == "on"
     assert not old_profile.exists()
+
+
+UPDATER = """
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("status", sys.argv[1])
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+for i in range(int(sys.argv[3])):
+    m.update("manar", lambda d: d.setdefault("audits", {}).__setitem__(f"{sys.argv[2]}_{i}", {"score": i}))
+"""
+
+
+def test_two_sessions_publishing_at_once_both_keep_their_part(status):
+    writers, rounds = 6, 20
+    procs = [subprocess.Popen([sys.executable, "-c", UPDATER, str(REPO / "common" / "status.py"), f"w{n}",
+                               str(rounds)]) for n in range(writers)]
+    assert all(p.wait(timeout=60) == 0 for p in procs)
+    audits = status.read("manar").get("audits") or {}
+    assert len(audits) == writers * rounds, f"{writers * rounds - len(audits)} entries were lost"
+    assert not list(status.home().glob(".manar.json.*.tmp"))
+
+
+def test_update_starts_from_nothing_when_the_file_is_unusable(status):
+    path = status.path_for("tabib")
+    status.ensure_dir(path.parent)
+    path.write_text('{"schema": "nexika.tabib/1", "runs": [1')
+    saved = status.update("tabib", lambda d: d.update(runs={"r": {}}))
+    assert saved["runs"] == {"r": {}} and status.read("tabib")["runs"] == {"r": {}}
+
+
+def test_a_failed_write_leaves_no_temp_file(status, monkeypatch):
+    def broken(*args, **kwargs):
+        raise OSError(28, "No space left on device")
+    monkeypatch.setattr(status.os, "replace", broken)
+    assert status.publish("amin", {"repos": {}}) is False
+    assert not [p for p in status.home().iterdir() if p.name.endswith(".tmp")]

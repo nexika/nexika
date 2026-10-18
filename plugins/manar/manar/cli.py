@@ -118,12 +118,15 @@ def render(audit: dict) -> str:
 
 
 def publish_score(root: Path, audit: dict, path: Path) -> None:
-    """status/manar.json (nexika.manar/1): the last audit score per project, for mizan."""
-    audits = status.read("manar").get("audits")
-    audits = {k: v for k, v in audits.items() if os.path.isdir(k)} if isinstance(audits, dict) else {}
-    audits[str(root)] = {"target": audit["target"], "score": audit["score"], "date": audit["date"],
-                         "path": str(path)}
-    status.publish("manar", {"audits": audits})
+    """status/manar.json (nexika.manar/1): the last audit score per project, for mizan. Changed under
+    the file's lock, so two sessions auditing different projects at once both keep their score (#394)."""
+    def change(data: dict) -> None:
+        audits = data.get("audits")
+        audits = {k: v for k, v in audits.items() if os.path.isdir(k)} if isinstance(audits, dict) else {}
+        audits[str(root)] = {"target": audit["target"], "score": audit["score"], "date": audit["date"],
+                             "path": str(path)}
+        data["audits"] = audits
+    status.update("manar", change)
 
 
 def cmd_audit(args: list[str]) -> int:
@@ -147,9 +150,13 @@ def cmd_audit(args: list[str]) -> int:
     slug = re.sub(r"[^a-z0-9]+", "-", audit["target"].lower()).strip("-")
     stem = f"{audit['date'][:19].replace(':', '')}-{slug}"
     path, n = folder / f"{stem}.json", 2
-    while path.exists():  # two audits in the same second must not overwrite each other
-        path, n = folder / f"{stem}-{n}.json", n + 1
-    path.write_text(json.dumps(audit, indent=1, ensure_ascii=False), encoding="utf-8")
+    while True:  # two audits in the same second, even in two sessions, must not overwrite each other
+        try:
+            with open(path, "x", encoding="utf-8") as fh:
+                fh.write(json.dumps(audit, indent=1, ensure_ascii=False))
+            break
+        except FileExistsError:
+            path, n = folder / f"{stem}-{n}.json", n + 1
     publish_score(project_root(), audit, path)
     print(json.dumps(audit, ensure_ascii=False) if as_json else render(audit) + f"\n\nsaved: {path}")
     if fail_on:   # CI mode: fail on findings this severe or worse
@@ -170,9 +177,11 @@ def cmd_diff(args: list[str] | None = None) -> int:
     audits = []
     for f in files:
         try:
-            audits.append(json.loads(f.read_text(encoding="utf-8")))
+            audit = json.loads(f.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
+        if isinstance(audit, dict):   # a file of another shape is skipped like an unreadable one (#394)
+            audits.append(audit)
     target = (args[0] if args else audits[-1]["target"] if audits else "").rstrip("/")
     same = [a for a in audits if str(a.get("target", "")).rstrip("/") == target]
     if len(same) < 2:
@@ -217,6 +226,15 @@ def cmd_generate(args: list[str]) -> int:
     return 0
 
 
+def _panel(path: Path) -> dict | None:
+    """.manar/panel.json, or None when it is not a readable JSON object."""
+    try:
+        panel = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return panel if isinstance(panel, dict) else None
+
+
 def cmd_visibility(args: list[str]) -> int:
     action = args[0] if args else "report"
     root = project_root()
@@ -238,13 +256,16 @@ def cmd_visibility(args: list[str]) -> int:
         if not runs:
             print("no measurements yet: manar visibility run")
             return 1
-        panel = json.loads(panel_path.read_text(encoding="utf-8")) if panel_path.exists() else {}
+        panel = _panel(panel_path) or {}   # only the domains come from it: a broken panel still reports
         print(visibility.report(runs[-1], runs[-2] if len(runs) > 1 else None, panel.get("domains")))
         return 0
     if not panel_path.exists():
         print("manar: no .manar/panel.json yet: run manar visibility init")
         return 1
-    panel = json.loads(panel_path.read_text(encoding="utf-8"))
+    panel = _panel(panel_path)
+    if panel is None:
+        print(f"manar: {panel_path} is not a JSON object: fix it, or delete it and run manar visibility init")
+        return 1
     engines = visibility.available()
     wanted = _flag(args, "--engines")
     if wanted:

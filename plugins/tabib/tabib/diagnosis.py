@@ -19,6 +19,9 @@ from . import __version__, classify, compare, forge, inject, parse, reproduce, s
 SCHEMA = "nexika.tabib/1"
 KEEP = 50
 CONFIDENCE = ("high", "medium", "low")
+# What the code reads from a saved record without checking; a record of another shape is not used (#394)
+SHAPE = {"run": dict, "kind": str, "jobs": list, "failures": list, "errors": list, "evidence": list}
+OPTIONAL = ("detail", "cause", "reproduction", "suspects", "history")
 
 
 def home() -> Path:
@@ -35,7 +38,12 @@ def path_for(repo: str, run_id) -> Path:
 
 def load(path: Path) -> dict:
     data = status.read_json(path)
-    return data if data.get("schema") == SCHEMA else {}
+    if data.get("schema") != SCHEMA or not all(isinstance(data.get(k), t) for k, t in SHAPE.items()):
+        return {}
+    if not isinstance(data["run"].get("id"), int) or not all(isinstance(data.get(k) or {}, dict)
+                                                             for k in OPTIONAL):
+        return {}
+    return data
 
 
 def now() -> str:
@@ -82,28 +90,43 @@ def places(failures: list[dict], frames: list[str]) -> list[tuple[str, int, int]
     return found
 
 
+def _entry(entry) -> bool:
+    return isinstance(entry, dict) and isinstance(entry.get("path"), str) and Path(entry["path"]).is_file()
+
+
 def publish(record: dict) -> None:
-    current = status.read("tabib")
-    runs = current.get("runs") if isinstance(current.get("runs"), dict) else {}
-    runs = {repo: {b: e for b, e in branches.items()
-                   if isinstance(e, dict) and Path(e.get("path", "")).is_file()}
-            for repo, branches in runs.items() if isinstance(branches, dict)}
     cause = record.get("cause") or {}
     reproduction = record.get("reproduction") or {}
-    runs.setdefault(record["repo"], {})[record["branch"]] = {
-        "run": record["run"]["id"], "sha": record["run"]["sha"], "kind": record["kind"],
-        "detail": record["detail"], "confidence": record["confidence"], "cause_found": bool(cause),
-        "cause": cause.get("text", "")[:200], "reproduced": reproduction.get("status", ""),
-        "path": str(path_for(record["repo"], record["run"]["id"])), "updated": record["updated"]}
-    status.publish("tabib", {"runs": runs})
+    entry = {"run": record["run"]["id"], "sha": record["run"]["sha"], "kind": record["kind"],
+             "detail": record["detail"], "confidence": record["confidence"], "cause_found": bool(cause),
+             "cause": cause.get("text", "")[:200], "reproduced": reproduction.get("status", ""),
+             "path": str(path_for(record["repo"], record["run"]["id"])), "updated": record["updated"]}
+
+    def change(current: dict) -> None:   # on the file as it is now: mizan's triage may be saving too (#394)
+        runs = current.get("runs") if isinstance(current.get("runs"), dict) else {}
+        runs = {repo: {b: e for b, e in branches.items() if _entry(e)}
+                for repo, branches in runs.items() if isinstance(branches, dict)}
+        runs.setdefault(record["repo"], {})[record["branch"]] = entry
+        current["runs"] = runs
+    status.update("tabib", change)
+
+
+def _age(path: Path) -> float:
+    try:
+        return path.stat().st_mtime
+    except OSError:   # removed by another save meanwhile
+        return 0.0
 
 
 def save(record: dict) -> dict:
     record["updated"] = now()
     target = path_for(record["repo"], record["run"]["id"])
     status.write_json(target, record)
-    for old in sorted(target.parent.glob("*.json"), key=lambda p: p.stat().st_mtime)[:-KEEP]:
-        old.unlink(missing_ok=True)
+    for old in sorted(target.parent.glob("*.json"), key=_age)[:-KEEP]:
+        try:
+            old.unlink(missing_ok=True)
+        except OSError:
+            pass
     publish(record)
     return record
 
@@ -197,9 +220,11 @@ def diagnose(info: dict, run_id: int | None = None, local_run: bool = True) -> d
 def latest(info: dict, run_id: int | None = None) -> dict:
     if run_id:
         return load(path_for(info["repo"], run_id))
-    runs = status.read("tabib").get("runs") or {}
-    entry = (runs.get(info["repo"]) or {}).get(info.get("branch", "")) or {}
-    return load(Path(entry["path"])) if entry.get("path") else {}
+    runs = status.read("tabib").get("runs")
+    branches = runs.get(info["repo"]) if isinstance(runs, dict) else None
+    entry = branches.get(info.get("branch", "")) if isinstance(branches, dict) else None
+    return load(Path(entry["path"])) if isinstance(entry, dict) and isinstance(entry.get("path"), str) \
+        and entry["path"] else {}
 
 
 def find_plugin(name: str) -> Path | None:
@@ -216,10 +241,10 @@ def find_plugin(name: str) -> Path | None:
                                .read_text(encoding="utf-8")).get("plugins") or {}
     except (OSError, ValueError, AttributeError):
         installed = {}
-    for key, entries in installed.items():
+    for key, entries in installed.items() if isinstance(installed, dict) else ():
         if key.split("@")[0] == name and isinstance(entries, list):
-            candidates += [Path(e["installPath"]) for e in entries
-                           if isinstance(e, dict) and e.get("installPath")]
+            candidates += [Path(e["installPath"]) for e in entries if isinstance(e, dict)
+                           and e.get("installPath") and isinstance(e["installPath"], str)]
     return next((c for c in candidates if (c / "bin" / name).is_file()), None)
 
 

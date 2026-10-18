@@ -37,6 +37,15 @@ def test_changed_big_file_returns_only_the_diff(project, barq_run):
     assert "-x40 = 40\n+x40 = 400" in out and "x10 = 10" not in out
 
 
+def test_changed_big_file_with_windows_line_ends_returns_only_the_diff(project, barq_run):
+    path = project / "src" / "big.py"
+    path.write_bytes("".join(f"x{i} = {i}\r\n" for i in range(80)).encode())
+    barq_run("read:src/big.py")
+    path.write_bytes(path.read_bytes().replace(b"x40 = 40", b"x40 = 400"))
+    _, out = barq_run("read:src/big.py")
+    assert "changed since your last read: diff, 80 lines now" in out
+
+
 def test_full_and_fresh_bypass_the_cache(project, barq_run):
     barq_run("read:src/app.py")
     assert "def total" in barq_run("read:src/app.py:full")[1]
@@ -576,3 +585,184 @@ def test_symbol_ambiguous_short_name_lists_matches(project, barq_run):
     assert "Reply.prototype.send (1-3)" in out and "send (6-8)" in out
     _, out = barq_run("read:reply.js@Reply.send")
     assert "1\tReply.prototype.send = function (payload) {" in out
+
+
+# ---------------------------------------------------------------- bad and shared files (#394)
+
+
+def _index_file(barq_env):
+    return barq_env / "barq-home" / "sessions" / "test-session.json"
+
+
+@pytest.mark.parametrize("stored", ["[]", '"x"', "7"])
+def test_an_index_of_the_wrong_shape_reads_as_empty(project, barq_run, barq_env, stored):
+    index = _index_file(barq_env)
+    index.parent.mkdir(parents=True)
+    index.write_text(stored)
+    code, out = barq_run("read:src/app.py")
+    assert code == 0 and "def total" in out
+    assert "(unchanged, 11 lines)" in barq_run("read:src/app.py")[1]   # healed, without --fresh
+
+
+def test_index_entries_of_the_wrong_shape_are_dropped(project, barq_run, barq_env):
+    barq_run("read:src/app.py", "read:src/util.py")
+    index = _index_file(barq_env)
+    data = json.loads(index.read_text())
+    index.write_text(json.dumps({key: "x" for key in data}))
+    code, out = barq_run("read:src/app.py")
+    assert code == 0 and "def total" in out
+    assert "(unchanged, 11 lines)" in barq_run("read:src/app.py")[1]
+
+
+def test_two_calls_in_one_session_keep_both_reads(project, barq_env):
+    from barq.cache import Cache
+    first, second = Cache("test-session"), Cache("test-session")   # loaded before either saved
+    first.remember("a.py", "a\n")
+    second.remember("b.py", "b\n")
+    first.save()
+    second.save()
+    again = Cache("test-session")
+    assert again.check("a.py", "a\n")[0] == "unchanged" and again.check("b.py", "b\n")[0] == "unchanged"
+
+
+def test_another_save_at_the_same_moment_does_not_take_the_temp_file(project, barq_env, monkeypatch):
+    """A second barq call of the session saving between this call's temp write and its rename."""
+    from pathlib import Path
+
+    from barq.cache import Cache
+    index = _index_file(barq_env)
+    real_os, real_path = os.replace, Path.replace
+    done = []
+
+    def other_call_saves():
+        if not done:
+            done.append(1)
+            other = index.with_suffix(".tmp")
+            other.write_text("{}")
+            real_os(other, index)
+
+    def os_replace(src, dst, *a, **kw):
+        other_call_saves()
+        return real_os(src, dst, *a, **kw)
+
+    def path_replace(self, target):
+        other_call_saves()
+        return real_path(self, target)
+
+    monkeypatch.setattr(os, "replace", os_replace)
+    monkeypatch.setattr(Path, "replace", path_replace)
+    cache = Cache("test-session")
+    cache.remember("a.py", "a\n")
+    cache.save()
+    assert done and Cache("test-session").check("a.py", "a\n")[0] == "unchanged"
+    assert sorted(p.name for p in index.parent.iterdir() if p.is_file() and not p.name.startswith(".")) \
+        == ["test-session.json"]
+
+
+def test_a_failed_cache_save_keeps_the_output(project, barq_run, barq_env, monkeypatch):
+    home = barq_env / "blocked-home"
+    home.write_text("a file where barq's folder should be")
+    monkeypatch.setenv("BARQ_HOME", str(home))
+    code, out = barq_run("read:src/app.py")
+    assert code == 0 and "def total" in out
+
+
+def test_a_torn_or_broken_snapshot_is_never_diffed_against(project, barq_env):
+    from barq.cache import Cache
+    text = "".join(f"line {i}\n" for i in range(200))
+    cache = Cache("test-session")
+    cache.remember("big.py", text)
+    cache.save()
+    snap = cache._snap_path("big.py")
+    now = text.replace("line 5\n", "line five\n")
+    snap.write_text("".join(f"line {i}\n" for i in range(180)))   # cut short by a crash or a racing writer
+    assert Cache("test-session").check("big.py", now) == ("changed", None)
+    snap.write_bytes(b"line \xff\n")
+    assert Cache("test-session").check("big.py", now) == ("changed", None)
+    snap.write_text(text)
+    state, diff = Cache("test-session").check("big.py", now)
+    assert state == "changed" and "+line five" in diff
+
+
+def test_snapshots_are_written_whole(project, barq_env, monkeypatch):
+    """A crash part-way through a snapshot leaves the old one, never a half file."""
+    from barq.cache import Cache
+    cache = Cache("test-session")
+    cache.remember("a.py", "old\n")
+    snap = cache._snap_path("a.py")
+
+    from pathlib import Path
+    real_write_text = Path.write_text
+
+    def torn(self, data, *args, **kwargs):
+        real_write_text(self, data[:2], *args, **kwargs)
+        raise OSError("disk full")
+
+    def crash(*args, **kwargs):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(Path, "write_text", torn)
+    monkeypatch.setattr(os, "replace", crash)
+    cache.remember("a.py", "new\n")   # the read still answers; only the snapshot is not kept
+    assert snap.read_text() == "old\n"
+    assert [p.name for p in snap.parent.iterdir()] == [snap.name]
+
+
+def test_stats_skip_unreadable_and_odd_lines(project, barq_run):
+    from barq import stats
+    barq_run("read:src/app.py")
+    today = time.strftime("%Y-%m-%d")
+    with open(stats.log_path(), "ab") as fh:
+        fh.write(b'{"ts": "' + today.encode() + b'T10:00:00", "ops": [{"op": "read\xff"}]}\n')
+        for junk in ([], "x", {"ts": 5}, {"ts": today, "ops": "x"},
+                     {"ts": today, "ops": [1, "a", {"op": "grep", "out": "big", "baseline": "x"}]}):
+            fh.write(json.dumps(junk).encode() + b"\n")
+    code, out = barq_run("stats")
+    assert code == 0 and "internal error" not in out and "calls:" in out
+
+
+@pytest.mark.parametrize("hook", ["session_start.py", "subagent_start.py"])
+@pytest.mark.parametrize("stdin", ["[]", '"x"', "3", "\xff"])
+def test_hooks_take_any_input(barq_env, hook, stdin):
+    res = subprocess.run([sys.executable, str(BARQ_ROOT / "hooks" / hook)], input=stdin.encode("latin-1"),
+                         capture_output=True, env={**os.environ, "BARQ_HOME": str(barq_env / "h")})
+    assert res.returncode == 0 and not res.stderr
+
+
+def test_package_scripts_of_the_wrong_shape_give_no_commands(project, barq_run):
+    (project / "package.json").write_text('{"scripts": "build and lint"}')
+    code, out = barq_run("info")
+    assert code == 0 and "run build" not in out and "run lint" not in out
+
+
+PUBLISHER = """
+import sys
+sys.path.insert(0, sys.argv[1])
+from barq import stats
+for _ in range(int(sys.argv[2])):
+    stats.publish_today([{"hit": True, "baseline": 100, "out": 40}])
+"""
+
+
+def test_two_sessions_counting_savings_at_once_both_count(barq_env):
+    writers, rounds = 5, 20
+    procs = [subprocess.Popen([sys.executable, "-c", PUBLISHER, str(BARQ_ROOT), str(rounds)])
+             for _ in range(writers)]
+    assert all(p.wait(timeout=60) == 0 for p in procs)
+    from barq import status
+    day = status.read("barq")
+    assert day["calls"] == writers * rounds and day["avoided_bytes"] == 60 * writers * rounds
+
+
+@pytest.mark.parametrize("value", ['"x"', "[1]", "1e400", "true"])
+def test_a_count_of_the_wrong_type_starts_again(barq_env, value):
+    import datetime
+
+    from barq import stats, status
+    path = status.path_for("barq")
+    status.ensure_dir(path.parent)
+    path.write_text(f'{{"schema": "nexika.barq/1", "date": "{datetime.date.today().isoformat()}", '
+                    f'"calls": {value}, "hits": 2}}')
+    stats.publish_today([{"hit": True}])
+    day = status.read("barq")
+    assert day["calls"] == 1 and day["hits"] == 3

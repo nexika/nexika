@@ -581,3 +581,96 @@ def test_audit_fail_on_sets_the_exit_code(server, tmp_path, monkeypatch, capsys)
     assert "fail-on low" in capsys.readouterr().out
     assert cli.main([*args, "--fail-on", "critical"]) == 0
     assert cli.main([*args, "--fail-on", "bogus"]) == 2
+
+
+# ---------------------------------------------------------------- issue #394: shared and damaged files
+
+
+def _row(run, prompt="q", engine="gemini"):
+    return {"run": run, "engine": engine, "model": "m", "prompt": prompt, "sample": 1, "mentioned": True,
+            "cited": False, "position": 0, "citations": [], "error": "", "ref": ""}
+
+
+def test_two_audits_publishing_at_once_both_keep_their_score(tmp_path, monkeypatch):
+    from manar import status
+    a, b = tmp_path / "a", tmp_path / "b"
+    a.mkdir()
+    b.mkdir()
+    real_read, other = status.read, []
+
+    def read_then_let_another_session_publish(*args, **kwargs):
+        data = real_read(*args, **kwargs)
+        if not other:   # once: a second session publishes between this read and the write
+            other.append(threading.Thread(target=cli.publish_score, args=(
+                b, {"target": "https://b.dev", "score": 70, "date": "2026-10-18"}, b / "x.json")))
+            other[0].start()
+            other[0].join(0.5)   # with the lock it waits for this publish to finish
+        return data
+    monkeypatch.setattr(status, "read", read_then_let_another_session_publish)
+    cli.publish_score(a, {"target": "https://a.dev", "score": 50, "date": "2026-10-18"}, a / "x.json")
+    other[0].join(10)
+    assert not other[0].is_alive()
+    monkeypatch.setattr(status, "read", real_read)
+    assert set(status.read("manar")["audits"]) == {str(a), str(b)}
+
+
+def test_publish_score_replaces_audits_of_the_wrong_type(tmp_path):
+    from manar import status
+    status.publish("manar", {"audits": ["not", "a", "dict"]})
+    cli.publish_score(tmp_path, {"target": "https://a.dev", "score": 50, "date": "d"}, tmp_path / "x.json")
+    assert status.read("manar")["audits"][str(tmp_path)]["score"] == 50
+
+
+def test_diff_skips_audit_files_of_the_wrong_shape(tmp_path, monkeypatch, capsys):
+    import os
+    monkeypatch.setattr(cli, "project_root", lambda: tmp_path)
+    folder = tmp_path / ".manar" / "audits"
+    folder.mkdir(parents=True)
+    for i, (name, body) in enumerate([("1.json", {"target": "https://a.dev", "score": 50}),
+                                      ("2.json", ["a", "list"]), ("3.json", b"\xff\xfe bad bytes"),
+                                      ("4.json", {"target": "https://a.dev", "score": 60}), ("5.json", 7)]):
+        if isinstance(body, dict):
+            body = {**body, "date": "2026-10-18T10:00:00", "site": [], "pages": []}
+        (folder / name).write_bytes(body if isinstance(body, bytes) else json.dumps(body).encode())
+        os.utime(folder / name, ns=(i * 10**9, i * 10**9))
+    assert cli.main(["diff", "https://a.dev"]) == 0
+    assert "score 50 -> 60" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("body", [b'["a", "list"]', b"\xff\xfe", b"{oops"])
+def test_visibility_with_a_panel_of_the_wrong_shape_says_so(tmp_path, monkeypatch, capsys, body):
+    monkeypatch.setattr(cli, "project_root", lambda: tmp_path)
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    (tmp_path / ".manar").mkdir()
+    (tmp_path / ".manar" / "panel.json").write_bytes(body)
+    assert cli.main(["visibility", "plan"]) == 1
+    assert "panel.json" in capsys.readouterr().out
+    visibility.save(tmp_path / ".manar" / "visibility.jsonl", [_row("2026-10-18T10:00:00")])
+    assert cli.main(["visibility", "report"]) == 0   # the report needs no panel: it still shows
+
+
+def test_a_torn_ledger_line_hides_only_that_line(tmp_path):
+    ledger = tmp_path / "v.jsonl"
+    visibility.save(ledger, [_row("2026-10-01T10:00:00"), _row("2026-10-01T10:00:00", "q2")])
+    with open(ledger, "ab") as fh:
+        fh.write(b'{"run": "2026-10-02T10:00:00", "engi')   # a run stopped in the middle of a line
+    assert [len(r) for r in visibility.load_runs(ledger)] == [2]
+    visibility.save(ledger, [_row("2026-10-03T10:00:00")])   # the next run starts on its own line
+    assert [r[0]["run"] for r in visibility.load_runs(ledger)] == ["2026-10-01T10:00:00", "2026-10-03T10:00:00"]
+
+
+def test_ledger_rows_of_the_wrong_shape_are_skipped(tmp_path):
+    ledger = tmp_path / "v.jsonl"
+    lines = [json.dumps(_row("2026-10-01T10:00:00")).encode(), b'["a", "list"]', b"\xff\xfe\xfd",
+             json.dumps(_row(5)).encode(), b'{"no": "run"}', b"7", json.dumps(_row(None)).encode()]
+    ledger.write_bytes(b"\n".join(lines) + b"\n")
+    runs = visibility.load_runs(ledger)
+    assert [r[0]["run"] for r in runs] == ["2026-10-01T10:00:00", 5]   # sorted as text, not a crash
+
+
+def test_detect_skips_a_package_json_of_the_wrong_shape(tmp_path):
+    (tmp_path / "package.json").write_text('["next"]')
+    (tmp_path / "web").mkdir()
+    (tmp_path / "web" / "package.json").write_text('{"dependencies": ["astro"], "devDependencies": 3}')
+    (tmp_path / "index.html").write_text("<html></html>")
+    assert framework.detect(tmp_path)["framework"] == "static"
