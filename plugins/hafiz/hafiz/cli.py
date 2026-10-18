@@ -130,8 +130,8 @@ def cmd_handoff(args) -> int:
         if not state:
             print("No recorded session yet in this project.")
             return 1
-        state["note"] = " ".join(secrets.redact(args.note).split())[:600]
-        capture.save_state(folder, state)
+        note = " ".join(secrets.redact(args.note).split())[:600]
+        state = capture.change_state(folder, state["session"], lambda s: s.update(note=note))
         card.write_handoff(folder, state)
         export.write_latest(root, state)
     branch = args.branch or store.branch(cwd)

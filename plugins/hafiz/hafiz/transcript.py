@@ -22,6 +22,7 @@ WRAPPER = re.compile(r"<(system-reminder|local-command-stdout|local-command-stde
                      re.S)
 COMMAND_NAME = re.compile(r"<command-name>\s*(.*?)\s*</command-name>", re.S)
 COMMAND_ARGS = re.compile(r"<command-args>(.*?)</command-args>", re.S)
+HALF_CHAR = re.compile(rb"\\u[dD][89a-fA-F]")  # an escaped surrogate; a pair is harmless, one alone is not
 SKIP_PROMPTS = ("[Request interrupted", "Caveat:", "<local-command", "<bash-", "<task-notification",
                 "<agent-message", "[SYSTEM NOTIFICATION")
 
@@ -120,6 +121,8 @@ def read_new(path: str | Path, offset: int = 0, line: int = 0) -> tuple[list[dic
         line += 1
         try:
             record = json.loads(raw)
+            if HALF_CHAR.search(raw):  # "\ud800" alone: text no file or hash can take, made "?" (#394)
+                record = json.loads(json.dumps(record, ensure_ascii=False).encode("utf-8", "replace"))
         except ValueError:
             continue
         if isinstance(record, dict):

@@ -138,15 +138,15 @@ def session_end(hook: dict) -> None:
     if not session:
         return
     events = [e for e in _read_jsonl(data_home() / "guard.jsonl") if e.get("session") == session]
-    counts = Counter(e.get("decision") for e in events)
-    asked = {e["tool_use_id"] for e in events if e.get("decision") == "ask" and e.get("tool_use_id")}
+    counts = Counter(str(e.get("decision")) for e in events)  # str: an odd entry must not lose the rest
+    asked = {str(e["tool_use_id"]) for e in events if e.get("decision") == "ask" and e.get("tool_use_id")}
     entry = {
         "ts": datetime.datetime.now().isoformat(timespec="seconds"),
         "session": session,
         "deny": counts.get("deny", 0),
         "ask": counts.get("ask", 0),
         "ask_approved": approved_asks(str(hook.get("transcript_path") or ""), asked),
-        "rules": sorted({e.get("rule", "?") for e in events}),
+        "rules": sorted({str(e.get("rule", "?")) for e in events}),
     }
     itqan_files.append_jsonl(data_home() / "sessions.jsonl", entry)
 

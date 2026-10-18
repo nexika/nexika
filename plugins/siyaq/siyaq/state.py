@@ -34,8 +34,10 @@ def load_session(session: str) -> dict:
         return {"shown": {}, "opened": []}
     try:
         data = json.loads(_session_path(session).read_text(encoding="utf-8"))
-        if isinstance(data, dict):
-            return {"shown": data.get("shown", {}), "opened": data.get("opened", [])}
+        if isinstance(data, dict):  # a damaged file must not stop this session's injections (#394)
+            shown, opened = data.get("shown"), data.get("opened")
+            return {"shown": shown if isinstance(shown, dict) else {},
+                    "opened": opened if isinstance(opened, list) else []}
     except (OSError, ValueError):
         pass
     return {"shown": {}, "opened": []}
@@ -105,8 +107,9 @@ def gc(max_age_days: int = SESSION_TTL_DAYS) -> None:
         return
     cutoff = time.time() - max_age_days * 86400
     for path in folder.glob("*.json"):
-        if path.stat().st_mtime < cutoff:
-            path.unlink(missing_ok=True)
+        with contextlib.suppress(OSError):  # another session's cleanup may have removed it first
+            if path.stat().st_mtime < cutoff:
+                path.unlink(missing_ok=True)
 
 
 def log_event(root: Path, event: dict) -> None:
@@ -127,11 +130,22 @@ def log_event(root: Path, event: dict) -> None:
         pass
 
 
+def _well_formed(item: object) -> bool:
+    """An event as log_event writes it; a damaged line is skipped, so it never breaks stats (#394)."""
+    if not isinstance(item, dict) or not isinstance(item.get("ts"), str):
+        return False
+    if item.get("type") in ("shown", "opened") and not isinstance(item.get("id"), str):
+        return False
+    terms = item.get("terms", [])
+    return isinstance(item.get("chars", 0), int) and isinstance(terms, list) and all(
+        isinstance(t, str) for t in terms)
+
+
 def read_events(root: Path, since: str = "") -> list[dict]:
     out = []
     for name in ("events.1.jsonl", "events.jsonl"):
         try:
-            lines = (project_dir(root) / name).read_text(encoding="utf-8").splitlines()
+            lines = (project_dir(root) / name).read_text(encoding="utf-8", errors="replace").splitlines()
         except OSError:
             continue
         for line in lines:
@@ -139,6 +153,6 @@ def read_events(root: Path, since: str = "") -> list[dict]:
                 item = json.loads(line)
             except ValueError:
                 continue
-            if isinstance(item, dict) and item.get("ts", "") >= since:
+            if _well_formed(item) and item["ts"] >= since:
                 out.append(item)
     return out

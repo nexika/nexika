@@ -1168,3 +1168,143 @@ def test_decisions_of_other_branches_wait_behind_a_count(log, capsys, repo):
     stop(log.user("Use argon2 for passwords, not bcrypt."), capsys)
     text = hook("session-start", {"session_id": "new-session", "source": "startup", "cwd": str(repo)}, capsys)
     assert "argon2" in text and "(+" in text and len(text.encode()) <= card.CARD_CHARS
+
+
+# ---------------------------------------------------------------- bad and shared files (#394)
+
+
+def _good_line(text="Use argon2 for passwords.", **fields):
+    return json.dumps(store.Memory.make("decision", text, scope="project", **fields), ensure_ascii=False)
+
+
+def test_a_bad_byte_in_the_memories_file_loses_only_its_line(repo, capsys):
+    memory = store.Memory(repo)
+    store.private_dir(memory.dir)
+    memory.path.write_bytes((_good_line() + "\n").encode() + b'{"text": "caf\xe9"}\n')
+    assert [i["text"] for i in memory.all()] == ["Use argon2 for passwords."]
+    assert memory.upsert([store.Memory.make("task", "Add refresh tokens", status="open")]) == 1
+    assert cli.main(["recall", "argon2"]) == 0 and "argon2" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("bad", [{"type": "decision", "text": "no id here"},
+                                 {"id": "m1", "type": "decision", "text": 5},
+                                 {"id": ["m1"], "type": "decision", "text": "a list id"},
+                                 {"id": "m2", "type": "task", "text": "odd", "key": ["k"], "status": "open"},
+                                 {"id": "m3", "type": "task", "text": "odd date", "date": 5, "status": "open"}])
+def test_malformed_memories_are_skipped(repo, capsys, bad):
+    memory = store.Memory(repo)
+    store.private_dir(memory.dir)
+    memory.path.write_text(_good_line() + "\n" + json.dumps(bad) + "\n", encoding="utf-8")
+    assert [i["text"] for i in memory.all()] == ["Use argon2 for passwords."]
+    assert memory.upsert([store.Memory.make("decision", "Keep the API stable.")]) == 1
+    assert memory.expire_open() == 0
+    assert "argon2" in card.start_card(repo, BRANCH, "hafiz")
+
+
+def test_a_forgotten_list_of_other_things_is_ignored(repo):
+    memory = store.Memory(repo)
+    store.write_json(memory.dir / "forgotten.json", [{"id": "m1"}, ["x"], "mgone"])
+    assert memory.forgotten() == {"mgone"}
+    assert memory.upsert([store.Memory.make("decision", "Keep the API stable.")]) == 1
+
+
+def test_another_sessions_plan_of_the_wrong_type_is_ignored(log, capsys, repo):
+    folder = store.project_dir(repo)
+    for name, plan in (("a", ["a"]), ("b", {"steps": "1. text"}), ("c", {"steps": [1, 2], "done": 3})):
+        store.write_json(folder / "sessions" / f"{name}.json",
+                         {"session": name, "branch": BRANCH, "plan": plan, "updated": "2026-10-05T10:00:00"})
+    stop(log.user("Fix the login bug in src/auth.py."), capsys)
+    assert capture.load_state(folder, SESSION)["prompt_count"] == 1
+
+
+def test_other_session_files_of_the_wrong_shape_are_skipped(log, capsys, repo):
+    stop(log.user("Fix the login bug in src/auth.py."), capsys)
+    folder = store.project_dir(repo)
+    store.write_json(folder / "sessions" / "x.json", {"session": 5, "prompt_count": 1, "updated": 7})
+    store.write_json(folder / "sessions" / "y.json", {"session": "y", "prompt_count": 1, "updated": 7})
+    assert [s["session"] for s in card.sessions(folder)] == [SESSION, "y"]  # a bad time sorts last
+    assert cli.main(["status"]) == 0 and "sessions recorded: 2" in capsys.readouterr().out
+
+
+def test_a_session_state_with_wrong_field_types_starts_those_fields_fresh(log, capsys, repo):
+    folder = store.project_dir(repo)
+    store.write_json(capture.state_path(folder, SESSION), {"session": SESSION, "tasks": [], "prompts": "x",
+                                                           "offset": "0", "plan": ["a"]})
+    stop(log.user("Fix the login bug in src/auth.py."), capsys)
+    state = capture.load_state(folder, SESSION)
+    assert state["prompt_count"] == 1 and state["tasks"] == {} and state["plan"] == {}
+
+
+def test_a_bad_byte_in_the_handoff_note_is_read_past(repo, capsys):
+    folder = store.project_dir(repo)
+    store.private_dir(folder / "handoffs")
+    (folder / "handoffs" / "feat-12-login.md").write_bytes(b"# Handoff: feat/12-login\ncaf\xe9\n")
+    assert card.read_handoff(folder, BRANCH).startswith("# Handoff: feat/12-login")
+    assert cli.main(["handoff"]) == 0 and "# Handoff" in capsys.readouterr().out
+
+
+@pytest.fixture
+def lock_seen(repo, monkeypatch):
+    """Whether the sessions lock was held each time a session state was saved."""
+    seen = []
+    real = capture.save_state
+
+    def save_state(folder, state):
+        seen.append((folder / "sessions" / ".lock").is_dir())
+        real(folder, state)
+
+    monkeypatch.setattr(capture, "save_state", save_state)
+    return seen
+
+
+def test_the_handoff_note_is_written_under_the_sessions_lock(log, capsys, repo, lock_seen):
+    stop(log.user("Fix the login bug in src/auth.py."), capsys)
+    assert cli.main(["handoff", "--note", "Login done. Next: refresh tokens."]) == 0
+    assert lock_seen and all(lock_seen)
+    assert capture.load_state(store.project_dir(repo), SESSION)["note"].startswith("Login done")
+
+
+@pytest.mark.parametrize("kind, field", [("pre-compact", "compactions"), ("session-end", "ended")])
+def test_a_note_written_while_a_hook_runs_is_kept(log, capsys, repo, monkeypatch, lock_seen, kind, field):
+    """The note lands between the hook's capture and its own save: the save must not undo it."""
+    folder = store.project_dir(repo)
+    real = capture.update
+
+    def update(*args, **kwargs):
+        state = real(*args, **kwargs)
+        assert cli.main(["handoff", "--note", "Written meanwhile."]) == 0
+        capsys.readouterr()  # the command's own output is not the hook's
+        return state
+
+    monkeypatch.setattr(capture, "update", update)
+    hook(kind, {"session_id": SESSION, "transcript_path": log.user("Fix the login bug.").write(),
+                "cwd": str(repo)}, capsys)
+    state = capture.load_state(folder, SESSION)
+    assert state["note"] == "Written meanwhile." and state[field]
+    assert all(lock_seen)
+
+
+def test_a_snapshot_with_fields_of_the_wrong_type_still_restores(repo):
+    folder = store.project_dir(repo)
+    store.write_json(folder / "snapshots" / f"{SESSION}.json",
+                     {"branch": BRANCH, "note": "Stopped at the tests.", "plan": "1. a", "tasks": 5,
+                      "files": ["src/auth.py", 7], "decisions": {"a": 1}})
+    text = card.restore_text(folder, SESSION, "hafiz")
+    assert "Stopped at the tests." in text and "src/auth.py" in text and "1. a" not in text
+
+
+def test_the_card_reads_past_a_last_session_of_the_wrong_shape(repo, capsys):
+    store.write_json(capture.state_path(store.project_dir(repo), "old"),
+                     {"session": "old", "branch": BRANCH, "prompt_count": 2, "updated": "2026-10-05T10:00:00",
+                      "plan": ["a"], "files": ["src/auth.py"], "prompts": "Fix the login bug please", "note": 3})
+    text = hook("session-start", {"session_id": "new-session", "source": "startup", "cwd": str(repo)}, capsys)
+    assert "Last session here" in text
+    assert cli.main(["handoff"]) == 0 and "# Handoff: feat/12-login" in capsys.readouterr().out
+
+
+def test_half_a_character_in_the_transcript_does_not_stop_capture(log, repo, capsys):
+    """An escaped lone surrogate ("\\ud800") parses into text no file can hold as UTF-8."""
+    log.user("Let's go with JWT instead of server sessions \ud800 for the login.")
+    log.path.write_text("".join(json.dumps(r) + "\n" for r in log.records), encoding="utf-8")
+    hook("stop", {"session_id": SESSION, "transcript_path": str(log.path), "cwd": str(repo)}, capsys)
+    assert capture.load_state(store.project_dir(repo), SESSION)["offset"] > 0

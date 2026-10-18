@@ -282,18 +282,27 @@ def commit_files(cwd: Path, sha: str) -> list[str]:
     return [p for p in out.split("\0") if p and not GIT_JUNK.search(p)][:MAX_GIT_FILES]
 
 
+def clean_plan(plan) -> dict:
+    """A plan read from a file ({} when it is not one): steps are text, `asked` and `done` step numbers."""
+    if not isinstance(plan, dict) or not isinstance(plan.get("steps"), list) or not plan["steps"] \
+            or not all(isinstance(step, str) for step in plan["steps"]):
+        return {}
+    asked, done = plan.get("asked", 0), plan.get("done", [])
+    return {"steps": list(plan["steps"]), "asked": asked if type(asked) is int else 0,
+            "done": [n for n in done if type(n) is int] if isinstance(done, list) else []}
+
+
 def inherited_plan(folder: Path, branch: str, session: str) -> dict:
     """The plan of the latest earlier session on this branch, for a new session that carries on."""
-    best: dict = {}
+    best, found = "", {}
     for path in (folder / "sessions").glob("*.json"):
         other = store.read_json(path, {})
-        plan = other.get("plan") or {}
-        if (other.get("session") != session and other.get("branch") == branch and plan.get("steps")
-                and other.get("updated", "") > best.get("updated", "")):
-            best = other
-    plan = best.get("plan") or {}
-    return {"steps": list(plan["steps"]), "asked": plan.get("asked", 0), "done": list(plan.get("done", []))} \
-        if plan else {}
+        plan = clean_plan(other.get("plan"))
+        updated = other.get("updated", "")
+        if (other.get("session") != session and other.get("branch") == branch and plan
+                and isinstance(updated, str) and updated > best):
+            best, found = updated, plan
+    return found
 
 
 def _epoch(stamp: str) -> float:
@@ -316,10 +325,17 @@ def state_path(folder: Path, session: str) -> Path:
     return folder / "sessions" / f"{store.safe_name(session, 64)}.json"
 
 
-def load_state(folder: Path, session: str, transcript_path: str = "") -> dict:
-    data = store.read_json(state_path(folder, session), {})
+def typed(data: dict, session: str = "", transcript_path: str = "") -> dict:
+    """A session state read from a file: a field missing or of the wrong type (a damaged or hand-edited
+    file) gets its default, so it never breaks capture or a card."""
     state = new_state(session, transcript_path)
-    state.update({k: v for k, v in data.items() if k in state})
+    state.update({k: v for k, v in data.items() if k in state and type(v) is type(state[k])})
+    state["plan"] = clean_plan(state["plan"])
+    return state
+
+
+def load_state(folder: Path, session: str, transcript_path: str = "") -> dict:
+    state = typed(store.read_json(state_path(folder, session), {}), session, transcript_path)
     if transcript_path and transcript_path != state["transcript"]:
         state.update(transcript=transcript_path, offset=0, line=0, pending={})
     return state
@@ -328,6 +344,16 @@ def load_state(folder: Path, session: str, transcript_path: str = "") -> dict:
 def save_state(folder: Path, state: dict) -> None:
     state["updated"] = store.now()
     store.write_json(state_path(folder, state["session"]), state)
+
+
+def change_state(folder: Path, session: str, change) -> dict:
+    """Load a session's state, apply `change(state)` and save it, under the lock `update` holds, so
+    a capture running at the same time never writes over the change (or the change over it)."""
+    with store.locked(folder / "sessions", timeout=8):
+        state = load_state(folder, session)
+        change(state)
+        save_state(folder, state)
+        return state
 
 
 class Capture:
