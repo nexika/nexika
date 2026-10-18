@@ -3211,7 +3211,8 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "", files: bool = True
     if CODE_SHELL_SOCKET.search(text):
         ctx.add("remote-shell", f"`{via}` connects a shell to the network: whoever is on the other side can "
                                 "run commands here.")
-    network = bool(CODE_NET.search(text))
+    # A socket or a token named only in a file's new contents talks to nothing (#389)
+    network = bool(code_matches(CODE_NET, text, data))
     executes = bool(exec_calls(text, data) or (not NO_BACKTICK_EXEC.search(lang or via)
                                                             and BACKTICK_EXEC.search(text)))
     paths: list[Arg] = []
@@ -3254,7 +3255,8 @@ def code_check(code: Arg, ctx: Ctx, via: str, lang: str = "", files: bool = True
         if path and ctx.where.place(path) == "secret":
             secret_hit = True
             ctx.add("secret-read", f"`{via}` opens {ctx.show(path)}, which holds secrets.", path)
-    secret_env = [n for n in CODE_SECRET_ENV.findall(text) if SECRET_VAR.search(n)]
+    secret_env = [n for n in (m.group(1) for m in code_matches(CODE_SECRET_ENV, text, data))
+                  if SECRET_VAR.search(n)]
     if network:
         if secret_hit:
             ctx.add("egress-secret", f"`{via}` reads a secret file and talks to the network.")
