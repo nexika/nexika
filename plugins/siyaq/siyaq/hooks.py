@@ -39,7 +39,10 @@ def context_level(session: str) -> str:
         return ""
     if not isinstance(data, dict) or data.get("schema") != "nexika.mizan/1":
         return ""
-    if time.time() - float(data.get("updated") or 0) > 600:
+    try:
+        if time.time() - float(data.get("updated") or 0) > 600:
+            return ""
+    except (TypeError, ValueError):
         return ""
     level = data.get("level")
     return level if level in ("fresh", "mid", "full") else ""

@@ -154,9 +154,44 @@ def _log(msg: str) -> None:
 
 def _read_hook_input() -> dict:
     try:
-        return json.loads(sys.stdin.read() or "{}")
+        data = json.loads(sys.stdin.read() or "{}")
     except (ValueError, OSError):
         return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _read(path: Path) -> str:
+    """A file's text; a byte that is not UTF-8 becomes "\ufffd" instead of an error (#394)."""
+    return path.read_text(encoding="utf-8", errors="replace")
+
+
+def _write_atomic(path: Path, text: str) -> None:
+    """Write through a temp file in the same folder, so a crash or a failed write never leaves half a
+    file (#394). Owner-only, like the family's files."""
+    import tempfile
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
+
+
+def _lock_topic(slug: str) -> int:
+    """Hold topics/.SLUG.lock until the returned descriptor is closed, so two sessions merging the same
+    topic take turns (#394). No lock where flock is missing. Only merge_report takes it, once per topic:
+    a second lock on the same file in one process would wait forever."""
+    TOPICS.mkdir(parents=True, exist_ok=True)
+    fd = os.open(TOPICS / f".{slug}.lock", os.O_RDWR | os.O_CREAT, 0o600)
+    try:
+        import fcntl
+        fcntl.flock(fd, fcntl.LOCK_EX)
+    except (ImportError, OSError):
+        pass
+    return fd
 
 
 def slugify(text: str) -> str:
@@ -194,8 +229,7 @@ def set_auto_report(on: bool) -> None:
     except (OSError, ValueError):
         data = {}
     data["auto_report"] = on
-    HOME.mkdir(parents=True, exist_ok=True)
-    SETTINGS.write_text(json.dumps(data, indent=1) + "\n", encoding="utf-8")
+    _write_atomic(SETTINGS, json.dumps(data, indent=1) + "\n")
 
 
 def report_for_session(sid: str) -> Path | None:
@@ -223,7 +257,7 @@ def review_days(streak: int | None) -> int:
 
 def _parse_markdown(path: Path) -> tuple[str | None, dict[str, Entry]]:
     title, entries = None, {}
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in _read(path).splitlines():
         if line.startswith("# "):
             title = line[2:].strip()
             continue
@@ -242,7 +276,7 @@ def _load(slug: str) -> tuple[str, dict[str, Entry], dict[str, int | None]]:
         data = json.loads(data_path.read_text(encoding="utf-8"))
         title = str(data.get("title") or slug)
         for c in data.get("concepts") or []:
-            if c.get("status") in STATUSES and c.get("concept"):
+            if isinstance(c, dict) and c.get("status") in STATUSES and c.get("concept"):
                 key = str(c["concept"]).lower()
                 entries[key] = (c["status"], str(c["concept"]), str(c.get("evidence") or "-"),
                                 str(c.get("date") or _today()))
@@ -278,20 +312,19 @@ def save_topic(slug: str, title: str, entries: dict[str, Entry],
     data = {"title": title, "concepts": [
         {"concept": c, "status": s, "evidence": ev, "date": d, "streak": streaks.get(c.lower())}
         for s, c, ev, d in rows]}
-    (TOPICS / f"{slug}.json").write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n",
-                                         encoding="utf-8")
+    _write_atomic(TOPICS / f"{slug}.json", json.dumps(data, ensure_ascii=False, indent=1) + "\n")
     lines = [f"# {title}", "",
              f"<!-- rendered from {slug}.json by prof_store.py; status edits here are kept. "
              f"{NO_REWRITE} -->", ""]
     lines += [f"- [{s}] {c} — {ev} ({d})" for s, c, ev, d in rows]
     md = TOPICS / f"{slug}.md"
-    md.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    _write_atomic(md, "\n".join(lines) + "\n")
     stamp = (TOPICS / f"{slug}.json").stat().st_mtime
     os.utime(md, (stamp, stamp))   # same time: the Markdown counts as hand-edited only after a change
 
 
 def merge_report(path: Path) -> int:
-    text = path.read_text(encoding="utf-8")
+    text = _read(path)
     m = REPORT_DATE_RE.match(path.name)
     date = m.group(1) if m else _today()
     updates: dict[str, list[tuple[str, str, str, str]]] = {}
@@ -303,24 +336,28 @@ def merge_report(path: Path) -> int:
             updates.setdefault(slugify(slug), []).append((status, title, concept, evidence))
     count = 0
     for slug, rows in updates.items():
-        title, entries, streaks = _load(slug)
-        for status, new_title, concept, evidence in rows:
-            title = new_title or title
-            count += 1
-            key = concept.lower()
-            old = entries.get(key)
-            if status == "not-checked" and old and old[0] != "not-checked":
-                continue   # "explained again" never erases a result the learner showed
-            if status == "understood":
-                if old and old[0] == "understood":
-                    before = streaks.get(key) or 1
-                    streaks[key] = before if old[3] == date else before + 1
+        lock = _lock_topic(slug)   # load to save: another session's merge waits, so neither is lost
+        try:
+            title, entries, streaks = _load(slug)
+            for status, new_title, concept, evidence in rows:
+                title = new_title or title
+                count += 1
+                key = concept.lower()
+                old = entries.get(key)
+                if status == "not-checked" and old and old[0] != "not-checked":
+                    continue   # "explained again" never erases a result the learner showed
+                if status == "understood":
+                    if old and old[0] == "understood":
+                        before = streaks.get(key) or 1
+                        streaks[key] = before if old[3] == date else before + 1
+                    else:
+                        streaks[key] = 1
                 else:
-                    streaks[key] = 1
-            else:
-                streaks[key] = 0
-            entries[key] = (status, concept, evidence or "-", date)
-        save_topic(slug, title, entries, streaks)
+                    streaks[key] = 0
+                entries[key] = (status, concept, evidence or "-", date)
+            save_topic(slug, title, entries, streaks)
+        finally:
+            os.close(lock)
     REPORTS.mkdir(parents=True, exist_ok=True)
     with open(MERGED, "a", encoding="utf-8") as fh:
         fh.write(path.name + "\n")
@@ -421,7 +458,7 @@ def session_start(hook: dict) -> None:
 
     if PROFILE.is_file():
         p("\n### Learner profile")
-        p("\n".join(PROFILE.read_text(encoding="utf-8").splitlines()[:60]))
+        p("\n".join(_read(PROFILE).splitlines()[:60]))
     else:
         p("\nNo learner profile yet: on the first tutoring request ask level + goals, then "
           "create it with the prof:progress skill.")
@@ -429,7 +466,7 @@ def session_start(hook: dict) -> None:
     reports = sorted(REPORTS.glob("*.md")) if REPORTS.is_dir() else []
     if reports:
         last = reports[-1]
-        text = last.read_text(encoding="utf-8")
+        text = _read(last)
         p(f"\n### Last session report ({last.name})")
         for heading in ("Weak areas", "Review next time"):
             body = _section(text, heading, 12)
@@ -488,7 +525,8 @@ def extract_conversation(transcript: Path) -> tuple[str, bool, int]:
             kind = obj.get("type")
             if kind not in ("user", "assistant") or obj.get("isMeta"):
                 continue
-            content = (obj.get("message") or {}).get("content")
+            message = obj.get("message")
+            content = message.get("content") if isinstance(message, dict) else None
             blocks = [{"type": "text", "text": content}] if isinstance(content, str) else (content or [])
             texts = []
             for block in blocks:
@@ -497,7 +535,8 @@ def extract_conversation(transcript: Path) -> tuple[str, bool, int]:
                 if block.get("type") == "text":
                     texts.append(block.get("text", ""))
                 elif block.get("type") == "tool_use":
-                    inp = block.get("input") or {}
+                    inp = block.get("input")
+                    inp = inp if isinstance(inp, dict) else {}
                     if block.get("name") == "Skill" and str(inp.get("skill", "")).startswith("prof:"):
                         tutoring = True
                         texts.append(f"[used skill {inp.get('skill')} {inp.get('args', '')}]")
@@ -538,7 +577,7 @@ def session_end(hook: dict) -> None:
         return
     TMP.mkdir(parents=True, exist_ok=True)
     convo_path = TMP / f"{sid[:8]}.txt"
-    convo_path.write_text(convo, encoding="utf-8")
+    convo_path.write_text(convo, encoding="utf-8", errors="replace")   # a lone "\ud800" from the JSON
     env = prof_background.child_env({GUARD_ENV: "1"})
     # Detached: Claude Code does not wait for this, so exiting stays instant.
     with open(LOG, "a", encoding="utf-8") as log:
@@ -574,7 +613,7 @@ def write_auto_report(sid: str, convo_path: Path) -> int:
         return 1
     REPORTS.mkdir(parents=True, exist_ok=True)
     out = REPORTS / f"{now:%Y-%m-%d_%H%M}_{sid[:8]}.md"
-    out.write_text(report + "\n", encoding="utf-8")
+    _write_atomic(out, report + "\n")   # half a report would count as this session's report
     n = merge_report(out)
     convo_path.unlink(missing_ok=True)
     _log(f"auto-report written: {out.name} ({n} concepts merged)")

@@ -88,7 +88,11 @@ if __name__ == "__main__":
         EVENT = json.loads(sys.stdin.read() or "{}")
     except ValueError:
         sys.exit(0)
-    if not isinstance(EVENT, dict) or (haris_active(EVENT) and not needs_quality_check(EVENT)):
+    try:
+        COVERED = isinstance(EVENT, dict) and haris_active(EVENT) and not needs_quality_check(EVENT)
+    except Exception:  # an odd event or a deleted folder: not sure haris covers it, so run the guard (#394)
+        COVERED = False
+    if not isinstance(EVENT, dict) or COVERED:
         sys.exit(0)  # haris covers this call: leave before loading anything else
 else:
     EVENT = None

@@ -127,23 +127,57 @@ def _store_path(root: Path) -> Path:
     return data_home() / "projects" / f"{name}-{digest}" / "learn.json"
 
 
+STATUSES = ("candidate", "proposed", "approved", "rejected", "retired")
+KINDS = ("convention", "preference", "mistake")
+
+
+def _evidence(items) -> list[dict]:
+    return [e for e in items if isinstance(e, dict) and isinstance(e.get("ts"), str)
+            and isinstance(e.get("quote"), str)] if isinstance(items, list) else []
+
+
+def _lesson(raw) -> dict | None:
+    """A lesson of learn.json in the shape the code relies on, or None when it cannot be one (#394)."""
+    if not isinstance(raw, dict) or not isinstance(raw.get("rule"), str) or raw.get("status") not in STATUSES:
+        return None
+    lesson = {**raw, "evidence": _evidence(raw.get("evidence")),
+              "violations": _evidence(raw.get("violations"))}
+    if lesson.get("kind") not in KINDS:
+        lesson["kind"] = "preference"
+    if not isinstance(lesson.get("approved"), str):
+        lesson["approved"] = None
+    if not isinstance(lesson.get("branch", ""), str):
+        del lesson["branch"]
+    return lesson
+
+
 def load_store(root: Path) -> dict:
     try:
-        data = json.loads(_store_path(root).read_text(encoding="utf-8"))
+        data = json.loads(_store_path(root).read_text(encoding="utf-8", errors="replace"))
         if isinstance(data, dict) and isinstance(data.get("lessons"), dict):
-            return data
+            lessons = {lid: _lesson(raw) for lid, raw in data["lessons"].items()}
+            return {**data, "lessons": {lid: les for lid, les in lessons.items() if les}}
     except (OSError, ValueError):
         pass
     return {"root": str(root), "lessons": {}}
 
 
-def save_store(root: Path, store: dict) -> None:
-    path = _store_path(root)
+def _store_dir(root: Path) -> Path:
     itqan_files.private_dir(data_home())
-    itqan_files.private_dir(path.parent.parent)
-    tmp = path.with_suffix(".tmp")
-    itqan_files.write_private(tmp, json.dumps(store, indent=1, ensure_ascii=False))
-    tmp.replace(path)
+    itqan_files.private_dir(_store_path(root).parent.parent)
+    return itqan_files.private_dir(_store_path(root).parent)
+
+
+def store_lock(root: Path):
+    """Held around every read-modify-write of learn.json: the background extraction and an approval
+    may run at the same moment (#394)."""
+    _store_dir(root)
+    return itqan_files.locked(_store_path(root))
+
+
+def save_store(root: Path, store: dict) -> None:
+    _store_dir(root)
+    itqan_files.write_atomic(_store_path(root), json.dumps(store, indent=1, ensure_ascii=False))
 
 
 def _append(name: str, entry: dict) -> None:
@@ -181,7 +215,7 @@ def rules_file(root: Path) -> Path:
 def read_rules_file(root: Path) -> tuple[dict[str, str], list[str]]:
     """({id: text} for managed rules, other '- ' lines the user wrote by hand)."""
     try:
-        lines = rules_file(root).read_text(encoding="utf-8").splitlines()
+        lines = rules_file(root).read_text(encoding="utf-8", errors="replace").splitlines()
     except OSError:
         return {}, []
     managed, manual = {}, []
@@ -227,7 +261,8 @@ def write_rules_file(root: Path, store: dict, add: str | None = None, remove: st
     """Add or remove one rule in the managed block; every other line, known to the store or not, stays."""
     path = rules_file(root)
     lessons = store["lessons"]
-    text = path.read_text(encoding="utf-8") if path.exists() else ""
+    # bytes that are not UTF-8 (another editor's) are written back as they were
+    text = path.read_text(encoding="utf-8", errors="surrogateescape") if path.exists() else ""
     if RULES_START in text and RULES_END in text:
         before, rest = text.split(RULES_START, 1)
         inside, after = rest.split(RULES_END, 1)
@@ -248,13 +283,15 @@ def write_rules_file(root: Path, store: dict, add: str | None = None, remove: st
     if add and f"- [{add}] {lessons[add]['rule']}" not in kept:
         kept.append(f"- [{add}] {lessons[add]['rule']}")
     block = "\n".join([RULES_START, *kept, RULES_END])
+    if path.is_symlink():  # a rules file shared through a link: the shared file gets the rule
+        path = path.resolve()
     if before is not None:
-        path.write_text(before + block + after, encoding="utf-8")
+        itqan_files.write_atomic(path, before + block + after, 0o666, "surrogateescape")
         return path
     path.parent.mkdir(parents=True, exist_ok=True)
     header = ("# Project rules\n\nLessons approved with /itqan:learn. Claude loads them at session start.\n"
               "Edit the wording freely; delete a line to retire a rule.\n\n")
-    path.write_text(header + block + "\n", encoding="utf-8")
+    itqan_files.write_atomic(path, header + block + "\n", 0o666, "surrogateescape")
     return path
 
 
@@ -405,7 +442,7 @@ def parse_lessons(output: str) -> list[dict]:
         lessons.append({
             "id": slug(str(item.get("id") or item["rule"])),
             "rule": str(item["rule"]).strip()[:200],
-            "kind": kind if kind in ("convention", "preference", "mistake") else "preference",
+            "kind": kind if kind in KINDS else "preference",
             "quote": str(item.get("quote", "")).strip()[:200],
         })
     return lessons
@@ -465,9 +502,10 @@ def run_extract(session: str, payload_path: Path, root: Path) -> int:
     _append("extract.jsonl", {"ts": _now(), "session": session[:8], "cwd": str(root),
                               "cost_usd": cost if isinstance(cost, (int, float)) else None,
                               "lessons": len(lessons)})
-    store = load_store(root)  # re-read: the user may have approved something meanwhile
-    merge_lessons(store, lessons)
-    save_store(root, store)
+    with store_lock(root):
+        store = load_store(root)  # re-read: the user may have approved something meanwhile
+        merge_lessons(store, lessons)
+        save_store(root, store)
     payload_path.unlink(missing_ok=True)
     print(f"{_now()} extract {session[:8]}: {len(lessons)} lesson(s) merged for {root}")
     return 0
@@ -496,6 +534,11 @@ def cmd_proposals(root: Path) -> str:
 
 
 def cmd_approve(root: Path, lid: str, text: str | None) -> str:
+    with store_lock(root):
+        return _approve(root, lid, text)
+
+
+def _approve(root: Path, lid: str, text: str | None) -> str:
     store = load_store(root)
     sync_from_file(root, store)
     lesson = store["lessons"].get(lid)
@@ -512,6 +555,11 @@ def cmd_approve(root: Path, lid: str, text: str | None) -> str:
 
 
 def cmd_reject(root: Path, lid: str) -> str:
+    with store_lock(root):
+        return _reject(root, lid)
+
+
+def _reject(root: Path, lid: str) -> str:
     store = load_store(root)
     lesson = store["lessons"].get(lid)
     if not lesson:
@@ -531,7 +579,9 @@ def cmd_rules(root: Path) -> str:
     return "\n".join([f"[{lid}] {text}" for lid, text in managed.items()] + manual)
 
 
-def _within(cwd: str, root: Path) -> bool:
+def _within(cwd, root: Path) -> bool:
+    if not isinstance(cwd, str):
+        return False
     try:
         Path(cwd).resolve().relative_to(root)
         return True
@@ -547,14 +597,25 @@ def _counts(items: list[str]) -> str:
     return ", ".join(f"{k} {v}" for k, v in ranked[:8]) or "none"
 
 
+def _int(value) -> int:
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 def cmd_insights(root: Path, days: int = 30) -> str:
     since = (datetime.datetime.now() - datetime.timedelta(days=days)).isoformat(timespec="seconds")
     home = data_home()
-    usage = [u for u in read_jsonl(home / "usage.jsonl")
-             if u.get("ts", "") >= since and _within(u.get("cwd", ""), root)]
-    guard = [g for g in read_jsonl(home / "guard.jsonl") if g.get("ts", "") >= since]
-    signals = [s for s in read_jsonl(home / "signals.jsonl")
-               if s.get("ts", "") >= since and _within(s.get("cwd", ""), root)]
+
+    def recent(name: str, here: bool = True) -> list[dict]:
+        """Entries of the last days (of this project): one of another shape is left out (#394)."""
+        return [e for e in read_jsonl(home / name) if isinstance(e.get("ts"), str) and e["ts"] >= since
+                and (not here or _within(e.get("cwd"), root))]
+
+    usage = [u for u in recent("usage.jsonl") if isinstance(u.get("name"), str)]
+    guard = recent("guard.jsonl", here=False)
+    signals = recent("signals.jsonl")
     store = load_store(root)
     sync_from_file(root, store)
 
@@ -570,17 +631,15 @@ def cmd_insights(root: Path, days: int = 30) -> str:
         out.append("  (plugins whose skills were used: " + ", ".join(plugins) + ")")
     decisions = [g.get("decision") for g in guard]
     out.append(f"guard (all projects): {decisions.count('deny')} refused, {decisions.count('ask')} asked"
-               + (" | top: " + _counts([g.get("rule", "?") for g in guard]) if guard else ""))
-    sessions = [s for s in read_jsonl(home / "sessions.jsonl")
-                if s.get("ts", "") >= since and "ask_approved" in s]
-    asked = sum(int(s.get("ask") or 0) for s in sessions)
+               + (" | top: " + _counts([str(g.get("rule", "?")) for g in guard]) if guard else ""))
+    sessions = [s for s in recent("sessions.jsonl", here=False) if "ask_approved" in s]
+    asked = sum(_int(s.get("ask")) for s in sessions)
     if asked:
-        yes = sum(int(s.get("ask_approved") or 0) for s in sessions)
+        yes = sum(_int(s.get("ask_approved")) for s in sessions)
         out.append(f"  asks you approved: {yes} of {asked} ({round(100 * yes / asked)}%): "
                    "each one is likely a false alarm worth a rule in .itqan.json")
     out.append(f"corrections captured: {len(signals)}")
-    runs = [r for r in read_jsonl(home / "extract.jsonl")
-            if r.get("ts", "") >= since and _within(r.get("cwd", ""), root)]
+    runs = recent("extract.jsonl")
     if runs:
         costs = [r["cost_usd"] for r in runs if isinstance(r.get("cost_usd"), (int, float))]
         spent = f", ${sum(costs):.2f}" if costs else ""
@@ -593,7 +652,10 @@ def cmd_insights(root: Path, days: int = 30) -> str:
                f"{sum(v['status'] == 'candidate' for v in lessons.values())} seen once")
     for lid, les in approved.items():
         repeats = len(les.get("violations", []))
-        approved_on = datetime.date.fromisoformat((les.get("approved") or _today())[:10])
+        try:
+            approved_on = datetime.date.fromisoformat((les.get("approved") or _today())[:10])
+        except ValueError:
+            approved_on = datetime.date.today()
         age = (datetime.date.today() - approved_on).days
         verdict = ("working (no repeat corrections)" if repeats == 0 else
                    f"corrected again {repeats}x since approval: reword it or check it is followed")

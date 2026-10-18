@@ -27,6 +27,8 @@ from pathlib import Path
 from . import secrets
 
 TYPES = ("decision", "task", "problem", "file", "link")
+TEXT_FIELDS = ("id", "text", "date", "branch", "commit", "session", "source", "reason", "origin", "scope",
+               "status", "key")
 MAX_MEMORIES = 3000          # per project; over it, routine automatic memories go first (see prune)
 MAX_TEXT = 500               # characters per memory
 SESSION_KEEP_DAYS = 60
@@ -126,7 +128,8 @@ def write_text(path: Path, content: str, private: bool = True) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
     try:
-        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        # half a character from a transcript ("\ud800") is written as "?", never failing the save (#394)
+        with os.fdopen(fd, "w", encoding="utf-8", errors="replace") as fh:
             fh.write(content)
         if not private:
             os.chmod(tmp, 0o644)
@@ -187,8 +190,9 @@ class Memory:
     # ------------------------------------------------------------ reading
 
     def all(self) -> list[dict]:
+        """Every well-formed memory; a line with a bad byte or a field of the wrong type is skipped."""
         try:
-            lines = self.path.read_text(encoding="utf-8").splitlines()
+            lines = self.path.read_text(encoding="utf-8", errors="replace").splitlines()
         except OSError:
             return []
         out = []
@@ -197,12 +201,14 @@ class Memory:
                 item = json.loads(line)
             except ValueError:
                 continue
-            if isinstance(item, dict) and item.get("type") in TYPES and item.get("text"):
+            if (isinstance(item, dict) and item.get("type") in TYPES and item.get("text")
+                    and isinstance(item.get("id"), str)
+                    and all(isinstance(item.get(k, ""), str) for k in TEXT_FIELDS)):
                 out.append(item)
         return out
 
     def forgotten(self) -> set[str]:
-        return set(read_json(self.dir / "forgotten.json", []))
+        return {i for i in read_json(self.dir / "forgotten.json", []) if isinstance(i, str)}
 
     # ------------------------------------------------------------ writing
 

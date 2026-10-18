@@ -91,8 +91,8 @@ def on_pre_compact(event: dict) -> str:
     if done:
         root, state = done
         folder = store.project_dir(root)
-        state["compactions"] = state.get("compactions", 0) + 1
-        capture.save_state(folder, state)
+        state = capture.change_state(folder, state["session"],
+                                     lambda s: s.update(compactions=s["compactions"] + 1))
         card.snapshot(folder, state)
         _publish(root, state)
     return ""
@@ -102,7 +102,7 @@ def on_session_end(event: dict) -> str:
     done = _capture(event)
     if done:
         root, state = done
-        state["ended"] = store.now()
-        capture.save_state(store.project_dir(root), state)
+        state = capture.change_state(store.project_dir(root), state["session"],
+                                     lambda s: s.update(ended=store.now()))
         _publish(root, state)
     return ""

@@ -124,8 +124,8 @@ def sessions(folder: Path) -> list[dict]:
     """Saved session states, most recently active first (empty sessions left out)."""
     out = []
     for path in (folder / "sessions").glob("*.json"):
-        state = store.read_json(path, {})
-        if state.get("session") and state.get("prompt_count"):
+        state = capture.typed(store.read_json(path, {}))
+        if state["session"] and state["prompt_count"]:
             out.append(state)
     return sorted(out, key=lambda s: s.get("updated", ""), reverse=True)
 
@@ -181,7 +181,7 @@ def write_handoff(folder: Path, state: dict) -> Path | None:
 def read_handoff(folder: Path, branch: str) -> str:
     try:
         return (folder / "handoffs" / f"{store.safe_name(branch or 'no-branch')}.md").read_text(
-            encoding="utf-8")
+            encoding="utf-8", errors="replace")
     except OSError:
         return ""
 
@@ -266,6 +266,11 @@ def snapshot(folder: Path, state: dict) -> Path:
     return path
 
 
+def _texts(value) -> list[str]:
+    """The text items of a list read from a file ([] when it is not a list)."""
+    return [i for i in value if isinstance(i, str)] if isinstance(value, list) else []
+
+
 def restore_text(folder: Path, session: str, helper: str, budget: int = RESTORE_CHARS) -> str:
     data = store.read_json(folder / "snapshots" / f"{store.safe_name(session, 64)}.json", {})
     if not data:
@@ -275,16 +280,16 @@ def restore_text(folder: Path, session: str, helper: str, budget: int = RESTORE_
     lines = ["## hafiz: restored after compaction",
              "Claude Code's compaction summary is the main account; these are the exact items hafiz "
              f"recorded before it, on branch {data.get('branch') or '(none)'}:"]
-    if data.get("note"):
+    if isinstance(data.get("note"), str) and data["note"]:
         lines.append(f"Where we stopped: {data['note']}")
-    if data.get("goal") and data.get("goal") != data.get("note"):
+    if isinstance(data.get("goal"), str) and data["goal"] and data["goal"] != data.get("note"):
         lines.append(f"Working on: {data['goal']}")
-    lines += data.get("plan") or []
+    lines += _texts(data.get("plan"))
     for title, key, limit in (("Open tasks", "tasks", 8), ("Decisions", "decisions", 6),
                               ("Open problems", "problems", 3), ("Files changed", "files", 12),
                               ("Commits", "commits", 5)):
-        if data.get(key):
-            lines.append(f"{title}: " + _join(data[key], limit, 160))
+        if _texts(data.get(key)):
+            lines.append(f"{title}: " + _join(_texts(data[key]), limit, 160))
     lines.append(f"More: `{helper} recall \"words\"`.")
     return fit(lines, budget)
 

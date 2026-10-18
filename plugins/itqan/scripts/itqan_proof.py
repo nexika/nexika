@@ -34,6 +34,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import itqan_files  # noqa: E402
 import itqan_secrets  # noqa: E402
 from itqan_guard import SECRET_PATTERNS  # noqa: E402
 from itqan_learn import data_home, project_root  # noqa: E402
@@ -385,16 +386,20 @@ def status_path() -> Path:
 
 
 def publish(root: Path, latest: Path) -> None:
-    """status/itqan.json: the latest proof per project, for mizan."""
+    """status/itqan.json: the latest proof per project, for mizan. Locked, so two projects proving at
+    once both stay; a file of another shape is started again (#394)."""
     path = status_path()
-    try:
-        current = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        current = {}
-    proofs = current.get("proofs") if isinstance(current, dict) else None
-    proofs = {k: v for k, v in (proofs or {}).items() if isinstance(v, str) and Path(v).is_file()}
-    proofs[str(root)] = str(latest)
-    _write(path, {"schema": STATUS_SCHEMA, "updated": int(time.time()), "proofs": proofs})
+    _ensure_dir(path.parent)
+    with itqan_files.locked(path):
+        try:
+            current = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+        except (OSError, ValueError):
+            current = {}
+        proofs = current.get("proofs") if isinstance(current, dict) else None
+        proofs = {k: v for k, v in (proofs if isinstance(proofs, dict) else {}).items()
+                  if isinstance(v, str) and Path(v).is_file()}
+        proofs[str(root)] = str(latest)
+        _write(path, {"schema": STATUS_SCHEMA, "updated": int(time.time()), "proofs": proofs})
 
 
 def save(root: Path, proof: dict) -> Path:
@@ -422,7 +427,9 @@ def ci_failure(root: Path, branch: str) -> dict:
         return {}
     if not isinstance(data, dict) or data.get("schema") != "nexika.tabib/1":
         return {}
-    entry = ((data.get("runs") or {}).get(str(root)) or {}).get(branch) or {}
+    runs = data.get("runs")
+    project = runs.get(str(root)) if isinstance(runs, dict) else None
+    entry = project.get(branch) if isinstance(project, dict) else None
     if not isinstance(entry, dict) or not entry.get("run"):
         return {}
     sha = str(entry.get("sha") or "")
@@ -447,7 +454,8 @@ def ui_check(root: Path) -> dict:
         return {}
     if not isinstance(data, dict) or data.get("schema") != "nexika.lawha/1":
         return {}
-    path = (data.get("checks") or {}).get(str(root))
+    checks = data.get("checks")
+    path = checks.get(str(root)) if isinstance(checks, dict) else None
     if not isinstance(path, str):
         return {}
     try:
@@ -461,14 +469,24 @@ def ui_check(root: Path) -> dict:
         return {}
     if rec.get("commit") != _git(root, "rev-parse", "--short", "HEAD"):
         return {}  # a check of another commit says nothing about this change
-    counts = rec.get("counts") or {}
-    problems = [p for p in (rec.get("problems") or [])[:8] if isinstance(p, dict)]
+    def listed(key: str) -> list:  # a field of another shape counts as empty (#394)
+        value = rec.get(key)
+        return value if isinstance(value, list) else []
+
+    def count(key: str) -> int:
+        counts = rec.get("counts")
+        try:
+            return int((counts.get(key) if isinstance(counts, dict) else 0) or 0)
+        except (TypeError, ValueError):
+            return 0
+
+    problems = [p for p in listed("problems")[:8] if isinstance(p, dict)]
     return {"verdict": "pass" if rec.get("verdict") == "pass" else "fail",
             "url": clean(str(rec.get("url") or "")),
-            "widths": [w for w in rec.get("widths") or [] if isinstance(w, int)][:12],
-            "themes": [str(t) for t in rec.get("themes") or []][:2],
-            "dirs": [str(d) for d in rec.get("dirs") or []][:2],
-            "fail": int(counts.get("fail") or 0), "warn": int(counts.get("warn") or 0),
+            "widths": [w for w in listed("widths") if isinstance(w, int)][:12],
+            "themes": [str(t) for t in listed("themes")][:2],
+            "dirs": [str(d) for d in listed("dirs")][:2],
+            "fail": count("fail"), "warn": count("warn"),
             "problems": [clean(str(p.get("message") or "")) for p in problems],
             "created": str(rec.get("created") or ""), "dirty": bool(rec.get("dirty")), "by": "lawha"}
 

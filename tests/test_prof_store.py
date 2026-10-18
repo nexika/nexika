@@ -441,3 +441,138 @@ def test_main_hook_never_fails(store, monkeypatch):
 def test_main_unknown_command_prints_usage(store, capsys):
     assert store.main(["prof_store.py", "nope"]) == 2
     assert "Commands:" in capsys.readouterr().out
+
+
+# ---------------------------------------------------------------- #394: bad bytes, torn writes, two sessions
+
+
+@pytest.mark.parametrize("damaged", ["profile", "report", "topic"])
+def test_one_bad_byte_does_not_hide_the_learner_context(store, monkeypatch, capsys, damaged):
+    # a non-UTF-8 byte in any file session-start reads lost the whole note, at every session start
+    store.merge_report(write_report(
+        store, "2026-10-04_1500_abcd1234.md", ["- [missed] py :: Python :: generators :: no yield"],
+        extra="## Weak areas & logic gaps\n- confuses yield with return\n"))
+    store.PROFILE.write_text("# Learner profile\n- Level: junior\n", encoding="utf-8")
+    path = {"profile": store.PROFILE, "report": store.REPORTS / "2026-10-04_1500_abcd1234.md",
+            "topic": store.TOPICS / "py.md"}[damaged]
+    path.write_bytes(path.read_bytes() + b"\xff caf\xe9\n")
+    os.utime(path, (time.time() + 5, time.time() + 5))     # the Markdown topic counts as edited
+    monkeypatch.setattr("sys.stdin", io.StringIO('{"session_id": "s1"}'))
+
+    assert store.main(["prof_store.py", "session-start"]) == 0
+    out = capsys.readouterr().out
+    assert "- Level: junior" in out and "- confuses yield with return" in out
+    assert "[missed] generators" in out
+    assert not store.LOG.exists() or "Error" not in store.LOG.read_text()
+
+
+def test_a_report_with_a_bad_byte_still_merges(store):
+    path = write_report(store, "2026-10-05_1000_abcd1234.md", ["- [shaky] py :: Python :: loops :: hints"])
+    path.write_bytes(path.read_bytes() + b"- [missed] py :: Python :: sets :: caf\xe9\n")
+    assert store.merge_report(path) == 2
+    assert store.load_topic("py")[1]["sets"][0] == "missed"
+
+
+def test_a_save_that_fails_part_way_keeps_the_topic(store):
+    # topic files were rewritten in place: a failed write left an empty .json and the streaks were lost
+    store.merge_report(write_report(store, "2026-10-05_1000_abcd1234.md",
+                                    ["- [understood] py :: Python :: loops :: fine"]))
+    before = (store.TOPICS / "py.json").read_text(encoding="utf-8")
+    with pytest.raises(UnicodeEncodeError):   # cannot be encoded: the write stops half way
+        store.save_topic("py", "Python", {"loops": ("missed", "loops \ud800", "-", TODAY.isoformat())})
+    assert (store.TOPICS / "py.json").read_text(encoding="utf-8") == before
+    assert not list(store.TOPICS.glob("*.tmp")) and not list(store.TOPICS.glob(".*.tmp"))
+    assert os.stat(store.TOPICS / "py.json").st_mode & 0o077 == 0     # owner-only, like the family files
+
+
+def test_two_sessions_merging_one_topic_keep_both_results(store, monkeypatch):
+    # a background auto-report and /prof:report in another session merged the same topic: the last
+    # writer dropped the other's concepts. Session B starts while A sits between its load and its save.
+    import fcntl
+    import threading
+
+    monkeypatch.setattr(store.prof_status, "publish", lambda *a, **k: None)
+    real_load, real_flock = store._load, fcntl.flock
+    b_done_or_waiting = threading.Event()
+
+    def flock(fd, op):
+        if threading.current_thread() is not threading.main_thread():
+            b_done_or_waiting.set()      # B reached the lock: A holds it, so B waits for A's save
+        return real_flock(fd, op)
+
+    monkeypatch.setattr(fcntl, "flock", flock)
+    a = write_report(store, "2026-10-05_1000_aaaa0001.md", ["- [understood] py :: Python :: loops :: fine"])
+    b = write_report(store, "2026-10-05_1001_bbbb0001.md", ["- [missed] py :: Python :: await :: wrong"])
+    other = []
+
+    def run_b():
+        try:
+            store.merge_report(b)
+        finally:
+            b_done_or_waiting.set()
+
+    def load(slug):
+        result = real_load(slug)
+        if not other:
+            other.append(threading.Thread(target=run_b))
+            other[0].start()
+            assert b_done_or_waiting.wait(10)
+        return result
+
+    monkeypatch.setattr(store, "_load", load)
+    store.merge_report(a)
+    other[0].join(10)
+    entries = real_load("py")[1]
+    assert set(entries) == {"loops", "await"}
+
+
+def test_auto_report_setting_survives_a_failed_write(store, monkeypatch):
+    store.set_auto_report(True)
+    monkeypatch.setattr(store.json, "dumps", lambda *a, **k: '{"auto_report": false, "x": "\ud800"}')
+    with pytest.raises(UnicodeEncodeError):
+        store.set_auto_report(False)
+    monkeypatch.undo()
+    assert store.auto_report_setting() is True
+    assert [p.name for p in store.HOME.iterdir() if p.name.endswith(".tmp")] == []
+
+
+def test_an_auto_report_that_fails_to_save_leaves_no_half_report(store, monkeypatch):
+    # a half-written report counted as this session's report and showed at the next session start
+    store.TMP.mkdir(parents=True)
+    convo = store.TMP / "abcd1234.txt"
+    convo.write_text("LEARNER: hi")
+    fake_claude(store, monkeypatch, VALID_REPORT + "- [missed] py :: Python :: sets :: \ud800\n")
+    assert store.main(["prof_store.py", "write-auto-report", "abcd1234zz", str(convo)]) == 1
+    assert list(store.REPORTS.iterdir()) == []
+    assert store.report_for_session("abcd1234zz") is None
+
+
+def test_one_odd_concept_does_not_drop_the_topic(store):
+    store.TOPICS.mkdir(parents=True)
+    (store.TOPICS / "py.json").write_text(json.dumps({"title": "Python", "concepts": [
+        "junk", {"concept": "loops", "status": "understood", "evidence": "-", "date": OLD, "streak": 2}]}))
+    assert store.load_streaks("py") == {"loops": 2}
+
+
+def test_hook_input_that_is_not_an_object_is_ignored(store, monkeypatch, capsys):
+    store.PROFILE.parent.mkdir(parents=True)
+    store.PROFILE.write_text("# Learner profile\n", encoding="utf-8")
+    monkeypatch.setattr("sys.stdin", io.StringIO('["not", "a", "dict"]'))
+    assert store.main(["prof_store.py", "session-start"]) == 0
+    assert "Prof plugin" in capsys.readouterr().out
+
+
+def test_odd_transcript_lines_do_not_stop_the_report(store, tmp_path):
+    transcript = write_transcript(tmp_path / "t.jsonl", [
+        {"type": "user", "message": "odd"}, assistant({"type": "tool_use", "name": "Skill", "input": "x"}),
+        slash("/prof:learn", "loops"), user("a"), user("b")])
+    assert store.extract_conversation(transcript)[1:] == (True, 3)
+
+
+def test_half_a_character_in_the_transcript_does_not_stop_the_report(store, tmp_path, popen_calls):
+    store.set_auto_report(True)
+    rows = [slash("/prof:learn", "loops"), user("a \ud800"), user("b"), user("c")]
+    path = tmp_path / "t.jsonl"
+    path.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")   # "\ud800" escaped
+    store.session_end({"session_id": "abcd1234zz", "transcript_path": str(path), "cwd": str(tmp_path)})
+    assert len(popen_calls) == 1

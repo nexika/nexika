@@ -866,3 +866,93 @@ def test_session_end_counts_asks_the_user_approved(tmp_path, repo):
     run_hooks("session-end", {"session_id": "eeee5555zz", "transcript_path": str(transcript)}, home)
     summary = json.loads((home / "sessions.jsonl").read_text().splitlines()[-1])
     assert (summary["ask"], summary["ask_approved"]) == (2, 1)
+
+
+# ---------------------------------------------------------------- bad and shared files (#394)
+
+
+def test_a_bad_status_file_does_not_break_the_next_proof(proof, tmp_path):
+    status = proof.status_path()
+    status.parent.mkdir(parents=True)
+    status.write_text('{"proofs": [1]}')
+    latest = tmp_path / "latest.json"
+    latest.write_text("{}")
+    proof.publish(tmp_path / "a", latest)
+    assert json.loads(status.read_text())["proofs"] == {str(tmp_path / "a"): str(latest)}
+
+
+def test_two_projects_publishing_at_once_both_stay(proof, tmp_path, monkeypatch):
+    import threading
+
+    latest_a, latest_b = tmp_path / "a.json", tmp_path / "b.json"
+    latest_a.write_text("{}")
+    latest_b.write_text("{}")
+    real_write, other = proof._write, []
+
+    def write(path, data):  # between reading the status file and writing it back
+        if path == proof.status_path() and not other:
+            other.append(threading.Thread(target=proof.publish, args=(tmp_path / "b", latest_b), daemon=True))
+            other[0].start()
+            other[0].join(0.5)  # done at once unless the file is locked
+        real_write(path, data)
+
+    monkeypatch.setattr(proof, "_write", write)
+    proof.publish(tmp_path / "a", latest_a)
+    other[0].join(10)
+    proofs = json.loads(proof.status_path().read_text())["proofs"]
+    assert proofs == {str(tmp_path / "a"): str(latest_a), str(tmp_path / "b"): str(latest_b)}
+
+
+def test_odd_tabib_and_lawha_records_do_not_break_the_proof(proof, tmp_path, monkeypatch):
+    status, root = proof.status_path().parent, tmp_path / "p"
+    status.mkdir(parents=True)
+    for runs in ([1], {str(root): [1]}, {str(root): {"main": [1]}}):
+        (status / "tabib.json").write_text(json.dumps({"schema": "nexika.tabib/1", "runs": runs}))
+        assert proof.ci_failure(root, "main") == {}
+    (status / "lawha.json").write_text(json.dumps({"schema": "nexika.lawha/1", "checks": [1]}))
+    assert proof.ui_check(root) == {}
+
+    monkeypatch.setenv("LAWHA_HOME", str(tmp_path / "lawha"))
+    monkeypatch.setattr(proof, "_git", lambda root, *args: "abc1234")
+    record = tmp_path / "lawha" / "checks" / "r.json"
+    record.parent.mkdir(parents=True)
+    record.write_text(json.dumps({"schema": "nexika.lawha.check/1", "commit": "abc1234", "verdict": "fail",
+                                  "counts": {"fail": "many", "warn": [2]}, "problems": 5, "widths": 3,
+                                  "themes": 7, "dirs": None}))
+    (status / "lawha.json").write_text(json.dumps({"schema": "nexika.lawha/1",
+                                                   "checks": {str(root): str(record)}}))
+    ui = proof.ui_check(root)
+    assert ui["verdict"] == "fail" and ui["fail"] == 0 and ui["problems"] == [] and ui["widths"] == []
+    record.write_text(json.dumps({"schema": "nexika.lawha.check/1", "commit": "abc1234", "counts": [1]}))
+    assert proof.ui_check(root)["fail"] == 0
+
+
+def test_the_guard_beside_haris_never_breaks_on_odd_events(tmp_path):
+    haris = tmp_path / "haris"
+    (haris / "active").mkdir(parents=True)
+    (haris / "active" / "s1").write_text("")
+    env = {**os.environ, "ITQAN_HOME": str(tmp_path / "home"), "HARIS_HOME": str(haris),
+           "CLAUDE_CONFIG_DIR": str(tmp_path / "claude")}
+    gone = tmp_path / "gone"  # the session's folder was deleted and the event names no cwd
+    gone.mkdir()
+    event = {"session_id": "s1", "tool_name": "Bash", "tool_input": {"command": "ls"}}
+    res = subprocess.run(["sh", "-c", 'cd "$1" && rmdir "$1" && exec "$2" "$3"', "sh", str(gone),
+                          sys.executable, str(GUARD)], input=json.dumps(event), capture_output=True,
+                         text=True, env=env)
+    assert res.returncode == 0 and res.stderr == ""
+
+    odd = {"session_id": "s1", "cwd": str(tmp_path), "tool_name": "Bash", "tool_input": ["ls"]}
+    res = subprocess.run([sys.executable, str(GUARD)], input=json.dumps(odd), capture_output=True, text=True,
+                         env=env)
+    assert res.returncode == 0 and res.stderr == ""
+
+
+def test_session_end_survives_odd_guard_entries(tmp_path):
+    home = tmp_path / "home"
+    home.mkdir()
+    (home / "guard.jsonl").write_bytes(
+        b'{"session": "abcdef12", "decision": "ask", "tool_use_id": ["x"], "rule": {"a": 1}}\n'
+        b'{"session": "abcdef12", "decision": "deny", "rule": "r"}\n\xff\n')
+    run_hooks("session-end", {"session_id": "abcdef123"}, home)
+    entry = json.loads((home / "sessions.jsonl").read_text())
+    assert entry["deny"] == 1 and entry["ask"] == 1

@@ -392,7 +392,7 @@ def load(root: Path, config: dict | None = None, max_age: float = 0) -> dict:
     current = fingerprint(root, files, config)
     try:
         cached = json.loads(cache.read_text(encoding="utf-8"))
-        if cached.get("fingerprint") == current:
+        if isinstance(cached, dict) and cached.get("fingerprint") == current:  # anything else is rebuilt
             return cached
     except (OSError, ValueError):
         pass

@@ -466,3 +466,144 @@ def test_insights_report_the_guard_false_positive_rate(learn, repo):
         learn._append("sessions.jsonl", {"ts": learn._now(), "session": "s", "deny": 0, "ask": asked,
                                          "ask_approved": approved, "rules": []})
     assert "asks you approved: 3 of 4 (75%)" in learn.cmd_insights(repo)
+
+
+# ---------------------------------------------------------------- bad and shared files (#394)
+
+
+def test_a_broken_byte_in_signals_does_not_stop_learning(learn, repo, tmp_path, monkeypatch, nexika_home):
+    nexika_home.mkdir()
+    (nexika_home / "settings.json").write_text('{"background_calls": "on"}')
+    calls = []
+    monkeypatch.setattr(learn, "project_root", lambda cwd: repo)
+    monkeypatch.setattr(learn.subprocess, "Popen", lambda *a, **kw: calls.append(a))
+    learn.data_home().mkdir(parents=True)
+    # a writer killed in the middle of a character
+    (learn.data_home() / "signals.jsonl").write_bytes(b'{"prompt": "caf\xc3\n')
+    learn.hook_signal({"prompt": "no, we use pnpm", "session_id": "sess-1234", "cwd": str(repo)})
+    transcript = write_transcript(tmp_path / "t.jsonl", [
+        msg("assistant", [{"type": "text", "text": "Used npm."}]), msg("user", "no, we use pnpm")])
+
+    learn.hook_extract({"session_id": "sess-1234", "transcript_path": str(transcript), "cwd": str(repo)})
+    assert len(calls) == 1
+    assert "corrections captured: 1" in learn.cmd_insights(repo)
+
+
+def test_insights_skip_log_entries_of_the_wrong_type(learn, repo):
+    now = learn._now()
+    for entry in ({"ts": 5, "cwd": str(repo), "kind": "skill", "name": "a:b"},
+                  {"ts": now, "cwd": 7, "kind": "skill", "name": "c:d"},
+                  {"ts": now, "cwd": str(repo), "kind": "skill", "name": ["x"]},
+                  {"ts": now, "cwd": str(repo), "kind": "skill", "name": "itqan:review"}):
+        learn._append("usage.jsonl", entry)
+    learn._append("guard.jsonl", {"ts": None, "decision": "deny"})
+    learn._append("guard.jsonl", {"ts": now, "decision": "ask", "rule": ["x"]})
+    learn._append("signals.jsonl", {"ts": {"a": 1}, "cwd": str(repo)})
+    learn._append("sessions.jsonl", {"ts": now, "ask": "two", "ask_approved": [1]})
+    learn._append("extract.jsonl", {"ts": 3, "cwd": str(repo)})
+
+    out = learn.cmd_insights(repo)
+    assert "workflows: itqan:review 1" in out and "other skills used: none" in out
+    assert "guard (all projects): 0 refused, 1 asked" in out
+    assert "corrections captured: 0" in out and "learning:" not in out
+
+
+def test_malformed_lessons_in_the_store_are_left_out(learn, repo):
+    proposed_store(learn, repo, "use-pnpm")
+    path = learn._store_path(repo)
+    store = json.loads(path.read_text())
+    store["lessons"].update({
+        "a": "a string", "b": {"rule": "no status"}, "c": {"rule": 5, "status": "proposed"},
+        "d": {"rule": "Rule d.", "status": "proposed", "evidence": "x", "kind": 1},
+        "e": {"rule": "Rule e.", "status": "approved", "approved": "someday", "violations": [{"ts": 1}]},
+    })
+    path.write_text(json.dumps(store))
+
+    assert "2 rule proposal(s)" in learn.session_note(repo)
+    proposals = learn.cmd_proposals(repo)
+    assert "[use-pnpm]" in proposals and "[d] Rule d.   (preference, 0 corrections)" in proposals
+    assert "[a]" not in proposals and "[b]" not in proposals and "[c]" not in proposals
+    assert "[e] 0d old: working" in learn.cmd_insights(repo)
+    assert learn.cmd_approve(repo, "d", None).startswith("Approved [d] Rule d.")
+
+
+def test_two_writers_of_the_store_do_not_collide(learn, repo, monkeypatch):
+    real, nested = os.replace, []
+
+    def replace(src, dst):
+        if not nested:  # another writer saves between this one's write and its rename
+            nested.append(src)
+            learn.save_store(repo, {"root": str(repo), "lessons": {}})
+        return real(src, dst)
+
+    monkeypatch.setattr(os, "replace", replace)
+    proposed_store(learn, repo, "use-pnpm")
+    assert "use-pnpm" in learn.load_store(repo)["lessons"]
+
+
+def test_an_approval_during_an_extraction_is_kept(learn, repo, monkeypatch):
+    import threading
+
+    proposed_store(learn, repo, "use-pnpm")
+    payload = learn.data_home() / "p.txt"
+    payload.write_text("ASSISTANT: x\nUSER: no")
+    answer = json.dumps([lesson("tests-first", "Write tests first.")])
+    real_run, real_merge, approver = subprocess.run, learn.merge_lessons, []
+
+    def run(cmd, *args, **kw):
+        if cmd[0] == "/fake/claude":
+            return subprocess.CompletedProcess(cmd, 0, stdout=answer, stderr="")
+        return real_run(cmd, *args, **kw)
+
+    def merge(store, lessons, when=None):  # between reading the store and writing it back
+        approver.append(threading.Thread(target=learn.cmd_approve, args=(repo, "use-pnpm", None),
+                                         daemon=True))
+        approver[0].start()
+        approver[0].join(0.5)  # done at once unless the store is locked
+        real_merge(store, lessons, when)
+
+    monkeypatch.setattr(learn.shutil, "which", lambda name: "/fake/claude")
+    monkeypatch.setattr(learn.subprocess, "run", run)
+    monkeypatch.setattr(learn, "merge_lessons", merge)
+    assert learn.run_extract("sess", payload, repo) == 0
+    approver[0].join(10)
+    lessons = learn.load_store(repo)["lessons"]
+    assert lessons["use-pnpm"]["status"] == "approved" and lessons["tests-first"]["status"] == "candidate"
+
+
+def test_a_broken_byte_in_the_rules_file_is_read_and_kept(learn, repo):
+    proposed_store(learn, repo, "use-pnpm", "tests-first")
+    learn.cmd_approve(repo, "use-pnpm", None)
+    path = repo / ".itqan" / "rules.md"
+    path.write_bytes(path.read_bytes() + b"- caf\xe9 au lait\n")  # Latin-1 from another editor
+
+    assert "- Rule use-pnpm." in learn.session_note(repo)
+    assert "[use-pnpm] Rule use-pnpm." in learn.cmd_rules(repo)
+    learn.cmd_approve(repo, "tests-first", None)
+    data = path.read_bytes()
+    assert b"- caf\xe9 au lait\n" in data and b"- [tests-first] Rule tests-first." in data
+
+
+def test_the_rules_file_is_replaced_whole(learn, repo, monkeypatch):
+    proposed_store(learn, repo, "use-pnpm", "tests-first")
+    real, replaced = os.replace, []
+    monkeypatch.setattr(os, "replace",
+                        lambda src, dst: (replaced.append(os.path.basename(dst)), real(src, dst)))
+    learn.cmd_approve(repo, "use-pnpm", None)  # creates the file
+    learn.cmd_approve(repo, "tests-first", None)  # rewrites it
+    assert replaced.count("rules.md") == 2
+    assert sorted(p.name for p in (repo / ".itqan").iterdir()) == ["rules.md"]
+    umask = os.umask(0)
+    os.umask(umask)
+    assert (repo / ".itqan" / "rules.md").stat().st_mode & 0o777 == 0o666 & ~umask
+
+
+def test_a_linked_rules_file_gets_the_rule_and_stays_a_link(learn, repo, tmp_path):
+    shared = tmp_path / "shared-rules.md"
+    shared.write_text("# Shared\n")
+    (repo / ".itqan").mkdir(exist_ok=True)
+    (repo / ".itqan" / "rules.md").symlink_to(shared)
+    proposed_store(learn, repo, "use-pnpm", "tests-first")
+    learn.cmd_approve(repo, "use-pnpm", None)
+    assert (repo / ".itqan" / "rules.md").is_symlink()
+    assert "use-pnpm" in shared.read_text()

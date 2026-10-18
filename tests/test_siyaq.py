@@ -567,3 +567,81 @@ def test_one_background_build_per_project(repo, monkeypatch):
     assert not (idx.project_dir(repo) / "index.json").exists()
     lock.rmdir()
     assert idx.refresh(repo) is True and idx.saved(repo)["n"] == 5 and not lock.exists()
+
+
+# ---------------------------------------------------------------- damaged files heal (#394)
+
+
+@pytest.mark.parametrize("content", ["[]", '"index"', "null", "\xff\xfe broken"])
+def test_an_index_file_of_the_wrong_type_is_rebuilt(repo, content):
+    cache = idx.project_dir(repo) / "index.json"
+    cache.parent.mkdir(parents=True)
+    cache.write_bytes(content.encode("latin-1"))
+    assert idx.load(repo)["n"] == 5
+    assert idx.saved(repo)["n"] == 5
+    assert "Deployment > Rollback" in context_of(hooks.on_prompt(prompt_event(repo, "how do we roll back?")))
+
+
+@pytest.mark.parametrize("data", [{"shown": [], "opened": []}, {"shown": {}, "opened": {}},
+                                  {"shown": "x", "opened": 3}, {"shown": None}])
+def test_a_session_file_of_the_wrong_shape_still_gets_injections(repo, data):
+    path = state.data_home() / "sessions" / "s1.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps(data))
+    assert state.load_session("s1") == {"shown": {}, "opened": []}
+    assert "Deployment > Rollback" in context_of(hooks.on_prompt(prompt_event(repo, "how do we roll back?")))
+    hooks.on_tool(tool_event(repo, "docs/deploy.md"))  # records the opened section
+    assert state.load_session("s1")["opened"] == ["docs/deploy.md#deployment-rollback"]
+
+
+def test_stats_survive_a_damaged_events_file(repo):
+    hooks.on_prompt(prompt_event(repo, "how do we roll back a release?"))
+    events = idx.project_dir(repo) / "events.jsonl"
+    with events.open("ab") as fh:
+        fh.write(b'{"ts": 1, "type": "shown"}\n{"ts": "2099-01-01", "type": "opened"}\n'
+                 b'{"ts": "2099-01-01", "type": "shown", "id": "x", "chars": "many"}\n'
+                 b'{"ts": "2099-01-01", "type": "miss", "terms": 5}\n\xff\xfe not text\n')
+    assert all(isinstance(e["ts"], str) for e in state.read_events(repo, "2000"))
+    assert "injections: 1 (" in cli.cmd_stats(repo)  # the damaged lines are skipped
+
+
+def test_stats_survive_an_events_file_that_is_not_utf8(repo):
+    folder = idx.project_dir(repo)
+    folder.mkdir(parents=True)
+    (folder / "events.jsonl").write_bytes(b'\xff{"ts": "2099-01-01", "type": "miss", "terms": ["kafka"]}\n')
+    state.read_events(repo)
+    assert "injections: 0" in cli.cmd_stats(repo)
+
+
+def test_siyaq_index_writes_the_index_atomically(repo, monkeypatch):
+    written = []
+    real = state.write_atomic
+    monkeypatch.setattr(state, "write_atomic",
+                        lambda path, data: (written.append(path.name), real(path, data)))
+    cli.cmd_index(repo)
+    assert written == ["index.json"] and idx.saved(repo)["n"] == 5
+
+
+def test_a_session_file_removed_by_another_session_does_not_stop_cleanup(repo, monkeypatch):
+    folder = state.data_home() / "sessions"
+    folder.mkdir(parents=True)
+    (folder / "gone.json").write_text("{}")
+    real_stat = type(folder).stat
+
+    def stat(path, *args, **kwargs):
+        if path.name == "gone.json":
+            raise FileNotFoundError(path)
+        return real_stat(path, *args, **kwargs)
+
+    monkeypatch.setattr(type(folder), "stat", stat)
+    state.gc()
+
+
+def test_a_damaged_mizan_status_file_is_ignored(tmp_path, monkeypatch):
+    home = tmp_path / "status"
+    monkeypatch.setenv("NEXIKA_STATUS_HOME", str(home))
+    (home / "mizan").mkdir(parents=True)
+    for data in ({"schema": "nexika.mizan/1", "updated": "soon", "level": "full"},
+                 {"schema": "nexika.mizan/1", "updated": [1], "level": "full"}):
+        (home / "mizan" / "s1.json").write_text(json.dumps(data))
+        assert hooks.context_level("s1") == ""
