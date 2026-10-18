@@ -61,8 +61,8 @@ def on_pre_tool_use(event: dict) -> str:
         decision = policy.Decision(c.ASK, "error", f"haris hit an internal error ({type(exc).__name__}) "
                                                    f"and could "
                                                    "not check this, so it asks you instead.")
-    changed = policy.remember(data, decision)  # remotes moved and files staged with a secret (#357)
-    if decision.verdict in (c.ASK, c.DENY) or decision.unattended:
+    logged = decision.verdict in (c.ASK, c.DENY) or bool(decision.unattended)
+    if logged:
         entry = {"session": session[:8], "project": os.path.basename(root), "tool": event.get("tool_name"),
                  "decision": "unattended" if decision.unattended == "passed" else decision.verdict,
                  "class": decision.cls, "reason": decision.reason, "detail": _detail(event),
@@ -70,11 +70,20 @@ def on_pre_tool_use(event: dict) -> str:
         if decision.unattended:
             entry["unattended"] = cfg["unattended_why"]
         state.log(entry)
-        changed = policy.remember_ask(data, decision) or changed
-        if decision.unattended:
-            changed = remember_unattended(data, decision.unattended, _detail(event)) or changed
-    if changed:
-        state.save_session(session, {**data, "project": data.get("project") or root})
+
+    def keep(fresh: dict) -> bool:
+        """What this call leaves behind for later ones (#357, #210), noted on the session as it is now:
+        a parallel call may have set the taint since `data` was read (#394)."""
+        changed = policy.remember(fresh, decision)  # remotes moved and files staged with a secret
+        if logged:
+            changed = policy.remember_ask(fresh, decision) or changed
+            if decision.unattended:
+                changed = remember_unattended(fresh, decision.unattended, _detail(event)) or changed
+        if changed:
+            fresh["project"] = fresh.get("project") or root
+        return changed
+    if decision.learned or logged:
+        state.update_session(session, keep)
     if cfg["mode"] == "watch" or decision.verdict == c.PASS:
         return ""
     return _out("PreToolUse", permissionDecision=decision.verdict,
@@ -91,7 +100,7 @@ def remember_unattended(data: dict, how: str, detail: str) -> bool:
         earlier = [d for d in data.get("unattended_passed") or [] if isinstance(d, str)]
         data["unattended_passed"] = (earlier + [secrets.redact(detail)[:120]])[-UNATTENDED_KEPT:]
     else:
-        data["unattended_refused"] = int(data.get("unattended_refused") or 0) + 1
+        data["unattended_refused"] = state.count(data.get("unattended_refused")) + 1
     data["unattended_told"] = False
     return True
 
@@ -102,13 +111,20 @@ def on_stop(event: dict) -> str:
     session = state.safe_session(str(event.get("session_id") or ""))
     if not session:
         return ""
-    data = state.load_session(session)
-    passed = [d for d in data.get("unattended_passed") or [] if isinstance(d, str)]
-    refused = int(data.get("unattended_refused") or 0)
-    if data.get("unattended_told", True) or not (passed or refused):
+    found = {}
+
+    def tell(data: dict) -> bool:
+        passed = [d for d in data.get("unattended_passed") or [] if isinstance(d, str)]
+        refused = state.count(data.get("unattended_refused"))
+        if data.get("unattended_told", True) or not (passed or refused):
+            return False
+        data["unattended_told"] = True
+        found.update(passed=passed, refused=refused)
+        return True
+    state.update_session(session, tell)
+    if not found:
         return ""
-    data["unattended_told"] = True
-    state.save_session(session, data)
+    passed, refused = found["passed"], found["refused"]
     return json.dumps({"systemMessage": unattended.summary(passed, refused)}, ensure_ascii=False)
 
 
@@ -146,11 +162,11 @@ def on_post_tool_use(event: dict) -> str:
     tracked = _tracked_file(tool, event, root)
     if tracked:  # a committed file of this repo is less likely an attack than a web page: shorter caution
         turns = min(turns, 1)
-    data = state.load_session(session)
-    data.update({"taint": max(int(data.get("taint") or 0), turns), "taint_reason": f"{hits[0]} (in {tool} "
-                                                                                   f"output)",
-                 "project": root})
-    state.save_session(session, data)
+    def taint(data: dict) -> bool:
+        data.update({"taint": max(state.count(data.get("taint")), turns),
+                     "taint_reason": f"{hits[0]} (in {tool} output)", "project": root})
+        return True
+    state.update_session(session, taint)
     state.log({"session": session[:8], "project": os.path.basename(root), "tool": tool, "decision": "taint",
                "class": "prompt-injection", "reason": "; ".join(hits), "detail": _detail(event),
                "source": "repo file" if tracked else "tool output"})
@@ -202,10 +218,12 @@ def on_user_prompt_submit(event: dict) -> str:
     cwd, root, cfg = _context(event)
     if cfg["mode"] == "off":
         return ""
-    data = state.load_session(session)
-    if int(data.get("taint") or 0) > 0:
-        data["taint"] = int(data["taint"]) - 1
-        state.save_session(session, data)
+    def count_down(data: dict) -> bool:
+        if state.count(data.get("taint")) <= 0:
+            return False
+        data["taint"] = state.count(data.get("taint")) - 1
+        return True
+    state.update_session(session, count_down)
     m = ALLOW_PROMPT.match(str(event.get("prompt") or ""))
     if not m:
         return ""

@@ -452,8 +452,16 @@ def fetch_ci(info: dict, pr: dict | None) -> dict:
 
 # ------------------------------------------------------------------ cache and background refresh
 
+def _seconds(value) -> float:
+    """A time from the cache; 0 (long ago) when it is not a number (#394)."""
+    try:
+        return float(value or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def fresh(entry: dict | None, ttl: float) -> bool:
-    return bool(entry) and time.time() - float(entry.get("fetched") or 0) < ttl
+    return bool(entry) and time.time() - _seconds(entry.get("fetched")) < ttl
 
 
 def ci_ttl(entry: dict | None) -> float:
@@ -462,15 +470,17 @@ def ci_ttl(entry: dict | None) -> float:
 
 def idle(data: dict, ci: dict | None) -> bool:
     """Nothing has changed for IDLE_AFTER seconds and no CI run is going: poll less."""
-    changed = float(data.get("changed") or 0)
+    changed = _seconds(data.get("changed"))
     return bool(changed) and time.time() - changed > IDLE_AFTER and (ci or {}).get("state") != "running"
 
 
 def cached(info: dict) -> dict:
     """{prs, ci} from the cache (either may be None: not fetched yet), and whether a refresh is due."""
     data = load_cache(info["repo"])
-    prs = data.get("prs")
-    ci = (data.get("ci") or {}).get(info.get("branch", ""))
+    prs = data.get("prs") if isinstance(data.get("prs"), dict) else None
+    branches = data.get("ci") if isinstance(data.get("ci"), dict) else {}
+    ci = branches.get(info.get("branch", ""))
+    ci = ci if isinstance(ci, dict) else None
     if ci and ci.get("head") != info.get("head"):
         ci = {**ci, "stale": True}  # a new commit: the old result stays shown until the new one is in
     factor = IDLE_FACTOR if idle(data, ci) else 1

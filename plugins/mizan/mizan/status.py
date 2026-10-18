@@ -64,6 +64,14 @@ def read_json(path: Path) -> dict:
     return data if isinstance(data, dict) else {}
 
 
+def updated(data: dict) -> float:
+    """When the file was written, or 0 (long ago) when it holds no usable time."""
+    try:
+        return float(data.get("updated") or 0)
+    except (TypeError, ValueError, OverflowError):
+        return 0.0
+
+
 def publish(plugin: str, data: dict, session: str = "") -> bool:
     path = path_for(plugin, session)
     if path is None:
@@ -81,7 +89,7 @@ def read(plugin: str, session: str = "", max_age: float = 0) -> dict:
     data = read_json(path) if path else {}
     if data.get("schema") != schema(plugin):
         return {}
-    if max_age and time.time() - float(data.get("updated") or 0) > max_age:
+    if max_age and time.time() - updated(data) > max_age:
         return {}
     return data
 
@@ -98,7 +106,7 @@ def sessions(plugin: str) -> list[dict]:
         data = read_json(path)
         if data.get("schema") != schema(plugin):
             continue
-        if time.time() - float(data.get("updated") or 0) > KEEP_SECONDS:
+        if time.time() - updated(data) > KEEP_SECONDS:
             try:
                 path.unlink()
             except OSError:

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import math
 import os
 import subprocess
 import sys
@@ -129,16 +130,17 @@ def manar_audit(repo: str) -> dict:
     """manar's last audit of this project: its checklist score, site and date."""
     found = _entry("manar", "audits", repo)
     score = found.get("score")
-    if not isinstance(score, (int, float)) or isinstance(score, bool):
+    if not isinstance(score, (int, float)) or isinstance(score, bool) or not math.isfinite(score):
         return {}
     return {"score": int(score), "target": str(found.get("target") or ""),
             "date": str(found.get("date") or "")}
 
 
 def _int(value) -> int:
+    """A count from another plugin's file; 0 for anything else (a list, NaN, Infinity) (#394)."""
     try:
         return int(value or 0)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return 0
 
 
