@@ -109,7 +109,9 @@ python3 benchmarks/agent/bench.py context --model sonnet --task django__django-1
 
 `pipeline` skips any task whose own gold patch doesn't grade as resolved, and lists it in
 `excluded.json`. A run that ends on an API failure, such as a usage limit, is marked invalid and
-run again on the next start. It never counts as a failed task.
+run again on the next start. It never counts as a failed task. After 3 tries in all (`--max-attempts`),
+a run is given up: it stays invalid with "gave up after 3 attempts" in its reason, so a task that always
+fails doesn't cost money on every start.
 
 Each run also records:
 - `ran_tests`: whether the agent ran the project's tests;

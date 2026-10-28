@@ -143,19 +143,42 @@ def make_cfg(args):
     }
 
 
-def run_order(order, rows, cfg, base, jobs):
+MAX_ATTEMPTS = 3
+
+
+def attempts_made(out_dir) -> int:
+    """How many times a run was tried: the earlier attempts kept in attempts/<n>/, and the files of the
+    last one (a run that crashed before writing meta.json still leaves its stream)."""
+    out = Path(out_dir)
+    if not out.is_dir():
+        return 0
+    kept = out / "attempts"
+    earlier = sum(1 for p in kept.iterdir() if p.name.isdigit()) if kept.is_dir() else 0
+    return earlier + any(p.is_file() for p in out.iterdir())
+
+
+def run_order(order, rows, cfg, base, jobs, max_attempts=MAX_ATTEMPTS):
     """Run every (task, run, arm) without a valid run yet, `jobs` containers at a time. An invalid
-    run (an API failure, a crash) is run again, unless it is marked "retry": false (a diff the grader
-    cannot take), which stays invalid."""
+    run (an API failure, a crash) is run again, up to `max_attempts` tries in all (#415): after that,
+    and when it is marked "retry": false (a diff the grader cannot take), it stays invalid."""
     def done(task, run, arm):
-        path = base / "runs" / runner.run_name(task, arm, run) / "meta.json"
-        if not path.exists():
-            return False
+        out = base / "runs" / runner.run_name(task, arm, run)
+        path = out / "meta.json"
         try:
             meta = json.loads(path.read_text(errors="replace"))
-        except ValueError:
-            return False   # half written: run again (the old files are kept in attempts/)
-        return isinstance(meta, dict) and (bool(meta.get("valid")) or meta.get("retry") is False)
+        except (OSError, ValueError):
+            meta = None   # none yet, or half written: run again (the old files are kept in attempts/)
+        if isinstance(meta, dict) and (bool(meta.get("valid")) or meta.get("retry") is False):
+            return True
+        tried = attempts_made(out)
+        if tried < max_attempts:
+            return False
+        say(f"gave up on runs/{out.name} after {tried} attempts (raise --max-attempts to try again)")
+        if isinstance(meta, dict):
+            reason = str(meta.get("invalid_reason") or "invalid")
+            meta.update(valid=False, retry=False, invalid_reason=f"{reason}; gave up after {tried} attempts")
+            path.write_text(json.dumps(meta, indent=1))
+        return True
 
     todo = [(n, item) for n, item in enumerate(order, 1) if not done(*item)]
 
@@ -190,7 +213,7 @@ def cmd_run(args):
         for arm in arms:
             print(f"{arm}: " + " ".join(runner.claude_args(arm, args.model, args.budget)))
         return
-    run_order(order, rows, make_cfg(args), base, args.jobs)
+    run_order(order, rows, make_cfg(args), base, args.jobs, args.max_attempts)
 
 
 def cmd_grade(args):
@@ -245,7 +268,8 @@ def cmd_pipeline(args):
                 say(f"  excluded {instance_id}: its own gold patch does not grade as resolved")
         excluded_path.write_text(json.dumps(excluded, indent=1) + "\n")
         batch = [i for i in batch if i not in excluded]
-        run_order(runner.plan(batch, args.runs, pilot["seed"], arms), rows, cfg, base, args.jobs)
+        run_order(runner.plan(batch, args.runs, pilot["seed"], arms), rows, cfg, base, args.jobs,
+                  args.max_attempts)
         grade_all(pilot, base, args)
         if not args.keep_images:
             subprocess.run(["docker", "rmi", "-f", *(runner.image_name(i) for i in batch)],
@@ -370,6 +394,8 @@ def main(argv=None):
             r.add_argument("--runs", type=int, default=1, help="runs per task per arm (default 1)")
             r.add_argument("--arms", default="A,B", help='e.g. "A,B,itqan,siyaq,haris+barq"')
             r.add_argument("--jobs", type=int, default=1, help="containers at a time (default 1)")
+            r.add_argument("--max-attempts", type=int, default=MAX_ATTEMPTS,
+                           help=f"tries per run before giving up on it (default {MAX_ATTEMPTS})")
             r.add_argument("--only", nargs="*", help="only these instance ids (any task in Verified)")
 
     def grader_options(g):
