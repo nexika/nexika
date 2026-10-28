@@ -203,10 +203,12 @@ def _signature_kept(project: Path) -> bool:
             continue
         if not isinstance(data, dict):
             continue
+        if "includeCoAuthoredBy" in data and not isinstance(data["includeCoAuthoredBy"], bool):
+            continue   # Claude Code rejects a non-boolean here ("Expected boolean") and skips the file
         if isinstance(data.get("attribution"), dict):
             return any(isinstance(v, str) and v.strip() for v in data["attribution"].values())
         if "includeCoAuthoredBy" in data:
-            return bool(data["includeCoAuthoredBy"])
+            return data["includeCoAuthoredBy"]
     return False
 
 
