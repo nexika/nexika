@@ -11,6 +11,7 @@ import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "
 import { join, relative, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
+import { readRun } from "./read-run.mjs";
 
 const HERE = fileURLToPath(new URL("..", import.meta.url));
 const LAWHA = resolve(HERE, "../plugins/lawha/engine/dist/cli.js");
@@ -126,7 +127,8 @@ for (const tool of tools) {
     if (task === "brief") args.push("--themes", "light,dark", "--expect-rtl", "--rtl-url", `${url}?lang=ar`);
     const check = sh(process.execPath, [LAWHA, ...args], HERE);
     if (!check.ok) { r.notes.push(`check failed: ${check.out.slice(-300)}`); continue; }
-    const run = JSON.parse(readFileSync(join(out, "run.json"), "utf8"));
+    const { run, problem } = readRun(join(out, "run.json"), HERE);
+    if (problem) { r.notes.push(problem); process.stderr.write(`${tool}: ${problem}\n`); continue; }
     // One problem per check and element, whatever the number of widths it appears at.
     const seen = new Set();
     for (const f of run.findings) {
