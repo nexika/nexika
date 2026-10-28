@@ -181,4 +181,5 @@ The pilot is for:
 - **Continuity across sessions (hafiz, siyaq).** SWE-bench has no tasks that span sessions. Those
   need their own tasks with seeded decisions.
 - **bayan, prof, manar, mizan and lawha.** They don't aim at "task solved". lawha has its own
-  benchmark in [`../README.md`](../README.md).
+  benchmark in [`../lawha.md`](../lawha.md). Every benchmark's results and limits are collected in
+  [`../README.md`](../README.md).

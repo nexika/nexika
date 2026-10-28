@@ -150,4 +150,4 @@ lawha is being built in steps (see [DESIGN.md](DESIGN.md)):
 3. **0.3:** `/lawha:direct`, `/lawha:inspire`, `/lawha:elevate` with blind A/B and taste, the
    Three.js recipes, and checks for 3D motion and text over media.
 4. **0.4, this version:** motion recipes built on Motion, motion from Figma prototypes, RTL icon
-   rules, and a [public benchmark](../../benchmarks/README.md) against the leading tools.
+   rules, and a [public benchmark](../../benchmarks/lawha.md) against the leading tools.
