@@ -649,6 +649,54 @@ def test_visibility_with_a_panel_of_the_wrong_shape_says_so(tmp_path, monkeypatc
     assert cli.main(["visibility", "report"]) == 0   # the report needs no panel: it still shows
 
 
+def _panel_cli(tmp_path, monkeypatch, panel):
+    monkeypatch.setattr(cli, "project_root", lambda: tmp_path)
+    for var in ("PERPLEXITY_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    asked = []
+
+    def ask(prompt, key, model):
+        asked.append(prompt)
+        return visibility.Answer("Acme is great", ["https://acme.dev/"])
+    monkeypatch.setitem(visibility.ASK, "gemini", ask)
+    (tmp_path / ".manar").mkdir(exist_ok=True)
+    (tmp_path / ".manar" / "panel.json").write_text(json.dumps(panel))
+    return asked
+
+
+def test_wrong_fields_in_the_panel_are_named_and_the_rest_runs(tmp_path, monkeypatch, capsys):
+    """#414: a panel field of the wrong type stopped `visibility run` with a generic error."""
+    asked = _panel_cli(tmp_path, monkeypatch, {
+        "brand": "Acme", "aliases": "Acme Inc", "domains": 7, "samples": "lots",
+        "prompts": ["best rockets?", {"text": "who sells anvils?", "lang": "en"}, 42, {"lang": "ar"}]})
+    assert cli.main(["visibility", "plan"]) == 0
+    out = capsys.readouterr().out
+    for field in ('"aliases"', '"domains"', '"samples"', '"prompts"'):
+        assert out.count(field) == 1, out
+    assert "2 prompts x 1 engines (gemini) x 3 samples = 6 API calls" in out
+    assert cli.main(["visibility", "run"]) == 0
+    assert asked == ["best rockets?"] * 3 + ["who sells anvils?"] * 3
+    assert "mentioned in 100%" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("panel", [{"brand": "Acme"}, {"brand": "Acme", "prompts": "best rockets?"},
+                                   {"brand": "Acme", "prompts": [7, {"text": ""}]}])
+def test_a_panel_with_no_usable_prompt_says_so_in_plain_words(tmp_path, monkeypatch, capsys, panel):
+    asked = _panel_cli(tmp_path, monkeypatch, panel)
+    assert cli.main(["visibility", "run"]) == 1
+    out = capsys.readouterr()
+    assert '"prompts"' in out.out and "customer questions" in out.out and not out.err
+    assert asked == []
+
+
+def test_a_panel_without_a_brand_uses_the_folder_name(tmp_path, monkeypatch, capsys):
+    _panel_cli(tmp_path, monkeypatch, {"brand": ["Acme"], "prompts": ["best rockets?"]})
+    assert cli.main(["visibility", "plan"]) == 0
+    out = capsys.readouterr().out
+    assert '"brand"' in out and f'"{tmp_path.name}"' in out
+
+
 def test_a_torn_ledger_line_hides_only_that_line(tmp_path):
     ledger = tmp_path / "v.jsonl"
     visibility.save(ledger, [_row("2026-10-01T10:00:00"), _row("2026-10-01T10:00:00", "q2")])

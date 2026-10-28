@@ -60,6 +60,7 @@ def cmd_index(root: Path) -> str:
     dead = [(e["title"], d) for e in index["entries"] for d in e["dead_refs"]]
     out = [f"{index['n']} entries ({manual} hand-written) from {len(index['sources'])} sources:"]
     out += [f"  {s}" for s in index["sources"][:30]]
+    out += [f"config: {p}." for p in idx.read_config(root)[1]]
     if dead:
         out.append(f"dead references ({len(dead)}):")
         out += [f"  {title} -> {path} (missing)" for title, path in dead[:20]]

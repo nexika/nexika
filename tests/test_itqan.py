@@ -748,6 +748,28 @@ def test_a_script_that_is_not_a_chain_stays_one_check(proof, tmp_path, monkeypat
     assert [c["argv"][-1] for c in proof.detect(root)] == ["test", "lint"]
 
 
+@pytest.mark.parametrize("odd", [None, 5, True, ["eslint"], {"cmd": "eslint"}])
+def test_a_package_script_that_is_not_text_is_named_and_the_rest_still_run(proof, tmp_path, monkeypatch,
+                                                                            capsys, odd):
+    """#414: a script value of another type became a check that runs nothing (`defined: None`), or
+    turned a pure `npm run` chain into steps that cannot run."""
+    root = node_project(tmp_path, {"test": "npm run lint && npm run unit", "lint": "eslint", "unit": odd,
+                                   "build": odd})
+    (root / "node_modules").mkdir()
+    monkeypatch.setattr(proof.shutil, "which", lambda name: f"/usr/bin/{name}")
+    not_run: list = []
+    checks = proof.detect(root, not_run)
+    assert [(c["argv"][-1], c["defined"]) for c in checks] == [
+        ("test", "npm run lint && npm run unit"), ("lint", "eslint")]
+    named = {n["name"]: n for n in not_run}
+    assert set(named) == {"npm run unit", "npm run build"}
+    for entry in named.values():
+        assert entry["kind"] == "other" and "package.json" in entry["reason"] and "text" in entry["reason"]
+    monkeypatch.chdir(root)
+    assert proof.main(["checks"]) == 0
+    assert 'package.json "scripts" > "build"' in capsys.readouterr().out
+
+
 # fastify (#230, case S-checks-name): `npm lint` is not an npm command; `npm test` is
 def test_a_node_check_is_named_by_a_command_that_runs(proof, tmp_path, monkeypatch):
     root = node_project(tmp_path, {"lint": "eslint", "test": "borp", "build": "tsc"})

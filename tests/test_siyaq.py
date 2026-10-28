@@ -163,6 +163,40 @@ def test_config_exclude(repo):
     assert "Orders > Discounts" not in entries_by_title(idx.load(repo))
 
 
+@pytest.mark.parametrize("config", [
+    {"exclude": "docs/orders.md"},                       # a string, not a list
+    {"sources": "docs/**/*.md", "exclude": [1, None]},   # items of the wrong type
+    {"top_k": "two", "budget_tokens": None, "min_score": True},
+])
+def test_a_wrong_value_in_siyaq_json_is_named_and_the_rest_keeps_working(repo, config, monkeypatch):
+    """#414: the hooks quietly did nothing (str + list in source_files); only `siyaq index` showed it."""
+    (repo / ".siyaq.json").write_text(json.dumps(config))
+    out = hooks.on_prompt(prompt_event(repo, "how do we roll back a release?"))
+    assert out and "Deployment > Rollback" in out
+    note = hooks.on_session_start({"session_id": "s1", "source": "startup", "cwd": str(repo)}, "helper")
+    for key in config:
+        assert f'"{key}"' in note, note
+    assert ".siyaq.json" in note and "default" in note
+    report = cli.cmd_index(repo)
+    assert "Deployment > Rollback" in entries_by_title(idx.load(repo))
+    for key in config:
+        assert f'"{key}"' in report, report
+
+
+def test_siyaq_json_that_is_not_an_object_is_named(repo):
+    (repo / ".siyaq.json").write_text("{oops")
+    note = hooks.on_session_start({"session_id": "s1", "source": "startup", "cwd": str(repo)}, "helper")
+    assert ".siyaq.json" in note and "JSON" in note
+    assert hooks.on_prompt(prompt_event(repo, "how do we roll back a release?"))
+    (repo / ".siyaq.json").write_text(json.dumps({"exclude": ["docs/orders.md"], "top_k": 2}))
+    assert hooks.on_session_start({"session_id": "s1", "source": "startup", "cwd": str(repo)},
+                                  "helper") == hooks.NOTE.format(helper="helper")
+
+
+def test_the_number_settings_siyaq_json_checks_are_ranks_settings():
+    assert set(idx.NUMBER_SETTINGS) == set(rank.DEFAULTS)
+
+
 # ---------------------------------------------------------------- ranking
 
 
