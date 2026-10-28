@@ -311,3 +311,94 @@ def test_a_submodule_cannot_declare_the_session_unattended(tmp_path, monkeypatch
     assert unattended.detect({"CI": "true"}, str(sub)) == ""
     assert unattended.detect({"CI": "true", "CLAUDE_PROJECT_DIR": str(clone)}, str(tmp_path)) == ""
     assert unattended.detect({"CI": "true"}, str(tmp_path / "home" / "work")) == "it runs in CI"
+
+
+# ---------------------------------------------------------------- how many modules haris reads (#434)
+
+NAMES = [f"N{i}" for i in range(40)]
+
+
+@pytest.fixture
+def lab(tmp_path, monkeypatch):
+    """An empty project, run from its root like an agent in a checkout of sympy or django."""
+    home = tmp_path / "home"
+    project = home / "work" / "lab"
+    project.mkdir(parents=True)
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("HARIS_HOME", str(home / ".claude" / "nexika" / "haris"))
+    monkeypatch.delenv("HARIS", raising=False)
+    monkeypatch.delenv("PYTHONPATH", raising=False)
+    monkeypatch.chdir(project)
+    _git(project, "init", "-q")
+    return project
+
+
+def check_unattended(capsys, command):
+    assert cli.main(["check", "--unattended", command]) == 0
+    return capsys.readouterr().out
+
+
+def write(root, files):
+    for name, text in files.items():
+        (root / name).parent.mkdir(parents=True, exist_ok=True)
+        (root / name).write_text(text)
+
+
+@pytest.mark.parametrize("source", ["pkg.core", "core"])
+def test_names_imported_from_one_module_count_once(lab, capsys, source):
+    """sympy/combinatorics/__init__.py imports 38 names from a few modules: `from sympy import Max, Min`
+    was refused unattended, as if haris had 38 modules to read (#434)."""
+    write(lab, {"pkg/__init__.py": f"from {source} import (\n    " + ",\n    ".join(NAMES) + ",\n)\n",
+                "pkg/core.py": "".join(f"{n} = {i}\n" for i, n in enumerate(NAMES))})
+    out = check_unattended(capsys, 'python -c "from pkg import N0, N1; print(N0)"')
+    assert "more than 32" not in out and not out.startswith("deny"), out
+
+
+def test_names_a_module_defines_are_not_modules(lab, capsys):
+    write(lab, {"pkg/__init__.py": "".join(f"{n} = {i}\n" for i, n in enumerate(NAMES))})
+    out = check_unattended(capsys, f'python -c "from pkg import {", ".join(NAMES)}"')
+    assert "more than 32" not in out and not out.startswith("deny"), out
+
+
+def test_more_names_than_haris_may_look_up_are_asked_about(lab, capsys):
+    """Each name may be a submodule file, so haris looks each one up; past 1024 in one call it asks, as
+    the check would get slow, and the last name could be the module that deletes your home folder."""
+    names = [f"N{i}" for i in range(1100)]
+    write(lab, {"pkg/__init__.py": "".join(f"{n} = 1\n" for n in names[:1000]),
+                "pkg/N1099.py": "import os, shutil\nshutil.rmtree(os.path.expanduser('~'))\n",
+                "main.py": "from pkg import (" + ", ".join(names) + ")\n"})
+    out = check_unattended(capsys, "python3 main.py")
+    assert out.startswith("deny (dynamic)") and "more than 1024 names" in out, out
+    write(lab, {"main.py": "from pkg import (" + ", ".join(names[:1000]) + ")\n"})
+    assert not check_unattended(capsys, "python3 main.py").startswith("deny")
+
+
+def test_names_that_are_submodules_each_count(lab, capsys):
+    """`from pkg import m0, m1, ...` imports the submodules pkg/m0.py ...: haris reads each one."""
+    write(lab, {"pkg/__init__.py": "", **{f"pkg/m{i}.py": "x = 1\n" for i in range(40)}})
+    out = check_unattended(capsys, f'python -c "from pkg import {", ".join(f"m{i}" for i in range(40))}"')
+    assert out.startswith("deny (dynamic)") and "more than 32" in out, out
+
+
+@pytest.mark.parametrize("command", ["python3 main.py", "python3 -c 'import main'"])
+def test_a_script_importing_more_than_32_modules_is_still_asked_about(lab, capsys, command):
+    write(lab, {"main.py": "".join(f"import m{i}\n" for i in range(40)),
+                **{f"m{i}.py": "x = 1\n" for i in range(40)}})
+    out = check_unattended(capsys, command)
+    assert out.startswith("deny (dynamic)") and "more than 32" in out, out
+
+
+def test_more_than_32_modules_over_a_chain_of_imports_is_asked_about(lab, capsys):
+    """main imports 6 modules that import 8 each: 55 modules in all, though no file imports more than 8.
+    haris read 32 of them and let the rest run unread (#434), the last one deleting your home folder."""
+    files = {"main.py": "".join(f"import a{i}\n" for i in range(6))}
+    for i in range(6):
+        files[f"a{i}.py"] = "".join(f"import b{i}_{j}\n" for j in range(8))
+        files.update({f"b{i}_{j}.py": "x = 1\n" for j in range(8)})
+    files["b5_7.py"] = "import os, shutil\nshutil.rmtree(os.path.expanduser('~'))\n"
+    write(lab, files)
+    out = check_unattended(capsys, "python3 main.py")
+    assert out.startswith("deny (dynamic)") and "more than 32" in out, out
+    files["main.py"] = "import a0\nimport a1\n"  # 2 + 16 modules: each one is read
+    write(lab, files)
+    assert not check_unattended(capsys, "python3 main.py").startswith("deny"), "a small chain is read"

