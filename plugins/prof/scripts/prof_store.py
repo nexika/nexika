@@ -417,11 +417,12 @@ def _section(text: str, heading: str, limit: int) -> list[str]:
 
 # ---------------------------------------------------------------- hooks
 
-def has_something_to_say(*, profile: bool, due: bool, role: str) -> bool:
-    """prof speaks at session start only when there is a learner here (#336): a learner profile, a lesson
-    due for review, or a user who said they are learning to code. Otherwise the session is plain work
-    and the skills (/prof:learn, "teach me") are enough."""
-    return profile or due or role == "learner"
+def has_something_to_say(*, due: bool, professor_style: bool, learner: bool, question: bool) -> bool:
+    """prof speaks at session start only where it applies (#336, #393): something is due for review, the
+    session is a tutoring session (the Professor output style), or a learner has a question waiting to
+    be asked once (automatic reports, the Nexika role). A learner with nothing due and nothing to ask
+    gets nothing: /prof:learn and "teach me" read the profile themselves."""
+    return due or professor_style or (learner and question)
 
 
 def session_start(hook: dict) -> None:
@@ -434,7 +435,11 @@ def session_start(hook: dict) -> None:
     publish_due(topics)
     pending = [t for t in topics if t[3] or t[4]]
     role = prof_family.role()
-    if not has_something_to_say(profile=PROFILE.is_file(), due=bool(pending), role=role):
+    family_unasked = not role and not prof_family.read_settings().get("asked")
+    cwd = hook.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
+    if not has_something_to_say(due=bool(pending), professor_style=_settings_style_is_professor(cwd),
+                                learner=PROFILE.is_file() or role == "learner",
+                                question=auto_report_state() is None or family_unasked):
         return
     ask = "" if auto_report_state() is not None else " " + AUTO_REPORT_NOTE[None].format(script=script)
     profile_ask = "" if role else prof_family.ask_note(f"python3 {Path(prof_family.__file__).resolve()}")

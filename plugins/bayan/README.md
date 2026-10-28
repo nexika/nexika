@@ -15,7 +15,11 @@ of the other Nexika plugins: prof's lessons and reports, amin's release notes, m
 | `/bayan:check <file or text>` | Lists, line by line, what is hard to read or sounds machine-made, with a better wording. |
 
 ## What happens on its own
-- **At the start of each session**, Claude gets a short writing guide for your reader level.
+- **At the start of each session**, Claude gets the short rules for your reader level (about 190
+  tokens): answer first, be specific, no filler, keep code exact. Before it writes prose for people
+  (docs, READMEs, release notes, reports, Arabic text) it reads [the full guide](guide/writing.md).
+  If your Nexika role is `writer`, the whole rule list comes every session instead, because prose
+  is your work.
 - **After Claude writes or edits a Markdown file** (`.md`, `.mdx`), bayan cleans **only the part
   Claude just wrote**: it removes hidden characters (zero-width spaces and the like), AI signature
   lines, filler sentences (`Great question!`, `I hope this helps!`) and wordy phrases (`in order to`,

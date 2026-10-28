@@ -167,7 +167,10 @@ nothing to do:
 
 - lawha speaks up only in a project that has a website or app front end.
 - manar speaks up only in a website project.
-- prof speaks up only when a lesson is due, or when you've said you are learning.
+- prof speaks up only when a lesson is due, in a tutoring session, or once to ask a learner a
+  question.
+- bayan gives the short writing rules; Claude reads the full guide only when it writes prose for
+  people (the whole list every session if you said you are a writer).
 
 Their commands still work everywhere. You can also turn an add-on off completely in one project,
 so it adds nothing there. Set it to `false` in that project's `.claude/settings.json` file (shared

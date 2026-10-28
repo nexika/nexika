@@ -6,12 +6,12 @@ argument-hint: "<file or text> [no-code|junior|developer]"
 
 # Write
 
-The bayan helper and the full guide path are in the session note ("Helper: ... Full guide ...");
-below the helper is written `bayan`.
+Below, `bayan` is the helper: `python3 ${CLAUDE_PLUGIN_ROOT}/bin/bayan` (the session note may have put
+`bayan` on the PATH). The full guide is `${CLAUDE_PLUGIN_ROOT}/guide/writing.md`.
 
 1. Input: $ARGUMENTS. A file path, or the text itself. A level word overrides the saved reader
-   level for this run; otherwise use the level from the session note.
-2. Read the full guide once (the path in the session note).
+   level for this run; otherwise use the saved level (`bayan level` prints it).
+2. Read the full guide once.
 3. Run `bayan check <file>` (or `bayan check -` with the text on stdin) and note the score and
    the lines it lists.
 4. Rewrite:
