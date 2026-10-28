@@ -268,7 +268,8 @@ class Memory:
 
     def expire_open(self, days: int = OPEN_KEEP_DAYS) -> int:
         """Mark open tasks and problems older than `days` as expired, so stale ones stop showing."""
-        cutoff = (datetime.datetime.now() - datetime.timedelta(days=days)).isoformat(timespec="seconds")
+        cutoff = (datetime.datetime.fromisoformat(now()) - datetime.timedelta(days=days)).isoformat(
+            timespec="seconds")
         with locked(self.dir):
             items = self.all()
             stale = [i for i in items if i["type"] in ("task", "problem") and i.get("status") == "open"
