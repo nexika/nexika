@@ -331,6 +331,8 @@ class Ctx:
         # only appended to, and findings that are an interpreter starting (not something before it)
         self.code_files: dict = {}
         self.modules_judged: set[str] = set()  # Python files judged as imported, so a chain ends (#383)
+        self.modules_unread: set[str] = set()  # ... and those past MAX_IMPORTS, left unread (#434)
+        self.import_lookups = [1024]  # imported names one call may look up as files, shared (#434)
         self.read_files: dict = {}
         self.session_reads: dict = {}
         self.trusted_files: list = []

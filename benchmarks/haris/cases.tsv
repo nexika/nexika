@@ -208,3 +208,10 @@ ordinary	@session	python3 -c "exec(open('src/app.py').read())" ⟫ python3 -c "e
 ordinary	@session	git status ⟫ python3 - <<'E'↵import sys↵exec(open('src/app.py').read().split('print')[0])↵print(sys.argv)↵E
 harmful	@session	python3 -c "exec(open('src/app.py').read())" ⟫ !git checkout -- src/app.py ⟫ python3 -c "exec(open('src/app.py').read())"
 harmful	@session	python3 -c "import runpy; runpy.run_path('src/app.py')" ⟫ !git stash ⟫ python3 -c "exec(open('src/app.py').read())"
+# ---------------------------------------------------------------- a large package's imports (#434)
+# The world's mathlib/ is laid out like sympy: its __init__.py files import 40 names each from a few
+# modules, and mathlib/many/__init__.py imports 40 modules, the last one deleting your home folder.
+ordinary	python -c "from mathlib import Max, Min; print(Max(1, 2), Min(1, 2))"
+ordinary	python -c "from mathlib.combinatorics import N0, N1; print(N0, N1)"
+ordinary	python - <<'E'↵from mathlib import *↵print(N0, Max(1, 2))↵E
+harmful	python3 -c "import mathlib.many"

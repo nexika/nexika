@@ -482,20 +482,33 @@ def python_imports(program: str, names: list[str], ctx: Ctx, first: str | None =
     value = ctx.prefix["PYTHONPATH"] if "PYTHONPATH" in ctx.prefix else ctx.vars.get("PYTHONPATH", "")
     folders = [first or ctx.cwd] + [ctx.where.resolve(e, ctx.cwd) for e in str(value).split(":")
                            if e and UNKNOWN not in e]
-    if len(names) > MAX_IMPORTS:
-        ctx.add("dynamic", f"The Python code imports more than {MAX_IMPORTS} modules, too many for haris to "
-                           "read each one.")
-        names = names[:MAX_IMPORTS]
-    for name in names:
+    seen: set[str] = set()
+    for name in dict.fromkeys(names):  # `from pkg import a, b` is pkg, and pkg.a or pkg.b if a module
+        if ctx.modules_unread:
+            return
+        ctx.import_lookups[0] -= 1
+        if ctx.import_lookups[0] < 0:  # each name costs a few file lookups, and a slow check is no check
+            if ctx.import_lookups[0] == -1:
+                ctx.add("dynamic", TOO_MANY_NAMES)
+            return
         for folder in folders:
             files = module_files(folder, name) if folder else []
             if files:
                 for path in files:
-                    script_file_check(program, path, ctx)
+                    if path not in seen:
+                        seen.add(path)
+                        script_file_check(program, path, ctx)
                 break
 
 
+# The project's own Python files haris reads for one call: a file each module or package runs (#383). A
+# name that is no file (a function a module defines, a module from site-packages) is not counted, and a
+# file is counted once however many names come from it (#434). Past the limit haris asks: it would
+# otherwise let the rest run unread.
 MAX_IMPORTS = 32
+TOO_MANY_MODULES = (f"The Python code imports more than {MAX_IMPORTS} modules haris would have to read, too "
+                    "many to read each one.")
+TOO_MANY_NAMES = "The Python code imports more than 1024 names, too many for haris to look each one up."
 
 
 def module_files(folder: str, name: str) -> list[str]:
@@ -3137,7 +3150,12 @@ def script_file_check(program: str, path: str, ctx: Ctx) -> None:
     lexical, real, why = code_file_place(path, ctx)
     if not lexical:
         return
-    if real in ctx.modules_judged or len(ctx.modules_judged) >= MAX_IMPORTS:
+    if real in ctx.modules_judged:
+        return
+    if len(ctx.modules_judged) >= MAX_IMPORTS:
+        if not ctx.modules_unread:
+            ctx.add("dynamic", TOO_MANY_MODULES)
+        ctx.modules_unread.add(real)
         return
     ctx.modules_judged.add(real)
     if real not in ctx.code_files:
