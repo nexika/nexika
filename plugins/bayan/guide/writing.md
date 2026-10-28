@@ -18,6 +18,7 @@ Example, one fact at three levels:
 
 ## 2. Say it plainly
 
+- Reply in the language the user writes in (Arabic or English).
 - Start with the answer or the result. Put the reasons after it.
 - One idea per sentence. Keep most sentences under 20 words, and mix in some short ones.
 - Use specific facts: numbers, names, files, dates, what changed and what didn't.
@@ -34,6 +35,11 @@ Example, one fact at three levels:
 | `Let's delve into the intricate landscape of SEO.` | `Here is what Google needs from your site.` |
 | `It's not just fast, but also secure.` | `It's fast. It also blocks private addresses.` |
 | `I hope this helps! Let me know if you have any other questions.` | (stop when you're done) |
+
+Friendly, not chatty: no opening praise, no closing pleasantries, no cheerleading.
+
+Words that sound like a machine: delve, tapestry, testament, realm, landscape, seamless, robust,
+unlock, game-changer, "plays a crucial role", "not just X but Y".
 
 Machine habits to avoid:
 - the same sentence length again and again;

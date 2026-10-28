@@ -60,6 +60,30 @@ sentences); when bayan reports style notes, rewrite those lines.
 Helper: {cmd} check FILE | {cmd} clean FILE --write. Full guide with examples: {guide}"""
 
 
+# Every session (#393): the rules that shape any answer, commit message or PR text. The rest (machine
+# habits, Arabic phrases, examples) is in guide/writing.md, read when writing prose for people.
+SHORT = """## bayan (Nexika): write like a clear, friendly person
+Reader level: {level} (change with /bayan:level). {level_rule}
+For everything you write, commit messages and pull request text included:
+- Reply in the language the user writes in. Lead with the answer, then the why.
+- Be specific: numbers, names, files, what changed. Short sentences; cut filler.
+- Friendly, not chatty: no opening praise, no "hope this helps" closings, no emoji in headings.
+- Correct before simple. Code, commands, paths and quotes stay exact.
+Before writing prose for people (docs, READMEs, release notes, reports, lessons, Arabic text), read
+the full guide once: {guide}
+Helper: {cmd} check FILE | {cmd} clean FILE --write"""
+
+
+def full_guide_here(role: str) -> bool:
+    """The whole rule list every session only for a writer: prose is their work (#393). Everyone else
+    gets the short rules, and the full guide when they write prose for people."""
+    return role == "writer"
+
+
+def note(*, full: bool, level: str, cmd: str, guide) -> str:
+    return (GUIDE if full else SHORT).format(level=level, level_rule=LEVEL_RULE[level], cmd=cmd, guide=guide)
+
+
 def session_start(hook: dict) -> str:
     cfg = config.load()
     bin_dir = Path(__file__).resolve().parent.parent / "bin"
@@ -77,10 +101,10 @@ def session_start(hook: dict) -> str:
                 fh.write(line)
     except OSError:
         command = f"python3 {shlex.quote(str(bin_dir / 'bayan'))}"
-    note = GUIDE.format(level=cfg["level"], level_rule=LEVEL_RULE[cfg["level"]], cmd=command,
-                        guide=bin_dir.parent / "guide" / "writing.md")
+    text = note(full=full_guide_here(family.role()), level=cfg["level"], cmd=command,
+                guide=bin_dir.parent / "guide" / "writing.md")
     ask = family.ask_note(f"python3 {shlex.quote(str(Path(family.__file__).resolve()))}")
-    return f"{note}\n{ask}" if ask else note
+    return f"{text}\n{ask}" if ask else text
 
 
 def _project(hook: dict) -> Path:

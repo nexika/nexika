@@ -2,7 +2,8 @@
 
 - Every skill and agent description says when to use it, in one line, within a length budget.
 - lawha speaks only in a project with a frontend, manar only for a website, prof only when a lesson
-  is due, a learner profile exists or the user is a learner.
+  is due, in a tutoring session or with a question for a learner (#393).
+- bayan gives the short rules every session and the full guide on demand, the whole list to a writer.
 """
 from __future__ import annotations
 
@@ -241,15 +242,57 @@ def test_prof_still_publishes_its_status_when_quiet(store, capsys):
     assert json.loads(status.read_text())["due"] == 0
 
 
-@pytest.mark.parametrize("profile,due,role,speaks", [
-    (False, False, "", False), (False, False, "developer", False), (False, False, "writer", False),
-    (True, False, "", True), (False, True, "", True), (False, False, "learner", True),
+# #393: prof speaks when something is due, in a tutoring session (Professor output style), or when a
+# learner has a question waiting to be asked once. A learner with nothing due and nothing to ask gets
+# nothing: /prof:learn and "teach me" read the profile themselves.
+@pytest.mark.parametrize("due,professor,learner,question,speaks", [
+    (False, False, False, False, False), (False, False, False, True, False),
+    (False, False, True, False, False), (True, False, False, False, True),
+    (False, True, False, False, True), (False, False, True, True, True),
 ])
-def test_prof_speak_rule(store, profile, due, role, speaks):
-    assert store.has_something_to_say(profile=profile, due=due, role=role) is speaks
+def test_prof_speak_rule(store, due, professor, learner, question, speaks):
+    assert store.has_something_to_say(due=due, professor_style=professor, learner=learner,
+                                      question=question) is speaks
 
 
-# bayan: the writing guide is the plugin's job (#336, option 4): tighter wording, the same rules
+def _learner_with_nothing_to_ask(store, family_profile, role="learner"):
+    store.set_auto_report(False)
+    store.PROFILE.parent.mkdir(parents=True, exist_ok=True)
+    store.PROFILE.write_text("# Learner profile\n- Level: junior\n", encoding="utf-8")
+    family_profile.parent.mkdir(parents=True, exist_ok=True)
+    family_profile.write_text(json.dumps({"schema": "nexika.settings/1", "role": role}))
+
+
+@pytest.mark.parametrize("role", ["learner", "developer", "writer"])
+def test_prof_is_quiet_when_nothing_is_due_and_nothing_to_ask(store, family_profile, tmp_path, capsys, role):
+    _learner_with_nothing_to_ask(store, family_profile, role)
+    store.session_start({"session_id": "s1", "cwd": str(make(tmp_path / "p", BACKENDS["python"]))})
+    assert capsys.readouterr().out == ""
+
+
+def test_prof_speaks_in_a_tutoring_session(store, family_profile, tmp_path, capsys):
+    _learner_with_nothing_to_ask(store, family_profile)
+    project = make(tmp_path / "p", {".claude/settings.local.json": '{"outputStyle": "prof:Professor"}'})
+    store.session_start({"session_id": "s1", "cwd": str(project)})
+    assert "Prof plugin" in capsys.readouterr().out
+
+
+def test_prof_speaks_to_a_developer_with_reviews_due(store, family_profile, tmp_path, capsys):
+    _learner_with_nothing_to_ask(store, family_profile, "developer")
+    store.save_topic("py", "Python", {"gen": ("missed", "generators", "no idea", "2026-10-01")})
+    store.session_start({"session_id": "s1", "cwd": str(tmp_path)})
+    assert "concepts are due for review" in capsys.readouterr().out
+
+
+# bayan: the writing guide is the plugin's job (#336, option 4). #393: the short rules every session,
+# the full guide on demand; a writer (prose is their work) still gets the whole rule list each session.
+
+
+@pytest.fixture
+def bayan_hooks():
+    sys.path.insert(0, str(PLUGINS / "bayan"))
+    from bayan import hooks
+    return hooks
 
 
 BAYAN_RULES = ["Reader level", "language the user writes in", "Lead with the answer", "One idea per sentence",
@@ -258,13 +301,64 @@ BAYAN_RULES = ["Reader level", "language the user writes in", "Lead with the ans
                "em dashes", "every list in", "bold label", "same sentence length", "Modern Standard Arabic",
                "من الجدير بالذكر", "في الختام", "Correct before simple", "uncertain", "Code, commands, paths",
                "commit messages", "pull request text", "rewrite those lines", "check FILE", "Full guide"]
+SHORT_RULES = ["Reader level", "language the user writes in", "Lead with the answer", "Be specific",
+               "no opening praise", "hope this helps", "no emoji", "Correct before simple",
+               "Code, commands, paths", "commit messages", "pull request text", "check FILE", "full guide"]
+# what leaves the short note must still be in the guide Claude reads on demand
+GUIDE_RULES = ["language the user writes in", "One idea per sentence", "under 20 words", "no cheerleading",
+               "exclamation mark", "delve", "tapestry", "testament", "realm", "game-changer", "em dashes",
+               "exactly three items", "bold label", "same sentence length", "Modern Standard Arabic",
+               "من الجدير بالذكر", "في الختام", "uncertain"]
 
 
-def test_bayan_session_note_keeps_every_rule_in_fewer_words():
-    sys.path.insert(0, str(PLUGINS / "bayan"))
-    from bayan import hooks
-    note = hooks.GUIDE.format(level="developer", level_rule=hooks.LEVEL_RULE["developer"], cmd="bayan",
-                              guide="/g/writing.md")
+def _note(hooks, full):
+    return hooks.note(full=full, level="developer", cmd="bayan", guide="/g/writing.md")
+
+
+def test_bayan_full_note_keeps_every_rule_in_fewer_words(bayan_hooks):
+    note = _note(bayan_hooks, True)
     for rule in BAYAN_RULES:
         assert rule in note, rule
     assert len(note) <= 1700, len(note)  # 1,756 before #336
+
+
+def test_bayan_short_note_keeps_the_rules_that_shape_every_answer(bayan_hooks):
+    note = _note(bayan_hooks, False)
+    for rule in SHORT_RULES:
+        assert rule in note, rule
+    assert "/g/writing.md" in note
+    assert len(note) <= 800, len(note)  # the full note is about 1,650
+
+
+def test_bayan_guide_holds_every_rule_the_short_note_leaves_out():
+    guide = (PLUGINS / "bayan" / "guide" / "writing.md").read_text(encoding="utf-8")
+    for rule in GUIDE_RULES:
+        assert rule in guide, rule
+
+
+@pytest.mark.parametrize("role,full", [("", False), ("developer", False), ("learner", False),
+                                       ("writer", True)])
+def test_bayan_full_guide_only_for_a_writer(bayan_hooks, role, full):
+    assert bayan_hooks.full_guide_here(role) is full
+
+
+def test_bayan_session_start_is_short_in_a_coding_session(bayan_hooks, family_profile):
+    family_profile.parent.mkdir(parents=True, exist_ok=True)
+    family_profile.write_text(json.dumps({"schema": "nexika.settings/1", "role": "developer"}))
+    note = bayan_hooks.session_start({})
+    assert "Lead with the answer" in note and "tapestry" not in note and "Modern Standard" not in note
+
+
+def test_bayan_session_start_gives_a_writer_the_whole_list(bayan_hooks, family_profile):
+    family_profile.parent.mkdir(parents=True, exist_ok=True)
+    family_profile.write_text(json.dumps({"schema": "nexika.settings/1", "role": "writer"}))
+    note = bayan_hooks.session_start({})
+    assert "Modern Standard Arabic" in note and "delve" in note
+
+
+def test_bayan_skills_find_the_helper_and_guide_without_the_session_note():
+    for name in ("check", "write", "level"):
+        text = (PLUGINS / "bayan" / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+        assert "${CLAUDE_PLUGIN_ROOT}/bin/bayan" in text, name
+    write = (PLUGINS / "bayan" / "skills" / "write" / "SKILL.md").read_text(encoding="utf-8")
+    assert "${CLAUDE_PLUGIN_ROOT}/guide/writing.md" in write

@@ -6,7 +6,7 @@ argument-hint: "[no-code|junior|developer]"
 
 # Level
 
-The bayan helper is in the session note; below it is written `bayan`.
+Below, `bayan` is the helper: `python3 ${CLAUDE_PLUGIN_ROOT}/bin/bayan`.
 
 1. With an argument ($ARGUMENTS): run `bayan level <level>`. Without one: run `bayan level` and
    ask which reader fits, in one short question:

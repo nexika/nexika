@@ -6,7 +6,7 @@ argument-hint: "<file or text> [no-code|junior|developer]"
 
 # Check
 
-The bayan helper is in the session note; below it is written `bayan`.
+Below, `bayan` is the helper: `python3 ${CLAUDE_PLUGIN_ROOT}/bin/bayan`.
 
 1. Input: $ARGUMENTS (a file, or the text: pass it on stdin with `bayan check -`). A level word
    becomes `--level <word>`.
