@@ -601,7 +601,9 @@ def write_auto_report(sid: str, convo_path: Path) -> int:
     prof_background.record("prof", "auto-report", "sonnet")
     try:
         with open(convo_path, encoding="utf-8") as stdin:
+            # a byte that is not UTF-8 must not cost the session its report
             res = subprocess.run(cmd, stdin=stdin, capture_output=True, text=True, timeout=600,
+                                 encoding="utf-8", errors="replace",
                                  env=prof_background.child_env({GUARD_ENV: "1"}))
     except (OSError, subprocess.TimeoutExpired) as exc:
         _log(f"auto-report {sid[:8]}: {exc}")
