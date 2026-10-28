@@ -579,7 +579,10 @@ def test_busy_memory_gives_a_message_not_a_traceback(repo, capsys, monkeypatch):
     assert "busy" in capsys.readouterr().out
 
 
-def test_card_budget_counts_bytes_and_hides_tool_output(log, capsys, repo):
+def test_card_budget_counts_bytes_and_hides_tool_output(log, capsys, repo, monkeypatch):
+    # The transcript is dated 2026-10-05: pin the clock to that week, or the problem expires
+    # (OPEN_KEEP_DAYS) once the real date passes 2026-10-19 and the card has no "Open problems".
+    monkeypatch.setattr(store, "now", lambda: "2026-10-06T09:00:00")
     for n in range(40):
         store.Memory(repo).upsert([store.Memory.make("decision", f"قرار رقم {n}: " + "نستخدم مكتبة التشفير " * 8,
                                                      branch=BRANCH)])
