@@ -153,6 +153,55 @@ def panel_template(brand: str, domains: list[str]) -> dict:
     }
 
 
+def _texts(value) -> list[str] | None:
+    """A list of non-empty strings, or None when the value is not a list of strings."""
+    if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
+        return None
+    return [v for v in value if v.strip()]
+
+
+def check_panel(panel: dict, default_brand: str) -> tuple[dict, list[str]]:
+    """(a panel `run` can use, a plain sentence for each field of the wrong type) (#414). A wrong
+    field keeps its default; prompts that are neither text nor {"text": ...} are left out. A plain
+    string counts as a prompt's text. With no usable prompt left, `prompts` is empty."""
+    problems = []
+
+    def wrong(name: str, should: str, default: str) -> None:
+        problems.append(f'"{name}" in panel.json should be {should}; using {default}')
+
+    brand = panel.get("brand")
+    if not isinstance(brand, str) or not brand.strip():
+        brand = default_brand
+        wrong("brand", "the brand's name as text", f'"{brand}"')
+    lists = {}
+    for name in ("aliases", "domains"):
+        value = _texts(panel.get(name, []))
+        if value is None:
+            wrong(name, 'a list of text like ["a", "b"]', "none")
+        lists[name] = value or []
+    samples = panel.get("samples", 3)
+    if isinstance(samples, bool) or not isinstance(samples, int) or samples < 1:
+        samples = 3
+        wrong("samples", "a whole number of 1 or more", "3")
+    prompts, raw = [], panel.get("prompts")
+    for item in raw if isinstance(raw, list) else []:
+        if isinstance(item, str):
+            item = {"text": item}
+        if isinstance(item, dict) and isinstance(item.get("text"), str) and item["text"].strip():
+            lang = item.get("lang")
+            prompts.append({"text": item["text"], "lang": lang if isinstance(lang, str) else ""})
+    if not isinstance(raw, list):
+        problems.append('"prompts" in panel.json should be a list of customer questions like '
+                        '[{"text": "...", "lang": "en"}]')
+    elif not prompts:
+        problems.append('"prompts" in panel.json has no customer questions to ask')
+    elif len(prompts) < len(raw):
+        skipped = len(raw) - len(prompts)
+        problems.append(f'"prompts" in panel.json has {skipped} item{"s" if skipped > 1 else ""} that '
+                        'are not customer questions (text, or {"text": "..."}); left out')
+    return {**panel, "brand": brand, **lists, "samples": samples, "prompts": prompts}, problems
+
+
 def mentions(text: str, names: list[str]) -> bool:
     return any(re.search(rf"(?<![\w-]){re.escape(n)}(?![\w-])", text, re.I) for n in names if n)
 

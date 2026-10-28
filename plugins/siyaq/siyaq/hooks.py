@@ -142,4 +142,5 @@ def on_session_start(event: dict, helper: str) -> str:
         return ""
     root, config = ctx
     idx.load_ready(root, config, wait=idx.SESSION_START_WAIT)  # starts or refreshes the index
-    return NOTE.format(helper=helper)
+    problems = idx.read_config(root)[1]  # named once a session; the rest of the file still counts (#414)
+    return "\n".join([NOTE.format(helper=helper), *(f"siyaq: {p}." for p in problems)])

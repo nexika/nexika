@@ -257,7 +257,8 @@ def cmd_visibility(args: list[str]) -> int:
             print("no measurements yet: manar visibility run")
             return 1
         panel = _panel(panel_path) or {}   # only the domains come from it: a broken panel still reports
-        print(visibility.report(runs[-1], runs[-2] if len(runs) > 1 else None, panel.get("domains")))
+        domains = visibility.check_panel(panel, root.name)[0]["domains"]
+        print(visibility.report(runs[-1], runs[-2] if len(runs) > 1 else None, domains))
         return 0
     if not panel_path.exists():
         print("manar: no .manar/panel.json yet: run manar visibility init")
@@ -265,6 +266,12 @@ def cmd_visibility(args: list[str]) -> int:
     panel = _panel(panel_path)
     if panel is None:
         print(f"manar: {panel_path} is not a JSON object: fix it, or delete it and run manar visibility init")
+        return 1
+    panel, problems = visibility.check_panel(panel, root.name)
+    for problem in problems:
+        print(f"manar: {problem}")
+    if not panel["prompts"]:
+        print(f"manar: nothing to ask: add real customer questions under \"prompts\" in {panel_path}")
         return 1
     engines = visibility.available()
     wanted = _flag(args, "--engines")

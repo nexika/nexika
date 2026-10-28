@@ -83,12 +83,49 @@ def project_dir(root: Path) -> Path:
     return data_home() / "projects" / f"{name}-{digest}"
 
 
-def load_config(root: Path) -> dict:
+# .siyaq.json's settings and the type each must have; a value of another type keeps the default (#414).
+LIST_SETTINGS = ("sources", "exclude")  # lists of globs
+NUMBER_SETTINGS = ("min_score", "top_k", "budget_tokens", "path_budget_tokens", "full_max_chars",
+                   "summary_chars")  # rank.DEFAULTS
+
+
+def check_config(data: object) -> tuple[dict, list[str]]:
+    """(the settings that can be used, a plain sentence for each wrong one). A wrong value is left
+    out, so its default applies and the rest of the file still counts."""
+    if not isinstance(data, dict):
+        return {}, [".siyaq.json should be a JSON object ({...}); siyaq uses its defaults"]
+    clean, problems = dict(data), []
+    for key in LIST_SETTINGS:
+        value = clean.get(key)
+        if key in clean and not (isinstance(value, list) and all(isinstance(v, str) for v in value)):
+            del clean[key]
+            problems.append(f'"{key}" in .siyaq.json should be a list of globs like ["docs/**/*.md"]; '
+                            "siyaq uses its default")
+    for key in NUMBER_SETTINGS:
+        value = clean.get(key)
+        if key in clean and (isinstance(value, bool) or not isinstance(value, (int, float))):
+            del clean[key]
+            problems.append(f'"{key}" in .siyaq.json should be a number; siyaq uses its default')
+    return clean, problems
+
+
+def read_config(root: Path) -> tuple[dict, list[str]]:
+    """.siyaq.json checked: (settings, problems). A missing file has no problems."""
     try:
-        data = json.loads((root / ".siyaq.json").read_text(encoding="utf-8"))
-        return data if isinstance(data, dict) else {}
-    except (OSError, ValueError):
-        return {}
+        raw = (root / ".siyaq.json").read_text(encoding="utf-8")
+    except OSError:
+        return {}, []
+    except ValueError:
+        return {}, [".siyaq.json is not UTF-8 text; siyaq uses its defaults"]
+    try:
+        data = json.loads(raw)
+    except ValueError:
+        return {}, [".siyaq.json is not valid JSON; siyaq uses its defaults"]
+    return check_config(data)
+
+
+def load_config(root: Path) -> dict:
+    return read_config(root)[0]
 
 
 # ---------------------------------------------------------------- globs and files

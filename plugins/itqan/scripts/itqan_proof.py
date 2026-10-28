@@ -102,6 +102,19 @@ def _script_kind(name: str) -> str | None:
     return None
 
 
+def _package_scripts(package: dict) -> tuple[dict[str, str], list[tuple[str, str]]]:
+    """package.json's scripts that are commands, and (script, reason) for each value that is not text
+    (#414): npm cannot run it, so it is no check, and the user is told why it is left out."""
+    scripts = package.get("scripts")
+    if not isinstance(scripts, dict):
+        return {}, []
+    good = {name: body for name, body in scripts.items() if isinstance(body, str)}
+    odd = [(name, f'package.json "scripts" > "{name}" is {json.dumps(body)[:40]}, not a text command; '
+                  "itqan leaves it out until it is fixed")
+           for name, body in scripts.items() if not isinstance(body, str)]
+    return good, odd
+
+
 def _script_steps(body: str, scripts: dict, least: int = 2) -> list[str] | None:
     """The scripts of a pure `npm run a && npm run b ...` chain, or None for any other body."""
     steps = []
@@ -244,8 +257,10 @@ def detect(root: Path, not_run: list | None = None) -> list[dict]:
             data = data if isinstance(data, dict) else {}
         except (ValueError, OSError):
             data = {}
-        scripts = data.get("scripts") if isinstance(data.get("scripts"), dict) else {}
+        scripts, odd = _package_scripts(data)
         runner = _package_runner(root)
+        skipped += [{"name": _script_check_name(runner, script), "kind": "other",
+                     "command": f"{runner} run {script}", "reason": reason} for script, reason in odd]
         missing = _node_deps_missing(root, data)
         planned: dict[str, str] = {}  # script -> kind, in the order they run
         for script, kind in (("test", "tests"), ("lint", "lint"), ("build", "build")):
