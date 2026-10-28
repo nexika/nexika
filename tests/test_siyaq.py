@@ -440,6 +440,38 @@ def test_events_file_is_private_and_rotated(repo, monkeypatch):
     assert terms[-1] == "word19" and len(terms) < 20
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="no file lock on Windows")
+def test_two_sessions_rotating_at_once_keep_the_history(repo, monkeypatch):
+    """#413: session A holds the rotation lock and rotates while session B, which also saw the file
+    over the limit, waits. B must re-check the size and not move A's new file over the history."""
+    import fcntl
+    import os
+    import threading
+
+    monkeypatch.setattr(state, "EVENTS_LIMIT", 300)
+    folder = idx.project_dir(repo)
+    folder.mkdir(parents=True)
+    history = "".join(json.dumps({"ts": "2026-01-01T00:00:00", "type": "miss", "n": n}) + "\n"
+                      for n in range(20))
+    (folder / "events.jsonl").write_text(history, encoding="utf-8")
+
+    lock = os.open(folder / ".events.lock", os.O_WRONLY | os.O_CREAT, 0o600)
+    fcntl.flock(lock, fcntl.LOCK_EX)  # session A is rotating
+    b = threading.Thread(target=state.log_event, args=(repo, {"session": "b", "type": "miss"}))
+    b.start()
+    b.join(timeout=1)  # B has seen the file over the limit (and, without a lock, rotated already)
+    os.replace(folder / "events.jsonl", folder / "events.1.jsonl")
+    with open(folder / "events.jsonl", "a", encoding="utf-8") as fh:
+        fh.write(json.dumps({"ts": "2026-01-01T00:00:01", "session": "a", "type": "miss"}) + "\n")
+    os.close(lock)
+    b.join()
+
+    assert (folder / "events.1.jsonl").read_text(encoding="utf-8") == history
+    sessions = [json.loads(line).get("session")
+                for line in (folder / "events.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert sessions == ["a", "b"]
+
+
 # ---------------------------------------------------------------- Arabic and English together (#72)
 
 

@@ -112,6 +112,27 @@ def gc(max_age_days: int = SESSION_TTL_DAYS) -> None:
                 path.unlink(missing_ok=True)
 
 
+def _rotate(path: Path) -> None:
+    """Move a full events.jsonl to events.1.jsonl once, even when two sessions see it full at the same
+    time (#413): the size is checked again under a lock, so the second one finds the new small file
+    and keeps it. Only the rotation is locked, not every event. Without a file lock (Windows) it
+    rotates unlocked, as before."""
+    fd = None
+    try:
+        import fcntl
+        fd = os.open(path.with_name(".events.lock"), os.O_WRONLY | os.O_CREAT, 0o600)
+        fcntl.flock(fd, fcntl.LOCK_EX)
+    except (ImportError, OSError):
+        pass
+    try:
+        with contextlib.suppress(FileNotFoundError):  # the other session moved it and has not written yet
+            if path.stat().st_size > EVENTS_LIMIT:
+                os.replace(path, path.with_name("events.1.jsonl"))
+    finally:
+        if fd is not None:
+            os.close(fd)  # closing releases the lock
+
+
 def log_event(root: Path, event: dict) -> None:
     """Append one usage event; the file is readable only by you (it holds words from prompts)."""
     folder = project_dir(root)
@@ -121,7 +142,7 @@ def log_event(root: Path, event: dict) -> None:
     path = folder / "events.jsonl"
     try:
         if path.exists() and path.stat().st_size > EVENTS_LIMIT:
-            os.replace(path, folder / "events.1.jsonl")
+            _rotate(path)
         fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
         os.fchmod(fd, 0o600)  # files written by older versions were 0644
         with os.fdopen(fd, "a", encoding="utf-8") as fh:
