@@ -24,11 +24,11 @@ def _exempt(rel: str, owner: proj.Project) -> bool:
     return False
 
 
-def _text(root: Path, rel: str) -> str:
+def _note_problem(root: Path, rel: str) -> str:
     try:
-        return (root / rel).read_text(encoding="utf-8").strip()
-    except (OSError, UnicodeDecodeError):
-        return ""
+        return fragments.read_note(root / rel)[1]
+    except OSError:
+        return "empty note"
 
 
 def check(root: Path, runner: gitops.Runner, projects: list[proj.Project], base: str,
@@ -57,9 +57,9 @@ def check(root: Path, runner: gitops.Runner, projects: list[proj.Project], base:
             lines.append(f"misplaced note: {rel}: it is never released; notes go in "
                          + " or ".join(sorted(f + "/" for f in folders)[:3])
                          + (" ..." if len(folders) > 3 else ""))
-        elif not _text(root, rel):
-            problem = "empty"
-            lines.append(f"empty note: {rel}: write what changed, for users")
+        elif problem := _note_problem(root, rel):
+            lines.append(f"empty note: {rel}: write what changed, for users" if problem == "empty note"
+                         else f"bad note: {rel}: {problem}; save it as UTF-8")
         else:
             notes.append(rel)
         ok = ok and not problem

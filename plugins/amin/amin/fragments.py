@@ -39,6 +39,16 @@ def check_name(filename: str) -> str | None:
     return None
 
 
+def read_note(path: Path) -> tuple[str, str]:
+    """(text, problem): the note's stripped text, or why it can't be released ("not UTF-8 text",
+    "empty note")."""
+    try:
+        text = path.read_text(encoding="utf-8").strip()
+    except UnicodeDecodeError:
+        return "", "not UTF-8 text"
+    return text, "" if text else "empty note"
+
+
 def pending(root: Path, project: Project) -> tuple[list[Fragment], list[str]]:
     """(valid notes, problems) waiting in the project's notes folder."""
     folder = root / project.fragments
@@ -53,13 +63,9 @@ def pending(root: Path, project: Project) -> tuple[list[Fragment], list[str]]:
             problems.append(f"{project.fragments}/{problem}")
             continue
         m = NAME.match(path.name)
-        try:
-            text = path.read_text(encoding="utf-8").strip()
-        except UnicodeDecodeError:
-            problems.append(f"{project.fragments}/{path.name}: not UTF-8 text")
-            continue
-        if not text:
-            problems.append(f"{project.fragments}/{path.name}: empty note")
+        text, problem = read_note(path)
+        if problem:
+            problems.append(f"{project.fragments}/{path.name}: {problem}")
             continue
         notes.append(Fragment(path.relative_to(root).as_posix(), m.group("id"), m.group("type"), text))
     return notes, problems

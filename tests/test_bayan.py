@@ -394,6 +394,24 @@ def test_the_user_level_attribution_setting_counts_too(tmp_path):
     assert decision(SIGNED, tmp_path / "elsewhere") is None
 
 
+@pytest.mark.parametrize("value", ["false", "FALSE"])
+def test_a_quoted_include_co_authored_by_is_not_a_choice_to_keep_the_signature(tmp_path, value):
+    # issue #417: bool("false") is True. Claude Code rejects a string here ("Expected boolean,
+    # but received string") and skips the file, so the user made no choice there
+    project = tmp_path / "proj"
+    write_settings(project / ".claude", {"includeCoAuthoredBy": value})
+    assert decision(SIGNED, project) == "suggest"
+
+
+def test_a_file_claude_code_rejects_falls_through_to_the_next_one(tmp_path):
+    project = tmp_path / "proj"
+    write_settings(project / ".claude", {"includeCoAuthoredBy": "false",
+                                         "attribution": {"commit": "Co-Authored-By: Claude"}})
+    assert decision(SIGNED, project) == "suggest"
+    write_settings(tmp_path / "claude-config", {"includeCoAuthoredBy": True})
+    assert decision(SIGNED, project) is None
+
+
 def test_an_empty_attribution_setting_still_gets_the_note(tmp_path):
     project = tmp_path / "proj"
     write_settings(project / ".claude", {"attribution": {"commit": "", "pr": ""}})

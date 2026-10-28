@@ -705,6 +705,20 @@ def test_empty_and_misplaced_notes_are_rejected(market):
     assert "misplaced note: changelog.d/gamma/7.fixed.md" in text
 
 
+def test_a_note_that_is_not_utf8_is_named_so_not_empty(market):
+    # issue #417: check-fragment called it an "empty note", sending the author the wrong way
+    feature_branch(market)
+    write(market, "plugins/alpha/main.py", "x = 5\n")
+    (market / "changelog.d" / "alpha").mkdir(parents=True, exist_ok=True)
+    (market / "changelog.d" / "alpha" / "5.fixed.md").write_bytes(b"caf\xe9 fixed\n")
+    commit(market)
+    ok, lines = run_check(market)
+    text = "\n".join(lines)
+    assert not ok
+    assert "changelog.d/alpha/5.fixed.md: not UTF-8 text" in text
+    assert "empty note" not in text
+
+
 # ---------------------------------------------------------------- triage
 
 
