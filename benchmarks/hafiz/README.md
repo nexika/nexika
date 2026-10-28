@@ -153,9 +153,30 @@ compaction only the transcript shows, good and bad runs.
 
 ## Results
 
-### Version 2
+### Version 2 (2026-10-11): a gain after a restart, from one task
 
-Pending: the paid runs need the maintainer's approval first.
+3 tasks, 2 arms, 3 runs each, Sonnet, every run valid, held-out wording (#376), hafiz at `6cb302c` (with
+#369-#371, shipped in Nexika 0.4.0). Cost $14.64. Raw data: `~/nexika-bench/hafiz/v2-heldout/`.
+
+| Arm | Continuity | Decisions kept | Open work done | No redo | Restore note | Tokens after the first break | Cost |
+|---|---|---|---|---|---|---|---|
+| plain | 0.82 ± 0.17 | 0.94 | 0.53 | 1.00 | none | 162k | $7.08 |
+| hafiz | 0.92 ± 0.10 | 0.94 | 0.83 | 1.00 | 1,015 chars | 202k (+25%) | $7.57 (+7%) |
+
+| Task | plain | hafiz |
+|---|---|---|
+| `loans-compact` (two compactions, same session) | 1.00 | 0.97 |
+| `loans-restart` (a new session told the steps left) | 0.80 | 0.80 |
+| `search-restart` (a new session told only "carry on with the plan") | 0.67 | 1.00 |
+
+- After a compaction in the same session, hafiz adds nothing: Claude Code's own summary carries the
+  decisions and the open work.
+- After a restart told only "carry on with the plan", hafiz carries the plan and the open work across.
+  The `plain` arm did none of step 4 in its 3 runs; the `hafiz` arm did all of it in its 3.
+- When the new prompt already lists the steps left, both arms score the same.
+- **How sure:** 9 runs per arm. The overall gap (+0.10) is within one standard deviation (±), and it
+  comes from one task. It is a clear direction, not a proven effect. More restart tasks, with 5 or more
+  runs each, would settle it.
 
 ### Version 1 (2026-10-10): no difference, and it could not show one
 

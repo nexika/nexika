@@ -106,19 +106,30 @@ The full lists are in [CHANGELOG.md](CHANGELOG.md) and in each add-on's own chan
 
 ## How we know it works
 
-We measure each add-on against real material, and we publish the results, including where an
-add-on doesn't help yet.
+We measure the add-ons and publish the results, including where an add-on doesn't help yet. Every
+method, result and limit is collected on one page: [benchmarks](benchmarks/README.md).
+
+We keep two kinds of result apart, and we say how sure each one is.
+
+**Tested on outside material.** These used tasks we did not write, graded by tools we did not build.
+Nobody outside the project has repeated them yet.
 
 | What we measured | How | Result |
 |---|---|---|
-| Does Nexika help Claude solve programming tasks? | The same tasks from public software projects, with and without Nexika ([benchmarks/agent](benchmarks/agent/README.md)) | Claude solves about 3 to 5 more tasks in 100 with Nexika, but the difference is small enough to be chance. The clear effect is that Claude checks its work far more often. Nexika costs about twice as much per task. |
-| Does haris stop real harm without getting in the way? | 1,180 labelled commands, harmful and ordinary ([benchmarks/haris](benchmarks/haris/README.md)) | Stops all 687 harmful ones at the standard setting, asks about 9 of 493 ordinary ones, and decides in under a thousandth of a second. |
-| Does tabib find the real cause of a failed build? | 170 real failures from six public projects, labelled by hand ([benchmarks/tabib](benchmarks/tabib/README.md)) | Right kind of failure 98% of the time, right failing test every time, with no misleading answers left. |
-| Does hafiz keep the work going after a break? | Long tasks with a forced break, with and without hafiz ([benchmarks/hafiz](benchmarks/hafiz/README.md)) | No difference after a shortened conversation. After a restart in a new conversation, Claude finished the open work in all 3 runs with hafiz and in none without. Only 3 runs each, so it is a strong sign, not a proof. |
-| Does lawha make better pages than other design tools? | The same design and brief for each tool, one scoring script ([benchmarks](benchmarks/README.md)) | Matches the design as closely as the best of the others, and fixes their contrast, tap-size and keyboard problems. A blind judge preferred its pages every time. |
+| Does Nexika help Claude solve programming tasks? | The same tasks from public software projects, with and without Nexika ([benchmarks/agent](benchmarks/agent/README.md)) | Not shown. Claude solved about 3 to 5 more tasks in 100 with Nexika, but the difference is small enough to be chance. |
+| Does Claude check its work more? | The same tasks | Yes. With Nexika, Claude runs the project's tests more often. With itqan's 0.4 guidance, it tests the files it changed in 86% of tasks, up from 63%. |
+| What does it cost? | The same tasks | About twice as much per task. |
+| Does lawha follow a design? | One public Figma design, the same for each tool ([benchmarks/lawha](benchmarks/lawha.md)) | As closely as Figma's own tool, with fewer accessibility problems. |
 
-These tests are small, and we say how sure each result is. When a result is only a direction,
-not a proof, the benchmark's own page says so.
+**Our own tests.** These use test sets we wrote, or material an add-on was tuned on. They guide our
+work and catch mistakes, but they don't prove how an add-on does on your work.
+
+| What we measured | How | Result |
+|---|---|---|
+| Does haris stop real harm without getting in the way? | 1,344 commands we labelled, harmful and ordinary ([benchmarks/haris](benchmarks/haris/README.md)) | Stops all 799 harmful ones at the standard setting, asks about 9 of 545 ordinary ones, and decides in under a thousandth of a second. |
+| Does tabib find the real cause of a failed build? | 170 real failures from six public projects, labelled by hand; tabib was tuned on 150 of them ([benchmarks/tabib](benchmarks/tabib/README.md)) | Right kind of failure 98% of the time, right failing test every time, with no misleading answers left. |
+| Does hafiz keep the work going after a break? | Our own long tasks with a forced break, with and without hafiz ([benchmarks/hafiz](benchmarks/hafiz/README.md)) | No difference after a shortened conversation. After a restart in a new conversation, Claude finished the open work in all 3 runs with hafiz and in none without. Only 3 runs each, so it is a strong sign, not a proof. |
+| Do people prefer lawha's pages? | One brief, built by lawha and by another design skill ([benchmarks/lawha](benchmarks/lawha.md)) | Three judges preferred lawha's page every time. The judges were AI models, not people. |
 
 ## Cost and privacy
 
