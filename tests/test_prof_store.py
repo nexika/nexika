@@ -4,6 +4,7 @@ from __future__ import annotations
 import datetime
 import io
 import json
+import locale
 import os
 import subprocess
 import time
@@ -387,7 +388,12 @@ def fake_claude(store, monkeypatch, stdout, returncode=0):
     def run(cmd, stdin, **kw):
         seen["cmd"] = cmd
         seen["stdin"] = stdin.read()
-        return subprocess.CompletedProcess(cmd, returncode, stdout=stdout, stderr="")
+        out = stdout
+        if isinstance(out, bytes):   # decode the way subprocess.run would, so bad bytes can be tested
+            if kw.get("text") or kw.get("encoding") or kw.get("errors"):
+                out = out.decode(kw.get("encoding") or locale.getpreferredencoding(False),
+                                 kw.get("errors") or "strict")
+        return subprocess.CompletedProcess(cmd, returncode, stdout=out, stderr="")
 
     monkeypatch.setattr(store.shutil, "which", lambda name: "/fake/claude")
     monkeypatch.setattr(store.subprocess, "run", run)
@@ -420,6 +426,22 @@ def test_write_auto_report_rejects_bad_output(store, monkeypatch, stdout, rc):
     fake_claude(store, monkeypatch, stdout, rc)
     assert store.write_auto_report("abcd1234", convo) == 1
     assert not store.REPORTS.exists() or not list(store.REPORTS.glob("*.md"))
+
+
+def test_an_auto_report_with_bytes_that_are_not_utf8_is_still_written(store, monkeypatch):
+    # #412: one bad byte in claude's output raised on decode and the session got no report
+    store.TMP.mkdir(parents=True)
+    convo = store.TMP / "abcd1234.txt"
+    convo.write_text("LEARNER: hi")
+    fake_claude(store, monkeypatch, VALID_REPORT.encode() + b"caf\xe9 \xff\n")
+
+    assert store.write_auto_report("abcd1234zz", convo) == 0
+
+    [report] = store.REPORTS.glob("*_abcd1234.md")
+    text = report.read_text(encoding="utf-8")
+    assert "## Concept checklist" in text
+    assert "caf\ufffd \ufffd" in text
+    assert store.load_topic("py")[1]["loops"][0] == "shaky"
 
 
 def test_write_auto_report_without_claude(store, monkeypatch, tmp_path):
