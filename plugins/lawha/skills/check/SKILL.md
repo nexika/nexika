@@ -1,6 +1,6 @@
 ---
 name: check
-description: Check a web page at every screen width, light and dark, LTR and RTL, and fix what fails. Use when the user says "check this page", "is it responsive", "does it work on mobile", "افحص الصفحة", "هل الصفحة متجاوبة", or after building or changing a page.
+description: Check a web page at every screen width, light and dark, and fix what fails. Use when the user says "check this page", "is it responsive", "does it work on mobile", "افحص الصفحة", "هل الصفحة متجاوبة", or after building or changing a page.
 argument-hint: "[url] [--fix]"
 ---
 

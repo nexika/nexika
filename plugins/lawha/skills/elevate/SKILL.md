@@ -1,6 +1,6 @@
 ---
 name: elevate
-description: Make a working page more beautiful, keeping only changes a blind judge prefers. Use when the user says "make it beautiful", "it looks boring", "polish this", "حسّن التصميم", "اجعلها أجمل".
+description: Make a working page more beautiful. Use when the user says "make it beautiful", "it looks boring", "polish this", "حسّن التصميم", "اجعلها أجمل".
 argument-hint: "[url] [--rounds 3]"
 ---
 
