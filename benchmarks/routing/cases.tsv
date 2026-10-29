@@ -1,24 +1,48 @@
-# Skill routing cases (#431). Columns, tab-separated: expected skill (plugin:skill, or - for none),
-# kind, prompt. kind: kept = a phrase the description still names; dropped = a phrase #438 cut from
-# the description; negative = ordinary work that must not start the plugin's skills.
-# The prompts run in a tiny project (FIXTURE in bench.py) that has app.py and a README.
-prof:learn	kept	Teach me async/await in Python.
-prof:learn	kept	I want to learn how git branches work.
-prof:learn	dropped	Give me a lesson on recursion.
-prof:walkthrough	kept	Walk me through app.py line by line.
-prof:walkthrough	dropped	I'm learning, explain app.py slowly.
-prof:onboard	kept	I'm new to this codebase, onboard me.
-prof:quiz	kept	Quiz me on Python list comprehensions.
-prof:quiz	kept	Test me on SQL joins.
-prof:quiz	dropped	Check my understanding of closures in JavaScript.
-prof:warmup	kept	Check what I remember about recursion.
-prof:warmup	dropped	Where was I in my lessons?
-prof:progress	kept	Show my progress.
-prof:progress	dropped	What have I learned so far?
-prof:report	kept	What did I learn today?
--	negative	What is a Python decorator?
--	negative	Why does [] == [] give True in Python but [] is [] gives False?
--	negative	What does app.py do?
--	negative	Give me a quick overview of this repo.
--	negative	Add a --verbose flag to app.py.
--	negative	Thanks, that's all for today. Bye!
+# Skill routing cases (#431). Columns, tab-separated: suite (the plugin under test, which also picks the
+# project the prompt runs in: FIXTURES in bench.py), expected skill (plugin:skill, or - for none), kind,
+# prompt. kind: kept = a phrase the description names; dropped = a phrase #438 first cut from prof's
+# descriptions; paraphrase = the same request in other words, routed from the description's meaning;
+# negative = ordinary work that must not start a skill of the suite.
+# Case ids are row numbers, so saved runs match only while rows stay put: add new cases at the end.
+prof	prof:learn	kept	Teach me async/await in Python.
+prof	prof:learn	kept	I want to learn how git branches work.
+prof	prof:learn	dropped	Give me a lesson on recursion.
+prof	prof:walkthrough	kept	Walk me through app.py line by line.
+prof	prof:walkthrough	dropped	I'm learning, explain app.py slowly.
+prof	prof:onboard	kept	I'm new to this codebase, onboard me.
+prof	prof:quiz	kept	Quiz me on Python list comprehensions.
+prof	prof:quiz	kept	Test me on SQL joins.
+prof	prof:quiz	dropped	Check my understanding of closures in JavaScript.
+prof	prof:warmup	kept	Check what I remember about recursion.
+prof	prof:warmup	dropped	Where was I in my lessons?
+prof	prof:progress	kept	Show my progress.
+prof	prof:progress	dropped	What have I learned so far?
+prof	prof:report	kept	What did I learn today?
+prof	-	negative	What is a Python decorator?
+prof	-	negative	Why does [] == [] give True in Python but [] is [] gives False?
+prof	-	negative	What does app.py do?
+prof	-	negative	Give me a quick overview of this repo.
+prof	-	negative	Add a --verbose flag to app.py.
+prof	-	negative	Thanks, that's all for today. Bye!
+lawha	lawha:check	kept	Check this page, is it responsive?
+lawha	lawha:check	kept	افحص الصفحة
+lawha	lawha:direct	kept	Make it look good, I have no idea how it should look.
+lawha	lawha:direct	kept	صمم الواجهة
+lawha	lawha:elevate	kept	Make it beautiful, it looks boring.
+lawha	lawha:elevate	kept	اجعلها أجمل
+lawha	lawha:figma	kept	Build this design: https://www.figma.com/design/Xq3vLm9pRt2/Landing?node-id=1-2
+lawha	lawha:inspire	kept	Make it like this: https://linear.app
+lawha	lawha:inspire	kept	استلهم من هذا الموقع https://stripe.com
+lawha	lawha:system	kept	What's in our design system?
+lawha	lawha:system	kept	Check for design drift.
+lawha	lawha:check	paraphrase	Does the app work on an iPhone, and in dark mode?
+lawha	lawha:direct	paraphrase	I need a visual style for this app and I can't picture one.
+lawha	lawha:elevate	paraphrase	The landing page works but feels plain. Can it feel more premium?
+lawha	lawha:figma	paraphrase	Turn this Figma frame into React: https://www.figma.com/design/Xq3vLm9pRt2/Landing?node-id=4-7
+lawha	lawha:inspire	paraphrase	I love how vercel.com looks. Can we get that feel without copying it?
+lawha	lawha:system	paraphrase	Which components and colour tokens do we already have?
+lawha	-	negative	What does the dependency array in useEffect do?
+lawha	-	negative	Add a loading state to the fetch in src/App.jsx.
+lawha	-	negative	Why does the fetch in src/App.jsx log undefined?
+lawha	-	negative	Rename the Button component to PrimaryButton.
+lawha	-	negative	Write a unit test for formatPrice in src/price.js.
