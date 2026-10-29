@@ -1,6 +1,6 @@
 ---
 name: progress
-description: Show or update the learner's profile and progress. Use after a lesson, quiz or onboarding, or when the user says "my progress", "what have I learned", "set my level", "what should I learn next".
+description: Show or update the learner's profile. Use after a lesson or quiz, or when the user says "my progress", "what have I learned", "set my level", "what should I learn next".
 argument-hint: "[show | update | reset]"
 ---
 
