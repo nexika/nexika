@@ -34,8 +34,11 @@ AUTH_VARS = ("ANTHROPIC_API_KEY", "CLAUDE_CODE_OAUTH_TOKEN")
 ALLOWED = ("Skill", "Read", "Grep", "Glob")
 DISALLOWED = ("Bash", "Edit", "Write", "NotebookEdit", "WebFetch", "WebSearch", "Task", "Agent")
 
-# The small project every prompt runs in, so "app.py" and "this codebase" mean something.
-FIXTURE = {
+KINDS = ("kept", "dropped", "paraphrase", "negative")
+
+# The small project each suite's prompts run in, so "app.py" or "this page" mean something.
+FIXTURES = {}
+FIXTURES["prof"] = {
     "README.md": "# tally\n\nCounts words in text files. Run `python3 app.py FILE...`.\n",
     "app.py": '''"""Count words in text files."""
 import sys
@@ -59,6 +62,55 @@ if __name__ == "__main__":
     main(sys.argv[1:])
 ''',
 }
+# lawha's session note shows only in a frontend project, as in real use.
+FIXTURES["lawha"] = {
+    "package.json": json.dumps({
+        "name": "shop", "private": True, "type": "module",
+        "scripts": {"dev": "vite", "build": "vite build", "test": "vitest"},
+        "dependencies": {"react": "^18.3.1", "react-dom": "^18.3.1"},
+        "devDependencies": {"vite": "^5.4.0", "tailwindcss": "^3.4.0", "vitest": "^2.1.0"},
+    }, indent=2) + "\n",
+    "index.html": '<!doctype html>\n<html lang="en">\n'
+                  '<head><meta charset="utf-8"><title>Shop</title></head>\n'
+                  '<body><div id="root"></div><script type="module" src="/src/main.jsx"></script></body>\n'
+                  "</html>\n",
+    "src/main.jsx": 'import { createRoot } from "react-dom/client";\nimport App from "./App.jsx";\n'
+                    'import "./index.css";\n\ncreateRoot(document.getElementById("root")).render(<App />);\n',
+    "src/index.css": "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n",
+    "src/App.jsx": '''import { useEffect, useState } from "react";
+import Button from "./Button.jsx";
+import { formatPrice } from "./price.js";
+
+export default function App() {
+  const [items, setItems] = useState([]);
+  useEffect(() => {
+    fetch("/api/items").then((r) => r.json()).then((data) => setItems(data.items));
+  }, []);
+  return (
+    <main className="mx-auto max-w-3xl p-6">
+      <h1 className="text-3xl font-bold">Shop</h1>
+      <ul className="mt-4 space-y-2">
+        {items.map((item) => (
+          <li key={item.id} className="flex justify-between">
+            {item.name} <span>{formatPrice(item.cents)}</span>
+          </li>
+        ))}
+      </ul>
+      <Button>Checkout</Button>
+    </main>
+  );
+}
+''',
+    "src/Button.jsx": '''export default function Button({ children, ...props }) {
+  return (
+    <button className="mt-6 rounded bg-blue-600 px-4 py-2 text-white" {...props}>
+      {children}
+    </button>
+  );
+}
+''',
+    "src/price.js": "export function formatPrice(cents) {\n  return `$${(cents / 100).toFixed(2)}`;\n}\n",
+}
 
 
 def load_cases(path=CASES):
@@ -66,13 +118,10 @@ def load_cases(path=CASES):
     for line in Path(path).read_text(encoding="utf-8").splitlines():
         if not line.strip() or line.startswith("#"):
             continue
-        expected, kind, prompt = line.split("\t")
-        cases.append({"id": len(cases) + 1, "expected": expected, "kind": kind, "prompt": prompt})
+        suite, expected, kind, prompt = line.split("\t")
+        cases.append({"id": len(cases) + 1, "suite": suite, "expected": expected, "kind": kind,
+                      "prompt": prompt})
     return cases
-
-
-def plugin_of(expected):
-    return expected.partition(":")[0] if expected != "-" else None
 
 
 def export_plugins(ref, dest, repo=REPO):
@@ -151,14 +200,11 @@ def cost(lines):
     return 0.0
 
 
-TESTED = {"prof"}   # plugins whose skills a negative case must not start
-
-
 def correct(case, called):
-    """Right when the expected skill was called; for "-", when no skill of the plugins under test was."""
+    """Right when the expected skill was called; for "-", when no skill of the case's suite was."""
     if case["expected"] != "-":
         return case["expected"] in called
-    return not any(name.partition(":")[0] in TESTED for name in called)
+    return not any(name.partition(":")[0] == case["suite"] for name in called)
 
 
 def run_one(case, arm, run, plugin_dirs, cfg, out):
@@ -169,7 +215,8 @@ def run_one(case, arm, run, plugin_dirs, cfg, out):
         home, project = Path(tmp) / "home", Path(tmp) / "project"
         (home / ".claude").mkdir(parents=True)
         project.mkdir()
-        for name, text in FIXTURE.items():
+        for name, text in FIXTURES[case["suite"]].items():
+            (project / name).parent.mkdir(parents=True, exist_ok=True)
             (project / name).write_text(text, encoding="utf-8")
         # The prompt goes on stdin: after a list of --plugin-dir options, a bare argument is easy to misread.
         proc = subprocess.run(claude_args(plugin_dirs, cfg["model"], cfg["max_turns"], cfg["budget"]),
@@ -196,7 +243,7 @@ def markdown(cases, results, arms):
     valid = [r for r in results if r["valid"]]
     lines = ["# Skill routing", "", "Right answers out of valid runs, per kind of prompt.", "",
              "| Kind | " + " | ".join(arms) + " |", "|---|" + "---|" * len(arms)]
-    for kind in ("kept", "dropped", "negative"):
+    for kind in [k for k in KINDS if any(c["kind"] == k for c in cases)]:
         row = []
         for arm in arms:
             rs = [r for r in valid if r["arm"] == arm and by_case[r["case"]]["kind"] == kind]
@@ -239,6 +286,7 @@ def main(argv=None):
     p.add_argument("--timeout", type=int, default=180)
     p.add_argument("--jobs", type=int, default=4)
     p.add_argument("--cases", default=str(CASES))
+    p.add_argument("--suite", help="only this suite's cases, e.g. lawha")
     p.add_argument("--only", help="case ids, comma-separated")
     p.add_argument("--out", help="folder for runs and summary.md")
     p.add_argument("--dry-run", action="store_true")
@@ -246,6 +294,8 @@ def main(argv=None):
     args = p.parse_args(argv)
 
     cases = load_cases(args.cases)
+    if args.suite:
+        cases = [c for c in cases if c["suite"] == args.suite]
     if args.only:
         keep = {int(i) for i in args.only.split(",")}
         cases = [c for c in cases if c["id"] in keep]
@@ -256,7 +306,7 @@ def main(argv=None):
     cfg = {"model": args.model, "max_turns": args.max_turns, "budget": args.budget, "timeout": args.timeout}
     if args.dry_run:
         for c in cases:
-            print(f"{c['id']:2} {c['expected']:18} {c['kind']:9} {c['prompt']}")
+            print(f"{c['id']:2} {c['expected']:18} {c['kind']:10} {c['prompt']}")
         print(f"\n{len(cases)} cases x {args.runs} runs x {len(refs)} arms = "
               f"{len(cases) * args.runs * len(refs)} sessions")
         print(" ".join(claude_args(["PLUGINS/<name>"], args.model, args.max_turns, args.budget)))

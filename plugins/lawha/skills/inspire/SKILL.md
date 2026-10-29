@@ -1,6 +1,6 @@
 ---
 name: inspire
-description: Learn a design (fonts, colours, spacing, motion) from sites or screenshots the user likes, without copying. Use when the user shares a URL or screenshot and says "make it like this", "I love this site", "استلهم من هذا الموقع", "أريد تصميماً مثل".
+description: Learn a design from sites or screenshots the user likes, without copying. Use when the user shares a URL or screenshot and says "make it like this", "I love this site", "استلهم من هذا الموقع", "أريد تصميماً مثل".
 argument-hint: "<url or screenshot> [more...]"
 ---
 

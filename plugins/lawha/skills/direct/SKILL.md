@@ -1,6 +1,6 @@
 ---
 name: direct
-description: Propose three design directions, pick one by looking, and turn it into Tailwind and shadcn tokens. Use when the user says "design this", "make it look good", "pick a style", "صمم الواجهة", "اقترح تصميماً", or starts a frontend with no design.
+description: Give a project a design: three directions to choose from. Use when the user says "design this", "make it look good", "pick a style", "صمم الواجهة", "اقترح تصميماً", or starts a frontend with no design.
 argument-hint: "[what the product is] [--kind landing|dashboard]"
 ---
 
