@@ -1,6 +1,6 @@
 ---
 name: learn
-description: Teach a programming concept step by step, with checks and an exercise. Use for "teach me", "I want to learn", "give me a lesson on". Not for "what is X" while working.
+description: Teach a programming concept step by step, with checks and an exercise. Use when the user says "teach me", "I want to learn", "give me a lesson on". Not for "what is X" while working.
 argument-hint: "<topic, e.g. async/await in C#>"
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: onboard
-description: Onboard a junior developer to an existing project, ending with a first task. Use for "onboard me", "I'm new to this codebase, teach me". Not for a quick overview.
+description: Onboard a junior developer to an existing project, ending with a first task. Use when the user says "onboard me", "I'm new to this codebase, teach me". Not for a quick overview.
 argument-hint: "[path or area of the project, optional]"
 ---
 

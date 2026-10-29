@@ -1,6 +1,6 @@
 ---
 name: report
-description: Write the learning report. Use when a prof lesson, quiz, walkthrough or onboarding ends, or for "what did I learn". Not for a goodbye after ordinary work.
+description: Write the learning report. Use when a prof lesson, quiz, walkthrough or onboarding ends, or when the user says "what did I learn". Not for a goodbye after ordinary work.
 argument-hint: "[optional note]"
 ---
 
