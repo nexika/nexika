@@ -1,6 +1,6 @@
 ---
 name: report
-description: Write the end-of-session learning report and update the per-topic memory. Use when a prof lesson, quiz, warm-up, walkthrough or onboarding ends, or the user says "what did I learn". A goodbye after ordinary work is not a reason.
+description: Write the learning report. Use when a prof lesson, quiz, walkthrough or onboarding ends, or for "what did I learn". Not for a goodbye after ordinary work.
 argument-hint: "[optional note]"
 ---
 

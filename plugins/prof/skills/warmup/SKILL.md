@@ -1,6 +1,6 @@
 ---
 name: warmup
-description: Check what the learner kept from past sessions and re-teach what was missed before new material. Use at the start of a tutoring session on a topic with history, or when the user says "check what I remember", "where was I in my lessons".
+description: Check what the learner kept from past sessions and re-teach gaps first. Use at the start of a lesson on a topic with history, or for "check what I remember".
 argument-hint: "[topic or topic-slug, optional]"
 ---
 

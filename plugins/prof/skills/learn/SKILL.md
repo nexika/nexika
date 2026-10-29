@@ -1,6 +1,6 @@
 ---
 name: learn
-description: Teach a programming concept step by step, with examples, check questions and an exercise. Use when the user asks to be taught ("teach me", "I want to learn", "give me a lesson on") or runs /prof:learn. Not for questions asked while working ("what is X"), which get a direct answer.
+description: Teach a programming concept step by step, with checks and an exercise. Use for "teach me", "I want to learn". Not for "what is X" while working.
 argument-hint: "<topic, e.g. async/await in C#>"
 ---
 

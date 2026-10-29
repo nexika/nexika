@@ -46,6 +46,15 @@ def test_skill_description_fits_its_budget(path):
     assert "Use " in text, "say when to use it"
 
 
+PROF_SKILL_BUDGET = 160   # #431: prof's seven skills load in every session, and most sessions aren't lessons
+PROF_SKILLS = sorted((PLUGINS / "prof" / "skills").glob("*/SKILL.md"))
+
+
+@pytest.mark.parametrize("path", PROF_SKILLS, ids=ids(PROF_SKILLS))
+def test_prof_skill_description_fits_the_tighter_budget(path):
+    assert len(description(path)) <= PROF_SKILL_BUDGET, f"{len(description(path))} characters"
+
+
 @pytest.mark.parametrize("path", AGENTS, ids=ids(AGENTS))
 def test_agent_description_fits_its_budget(path):
     text = description(path)
