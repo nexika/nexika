@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Audit a website or built site folder for search engines and AI assistants, with a prioritised fix list. Use when the user says "SEO audit", "why don't we show up in Google / ChatGPT / Gemini", "check our site", or "manar audit".
+description: Audit a website or built site folder for search engines and AI assistants. Use when the user says "SEO audit", "why don't we show up in Google / ChatGPT / Gemini", "check our site", or "manar audit".
 argument-hint: "<URL or built folder>"
 ---
 

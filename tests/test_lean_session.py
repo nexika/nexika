@@ -63,6 +63,14 @@ def test_lawha_skill_descriptions_fit_their_total_budget():
     assert total <= LAWHA_SKILLS_BUDGET, f"{total} characters"
 
 
+MANAR_SKILLS_BUDGET = 550   # #431: all three together, down from 656; every trigger phrase stays
+
+
+def test_manar_skill_descriptions_fit_their_total_budget():
+    total = sum(len(description(p)) for p in (PLUGINS / "manar" / "skills").glob("*/SKILL.md"))
+    assert total <= MANAR_SKILLS_BUDGET, f"{total} characters"
+
+
 @pytest.mark.parametrize("path", AGENTS, ids=ids(AGENTS))
 def test_agent_description_fits_its_budget(path):
     text = description(path)
@@ -91,9 +99,12 @@ TRIGGERS = {
     "prof/skills/quiz/SKILL.md": ["quiz me", "check my understanding"],
     "prof/skills/warmup/SKILL.md": ["check what I remember", "where was I in my lessons"],
     "prof/skills/progress/SKILL.md": ["my progress", "what have I learned"],
-    "manar/skills/audit/SKILL.md": ["SEO audit", "ChatGPT"],
-    "manar/skills/fix/SKILL.md": ["fix the SEO", "llms.txt"],
-    "manar/skills/visibility/SKILL.md": ["AI visibility", "are we cited"],
+    "manar/skills/audit/SKILL.md": ["SEO audit", "why don't we show up in Google / ChatGPT / Gemini",
+                                    "check our site", "manar audit"],
+    "manar/skills/fix/SKILL.md": ["fix the SEO", "make us visible to ChatGPT/Gemini",
+                                  "add schema / sitemap / llms.txt", "manar fix"],
+    "manar/skills/visibility/SKILL.md": ["do ChatGPT/Gemini recommend us", "AI visibility", "are we cited",
+                                         "did the SEO work"],
     "bayan/skills/check/SKILL.md": ["does this sound like AI", "راجع النص"],
     "bayan/skills/write/SKILL.md": ["humanize this", "اكتبها بشكل أبسط"],
     "bayan/skills/level/SKILL.md": ["reader level"],

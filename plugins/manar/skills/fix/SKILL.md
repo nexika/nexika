@@ -1,6 +1,6 @@
 ---
 name: fix
-description: Apply SEO and AI-visibility fixes in the project's code (meta tags, schema, sitemap, robots.txt, llms.txt). Use when the user says "fix the SEO", "make us visible to ChatGPT/Gemini", "add schema / sitemap / llms.txt", or "manar fix".
+description: Apply SEO and AI-visibility fixes in the project's code. Use when the user says "fix the SEO", "make us visible to ChatGPT/Gemini", "add schema / sitemap / llms.txt", or "manar fix".
 argument-hint: "[audit file or issue ids]"
 ---
 
