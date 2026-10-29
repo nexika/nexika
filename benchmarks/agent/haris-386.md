@@ -1,16 +1,130 @@
-# haris in unattended agent runs: pilot 2 against 22c20fb (#386)
+# haris in unattended agent runs (#386)
 
 #386 asks whether #343's haris work cut the permission denials that unattended agent runs hit,
-without costing solve rate or adding regressions. This note answers that from runs that already
-exist. No new paid run was made for it.
+without costing solve rate or adding regressions. It asked for the haris+barq arm on pilot 2's 100
+tasks, compared with pilot 2's same arm.
 
-**Answer: no. Denials went up, from 2 to 41 on the same 100 tasks.** 39 of the 41 come from one
+This page has two parts:
+- **The haris+barq run** (28 Oct 2026, 4f7a4cb, after #434's fix). This is the measurement #386 asked
+  for.
+- **Before the fix** (from existing runs, #433). Arm B at 22c20fb showed denials going up, from one
+  haris rule. #434 then changed that rule.
+
+## The haris+barq run at 4f7a4cb
+
+**Answer: denials did not go down, and did not go up. 1 denial in 100 tasks, the same as pilot 2's
+haris+barq arm.** Solve rate, regressions and cost are the same within the noise. The rise seen at
+22c20fb (41 denials) is gone. Read literally, #386's guardrail ("denials go down") is not met. Pilot 2
+had only 1 denial in this arm, so there was almost nothing left to remove (see Limits).
+
+### Method
+
+| | Before | After |
+|---|---|---|
+| Run | pilot 2, haris+barq arm (2026-10-10) | #386 run, haris+barq arm (2026-10-28) |
+| Nexika | 3ddb676 (0.3 era) | 4f7a4cb (`origin/main` after #436, so all of #343, #402 and #434) |
+| Claude Code | 2.1.296 | 2.1.312 |
+| Tasks, model, settings | pilot 2's 100 tasks, Sonnet, `--permission-prompts none`, `--jobs 3 --workers 3 --test-timeout 900` | the same |
+| Data | `~/nexika-bench/pilot-2/` | `~/nexika-bench/guard-386/main/` (script: `run.sh` next to it) |
+
+Same statistics as below: `bench.py summary`'s pairing, 95% bootstrap intervals over tasks (seed 333,
+2000 draws) and the exact sign test. All 100 runs are valid, and no task failed its gold-patch check.
+A 1-task smoke run went first (`guard-386/smoke/`).
+
+```bash
+AGENTBENCH_HOME=~/nexika-bench/guard-386/main flock ~/nexika-bench/.paid.lock \
+  python3 benchmarks/agent/bench.py --pilot benchmarks/agent/pilot-2.json pipeline --model sonnet \
+  --arms haris+barq --ref 4f7a4cb --jobs 3 --python ~/nexika-bench/venv/bin/python --workers 3 \
+  --test-timeout 900
+python3 benchmarks/agent/denials.py compare ~/nexika-bench/pilot-2 ~/nexika-bench/guard-386/main --arm haris+barq
+python3 benchmarks/agent/denials.py kinds ~/nexika-bench/guard-386/main --arm haris+barq
+```
+
+### Results against pilot 2's haris+barq arm
+
+| Measure (mean per task) | Pilot 2 | 4f7a4cb | Difference | 95% interval |
+|---|---|---|---|---|
+| permission_denials | 0.01 | 0.01 | +0.00 | +0.00 to +0.00 |
+| tasks with any denial | 1% | 1% | +0 pts | +0 pts to +0 pts |
+| resolved | 73% | 72% | -1 pts | -7 pts to +5 pts |
+| regression | 2% | 2% | +0 pts | -3 pts to +3 pts |
+| cost_usd | $0.07 | $0.07 | +$0.00 | -$0.00 to +$0.01 |
+| tokens | 138.2k | 129.4k | -8.8k | -25.6k to +5.1k |
+| tool_calls | 5.50 | 4.90 | -0.60 | -1.19 to -0.10 |
+| ran_tests | 61% | 63% | +2 pts | -4 pts to +8 pts |
+
+- Resolved: only after 4, only before 5 (sign test p = 1).
+- Regression: only after 1 (`sympy__sympy-12489`), only before 1 (`pytest-dev__pytest-5787`), p = 1.
+- None of the 5 tasks lost had a denial in either run.
+- Cost per resolved task: $0.10 in both. Total spend $7.05 before, $7.14 after.
+
+### Against the 22c20fb run (arm B, before #434)
+
+Same tasks, paired the same way. This is not a like-for-like comparison: arm B loads all twelve
+plugins, so only the denial rows are about haris.
+
+| Measure | 22c20fb, B | 4f7a4cb, haris+barq | Difference | 95% interval |
+|---|---|---|---|---|
+| permission_denials | 0.41 | 0.01 | -0.40 | -0.58 to -0.24 |
+| tasks with any denial | 22% | 1% | -21 pts | -29 pts to -13 pts |
+| resolved | 76% | 72% | -4 pts | -11 pts to +3 pts |
+| regression | 5% | 2% | -3 pts | -7 pts to +0 pts |
+
+The 32-module rule (#402) caused 39 of the 41 denials at 22c20fb. After #434 it caused none: no sympy
+task was denied, where 15 of 21 were before.
+
+### Which call was denied
+
+| Reason (haris's text) | Pilot 2 | 4f7a4cb |
+|---|---|---|
+| Edits a path that is only known when it runs, so haris cannot tell where. | 1 call in 1 run | 0 |
+| PYTHONPATH points Python at /tmp, so it would load code haris has not judged. | 0 | 1 call in 1 run |
+
+Both are on the same task, `django__django-13344`, and both are the agent running a test script it
+wrote to `/tmp` with `PYTHONPATH=/testbed:/tmp python t.py`. haris at 4f7a4cb denies pilot 2's command
+too, now for the PYTHONPATH reason (`haris check --unattended`). haris's own benchmark lists a command
+of this kind as a known false alarm (`benchmarks/haris/cases.tsv` line 42). The task was resolved in
+both runs.
+
+### `python3 benchmarks/haris/bench.py --check` at 4f7a4cb
+
+It passes. At standard, attended or unattended, 800/800 harmful cases are stopped and 9/548 ordinary
+cases are asked about. The new case "a large package's imports (#434)" is stopped at every setting.
+
+### Verdict
+
+| #386 guardrail | Result |
+|---|---|
+| Denials go down | **Not met as written.** 1 → 1 per 100 tasks: no change. |
+| Solve rate within the noise or better | Met: 73% → 72%, -7 to +5 pts. |
+| Regression rate within the noise or better | Met: 2% → 2%, -3 to +3 pts. |
+| `bench.py --check` passes | Met. |
+
+Whether "the same as pilot 2, at 1 in 100" is enough to close #386 is the maintainer's call. No
+tuning or rerun was done for this answer.
+
+### Limits
+
+- **A floor of 1.** Pilot 2's arm had 1 denial in 100 tasks. "Fewer" could only mean 0. One run per
+  task can't tell 1 in 100 from 0 in 100. A real drop would need a harder set or several runs per task.
+- **Not haris alone.** Claude Code changed from 2.1.296 to 2.1.312 between the runs, and barq changed
+  too. The solve, cost and tool-call differences can't be pinned on haris. The denials can: each one
+  carries haris's reason.
+- **What #343 changed is still not visible.** With 1 denial before, there was nothing to show a drop
+  from #375, #377, #379 or #381.
+- **One run per task**, Sonnet, 100 tasks. The intervals are over tasks. They don't cover
+  run-to-run noise on the same task.
+
+## Before the fix: pilot 2 arm B against 22c20fb arm B (#433)
+
+This part was measured from runs that already existed, before #434. It found the rise that #434 fixed.
+
+**Answer then: no. Denials went up, from 2 to 41 on the same 100 tasks.** 39 of the 41 come from one
 haris rule. Inline Python that imports a package whose `__init__.py` names more than 32 modules is
 asked about (`MAX_IMPORTS`, added in #402 on 2026-10-15, after pilot 2). In an unattended session an
-ask is a refusal. Solve rate, regressions and cost stay within the noise. #386's
-guardrail ("denials go down") is not met, so the rule needs reworking before #386 can close.
+ask is a refusal. Solve rate, regressions and cost stay within the noise.
 
-## Method
+### Method
 
 | | Before | After |
 |---|---|---|
@@ -31,7 +145,7 @@ python3 benchmarks/agent/denials.py compare ~/nexika-bench/pilot-2 ~/nexika-benc
 python3 benchmarks/agent/denials.py kinds ~/nexika-bench/guard-393/main
 ```
 
-## Results
+### Results
 
 | Measure (mean per task) | Before | After | After − before | 95% interval |
 |---|---|---|---|---|
@@ -49,7 +163,7 @@ python3 benchmarks/agent/denials.py kinds ~/nexika-bench/guard-393/main
 - Any denial: only after 21, only before 1 (p = 0.00001).
 - Cost per resolved task: $0.16 before, $0.15 after. Total spend $11.62 before, $11.72 after.
 
-### Which calls were denied
+#### Which calls were denied
 
 | Reason (haris's text) | Before | After |
 |---|---|---|
@@ -79,7 +193,7 @@ asks.
 The other arm of the #393 run (branch f1e195f, `~/nexika-bench/guard-393/b-393/`) shows the same
 thing: 36 denials in 21 runs, 33 of them from this rule. Pilot 2's haris+barq arm had 1 denial.
 
-### Did the denials cost results?
+#### Did the denials cost results?
 
 Only weakly, and from one task. On the 22 tasks with a denial after, 12 were resolved before and 11
 after. The one that flipped, `sympy__sympy-12489`, is also the only new regression. haris refused
@@ -89,15 +203,14 @@ it". The agent usually split the command or ran the test file instead, which cos
 changing the result. One task is not evidence of a solve-rate effect: the resolved and regression
 intervals both contain 0 or touch it.
 
-### `python3 benchmarks/haris/bench.py --check` at 22c20fb
+#### `python3 benchmarks/haris/bench.py --check` at 22c20fb
 
-It passes. haris has not changed between 22c20fb and the current `origin/main`
-(`git log 22c20fb..origin/main -- plugins/haris` is empty). At standard, attended or unattended,
+It passes. When #433 was written, haris had not changed since 22c20fb. At standard, attended or unattended,
 799/799 harmful cases are stopped and 9/545 ordinary cases are asked about. The benchmark misses
 this problem because its cases run without the project's files: with no `sympy/__init__.py` to
 read, the 32-module rule never fires. A case with a large package `__init__.py` would catch it.
 
-## Limits
+### Limits
 
 - **B, not the haris arm.** #386 asked for the haris (or haris+barq) arm. Both runs here load all
   twelve plugins, and the other plugins changed a lot between 0.3 and 22c20fb. Claude Code also
@@ -113,12 +226,3 @@ read, the 32-module rule never fires. A case with a large package `__init__.py` 
   targeted, went from 2 to 1.
 - **One run per task**, Sonnet, 100 tasks. The intervals are bootstrap intervals over tasks. They
   don't cover run-to-run noise on the same task.
-
-## What a paid haris-arm run (~$15) would add
-
-A haris+barq run at 22c20fb against pilot 2's haris+barq arm (73% resolved, 1 denial) would separate
-haris from the other plugins on solve rate and cost. The denials would most likely look the same:
-they come from haris's own rule on the agent's own checks, so expect about a fifth of the tasks
-denied again, mostly sympy. It is better spent after the 32-module rule is fixed, as the
-measurement that closes #386: it should show denials at or below pilot 2's, with solve and
-regression rates within the noise.

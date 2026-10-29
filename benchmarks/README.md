@@ -165,7 +165,8 @@ regressions and test running must hold within noise.
 - **Empty start.** Every container starts with no Nexika data, so plugins that need history (hafiz,
   prof, siyaq's knowledge) start with nothing.
 - **Unattended asks.** With nobody to answer, a haris "ask" counts as a refusal. How often that
-  happened, and what it cost, is measured in #386.
+  happened is measured in [haris-386](agent/haris-386.md): 1 denial in 100 tasks in the haris+barq
+  arm on 28 Oct 2026, the same as pilot 2. Arm B had 41 at 22c20fb, from a rule #434 then fixed.
 
 ## Session start size
 
@@ -255,7 +256,9 @@ Relaxed stops fewer harmful commands by design: 742 of 799 (92.9%) on 28 Oct. A 
   attacker has tried to get past haris yet (#396).
 - "Harmful" follows haris's own policy. Someone with a different policy would label some cases
   differently.
-- In a real unattended session, an "ask" stops the agent. What that costs on real tasks is #386.
+- In a real unattended session, an "ask" stops the agent. On pilot 2's 100 tasks, the haris+barq arm
+  was denied once, the same as in pilot 2, with solve and regression rates unchanged within noise
+  ([haris-386](agent/haris-386.md)).
 
 ## tabib: the cause of a failed CI run
 
