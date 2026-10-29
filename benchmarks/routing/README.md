@@ -20,10 +20,10 @@ Sonnet, so 20 cases × 3 runs × 2 arms is about $6.
 Each case in `cases.tsv` runs as a fresh `claude -p` session, once per arm. A case belongs to a suite: the
 plugin under test. An arm is the twelve plugins exported from a git ref with `git archive`, so local edits
 don't count. The session runs in a tiny project that fits the suite. prof gets `app.py` and a README. lawha
-gets a React and Tailwind app and manar a small Astro site, so their session notes show as they would in real
-use. Each session has a throwaway `HOME` and Claude Code config folder, so nothing from your own setup
-gets in: no installed plugins, memory or CLAUDE.md. Each result records the plugins the session loaded, so you can check this.
-Only Skill, Read, Grep and Glob are allowed, and a session stops after two turns.
+gets a React and Tailwind app and manar a small Astro site, so their session notes show as they would in
+real use. Each session has a throwaway `HOME` and Claude Code config folder, so nothing from your own setup
+gets in: no installed plugins, memory or CLAUDE.md. Each result records the plugins the session loaded, so
+you can check this. Only Skill, Read, Grep and Glob are allowed, and a session stops after two turns.
 
 A case passes when the model called the expected skill. A negative case (`-`) passes when no skill of its
 suite ran. Other plugins' skills don't count against it.
