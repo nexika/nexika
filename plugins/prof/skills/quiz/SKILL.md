@@ -1,6 +1,6 @@
 ---
 name: quiz
-description: Quiz the learner on a topic or project, one question at a time, with a score. Use for "quiz me", "test me", "am I ready".
+description: Quiz the learner on a topic or project, one question at a time, with a score. Use for "quiz me", "test me", "check my understanding", "am I ready".
 argument-hint: "[topic or project area]"
 ---
 

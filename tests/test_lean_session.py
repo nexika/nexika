@@ -46,7 +46,7 @@ def test_skill_description_fits_its_budget(path):
     assert "Use " in text, "say when to use it"
 
 
-PROF_SKILL_BUDGET = 160   # #431: prof's seven skills load in every session, and most sessions aren't lessons
+PROF_SKILL_BUDGET = 200   # #431: prof's seven skills load in every session, and most sessions aren't lessons
 PROF_SKILLS = sorted((PLUGINS / "prof" / "skills").glob("*/SKILL.md"))
 
 
@@ -61,7 +61,8 @@ def test_agent_description_fits_its_budget(path):
     assert 20 < len(text) <= AGENT_BUDGET, f"{len(text)} characters"
 
 
-# The words people type that route a request to the skill: trimming must keep them.
+# The words people type that route a request to the skill: trimming must keep them. #431's routing check
+# (benchmarks/routing) showed prof's second phrases matter: without them the request went elsewhere.
 TRIGGERS = {
     "lawha/skills/check/SKILL.md": ["is it responsive", "افحص الصفحة"],
     "lawha/skills/direct/SKILL.md": ["make it look good", "صمم الواجهة"],
@@ -71,11 +72,11 @@ TRIGGERS = {
     "lawha/skills/system/SKILL.md": ["design system", "design drift"],
     "prof/skills/learn/SKILL.md": ["teach me", "Not for"],
     "prof/skills/walkthrough/SKILL.md": ["line by line", "Not for"],
-    "prof/skills/onboard/SKILL.md": ["onboard me", "Not for"],
+    "prof/skills/onboard/SKILL.md": ["onboard me", "I'm new to this codebase", "Not for"],
     "prof/skills/report/SKILL.md": ["what did I learn", "goodbye"],
-    "prof/skills/quiz/SKILL.md": ["quiz me"],
-    "prof/skills/warmup/SKILL.md": ["check what I remember"],
-    "prof/skills/progress/SKILL.md": ["my progress"],
+    "prof/skills/quiz/SKILL.md": ["quiz me", "check my understanding"],
+    "prof/skills/warmup/SKILL.md": ["check what I remember", "where was I in my lessons"],
+    "prof/skills/progress/SKILL.md": ["my progress", "what have I learned"],
     "manar/skills/audit/SKILL.md": ["SEO audit", "ChatGPT"],
     "manar/skills/fix/SKILL.md": ["fix the SEO", "llms.txt"],
     "manar/skills/visibility/SKILL.md": ["AI visibility", "are we cited"],
