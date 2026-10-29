@@ -1,6 +1,6 @@
 ---
 name: visibility
-description: Measure whether AI assistants mention and cite the brand for real customer questions. Use when the user asks "do ChatGPT/Gemini recommend us", "AI visibility", "are we cited", "did the SEO work".
+description: Measure whether AI assistants mention and cite the brand. Use when the user asks "do ChatGPT/Gemini recommend us", "AI visibility", "are we cited", "did the SEO work".
 argument-hint: "[init | plan | run | report]"
 ---
 

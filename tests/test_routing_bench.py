@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import subprocess
+import sys
 
 import pytest
 from conftest import PLUGINS
@@ -15,7 +16,7 @@ bench = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(bench)
 
 
-@pytest.mark.parametrize("suite", ["prof", "lawha"])
+@pytest.mark.parametrize("suite", ["prof", "lawha", "manar"])
 def test_every_skill_of_a_suite_has_a_case_and_ordinary_work_has_some(suite):
     cases = [c for c in bench.load_cases() if c["suite"] == suite]
     expected = {c["expected"] for c in cases}
@@ -90,6 +91,15 @@ def test_skills_called_reads_skill_tool_calls_in_order():
     assert bench.skills_called(lines) == ["prof:walkthrough", "prof:report"]
     assert bench.cost(lines) == 0.03
     assert bench.plugins_loaded(lines) == ["prof"]
+
+
+def test_the_manar_project_is_a_website_to_manar(tmp_path):
+    sys.path.insert(0, str(PLUGINS / "manar"))
+    from manar import hook
+    for name, text in bench.FIXTURES["manar"].items():
+        (tmp_path / name).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / name).write_text(text)
+    assert "manar" in hook.session_note(tmp_path)
 
 
 def test_a_case_is_right_when_its_skill_ran_and_a_negative_when_its_suite_stayed_out():
