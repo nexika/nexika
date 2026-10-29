@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 
+import pytest
 from conftest import PLUGINS
 
 BENCH_DIR = PLUGINS.parent / "benchmarks" / "routing"
@@ -13,13 +15,37 @@ bench = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(bench)
 
 
-def test_every_prof_skill_has_a_case_and_ordinary_work_has_some():
-    cases = bench.load_cases()
+@pytest.mark.parametrize("suite", ["prof", "lawha"])
+def test_every_skill_of_a_suite_has_a_case_and_ordinary_work_has_some(suite):
+    cases = [c for c in bench.load_cases() if c["suite"] == suite]
     expected = {c["expected"] for c in cases}
-    skills = {f"prof:{p.parent.name}" for p in (PLUGINS / "prof" / "skills").glob("*/SKILL.md")}
+    skills = {f"{suite}:{p.parent.name}" for p in (PLUGINS / suite / "skills").glob("*/SKILL.md")}
     assert skills <= expected
     assert sum(c["kind"] == "negative" for c in cases) >= 5
-    assert {c["kind"] for c in cases} == {"kept", "dropped", "negative"}
+    assert suite in bench.FIXTURES
+
+
+def test_a_case_expects_a_skill_of_its_own_suite_and_a_known_kind():
+    for case in bench.load_cases():
+        assert case["expected"] == "-" or case["expected"].startswith(case["suite"] + ":"), case
+        assert case["kind"] in bench.KINDS, case
+
+
+def test_case_ids_stay_put_so_saved_runs_still_match():
+    """Ids are row numbers: new cases go at the end. These are the first prof rows (#438's runs)."""
+    cases = bench.load_cases()
+    assert cases[0]["prompt"] == "Teach me async/await in Python."
+    assert cases[8]["prompt"] == "Check my understanding of closures in JavaScript."
+    assert cases[19]["prompt"] == "Thanks, that's all for today. Bye!"
+
+
+def test_the_lawha_project_looks_like_a_frontend_to_lawha(tmp_path):
+    for name, text in bench.FIXTURES["lawha"].items():
+        (tmp_path / name).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / name).write_text(text)
+    out = subprocess.run(["sh", str(PLUGINS / "lawha" / "bin" / "lawha"), "has-frontend", str(tmp_path)],
+                         capture_output=True, text=True)
+    assert out.stdout.strip() == "yes"
 
 
 def test_every_expected_skill_exists():
@@ -66,20 +92,22 @@ def test_skills_called_reads_skill_tool_calls_in_order():
     assert bench.plugins_loaded(lines) == ["prof"]
 
 
-def test_a_case_is_right_when_its_skill_ran_and_a_negative_when_prof_stayed_out():
-    learn = {"expected": "prof:learn"}
-    none = {"expected": "-"}
+def test_a_case_is_right_when_its_skill_ran_and_a_negative_when_its_suite_stayed_out():
+    learn = {"suite": "prof", "expected": "prof:learn"}
+    none = {"suite": "prof", "expected": "-"}
     assert bench.correct(learn, ["prof:warmup", "prof:learn"])
     assert not bench.correct(learn, ["prof:quiz"])
     assert not bench.correct(learn, [])
     assert bench.correct(none, [])
     assert bench.correct(none, ["bayan:check"])
     assert not bench.correct(none, ["prof:learn"])
+    assert not bench.correct({"suite": "lawha", "expected": "-"}, ["lawha:check"])
+    assert bench.correct({"suite": "lawha", "expected": "-"}, ["prof:learn"])
 
 
 def test_the_report_counts_valid_runs_per_kind_and_arm():
-    cases = [{"id": 1, "expected": "prof:quiz", "kind": "kept", "prompt": "Quiz me"},
-             {"id": 2, "expected": "-", "kind": "negative", "prompt": "What is X?"}]
+    cases = [{"id": 1, "suite": "prof", "expected": "prof:quiz", "kind": "kept", "prompt": "Quiz me"},
+             {"id": 2, "suite": "prof", "expected": "-", "kind": "negative", "prompt": "What is X?"}]
     results = [
         {"case": 1, "arm": "main", "called": ["prof:quiz"], "correct": True, "valid": True, "cost_usd": 0.02},
         {"case": 1, "arm": "new", "called": ["prof:learn"], "correct": False, "valid": True,
@@ -89,6 +117,7 @@ def test_the_report_counts_valid_runs_per_kind_and_arm():
     text = bench.markdown(cases, results, ["main", "new"])
     assert "| kept | 1/1 | 0/1 |" in text
     assert "| negative | 0/0 | 0/0 |" in text
+    assert "paraphrase" not in text   # only the kinds the cases use
     assert "(got prof:learn)" in text
     assert "2 valid runs, 1 invalid, $0.05 in all." in text
 
