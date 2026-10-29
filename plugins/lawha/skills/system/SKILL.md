@@ -1,6 +1,6 @@
 ---
 name: system
-description: Read the project's design system (tokens, components, routes) and report drift. Use when the user says "what's in our design system", "check for design drift", "ما هي مكونات المشروع", or before building a new page in an existing project.
+description: Read the project's design system and report drift. Use when the user says "what's in our design system", "check for design drift", "ما هي مكونات المشروع", or before building a new page in an existing project.
 argument-hint: "[project folder]"
 ---
 

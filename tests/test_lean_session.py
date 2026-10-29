@@ -55,6 +55,14 @@ def test_prof_skill_description_fits_the_tighter_budget(path):
     assert len(description(path)) <= PROF_SKILL_BUDGET, f"{len(description(path))} characters"
 
 
+LAWHA_SKILLS_BUDGET = 1170   # #431: all six together, down from 1,348; every trigger phrase stays
+
+
+def test_lawha_skill_descriptions_fit_their_total_budget():
+    total = sum(len(description(p)) for p in (PLUGINS / "lawha" / "skills").glob("*/SKILL.md"))
+    assert total <= LAWHA_SKILLS_BUDGET, f"{total} characters"
+
+
 @pytest.mark.parametrize("path", AGENTS, ids=ids(AGENTS))
 def test_agent_description_fits_its_budget(path):
     text = description(path)
@@ -64,12 +72,18 @@ def test_agent_description_fits_its_budget(path):
 # The words people type that route a request to the skill: trimming must keep them. #431's routing check
 # (benchmarks/routing) showed prof's second phrases matter: without them the request went elsewhere.
 TRIGGERS = {
-    "lawha/skills/check/SKILL.md": ["is it responsive", "افحص الصفحة"],
-    "lawha/skills/direct/SKILL.md": ["make it look good", "صمم الواجهة"],
-    "lawha/skills/elevate/SKILL.md": ["make it beautiful", "اجعلها أجمل"],
-    "lawha/skills/figma/SKILL.md": ["Figma link", "نفّذ هذا التصميم"],
-    "lawha/skills/inspire/SKILL.md": ["make it like this", "استلهم من هذا الموقع"],
-    "lawha/skills/system/SKILL.md": ["design system", "design drift"],
+    "lawha/skills/check/SKILL.md": ["check this page", "is it responsive", "does it work on mobile",
+                                    "افحص الصفحة", "هل الصفحة متجاوبة"],
+    "lawha/skills/direct/SKILL.md": ["design this", "make it look good", "pick a style", "صمم الواجهة",
+                                     "اقترح تصميماً"],
+    "lawha/skills/elevate/SKILL.md": ["make it beautiful", "it looks boring", "polish this", "حسّن التصميم",
+                                      "اجعلها أجمل"],
+    "lawha/skills/figma/SKILL.md": ["Figma link", "build this design", "figma to code", "نفّذ هذا التصميم",
+                                    "حوّل تصميم فيغما إلى كود"],
+    "lawha/skills/inspire/SKILL.md": ["make it like this", "I love this site", "استلهم من هذا الموقع",
+                                      "أريد تصميماً مثل"],
+    "lawha/skills/system/SKILL.md": ["what's in our design system", "check for design drift",
+                                     "ما هي مكونات المشروع"],
     "prof/skills/learn/SKILL.md": ["teach me", "Not for"],
     "prof/skills/walkthrough/SKILL.md": ["line by line", "Not for"],
     "prof/skills/onboard/SKILL.md": ["onboard me", "I'm new to this codebase", "Not for"],

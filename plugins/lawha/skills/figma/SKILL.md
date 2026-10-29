@@ -1,6 +1,6 @@
 ---
 name: figma
-description: Build a Figma design in code exactly, at every width. Use when the user shares a Figma link or says "build this design", "figma to code", "نفّذ هذا التصميم", "حوّل تصميم فيغما إلى كود".
+description: Build a Figma design in code. Use when the user shares a Figma link or says "build this design", "figma to code", "نفّذ هذا التصميم", "حوّل تصميم فيغما إلى كود".
 argument-hint: "<figma link> [frames]"
 ---
 
