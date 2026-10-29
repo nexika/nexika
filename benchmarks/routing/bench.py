@@ -112,6 +112,45 @@ export default function App() {
     "src/price.js": "export function formatPrice(cents) {\n  return `$${(cents / 100).toFixed(2)}`;\n}\n",
 }
 
+# manar's session note shows only for a website: a small Astro marketing site.
+FIXTURES["manar"] = {
+    "package.json": json.dumps({
+        "name": "billfast-site", "private": True, "type": "module",
+        "scripts": {"dev": "astro dev", "build": "astro build"},
+        "dependencies": {"astro": "^4.16.0"},
+    }, indent=2) + "\n",
+    "astro.config.mjs": 'import { defineConfig } from "astro/config";\n\n'
+                        'export default defineConfig({ site: "https://billfast.example" });\n',
+    "src/layouts/Base.astro": '''---
+const { title } = Astro.props;
+---
+<html lang="en">
+  <head><meta charset="utf-8" /><title>{title}</title></head>
+  <body><slot /></body>
+</html>
+''',
+    "src/pages/index.astro": '''---
+import Base from "../layouts/Base.astro";
+---
+<Base title="BillFast">
+  <section class="hero">
+    <h1>Invoicng for small teams</h1>
+    <p>Send an invoice in a minute and get paid sooner.</p>
+    <a href="/pricing">See pricing</a>
+  </section>
+</Base>
+''',
+    "src/pages/pricing.astro": '''---
+import Base from "../layouts/Base.astro";
+---
+<Base title="Pricing - BillFast">
+  <h1>Pricing</h1>
+  <div class="card"><h2>Solo</h2><p>$9 a month</p></div>
+</Base>
+''',
+    "public/robots.txt": "User-agent: *\nAllow: /\n",
+}
+
 
 def load_cases(path=CASES):
     cases = []

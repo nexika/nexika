@@ -46,3 +46,21 @@ lawha	-	negative	Add a loading state to the fetch in src/App.jsx.
 lawha	-	negative	Why does the fetch in src/App.jsx log undefined?
 lawha	-	negative	Rename the Button component to PrimaryButton.
 lawha	-	negative	Write a unit test for formatPrice in src/price.js.
+manar	manar:audit	kept	Run an SEO audit of this site.
+manar	manar:audit	kept	Why don't we show up in Google?
+manar	manar:audit	kept	Check our site.
+manar	manar:fix	kept	Fix the SEO.
+manar	manar:fix	kept	Make us visible to ChatGPT.
+manar	manar:fix	kept	Add schema and a sitemap.
+manar	manar:visibility	kept	Do ChatGPT and Gemini recommend us?
+manar	manar:visibility	kept	Are we cited by AI assistants?
+manar	manar:visibility	kept	Did the SEO work?
+manar	manar:audit	paraphrase	Audit the built site in ./dist for search engines.
+manar	manar:audit	paraphrase	Is our robots.txt blocking AI crawlers like GPTBot?
+manar	manar:fix	paraphrase	Add Open Graph tags and an llms.txt to the site.
+manar	manar:visibility	paraphrase	When people ask Perplexity for the best invoicing tool, do they hear about us?
+manar	-	negative	Add a Team plan card to src/pages/pricing.astro.
+manar	-	negative	What does getStaticPaths do in Astro?
+manar	-	negative	Fix the typo in the home page heading.
+manar	-	negative	Make the pricing page say $12 a month instead of $9.
+manar	-	negative	Rename the "See pricing" link to "Plans and pricing".
