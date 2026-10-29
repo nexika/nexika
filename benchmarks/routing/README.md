@@ -17,12 +17,13 @@ Sonnet, so 20 cases × 3 runs × 2 arms is about $6.
 
 ## How it works
 
-Each case in `cases.tsv` runs as a fresh `claude -p` session, once per arm. A case belongs to a suite, which is
-the plugin under test. An arm is the twelve plugins
-exported from a git ref with `git archive`, so local edits don't count. The session runs in a tiny project that fits the suite. prof gets `app.py` and a
-README. lawha gets a React and Tailwind app, so its session note shows as it would in a real frontend. Each session has a throwaway `HOME` and Claude Code config folder. Nothing from your own setup
-gets in: no installed plugins, memory or CLAUDE.md. Each result records the plugins the session loaded,
-so you can check this. Only Skill, Read, Grep and Glob are allowed, and a session stops after two turns.
+Each case in `cases.tsv` runs as a fresh `claude -p` session, once per arm. A case belongs to a suite: the
+plugin under test. An arm is the twelve plugins exported from a git ref with `git archive`, so local edits
+don't count. The session runs in a tiny project that fits the suite. prof gets `app.py` and a README; lawha
+gets a React and Tailwind app, so its session note shows as it would in a real frontend. Each session has a
+throwaway `HOME` and Claude Code config folder, so nothing from your own setup gets in: no installed
+plugins, memory or CLAUDE.md. Each result records the plugins the session loaded, so you can check this.
+Only Skill, Read, Grep and Glob are allowed, and a session stops after two turns.
 
 A case passes when the model called the expected skill. A negative case (`-`) passes when no skill of its
 suite ran. Other plugins' skills don't count against it.
@@ -32,7 +33,7 @@ suite ran. Other plugins' skills don't count against it.
 | kept | a phrase the description still names |
 | dropped | a phrase #438 first cut from prof's descriptions (they're back now) |
 | paraphrase | the same request in other words; the model has to route from the description's meaning |
-| negative | ordinary work and questions that must not start a lesson, a walkthrough or a report |
+| negative | ordinary work and questions that must not start any of the suite's skills |
 
 Learner data starts empty, so prof's session note stays quiet, and for prof the check tests the descriptions
 alone. To add a plugin, give it a project in `FIXTURES` and add its rows at the end of `cases.tsv`. Case ids
