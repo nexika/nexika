@@ -1,0 +1,102 @@
+# prompt<TAB>relevant sections ("source :: last heading", separated by " | "; "-" means nothing should load)
+# Labelled on 2026-11-01 before siyaq was run on any prompt. Corpus: the docs snapshot in corpus/.
+what is the next issue	-
+merged	-
+go	-
+yes	-
+closed	-
+ok go	-
+next issue?	-
+only git repos, go	-
+merged now	-
+thanks, that's all for today	-
+fix the typo in the function name	-
+why is this regex not matching dates like 2026-11-01?	-
+rename the variable x to count everywhere in this file	-
+write a unit test for parse_duration	-
+explain what a python decorator does	-
+what does git rebase --onto do?	-
+make the button blue	-
+the page is slow on my phone, any idea why?	-
+how do I center a div with flexbox?	-
+sort this list of dicts by the "date" key	-
+can you summarize this error for me?	-
+continue	-
+run it again	-
+looks good, commit it	-
+ابدأ	-
+how do I add a change note for my PR?	changelog.d/README.md :: Change notes | plugins/amin/README.md :: Change notes
+what type should a change note be for a bug fix?	changelog.d/README.md :: Change notes | plugins/amin/README.md :: Change notes
+how does amin choose the next version in a release?	plugins/amin/README.md :: Releases
+which version files can amin update?	plugins/amin/README.md :: Requirements and limits | plugins/amin/README.md :: Projects
+does amin ever merge the pull request itself?	plugins/amin/README.md :: amin (أمين) - a maintainer that never merges for you | plugins/amin/README.md :: Skills
+how do I release several projects of the repo at once?	plugins/amin/README.md :: Releases | plugins/amin/README.md :: Projects
+what does haris do when Claude tries to delete my home folder?	plugins/haris/README.md :: What it protects
+how do I switch haris to the strict profile?	plugins/haris/README.md :: Profiles | plugins/haris/README.md :: Settings
+why did haris ask me to approve a command it didn't stop before?	plugins/haris/README.md :: How it judges a command | plugins/haris/README.md :: Skills
+can Claude approve its own risky command in haris?	plugins/haris/README.md :: No self-approval
+how does haris handle a python script written and run in one command?	plugins/haris/README.md :: Scripts written and run in one command | plugins/haris/README.md :: Code read from a file
+what does haris do with prompt injection from a web page?	plugins/haris/README.md :: Prompt injection
+in an unattended run, what happens when haris would ask?	plugins/haris/README.md :: Unattended sessions | benchmarks/README.md :: Limits
+how many harmful commands does haris stop, and how many false alarms?	benchmarks/README.md :: haris: harmful commands stopped, and false alarms | benchmarks/haris/README.md :: haris benchmark | benchmarks/haris/README.md :: Results after #434: modules haris reads, not names imported (2026-10-28)
+how fast is a haris decision?	plugins/haris/README.md :: Speed and testing | benchmarks/README.md :: haris: harmful commands stopped, and false alarms
+where does haris keep its audit log?	plugins/haris/README.md :: Data
+how does hafiz remember work after /compact?	plugins/hafiz/README.md :: How it works | plugins/hafiz/README.md :: hafiz (حافظ) - Claude remembers your work
+how do I make hafiz forget something private?	plugins/hafiz/README.md :: Skills | plugins/hafiz/README.md :: Built to be trusted
+what does the hafiz detailed summary cost and which model writes it?	plugins/hafiz/README.md :: The detailed summary
+how do I configure hafiz for this repo?	plugins/hafiz/README.md :: Configuration: `.hafiz.json` (optional, in the repo root)
+did hafiz actually help in the benchmark?	benchmarks/README.md :: hafiz: continuing after a break | benchmarks/hafiz/README.md :: Version 2 (2026-10-11): a gain after a restart, from one task
+how do I run the hafiz benchmark?	benchmarks/hafiz/README.md :: Run it
+why did CI fail on my branch?	plugins/tabib/README.md :: tabib (طبيب) - finds out why CI failed | plugins/tabib/README.md :: Two steps
+does tabib re-run the failing tests on my machine? is it safe?	plugins/tabib/README.md :: Running the failing tests again, safely
+how does tabib tell a flaky test from a real bug?	plugins/tabib/README.md :: Flaky and infrastructure failures
+can a CI log trick tabib into running commands?	plugins/tabib/README.md :: Untrusted logs
+does tabib work with GitLab CI?	plugins/tabib/README.md :: What it reads | plugins/tabib/README.md :: Limits
+how accurate is tabib on real CI failures?	benchmarks/README.md :: tabib: the cause of a failed CI run | benchmarks/tabib/README.md :: Results (2026-10-10, tabib 0.3.0 with #360, #361, #362 and #366)
+how do I add a new case to the tabib benchmark?	benchmarks/tabib/README.md :: The cases | benchmarks/tabib/README.md :: How each label was decided | benchmarks/tabib/README.md :: How the logs are stored
+how does itqan learn from my corrections?	plugins/itqan/README.md :: Learning from your corrections
+what does the itqan guard block?	plugins/itqan/README.md :: The guard
+what are the itqan workflows for planning and shipping a change?	plugins/itqan/README.md :: What's inside | plugins/itqan/README.md :: itqan (إتقان) - quality without the friction
+does itqan make Claude solve more tasks?	benchmarks/README.md :: The three pilots | benchmarks/README.md :: Tested on outside material
+how does lawha check a page on every screen size?	plugins/lawha/README.md :: What it checks | plugins/lawha/README.md :: Commands
+why is lawha quiet in my backend project?	plugins/lawha/README.md :: Quiet in projects without a frontend
+how do I set up lawha's browser engine?	plugins/lawha/README.md :: Setup
+how does lawha compare with Figma's MCP server?	benchmarks/README.md :: lawha: design to code, and brief to page
+show me the motion recipes lawha has	plugins/lawha/recipes/motion/README.md :: lawha motion recipes | showcases/motion-recipes/README.md :: Showcase: lawha's motion recipes
+how do I use Three.js with lawha without breaking reduced motion?	plugins/lawha/recipes/three/README.md :: lawha Three.js recipes | showcases/three-recipes/README.md :: Showcase: lawha's Three.js recipes
+how do I make my site show up in ChatGPT answers?	plugins/manar/README.md :: manar (منار) - be found by search engines and AI assistants | plugins/manar/README.md :: Why it's different
+which API keys does manar visibility need?	plugins/manar/README.md :: Keys for measuring AI visibility (optional)
+what does mizan show above the prompt?	plugins/mizan/README.md :: mizan (ميزان) - keeps your session in balance | plugins/mizan/README.md :: How it works
+what happens when the context window is full?	plugins/mizan/README.md :: When the context fills
+how do I change mizan's settings?	plugins/mizan/README.md :: Settings
+what does prof store about the learner?	plugins/prof/README.md :: Data (`~/.claude/nexika/prof/`)
+how does prof's learning loop work, with warmups and reviews?	plugins/prof/README.md :: The learning loop
+can prof teach from the nexika courses?	plugins/prof/README.md :: Lessons from Nexika's courses
+how do I try prof locally?	plugins/prof/README.md :: Try it locally
+how do I write a hand-written siyaq entry?	plugins/siyaq/README.md :: Hand-written entries
+what can I put in .siyaq.json?	plugins/siyaq/README.md :: Configuration: `.siyaq.json`
+does siyaq match an Arabic question to English docs?	plugins/siyaq/README.md :: Matching that understands people | plugins/siyaq/README.md :: Limits
+what does barq's git-status op show?	plugins/barq/README.md :: Ops
+is barq safe to run on any command?	plugins/barq/README.md :: Safety
+how do I configure barq's test command?	plugins/barq/README.md :: Project config: `.barq.json`
+how do I make bayan write for a non-developer?	plugins/bayan/README.md :: bayan (بيان): write like a clear, friendly person | plugins/bayan/README.md :: Commands (used by the skills; also handy in CI)
+can I run bayan check in CI?	plugins/bayan/README.md :: Commands (used by the skills; also handy in CI)
+how do I install nexika?	README.md :: Installing
+how do I turn one plugin off for this project?	README.md :: Lean sessions: what each plugin adds, and turning one off per project
+how do the plugins share status with each other?	README.md :: Status files: how the plugins talk to each other
+where is the shared code that several plugins copy?	common/README.md :: common | README.md :: Repository layout
+how do I develop a plugin locally?	README.md :: Develop locally
+what does nexika cost and what data leaves my machine?	README.md :: Cost and privacy
+how many tokens does each plugin add at session start?	benchmarks/README.md :: Session start size | README.md :: Lean sessions: what each plugin adds, and turning one off per project
+how do I run the agent benchmark on SWE-bench?	benchmarks/agent/README.md :: Run it | benchmarks/agent/README.md :: How a run works
+what does a guardrail run check?	benchmarks/README.md :: Guardrail runs: did a change make the work worse?
+what does "not significant" mean in the benchmark tables?	benchmarks/README.md :: How to read the numbers | benchmarks/agent/README.md :: Reading the result
+what is the skill routing check?	benchmarks/routing/README.md :: Skill routing check | benchmarks/routing/README.md :: How it works
+how do I contribute a change to nexika?	README.md :: Contributing
+كيف أضيف ملاحظة تغيير لطلب الدمج؟	changelog.d/README.md :: Change notes | plugins/amin/README.md :: Change notes
+لماذا فشل CI في فرعي؟	plugins/tabib/README.md :: tabib (طبيب) - finds out why CI failed | plugins/tabib/README.md :: Two steps
+كيف أثبّت nexika؟	README.md :: Installing
+كيف يحمي haris مجلد المنزل من الحذف؟	plugins/haris/README.md :: What it protects
+كيف يتذكر hafiz العمل بعد بدء جلسة جديدة؟	plugins/hafiz/README.md :: How it works | plugins/hafiz/README.md :: hafiz (حافظ) - Claude remembers your work
+ماذا يحدث عندما يمتلئ السياق؟	plugins/mizan/README.md :: When the context fills
+كيف أوقف إضافة واحدة في هذا المشروع؟	README.md :: Lean sessions: what each plugin adds, and turning one off per project

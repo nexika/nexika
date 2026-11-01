@@ -1,0 +1,294 @@
+# haris (حارس) - guards your machine and your accounts
+
+Part of [Nexika](../../README.md). *Haris* means guard.
+
+Claude runs real commands on your computer. Most are harmless; a few can delete your work, leak
+a key, plant something that runs every time you log in, or publish something you cannot take
+back. Text Claude reads (a web page, a README, a tool's output) can also try to talk it into
+doing that. haris checks **every tool call before it runs** (subagents included) and decides:
+
+| Decision | When | What you see |
+|---|---|---|
+| **allow** | provably safe: reading, running the project's own tests and builds, or exactly what you approved | nothing; it just runs |
+| **pass** | no objection, but not provably safe (editing project files, installing packages, unknown programs) | Claude Code's own permission rules decide, as without haris |
+| **ask** | risky but often intended: reading a secret, force-pushing your branch, deleting outside the project, merging, publishing, deploying | Claude Code asks you, with haris's reason |
+| **deny** | dangerous: wiping your home folder, sending a secret off the machine, changing shell startup files, cron or git hooks, changing haris itself | refused, with the reason and the safe alternative |
+
+Anything haris cannot read, and any error inside haris, becomes **ask**, never a silent allow.
+
+## How it judges a command
+
+```
+command ─► shell parser ─► every command it would start ─► unwrap wrappers ─► action + target ─► decision
+            quotes, escapes, $'..', ; & && || | |&,          env, sudo, nice, nohup, timeout,     read / run / write / delete
+            newlines, ( ) { }, if/while/for/case,            xargs, find -exec/-delete,           egress / secret / persistence
+            functions, $( ) ` ` <( ) >( ), heredocs          bash -c, eval, source, python -c,    remote / self ...
+            (their $( ) runs too), redirections              node -e, ssh, docker/kubectl exec,   + where: project, temp, home,
+                                                             git aliases, uv/poetry run ...       secret, system, haris itself
+```
+
+It never decides by the command's name alone. `rm -rf build` in the project passes; `rm -rf ~`
+is refused whether it is written `\rm`, `/bin/rm`, `"rm"`, `$'\x72\x6d'`, after `env`, `nice`
+or `sudo`, inside `bash -c '...'`, `eval`, a heredoc piped to `sh`, `find ~ -exec rm {} +`,
+`echo ~ | xargs rm -rf`, `python3 -c "shutil.rmtree(...)"` or a git alias. Paths are resolved
+first (`~`, `$HOME`, `..`, symlinks, globs, `cd` earlier in the line), so a detour does not
+hide the target. Variables given through `env` (`env GIT_DIR=... git push`, with `-i`, `-u`, `-S`,
+behind `nice`, `timeout` or `nohup`) count exactly like `GIT_DIR=... git push`, and so do variables
+given to a shell (`GIT_DIR=... bash -c '...'`).
+
+### What it protects
+
+- **Your files:** deleting `/`, your home folder, a parent of the project or the project itself
+  is refused; deleting or writing outside the project asks; the operating system's folders and
+  disks are refused. Another worktree of the same git repository counts as the project, and so
+  does Claude Code's memory folder for it (`~/.claude/projects/<project>/memory`; deleting there
+  asks, and writing there asks after text that tried to give Claude orders).
+- **Secrets:** `~/.ssh`, `~/.aws`, `~/.config/gcloud`, `~/.kube`, `.env` (not `.env.example`),
+  key files, `.netrc`, `~/.claude.json`, shell history, a process's environment, cloud and
+  password-manager CLIs, `gh auth token`, `echo $GITHUB_TOKEN` ... reading them into the
+  conversation asks, also through side doors such as `git show HEAD:.env` or `source .env`. Filling in the project's own `.env` is fine.
+- **Data leaving the machine:** what `curl`, `wget`, `scp`, `rsync`, `nc`, `ssh`, `gh`, web
+  searches, web fetches and MCP tools send is checked for secrets (the same rules as hafiz's
+  redaction, in a copy a test keeps identical). A secret file, a secret read by another command
+  (`cat .env | curl -d @-`, `$(cat ~/.ssh/id_rsa)`) or a literal key is **refused**, and so is
+  the whole environment (`env | curl`, or inline code that reads all of it and talks to the network:
+  `os.environ` or `from os import environ`, `process.env` or `const {env} = process`, Ruby's `ENV`,
+  PHP's `getenv()` and `$_ENV`). So is a
+  file an earlier command in the session filled with the whole environment or a secret (`env >
+  /tmp/e`, `cp ~/.aws/credentials /tmp/c`, `env | tee f`): sending it later is sending the secret.
+  A push to a remote added or pointed at a new address earlier in the session asks, like one
+  added in the same command.
+- **Persistence:** shell profiles, `crontab`, launchd, systemd, `.git/hooks` and `.git/config`,
+  git settings that run programs (`core.hooksPath`, `core.pager`, `!` aliases), Claude Code
+  settings, hooks and plugins, `~/.local/bin`, PowerShell profiles: refused.
+- **History and shared things:** force-pushing `main`, `master`, `develop`, `production`,
+  `trunk`, `stable`, `next`, `release/*`, a release line like `4.x` or `5.x`, or the remote's
+  default branch is refused; force-pushing your own
+  branch, `reset --hard` with uncommitted work, `clean -f`, `branch -D` of a branch with commits
+  that are on no remote ask (a squash-merged branch whose remote branch is gone does not).
+  `git stash drop` and `git stash clear` ask, except a drop of a stash the session itself made in
+  this repository, named by its index (`git stash drop`, `git stash drop stash@{1}`) and run on its
+  own, not in a loop or after a command that could change the stashes. Merging pull
+  requests, releases, tags, publishing packages, deploying, `terraform apply/destroy`,
+  `kubectl delete`, SQL `DROP`/`TRUNCATE`, deleting repos or buckets **always ask**, and no
+  approval removes that (it backs [amin](../amin/README.md), which never merges for you).
+- **Download and run:** `curl ... | sh`, `bash <(curl ...)`, `eval "$(curl ...)"`, running a
+  file the same command just downloaded: ask (refused in strict).
+- **haris itself:** its installed code (under `~/.claude/plugins`), data, settings and the repo's
+  `.haris.json` cannot be changed by Claude, `claude plugin disable haris` is refused, and running
+  its hook by hand is refused. A source checkout of haris, mizan or tabib in a git repo (the
+  Nexika repo) is ordinary project code: Claude can edit it, import it and run its tests. Code there
+  that calls what changes their data (`add_approval`, `publish`, `save` ...) is still refused, and so
+  is running the checkout's hook by hand with your real haris data; give it its own `HARIS_HOME`.
+- **What haris guards beside itself:** mizan (its code, `~/.claude/nexika/mizan`), itqan's proofs,
+  tabib's diagnoses (`~/.claude/nexika/tabib`), lawha's check records (`~/.claude/nexika/lawha`)
+  and the shared
+  Nexika status files (`~/.claude/nexika/status`), so what mizan shows you and what siyaq reads come
+  from the plugins, never from Claude. Running mizan's hook or publishing its status by hand is
+  refused; `mizan report`, `status` and `proof` are fine.
+
+### No self-approval
+
+Approvals count only from what **you type**. `/haris:allow <exact command>` (or
+`/haris:allow read <path>`, `/haris:allow write <path>`) is read by haris's own
+`UserPromptSubmit` hook from your message, before Claude sees it. It approves exactly that
+command or path for this session (`--project` keeps it for this project); `--remove` takes it
+back. Claude cannot call the skill, cannot write haris's files and cannot run its hook, so it
+cannot approve anything for itself. There are no broad rules like `git *`.
+
+When haris asks about a write outside the project, its reason ends with the line that keeps your
+yes: `/haris:allow --project write <folder>/` (the target's git checkout, never your home folder).
+A folder you approve this way never covers its `.git`, hooks, CI workflows, `.envrc`, `.mcp.json`,
+`CLAUDE.md` or Claude Code settings, at any depth.
+
+Some actions are refused in every profile: deleting your home folder or the system, writing to
+persistence spots, sending secrets off the machine, force-pushing a protected branch, a remote
+shell, a fork bomb and changes to haris. **No approval lifts these**; `/haris:allow` says so
+instead of recording it. If you really want one, do it yourself, outside Claude.
+
+### Scripts written and run in one command
+
+When a command writes a script and runs it straight away (`echo '...' > x.sh && bash x.sh`, a
+heredoc, `./x.sh`, `python3 x.py`), haris does not ask about the script blindly: it reads what
+the script will run and judges that. A safe script goes through; a harmful one is stopped with
+a plain warning, exactly as if the commands had been typed directly.
+
+### Code read from a file
+
+Inline Python that runs a file as code (`exec(open('/tmp/t.py').read())`,
+`exec(compile(open(p).read(), 't', 'exec'))`, `runpy.run_path(...)`) is judged by the file's text,
+read once when haris decides, with the same rules as inline code. The part the code runs is judged
+exactly: `.read().split('marker')[0]`, `.replace('a', 'b')` and other string methods with written-out
+arguments are applied to the text first. haris reads the file only when it is a regular file in the
+project or the temporary folder, at most 64 KB. It must not be a link or sit under a linked folder, and
+must be plain ASCII unless the code opens it as UTF-8. Anything else keeps the code unknown, so it asks:
+
+- the file's name is computed, or open, exec or compile mean something else in the code;
+- something may change the file before it runs. That is an earlier command in the same call (other than
+  reads, or one write haris can see whole), another stage of the same pipeline, or code before the read.
+  A loop, or a program that runs it several times (xargs, find), counts too;
+- the file changed since haris read it earlier in the session (its size, times and inode are kept in the
+  session, never its text). haris cannot stop a change made between its check and the run, and says so.
+
+What haris could read is judged even then, so a harmful file is refused. `python FILE` is not asked
+about (Claude Code's own rules apply, as before), but a file up to 16 KB that does something refused in
+every profile (deleting your home folder, sending a secret) is refused.
+
+### Prompt injection
+
+After each tool call haris scans the output (web pages, files, command output, MCP results) for
+text that tries to give Claude orders: "ignore previous instructions", fake system messages,
+"do not tell the user", requests to send secrets somewhere, hidden characters, instructions in
+HTML comments, in English and Arabic, paraphrases included ("set aside everything you were told").
+A short phrase in quotes is a mention, not an order, so docs about attacks are not flagged. The
+patterns are checked in CI against a labelled corpus (`tests/haris_inject_corpus.tsv`): every
+injection must be found and no ordinary text flagged. Claude is told the text is data, not a
+request from you, and for your next 3 messages (1 when the text came from a file git tracks in
+this repository) sending data out and irreversible remote actions are raised one level (pass
+becomes ask, ask becomes deny).
+
+### Unattended sessions
+
+In `claude -p`, CI or a background session nobody can answer a question, so an ask would end as a
+refusal anyway. haris treats a session as unattended only on a clear signal: Claude Code's own
+`CLAUDE_CODE_SESSION_ATTENDED=0`, or, when Claude Code does not set it, `HARIS_UNATTENDED=1` or
+`CI=true`. A signal set by a project's `.claude/settings*.json` (in the working folder or any
+folder above it, below home) does not count, and an unknown session is attended. There:
+
+- a reversible change inside the project that the profile asks about passes without a question.
+  Today that is one thing, a delete under `strict`, and only when git or a rebuild gives it back: a
+  file git tracks with no uncommitted change, or a build folder (`build`, `dist`, `node_modules`,
+  `__pycache__` ...) with nothing tracked in it and, looked through up to 5000 entries, no link out
+  of it, no repository and no secret (a bigger folder is not lifted). Not a pattern (`find -name`, a glob), a link, a
+  path that does not exist yet, another worktree, `.git`, CI, `.claude` or other files that make
+  tools run commands, and only when the command does nothing else but read. Each one is logged.
+- every other ask is refused by haris itself, with its reason, so the agent learns why: secrets,
+  paths outside the project or unknown, the network, publishing, pushing, destructive git and code
+  haris cannot see. Everything refused today stays refused, and a session marked after a
+  prompt-injection warning passes nothing.
+- at the end of the run haris sums up what passed and how many asks it refused;
+  `haris audit --decision unattended` lists what passed.
+
+`"unattended": "off"` in your settings or a repository's `.haris.json` turns detection off.
+`haris check --unattended COMMAND` shows the unattended decision.
+
+## Profiles
+
+| | relaxed | standard (default) | strict |
+|---|---|---|---|
+| reading, project tests and builds | allow | allow | allow (outside the project: pass) |
+| editing and deleting in the project | allow | pass | edits pass, deletes ask |
+| writing outside the project | pass | ask | ask |
+| reading secrets, download-and-run | ask | ask | deny |
+| persistence, haris, wiping, leaking secrets | deny | deny | deny |
+| merges, releases, publishing, deploys | ask | ask | ask |
+
+## Settings
+
+`~/.claude/nexika/haris/config.json` is yours: it can loosen or tighten. A repository's
+`.haris.json` can **only tighten** (a cloned repo cannot switch haris off).
+
+```json
+{
+  "profile": "standard",
+  "mode": "on",
+  "ask": ["terraform plan", "make deploy"],
+  "deny": ["kubectl delete"],
+  "allow": ["make release-notes"],
+  "protected_branches": ["staging"],
+  "secret_paths": ["*/secrets/*"],
+  "taint_turns": 3,
+  "unattended": "auto"
+}
+```
+
+`mode`: `on` (default, protecting from day one), `watch` (records what it would do, stops
+nothing) or `off`. `ask`/`deny` are command prefixes matched after unwrapping (`*` matches one
+word), so `env X=1 nice terraform apply` still matches `terraform apply`. `allow` holds exact
+commands only, and only in your own file. In `.haris.json` only `profile` (stricter),
+`ask`, `deny`, `protected_branches`, `secret_paths`, a larger `taint_turns` count and
+`"unattended": "off"`.
+
+## Skills
+
+| Skill | What it does |
+|---|---|
+| `/haris:why [n]` | what haris asked about or refused, why, and the safe way forward |
+| `/haris:allow ...` | approve one exact command or path (typed by you; Claude cannot call it) |
+| `/haris:status` | profile, mode, settings, taint and approvals |
+| `/haris:audit [--days N]` | the audit log |
+
+The helper behind them: `haris why`, `haris status`, `haris audit`, `haris approvals`,
+`haris check "<command>"` (what haris would decide, without running it, with this project's
+`--project` approvals applied; one session's approvals are not) and `haris export --json`.
+
+A write whose file name alone is computed (`> logs/$id.log` in a loop) is judged by its folder;
+when the folder is computed too (`$DIR/x`), or is one where a name could run code or hold
+secrets (home, `.git`, `.claude`, CI workflows), haris still asks. After a second ask about
+writes in the same folder outside the project, the ask offers that whole folder for
+`/haris:allow --project write`.
+
+## Data
+
+In `~/.claude/nexika/haris/` (`HARIS_HOME` moves it), owner-only (folders 0700, files 0600):
+`config.json`, `sessions/<id>.json` (taint, session approvals, and the names of remotes moved and
+paths of files staged with a secret and the commit ids of stashes made in this session, never
+their contents; kept 7 days),
+`approvals.json` (`--project` approvals), `audit.jsonl` (every ask, refusal, approval,
+injection warning and ask let pass in an unattended session; secrets in commands replaced with `[secret]`; rotated at 1 MB) and
+`active/<id>`. Nothing is sent anywhere.
+
+## Working with the other Nexika plugins
+
+- **itqan:** its guard steps aside in sessions haris guards (haris covers its rules and more);
+  the workflow, reviews and checklists are unchanged.
+- **amin:** merges and releases always ask, whatever the profile or approvals.
+- **hafiz:** the same secret rules (`secrets.py` is a copy, kept identical by a test).
+  `haris export --json` (schema `nexika.haris/1`: profile, mode, session taint, the last week's
+  asks, refusals and approvals) is there for hafiz and the others to read, and `/haris:allow`
+  offers to record a lasting approval as a hafiz decision.
+- **mizan:** haris publishes its profile and mode per session in
+  `~/.claude/nexika/status/haris/<session>.json` (schema `nexika.haris/1`) for mizan's band.
+- **Shared startup budget:** haris's start note is under 600 bytes.
+
+## Speed and testing
+
+Every check is pure Python (stdlib only, 3.10+), with no network and no AI call; it runs git
+only for `git commit`, `reset --hard`, `checkout`/`restore`, and a `git push` that names no remote
+after the session moved one (with every program-running git option switched off). `tests/haris_corpus.tsv` holds 758 adversarial and ordinary commands
+(464 of them dangerous) with their expected decisions, and CI fails unless no dangerous
+command is missed, fewer than 2% of ordinary commands are blocked, and checks stay under 50 ms.
+The [haris benchmark](../../benchmarks/haris/README.md) adds real commands from the agent benchmark
+and the trial, and measures recall and false alarms per profile; CI fails if a change lets through
+a harmful case haris stopped before.
+
+## Limits
+
+- haris is a guard, not a sandbox. It judges each action before it runs; it does not follow a
+  process while it runs. A program or script it cannot see into (a script already on disk,
+  `make`, a binary) is left to Claude Code's own permission rules, and code built to hide what
+  it does can get past any static check. Inline code (`python -c`, `node -e`) is never approved.
+  Inline Python that runs a command written out in full (`subprocess.run(['python', 't.py'])`,
+  `os.system('git status')`) is judged as that command; a command it builds when it runs is
+  asked about.
+  The same holds for what haris guards beside itself: inline code that builds a status-file
+  path from pieces, or a copy of mizan's helper run from elsewhere, is left to Claude Code's
+  rules (never approved by haris), not refused.
+- PowerShell gets a lighter reading than bash (common cmdlets and aliases); a full PowerShell
+  parser is planned.
+- Prompt-injection scanning matches known patterns; it cannot understand every way text can
+  try to steer a model.
+- Two sessions that save approvals or a session's caution after a prompt injection at the same
+  moment take turns through a file lock. Where a file can't be locked (Windows, some network
+  drives), one of the two changes can still be lost, including the caution a parallel tool call set.
+- A damaged data file (cut short by a crash, a stray byte, a value of the wrong kind) is never an
+  error: haris skips the bad part or reads the file as empty, and the next save replaces it. What
+  the damaged part held is not recovered.
+
+## Credit
+
+The idea of a permission guard plugin came from
+[claude-caliper](https://github.com/nikhilsitaram/claude-caliper) by nikhilsitaram (MIT).
+haris is written from scratch with a different design: a real shell parser, decisions by
+action and target instead of command names, exact approvals only from what you type, and
+protection of secrets, persistence spots and itself.

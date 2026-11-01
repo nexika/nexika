@@ -59,6 +59,7 @@ and catch regressions. They are not proof of how Nexika does on other people's w
 | tabib names the right kind of failure for 167 of 170 failed CI runs, and the right failing test in all 111 runs that have one ([tabib](#tabib-the-cause-of-a-failed-ci-run)). | tabib was tuned on 150 of the runs. We labelled every run by hand. |
 | After a restart told only "carry on with the plan", Claude finished the open work in 3 of 3 runs with hafiz and 0 of 3 without ([hafiz](#hafiz-continuing-after-a-break)). | Our own tasks, and 3 runs per arm. |
 | Blind judges preferred lawha's page to Anthropic's frontend-design skill 6 times out of 6 ([lawha](#lawha-design-to-code-and-brief-to-page)). | The judges were Claude models using lawha's own judge instructions. |
+| Of the doc sections siyaq loads for 100 prompts, 28% help with the prompt; the draft pass line is 70% ([siyaq](#siyaq-the-right-docs-for-a-prompt)). | Nexika's own docs, and prompts we wrote and labelled. |
 
 ## Agent benchmark: Claude Code alone vs with Nexika
 
@@ -322,13 +323,40 @@ between Nexika 0.1.0 and 0.2.0.
   person has judged yet.
 - The model used for the Claude Code runs is not recorded on the page.
 
+## siyaq: the right docs for a prompt
+
+[Full page](siyaq/README.md) · issue #452
+
+**What it measures.** Whether the doc sections siyaq loads for a prompt help with it, and whether it
+stays quiet when no docs help.
+
+**How.** 100 prompts over a snapshot of Nexika's 30 docs (196 sections). 75 ask about Nexika and
+list the sections that would help; 25 need no docs. The labels were written before siyaq ran on any
+prompt. Each prompt goes through siyaq's own selection code with default settings. Offline, no model,
+about a second. CI fails if a prompt siyaq got right is now wrong.
+
+**Results.** Measured on 1 Nov 2026 with siyaq at `f20ce94`.
+
+| Measure | Result |
+|---|---|
+| Loaded sections that help (precision) | 68/244 = 28% |
+| Prompts that ask about Nexika with a helpful section loaded | 56/75 = 75% |
+| Prompts that need no docs and got none | 13/25 = 52% |
+| Tokens added per prompt (mean) | 357 |
+
+siyaq nearly always loads three sections, so the right one comes with two weaker ones.
+
+**Limits.**
+- Our own docs, prompts and labels, from one labeller with strict labels.
+- Only prompts are measured, not the docs siyaq loads when Claude reads or edits a file.
+- Whether a wrong section makes the work worse needs the agent benchmark.
+
 ## Not measured yet
 
 - **prof, bayan, mizan and amin** have no benchmark. Their criteria are drafted in #391; prof's test
   with real learners is #398.
-- **siyaq and barq** were measured only as arms of the agent benchmark (pilot 2), where neither moved
-  the solve rate beyond noise. Whether siyaq loads the right knowledge, and whether barq's savings keep
-  the outcome, is not measured.
+- **barq** was measured only as part of an arm of the agent benchmark (pilot 2), where it did not move
+  the solve rate beyond noise. Whether its savings keep the outcome is not measured (#452).
 - **manar** measures sites with `/manar:visibility`, but there are no results on real sites over time
   yet.
 
