@@ -1710,19 +1710,74 @@ def test_flaky_comes_with_the_rerun_command_and_no_local_run(ci, project, monkey
 
 # ---------------------------------------------------------------- startup note
 
-def test_startup_note_is_small():
+def with_github_ci(root):
+    (root / ".git").mkdir(parents=True, exist_ok=True)
+    (root / ".github" / "workflows").mkdir(parents=True, exist_ok=True)
+    (root / ".github" / "workflows" / "ci.yml").write_text("on: push\n", encoding="utf-8")
+    return root
+
+
+def test_startup_note_is_small(tmp_path):
     long_path = "/home/" + "a-rather-long-user-name/" * 3 + ".claude/plugins/cache/nexika/tabib/0.1.0/bin/tabib"
-    note = json.loads(hooks.on_session_start({}, long_path))["hookSpecificOutput"]["additionalContext"]
+    note = hooks.session_note(with_github_ci(tmp_path), long_path)
     assert len(note.encode("utf-8")) < 400 and long_path in note
 
 
-def test_startup_note_keeps_the_helper_and_the_log_rule():
+def test_startup_note_keeps_the_helper_and_the_log_rule(tmp_path):
     """#345: how to diagnose is in the skill, read when it runs; every session keeps the helper and
     the rule for CI logs read outside it."""
-    note = json.loads(hooks.on_session_start({}, "H"))["hookSpecificOutput"]["additionalContext"]
+    note = hooks.session_note(with_github_ci(tmp_path), "H")
     assert "Helper: python3 H" in note and "/tabib:diagnose" in note and "untrusted" in note
     assert "never edit code" not in note
     assert len(note.replace("H", "")) <= 100, note
+
+
+def test_no_startup_note_in_a_repo_without_ci(tmp_path):
+    """#432: the note only matters where CI runs."""
+    (tmp_path / ".git").mkdir()
+    (tmp_path / ".github").mkdir()  # issue templates, no workflows
+    (tmp_path / ".github" / "workflows").mkdir()
+    (tmp_path / ".github" / "workflows" / "README.md").write_text("none yet", encoding="utf-8")
+    assert not hooks.has_ci(tmp_path)
+    assert hooks.session_note(tmp_path, "H") == ""
+    assert hooks.on_session_start({"cwd": str(tmp_path)}, "H") == ""
+
+
+def test_no_startup_note_outside_a_repo(tmp_path):
+    assert hooks.session_note(tmp_path / "missing", "H") == ""
+
+
+@pytest.mark.parametrize("ci_file", [".github/workflows/ci.yml", ".github/workflows/test.yaml", ".gitlab-ci.yml"])
+def test_startup_note_in_a_repo_with_ci(tmp_path, ci_file):
+    (tmp_path / ".git").mkdir()
+    (tmp_path / ci_file).parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / ci_file).write_text("x: 1\n", encoding="utf-8")
+    assert hooks.has_ci(tmp_path)
+    context = json.loads(hooks.on_session_start({"cwd": str(tmp_path)}, "H"))["hookSpecificOutput"]
+    assert "Helper: python3 H" in context["additionalContext"]
+
+
+def test_startup_note_in_a_subfolder_of_a_repo_with_ci(tmp_path):
+    sub = with_github_ci(tmp_path) / "src" / "app"
+    sub.mkdir(parents=True)
+    assert hooks.has_ci(sub)
+    assert "Helper: python3 H" in hooks.session_note(sub, "H")
+
+
+def test_ci_above_the_repo_does_not_count(tmp_path):
+    """A repo with no CI inside a folder that has some (a monorepo checkout of its own) stays quiet."""
+    inner = with_github_ci(tmp_path) / "vendor" / "lib"
+    (inner / ".git").mkdir(parents=True)
+    assert not hooks.has_ci(inner)
+
+
+def test_the_hook_is_silent_in_a_repo_without_ci(env, tmp_path):
+    repo = tmp_path / "repo"
+    (repo / ".git").mkdir(parents=True)
+    done = subprocess.run([sys.executable, str(BIN), "hook", "session-start"],
+                          input=json.dumps({"cwd": str(repo)}), capture_output=True, text=True,
+                          env={k: v for k, v in os.environ.items() if k != "CLAUDE_PROJECT_DIR"}, timeout=30)
+    assert done.returncode == 0 and done.stdout == "" and done.stderr == ""
 
 
 # ---------------------------------------------------------------- with mizan and itqan
@@ -2195,8 +2250,11 @@ def test_the_hook_says_its_note_whatever_is_stored(env, garbage):
     (folder / "tabib.json").write_bytes(garbage)
     (env / "tabib_home").mkdir(exist_ok=True)
     (env / "tabib_home" / "config.json").write_bytes(garbage)
-    done = subprocess.run([sys.executable, str(BIN), "hook", "session-start"], input="{}", capture_output=True,
-                          text=True, env={**os.environ, "TABIB_LANG": ""}, timeout=30)
+    repo = with_github_ci(env / "repo")
+    done = subprocess.run([sys.executable, str(BIN), "hook", "session-start"],
+                          input=json.dumps({"cwd": str(repo)}), capture_output=True, text=True,
+                          env={k: v for k, v in os.environ.items() if k != "CLAUDE_PROJECT_DIR"}
+                          | {"TABIB_LANG": ""}, timeout=30)
     assert done.returncode == 0 and done.stderr == ""
     assert "Helper: python3" in json.loads(done.stdout)["hookSpecificOutput"]["additionalContext"]
 
