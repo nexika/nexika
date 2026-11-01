@@ -51,7 +51,25 @@ topics/csharp-async.md        the same, rendered worst first (status edits here 
                               - [understood] Task.WhenAll — wrote a correct example (2026-10-04)
 settings.json                 your answer about automatic reports
 hook.log                      what the hooks did (auto reports, errors)
+courses/                      a copy of nexika/courses (lessons prof teaches from)
+courses.json                  when that copy was last downloaded
 ```
+
+## Lessons from Nexika's courses
+
+[nexika/courses](https://github.com/nexika/courses) holds lessons whose code runs, whose facts quote
+their sources, and that people have checked, in English, Arabic and French. When you ask `/prof:learn`
+about a topic one of them covers (tool use, tokens, MCP, structured output and more), prof teaches
+from that lesson. It uses the lesson's text, its quiz questions and its exercise, and tells you the
+lesson's status. Only **reviewed** lessons (two fact checks and a teaching review) and **verified**
+ones (learners passed them too) are used. For any other topic prof teaches as before.
+
+The first time `/prof:learn` looks for a lesson, prof downloads the courses with `git clone` into
+`courses/`. After that it updates them at most once a week, and only when you ask for a lesson. A hook
+never does this. If the download fails, prof teaches as before. `python3 scripts/prof_courses.py find
+"<topic>"` shows what it would use, and `update` downloads the latest now. Lesson statuses come from
+the courses repository's own `bin/courses status --json`, which reads the lessons and their reviews but
+never runs lesson code.
 
 Retention checks use spaced repetition: a concept you just understood comes back after 3 days,
 then 7, 14, 30, 60 and 120 days for each success in a row. A miss starts it over.
