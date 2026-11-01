@@ -119,7 +119,8 @@ def test_trimmed_descriptions_keep_the_trigger_words(rel):
 
 
 @pytest.mark.parametrize("plugin,helper", [("lawha", "${CLAUDE_PLUGIN_ROOT}/bin/lawha"),
-                                           ("manar", "${CLAUDE_PLUGIN_ROOT}/bin/manar")])
+                                           ("manar", "${CLAUDE_PLUGIN_ROOT}/bin/manar"),
+                                           ("tabib", "${CLAUDE_PLUGIN_ROOT}/bin/tabib")])
 def test_skills_find_the_helper_without_the_session_note(plugin, helper):
     """The session note is quiet in most projects, so a skill must not need it for the helper's path."""
     for path in (PLUGINS / plugin / "skills").glob("*/SKILL.md"):

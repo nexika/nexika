@@ -164,9 +164,15 @@ def cmd_record(args) -> int:
 
 
 def cmd_hook(args) -> int:
+    event = {}
     if sys.stdin is not None and not sys.stdin.isatty():
-        sys.stdin.read(STDIN_LIMIT)
-    sys.stdout.write(hooks.on_session_start({}, helper_path()) + "\n")
+        try:
+            event = json.loads(sys.stdin.read(STDIN_LIMIT) or "{}")
+        except ValueError:
+            event = {}
+    out = hooks.on_session_start(event, helper_path(), os.environ.get("CLAUDE_PROJECT_DIR", ""))
+    if out:
+        sys.stdout.write(out + "\n")
     return 0
 
 

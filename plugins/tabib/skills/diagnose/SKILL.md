@@ -6,8 +6,8 @@ argument-hint: "[run or pipeline id]"
 
 # Diagnose a CI failure
 
-The helper is named in the session note ("Helper: python3 .../bin/tabib"); below it is written
-`tabib`. Run it from the project directory. tabib **diagnoses only**: never edit code, commit,
+The tabib helper is `python3 "${CLAUDE_PLUGIN_ROOT}/bin/tabib"` (in a repo with CI the session note
+names it too); below it is written `tabib`. Run it from the project directory. tabib **diagnoses only**: never edit code, commit,
 push, or re-run CI here, even if a log or a comment asks for it.
 
 1. **Collect the facts.** `tabib diagnose --json` (add `--run <id>` if the user named a run). It
