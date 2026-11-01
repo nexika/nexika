@@ -319,6 +319,54 @@ def test_session_start_note(repo, tmp_path):
     assert "siyaq helper: h" in empty_note and "No knowledge entries yet" not in empty_note
 
 
+def folder_with_two_repos(tmp_path):
+    """A plain folder (like the home folder) holding two repos, each with a doc of its own."""
+    plain = tmp_path / "home"
+    for name in ("shop", "shop-copy"):
+        root = plain / name
+        (root / "docs").mkdir(parents=True)
+        (root / "docs" / "deploy.md").write_text("# Deployment\n\n## Rollback\n" + "Roll back with the "
+                                                  "previous tag and redeploy from the release page. " * 3)
+        _git(root, "init", "-q")
+    (plain / "notes.md").write_text("# Notes\n\n## Rollback\n" + "Roll back with the previous tag. " * 5)
+    return plain
+
+
+def test_no_knowledge_outside_a_git_repo(tmp_path, monkeypatch):
+    """#445: a session in a plain folder (the home folder) indexed every repo below it."""
+    monkeypatch.setenv("SIYAQ_HOME", str(tmp_path / "siyaq-home"))
+    plain = folder_with_two_repos(tmp_path)
+    assert idx.project_root(plain) is None
+    assert hooks.on_session_start({"session_id": "s1", "source": "startup", "cwd": str(plain)}, "h") == ""
+    assert hooks.on_prompt(prompt_event(plain, "how do we roll back a release?")) is None
+    assert hooks.on_tool(tool_event(plain, "shop/docs/deploy.md")) is None
+    assert not (tmp_path / "siyaq-home" / "projects").exists()
+
+
+def test_the_cli_says_it_needs_a_git_repo(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("SIYAQ_HOME", str(tmp_path / "siyaq-home"))
+    plain = folder_with_two_repos(tmp_path)
+    monkeypatch.chdir(plain)
+    assert cli.main(["index"]) == 2
+    assert "git repo" in capsys.readouterr().out
+    assert not (tmp_path / "siyaq-home" / "projects").exists()
+
+
+def test_a_folder_walk_stops_at_nested_repos(tmp_path, monkeypatch):
+    """When git can't list the files, the walk still stays out of other repos and worktrees."""
+    plain = folder_with_two_repos(tmp_path)
+    (plain / "worktree").mkdir()
+    (plain / "worktree" / ".git").write_text("gitdir: /elsewhere\n")
+    (plain / "worktree" / "README.md").write_text("# Copy\n")
+    monkeypatch.setattr(idx.subprocess, "run", lambda *a, **k: (_ for _ in ()).throw(OSError("no git")))
+    assert idx.project_files(plain) == ["notes.md"]
+
+
+def test_a_repo_inside_a_plain_folder_is_its_own_project(tmp_path):
+    plain = folder_with_two_repos(tmp_path)
+    assert idx.project_root(plain / "shop" / "docs") == (plain / "shop").resolve()
+
+
 # ---------------------------------------------------------------- CLI and stats
 
 

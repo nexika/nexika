@@ -97,6 +97,8 @@ project's docs), 1.0 otherwise. `"mode": "off"` or `SIYAQ=off` disables it. CLAU
 the usage events (which hold words from your prompts) are readable only by you and rotate at 1 MB.
 
 ## Limits
+- siyaq works in git repos only. In a plain folder, such as your home folder, it adds nothing,
+  so the docs of every repo below that folder stay out.
 - Matching is lexical (words, stems, synonyms you add), not semantic. A built-in glossary of
   common software and business words (deploy = نشر, invoice = فاتورة, rollback = تراجع ...) lets an
   Arabic question find English docs and the reverse; other terms match across languages only

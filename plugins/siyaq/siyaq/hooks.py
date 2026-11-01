@@ -21,6 +21,8 @@ NOTE = ("siyaq (Nexika): project knowledge is added when a prompt or a file you 
 
 def _context(event: dict) -> tuple[Path, dict] | None:
     root = idx.project_root(Path(event.get("cwd") or os.getcwd()))
+    if root is None:
+        return None
     config = idx.load_config(root)
     if os.environ.get("SIYAQ", "").lower() == "off" or config.get("mode") == "off":
         return None
