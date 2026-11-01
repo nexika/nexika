@@ -15,8 +15,16 @@ HEADER = ("siyaq: project knowledge matched to this {what} (from the repo's docs
           "with the code, trust the code and mention the mismatch):\n\n")
 # Read again on every turn (#345): the knowledge itself comes with the prompt or file it matches, so
 # the note only says so and names the helper (the skills run it; `match` searches on demand).
-NOTE = ("siyaq (Nexika): project knowledge is added when a prompt or a file you touch matches it. "
+NOTE = ("siyaq (Nexika): project knowledge is added when {what} matches it. "
         "siyaq helper: {helper} (match TEXT | entries | stats | index)")
+
+
+def prompts_on(config: dict) -> bool:
+    """Whether a prompt brings docs (#455): off unless .siyaq.json says "prompts": true or the user sets
+    SIYAQ_PROMPTS=on. The project's setting wins. Files always bring their docs."""
+    if isinstance(config.get("prompts"), bool):
+        return config["prompts"]
+    return os.environ.get("SIYAQ_PROMPTS", "").lower() in ("on", "1", "true", "yes")
 
 
 def _context(event: dict) -> tuple[Path, dict] | None:
@@ -74,6 +82,8 @@ def on_prompt(event: dict) -> str | None:
     if not ctx:
         return None
     root, config = ctx
+    if not prompts_on(config):
+        return None
     if prompt.startswith("/"):
         prompt = prompt.split(maxsplit=1)[1] if " " in prompt else ""
     session = str(event.get("session_id") or "")
@@ -145,4 +155,5 @@ def on_session_start(event: dict, helper: str) -> str:
     root, config = ctx
     idx.load_ready(root, config, wait=idx.SESSION_START_WAIT)  # starts or refreshes the index
     problems = idx.read_config(root)[1]  # named once a session; the rest of the file still counts (#414)
-    return "\n".join([NOTE.format(helper=helper), *(f"siyaq: {p}." for p in problems)])
+    what = "a prompt or a file you touch" if prompts_on(config) else "a file you touch"
+    return "\n".join([NOTE.format(what=what, helper=helper), *(f"siyaq: {p}." for p in problems)])

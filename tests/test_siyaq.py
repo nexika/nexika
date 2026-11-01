@@ -68,6 +68,7 @@ DOCS = {
 def repo(tmp_path, monkeypatch):
     monkeypatch.setenv("SIYAQ_HOME", str(tmp_path / "siyaq-home"))
     monkeypatch.delenv("SIYAQ", raising=False)
+    monkeypatch.setenv("SIYAQ_PROMPTS", "on")  # most tests check prompt matching itself; it is opt-in (#455)
     root = tmp_path / "shop"
     for rel, content in DOCS.items():
         path = root / rel
@@ -76,6 +77,9 @@ def repo(tmp_path, monkeypatch):
     _git(root, "init", "-q", "-b", "main")
     _git(root, "add", "-A")
     return root.resolve()
+
+
+FULL_NOTE = hooks.NOTE.format(what="a prompt or a file you touch", helper="helper")  # prompts on
 
 
 def entries_by_title(index):
@@ -190,7 +194,7 @@ def test_siyaq_json_that_is_not_an_object_is_named(repo):
     assert hooks.on_prompt(prompt_event(repo, "how do we roll back a release?"))
     (repo / ".siyaq.json").write_text(json.dumps({"exclude": ["docs/orders.md"], "top_k": 2}))
     assert hooks.on_session_start({"session_id": "s1", "source": "startup", "cwd": str(repo)},
-                                  "helper") == hooks.NOTE.format(helper="helper")
+                                  "helper") == FULL_NOTE
 
 
 def test_the_number_settings_siyaq_json_checks_are_ranks_settings():
@@ -365,6 +369,44 @@ def test_a_folder_walk_stops_at_nested_repos(tmp_path, monkeypatch):
 def test_a_repo_inside_a_plain_folder_is_its_own_project(tmp_path):
     plain = folder_with_two_repos(tmp_path)
     assert idx.project_root(plain / "shop" / "docs") == (plain / "shop").resolve()
+
+
+def test_prompt_matching_is_off_by_default(repo, monkeypatch):
+    """#455: on 100 labelled prompts only 28% of the sections siyaq loaded were relevant
+    (benchmarks/siyaq), so prompts load nothing unless the project or the user turns matching on."""
+    monkeypatch.delenv("SIYAQ_PROMPTS")
+    assert hooks.on_prompt(prompt_event(repo, "how do we roll back a release?")) is None
+    # files still bring their docs, and match still works
+    assert hooks.on_tool(tool_event(repo, "src/Orders/DiscountService.cs", tool="Edit")) is not None
+    assert "Rollback" in cli.cmd_match(repo, "how do we roll back a release?")
+
+
+def test_prompt_matching_turned_on_per_project_or_per_user(repo, monkeypatch):
+    monkeypatch.delenv("SIYAQ_PROMPTS")
+    (repo / ".siyaq.json").write_text('{"prompts": true}')
+    assert "Rollback" in context_of(hooks.on_prompt(prompt_event(repo, "how do we roll back a release?")))
+    (repo / ".siyaq.json").write_text('{"prompts": false}')
+    monkeypatch.setenv("SIYAQ_PROMPTS", "on")
+    assert hooks.on_prompt(prompt_event(repo, "how do we roll back a release?")) is None  # the project wins
+    (repo / ".siyaq.json").unlink()
+    assert hooks.on_prompt(prompt_event(repo, "how do we roll back a release?", session="s2")) is not None
+
+
+def test_a_wrong_prompts_setting_keeps_the_default(repo, monkeypatch):
+    monkeypatch.delenv("SIYAQ_PROMPTS")
+    (repo / ".siyaq.json").write_text('{"prompts": "yes"}')
+    config, problems = idx.read_config(repo)
+    assert "prompts" not in config and any('"prompts"' in p for p in problems)
+    assert hooks.on_prompt(prompt_event(repo, "how do we roll back a release?")) is None
+
+
+def test_session_note_says_what_loads(repo, monkeypatch):
+    monkeypatch.delenv("SIYAQ_PROMPTS")
+    event = {"session_id": "s1", "cwd": str(repo)}
+    note = hooks.on_session_start(event, "h")
+    assert "a file you touch" in note and "prompt" not in note.split("siyaq helper")[0]
+    monkeypatch.setenv("SIYAQ_PROMPTS", "on")
+    assert "a prompt or a file you touch" in hooks.on_session_start(event, "h")
 
 
 # ---------------------------------------------------------------- CLI and stats
@@ -655,7 +697,7 @@ def test_first_prompt_on_a_slow_repo_never_waits_for_the_index(repo, slow_build)
     assert slow_build.started == [repo]
     assert hooks.on_tool(tool_event(repo, "src/Orders/DiscountService.cs", tool="Edit")) is None
     note = hooks.on_session_start({"session_id": "s1", "source": "startup", "cwd": str(repo)}, "helper")
-    assert note == hooks.NOTE.format(helper="helper")  # the same short note while the index builds (#345)
+    assert note == FULL_NOTE  # the same short note while the index builds (#345)
 
 
 def test_background_build_writes_the_index(repo):

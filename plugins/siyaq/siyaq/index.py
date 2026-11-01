@@ -87,6 +87,7 @@ def project_dir(root: Path) -> Path:
 
 # .siyaq.json's settings and the type each must have; a value of another type keeps the default (#414).
 LIST_SETTINGS = ("sources", "exclude")  # lists of globs
+BOOL_SETTINGS = ("prompts",)  # true or false
 NUMBER_SETTINGS = ("min_score", "top_k", "budget_tokens", "path_budget_tokens", "full_max_chars",
                    "summary_chars")  # rank.DEFAULTS
 
@@ -103,6 +104,10 @@ def check_config(data: object) -> tuple[dict, list[str]]:
             del clean[key]
             problems.append(f'"{key}" in .siyaq.json should be a list of globs like ["docs/**/*.md"]; '
                             "siyaq uses its default")
+    for key in BOOL_SETTINGS:
+        if key in clean and not isinstance(clean[key], bool):
+            del clean[key]
+            problems.append(f'"{key}" in .siyaq.json should be true or false; siyaq uses its default')
     for key in NUMBER_SETTINGS:
         value = clean.get(key)
         if key in clean and (isinstance(value, bool) or not isinstance(value, (int, float))):

@@ -1,0 +1,42 @@
+# Held out for #455: labelled on 2026-11-01 before the ranking change, never used while tuning.
+# prompt<TAB>relevant sections ("source :: last heading", separated by " | "; "-" means nothing should load)
+done	-
+perfect, push it	-
+no, revert that	-
+please continue with the next step	-
+add type hints to this function	-
+the tests are failing with ImportError, look at the traceback	-
+why does my docker build take so long?	-
+convert this callback code to async/await	-
+what's the difference between a list and a tuple?	-
+open a PR for this	-
+لا، أعد المحاولة	-
+improve the error message when the file is missing	-
+how do I approve a command that haris refused?	plugins/haris/README.md :: Skills | plugins/haris/README.md :: No self-approval
+what are haris's relaxed, standard and strict settings?	plugins/haris/README.md :: Profiles
+does haris stop secrets from being sent to a website?	plugins/haris/README.md :: What it protects
+how do I see what hafiz remembers about this project?	plugins/hafiz/README.md :: Skills
+where does hafiz store its memories?	plugins/hafiz/README.md :: How it works | plugins/hafiz/README.md :: Built to be trusted
+what does tabib store after a diagnosis?	plugins/tabib/README.md :: Data
+can tabib fix the failing test for me?	plugins/tabib/README.md :: tabib (طبيب) - finds out why CI failed | plugins/tabib/README.md :: Two steps
+which CI providers does tabib read?	plugins/tabib/README.md :: What it reads
+how do I review my changes with itqan?	plugins/itqan/README.md :: What's inside
+where does itqan keep the rules it learned?	plugins/itqan/README.md :: Learning from your corrections | plugins/itqan/README.md :: Data
+how do I build a page from a Figma link with lawha?	plugins/lawha/README.md :: Commands | plugins/lawha/README.md :: lawha (لوحة) - frontend you can see
+what are lawha's limits?	plugins/lawha/README.md :: Limits
+how does manar check robots.txt for AI crawlers?	plugins/manar/README.md :: manar (منار) - be found by search engines and AI assistants | plugins/manar/README.md :: Commands (the helper the skills use)
+what data does mizan keep?	plugins/mizan/README.md :: Data
+what does mizan do when the work is done?	plugins/mizan/README.md :: When the work is done
+how do I set my level in prof?	plugins/prof/README.md :: What's inside
+what are prof's limits?	plugins/prof/README.md :: Limits
+how do I turn siyaq off?	plugins/siyaq/README.md :: Configuration: `.siyaq.json` | README.md :: Lean sessions: what each plugin adds, and turning one off per project
+what does barq run:test print?	plugins/barq/README.md :: Ops
+what words does bayan avoid?	plugins/bayan/README.md :: What happens on its own | plugins/bayan/README.md :: bayan (بيان): write like a clear, friendly person
+how does amin find the projects in a repo?	plugins/amin/README.md :: Projects
+what is the family profile?	README.md :: The family profile: who the user is
+what changed in nexika 0.4?	README.md :: What's new in 0.4
+how much more does a task cost with nexika?	benchmarks/README.md :: The three pilots | benchmarks/README.md :: Tested on outside material
+how were the tabib benchmark labels decided?	benchmarks/tabib/README.md :: How each label was decided
+ما هي إعدادات haris الثلاثة؟	plugins/haris/README.md :: Profiles
+كيف أرى ما يتذكره hafiz؟	plugins/hafiz/README.md :: Skills
+كم تكلف nexika لكل مهمة؟	benchmarks/README.md :: The three pilots | benchmarks/README.md :: Tested on outside material

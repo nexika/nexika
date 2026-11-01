@@ -1,6 +1,6 @@
 ---
 name: add
-description: Capture a piece of project knowledge as a siyaq entry so it is loaded automatically whenever a future prompt or file touches it - a convention, a gotcha, how a subsystem works, a deployment step. Use when the user says "remember this for the project", "add this to the docs/knowledge", "siyaq add", or after explaining something non-obvious about the codebase.
+description: Capture a piece of project knowledge as a siyaq entry so it is loaded automatically whenever Claude reads or edits the files it covers (and prompts, when prompt matching is on) - a convention, a gotcha, how a subsystem works, a deployment step. Use when the user says "remember this for the project", "add this to the docs/knowledge", "siyaq add", or after explaining something non-obvious about the codebase.
 argument-hint: "[topic]"
 ---
 
@@ -27,7 +27,9 @@ Topic: $ARGUMENTS (if empty, use the knowledge just discussed; if unclear, ask w
    - `keywords`: other words people use for it, **including the languages the team writes
      prompts in** (e.g. Arabic): matching works on words, so synonyms widen recall.
    - `paths`: globs of files where this knowledge matters (it is shown when Claude reads or
-     edits them). Prefer specific folders or files.
+     edits them). Prefer specific folders or files. Always set it: prompt matching is off unless
+     the project or the user turns it on, so without `paths` the entry loads only through
+     `siyaq match`.
    - Body: short and concrete, under ~40 lines. Link to code with paths, not copies of code.
    - Add `inject: full` only for small, always-essential entries; the default lets siyaq
      send a summary first.
