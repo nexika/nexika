@@ -66,7 +66,9 @@ def data_home() -> Path:
     return Path(os.environ.get("SIYAQ_HOME") or Path.home() / ".claude" / "nexika" / "siyaq")
 
 
-def project_root(cwd: Path) -> Path:
+def project_root(cwd: Path) -> Path | None:
+    """The git repo holding cwd, or None: siyaq knows git repos only (#445). A plain folder such as
+    the home folder would pull in the docs of every repo below it."""
     try:
         res = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=cwd, capture_output=True,
                              text=True, timeout=10)
@@ -74,7 +76,7 @@ def project_root(cwd: Path) -> Path:
             return Path(res.stdout.strip()).resolve()
     except (OSError, subprocess.TimeoutExpired):
         pass
-    return cwd.resolve()
+    return None
 
 
 def project_dir(root: Path) -> Path:
@@ -165,7 +167,9 @@ def project_files(root: Path) -> list[str]:
     skip = {".git", "node_modules", "bin", "obj", "dist", "build", ".venv", "venv", "__pycache__"}
     out = []
     for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if d not in skip]
+        # another repo or worktree (.git is a folder or a file) is not part of this one (#445)
+        dirnames[:] = [d for d in dirnames
+                       if d not in skip and not os.path.lexists(os.path.join(dirpath, d, ".git"))]
         for name in filenames:
             out.append(Path(dirpath, name).relative_to(root).as_posix())
     return sorted(out)

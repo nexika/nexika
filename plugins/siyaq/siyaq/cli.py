@@ -143,6 +143,9 @@ def main(argv: list[str]) -> int:
             pass
         return 0
     root = idx.project_root(Path.cwd())
+    if root is None and cmd in ("match", "entries", "index", "refresh", "stats"):
+        print("siyaq: not in a git repo. siyaq indexes the docs of a git repo; run it inside one.")
+        return 2
     if cmd == "match" and len(argv) > 1:
         print(cmd_match(root, " ".join(argv[1:])))
     elif cmd == "entries":
