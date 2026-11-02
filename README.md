@@ -59,7 +59,7 @@ Each add-on has an Arabic name that says what it does. Click a name for its own 
 | Add-on | In plain words |
 |---|---|
 | [**hafiz**](plugins/hafiz/README.md) (حافظ, *the one who keeps and remembers*) | Keeps a notebook of the work as it happens: the decisions you made, the plan and its open steps, the problems still open, the files that matter. When a long conversation is shortened, or you start a new one, hafiz hands Claude the notebook so it carries on instead of starting over. Secrets are removed before anything is saved. |
-| [**siyaq**](plugins/siyaq/README.md) (سياق, *context*) | Gives Claude the right page of your project's documentation at the right moment, only when a question or a file needs it, in Arabic or English, instead of everything every time. |
+| [**siyaq**](plugins/siyaq/README.md) (سياق, *context*) | Gives Claude the right page of your project's documentation when a file it reads or edits needs it, in Arabic or English, instead of everything every time. Matching your questions too is opt-in. |
 | [**mizan**](plugins/mizan/README.md) (ميزان, *scale* or *balance*) | A small bar above where you type that keeps the session in balance: which line of work (branch) you're on, whether the last checks passed, how full Claude's memory of the conversation is, the computer's memory and disk, and what the session has cost so far. It warns you before something runs out. |
 
 ### Learning and writing

@@ -6,6 +6,7 @@ and nothing when nothing helps? Offline, no model calls, a few seconds.
     python3 benchmarks/siyaq/bench.py --json           # the same as JSON, with every prompt
     python3 benchmarks/siyaq/bench.py --check          # exit 1 if a prompt right in the baseline is now wrong
     python3 benchmarks/siyaq/bench.py --save-baseline  # after a change that gets more right
+    python3 benchmarks/siyaq/bench.py --set heldout    # the 40 held-out prompts (same options)
 """
 from __future__ import annotations
 
@@ -23,6 +24,8 @@ REPO = HERE.parent.parent
 CORPUS = HERE / "corpus"
 PROMPTS = HERE / "prompts.tsv"
 BASELINE = HERE / "baseline.json"
+# heldout.tsv was labelled before #455's ranking experiments and is never used to tune siyaq
+SETS = {"main": (PROMPTS, BASELINE), "heldout": (HERE / "heldout.tsv", HERE / "baseline-heldout.json")}
 sys.path.insert(0, str(REPO / "plugins" / "siyaq"))
 
 from siyaq import index as idx  # noqa: E402
@@ -67,7 +70,8 @@ def picks(index: dict, prompt: str, cfg: dict) -> list[dict]:
     return rank.select_for_prompt(index, typed, cfg, {}) if typed else []
 
 
-def run() -> dict:
+def run(name: str = "main") -> dict:
+    prompts = SETS[name][0]
     with tempfile.TemporaryDirectory() as tmp:
         old = os.environ.get("SIYAQ_HOME")
         os.environ["SIYAQ_HOME"] = str(Path(tmp) / "home")
@@ -82,12 +86,12 @@ def run() -> dict:
     cfg = rank.settings({})
     titles = {e["id"]: e["title"] for e in index["entries"]}
     rows = []
-    for case in load_prompts():
+    for case in load_prompts(prompts):
         wanted = set()
         for label in case["relevant"]:
             found = resolve(label, index["entries"])
             if not found:
-                raise SystemExit(f"prompts.tsv:{case['line']}: no section matches {label!r}")
+                raise SystemExit(f"{prompts.name}:{case['line']}: no section matches {label!r}")
             wanted.update(found)
         start = time.perf_counter()
         picked = picks(index, case["prompt"], cfg)
@@ -95,7 +99,7 @@ def run() -> dict:
         loaded = [p["entry"]["id"] for p in picked]
         good = [i for i in loaded if i in wanted]
         rows.append({
-            "line": case["line"], "prompt": case["prompt"], "silent": not wanted,
+            "file": prompts.name, "line": case["line"], "prompt": case["prompt"], "silent": not wanted,
             "loaded": [titles[i] for i in loaded], "relevant_loaded": len(good), "loaded_n": len(loaded),
             "tokens": sum(len(p["text"]) for p in picked) // rank.CHARS_PER_TOKEN, "ms": round(ms, 2),
             # right: a silent prompt loads nothing; a labelled one loads at least one relevant section
@@ -123,7 +127,7 @@ def summarise(rows: list[dict], index: dict) -> dict:
 
 
 def regressions(report: dict, baseline: dict) -> list[str]:
-    lost = [f"prompts.tsv:{r['line']} {r['prompt']!r} now loads {r['loaded'] or 'nothing'}"
+    lost = [f"{r['file']}:{r['line']} {r['prompt']!r} now loads {r['loaded'] or 'nothing'}"
             for r in report["rows"] if r["prompt"] in set(baseline.get("right", [])) and not r["right"]]
     if round(report["precision"], 4) < baseline.get("precision", 0):  # the baseline keeps 4 decimals
         lost.append(f"precision dropped: {baseline['precision']:.1%} -> {report['precision']:.1%}")
@@ -159,14 +163,16 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--save-baseline", action="store_true")
+    ap.add_argument("--set", choices=sorted(SETS), default="main", help="main (100 prompts) or heldout (40)")
     args = ap.parse_args(argv)
-    report = run()
+    report = run(args.set)
+    baseline = SETS[args.set][1]
     if args.save_baseline:
-        BASELINE.write_text(json.dumps({"precision": round(report["precision"], 4),
+        baseline.write_text(json.dumps({"precision": round(report["precision"], 4),
                                         "right": [r["prompt"] for r in report["rows"] if r["right"]]},
                                        ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     if args.check:
-        lost = regressions(report, json.loads(BASELINE.read_text(encoding="utf-8")))
+        lost = regressions(report, json.loads(baseline.read_text(encoding="utf-8")))
         print("\n".join(lost) or "no regressions")
         return 1 if lost else 0
     print(json.dumps(report, ensure_ascii=False, indent=1) if args.json else markdown(report))

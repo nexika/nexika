@@ -9,9 +9,13 @@ python3 benchmarks/siyaq/bench.py                  # the report as Markdown, wit
 python3 benchmarks/siyaq/bench.py --json           # the same as JSON, with every prompt
 python3 benchmarks/siyaq/bench.py --check          # exit 1 if a prompt the baseline got right is now wrong
 python3 benchmarks/siyaq/bench.py --save-baseline  # after a change that gets more right
+python3 benchmarks/siyaq/bench.py --set heldout    # the 40 held-out prompts, same options
 ```
 
-`tests/test_siyaq_bench.py` runs `--check` in CI.
+`tests/test_siyaq_bench.py` runs `--check` on both sets in CI.
+
+It measures prompt matching as it works when turned on. Since #455 it is off by default (see
+"What we changed").
 
 ## What it measures
 
@@ -35,6 +39,9 @@ Each labelled prompt lists the sections that would help answer it, as `source ::
 prompt counts as found if any one of them loads. All labels were written on 1 Nov 2026, before
 siyaq was run on any prompt.
 
+`heldout.tsv` has 40 more prompts (12 need no docs, 3 are in Arabic), labelled the same way on
+1 Nov 2026 before any ranking change was tried. Use it to check a change; never tune on it.
+
 ## The corpus
 
 `corpus/` is a snapshot of the 30 docs siyaq indexes in this repo at `f20ce94`: 196 sections. The
@@ -54,6 +61,25 @@ them into a throwaway git repo with their real names.
 siyaq misses the 70% pass line by far. It loads up to three sections for almost every prompt, so
 even when the right one is there, two weaker ones come with it. It loaded three sections for
 "what is the next issue" and for "write a unit test for parse_duration".
+
+### Held-out set (2026-11-01, siyaq at `20678b4`)
+
+| Measure | Result |
+|---|---|
+| Precision | 21/95 = 22% |
+| Labelled prompts with a relevant section loaded | 17/28 = 61% |
+| Prompts that need nothing and got nothing | 5/12 = 42% |
+
+## What we changed (#455)
+
+We tried to raise precision by changing siyaq's ranking: a bonus for prompt words in a section's own
+and parent headings, a cutoff relative to the best match, stricter rules for matches in the body
+only, and fewer slots. Tuned on the 100 prompts, the best setting reached 56% precision with 53 of
+75 found. On the 40 held-out prompts it reached 30% (from 22%) and found 12 of 28 (from 17). Most of
+the gain was fitted to the tuning prompts, and no setting met all three targets in #455 even there.
+
+So prompt matching is now opt-in: `"prompts": true` in `.siyaq.json`, or `SIYAQ_PROMPTS=on`. Docs
+still load when Claude reads or edits a file. File matching is not measured yet.
 
 ## Limits
 

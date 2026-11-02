@@ -59,7 +59,7 @@ and catch regressions. They are not proof of how Nexika does on other people's w
 | tabib names the right kind of failure for 167 of 170 failed CI runs, and the right failing test in all 111 runs that have one ([tabib](#tabib-the-cause-of-a-failed-ci-run)). | tabib was tuned on 150 of the runs. We labelled every run by hand. |
 | After a restart told only "carry on with the plan", Claude finished the open work in 3 of 3 runs with hafiz and 0 of 3 without ([hafiz](#hafiz-continuing-after-a-break)). | Our own tasks, and 3 runs per arm. |
 | Blind judges preferred lawha's page to Anthropic's frontend-design skill 6 times out of 6 ([lawha](#lawha-design-to-code-and-brief-to-page)). | The judges were Claude models using lawha's own judge instructions. |
-| Of the doc sections siyaq loads for 100 prompts, 28% help with the prompt; the draft pass line is 70% ([siyaq](#siyaq-the-right-docs-for-a-prompt)). | Nexika's own docs, and prompts we wrote and labelled. |
+| Of the doc sections siyaq loads for 100 prompts, 28% help with the prompt (22% on 40 held-out prompts); the draft pass line is 70%, so prompt matching is now opt-in ([siyaq](#siyaq-the-right-docs-for-a-prompt)). | Nexika's own docs, and prompts we wrote and labelled. |
 
 ## Agent benchmark: Claude Code alone vs with Nexika
 
@@ -345,6 +345,11 @@ about a second. CI fails if a prompt siyaq got right is now wrong.
 | Tokens added per prompt (mean) | 357 |
 
 siyaq nearly always loads three sections, so the right one comes with two weaker ones.
+
+On 40 held-out prompts precision was 22%. Changing the ranking raised it to 56% on the 100 prompts
+it was tuned on, but only to 30% on the held-out set, where it found fewer helpful sections (12 of
+28 against 17). So since #455 siyaq matches prompts only when turned on; docs still load for the
+files Claude reads or edits.
 
 **Limits.**
 - Our own docs, prompts and labels, from one labeller with strict labels.

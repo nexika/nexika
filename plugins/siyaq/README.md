@@ -3,8 +3,8 @@
 Part of [Nexika](../../README.md). *Siyaq* means context.
 
 CLAUDE.md is loaded into every session, whether the task needs it or not. siyaq keeps project
-knowledge out of the context until a prompt or a file Claude touches makes it relevant, then
-adds just that piece.
+knowledge out of the context until a file Claude reads or edits makes it relevant, then adds just
+that piece. Matching your prompts too is opt-in (see below).
 
 ## How it works
 
@@ -12,7 +12,7 @@ adds just that piece.
 your docs ─────────► index (automatic): every heading section of docs/**, READMEs, CONTRIBUTING,
 .siyaq/entries/ ───►   ARCHITECTURE, adr/** + your hand-written entries; rebuilt by itself when
                        a source changes, so there is no index to forget
-prompt ────────────► language-aware words (Arabic included) ─► relevance ranking (BM25)
+prompt (opt-in) ───► language-aware words (Arabic included) ─► relevance ranking (BM25)
                        ─► up to 3 entries within a token budget (summary first, full if strong)
 Read/Edit a file ──► the sections that mention that file or its (specific) folder
 once per session ──► never sent twice; reset after /compact or /clear
@@ -87,9 +87,16 @@ what would be injected; `siyaq entries`, `siyaq index` (sources, dead references
   "exclude": ["docs/archive/**"],
   "top_k": 3, "budget_tokens": 1200, "path_budget_tokens": 600,
   "min_score": 1.0, "full_max_chars": 1800,
-  "mode": "on"
+  "mode": "on", "prompts": false
 }
 ```
+
+**Prompt matching is off by default.** On 100 labelled prompts about this repo, only 28% of the
+sections siyaq loaded for a prompt helped with it, and on 40 held-out prompts 22%
+([benchmark](../../benchmarks/siyaq/README.md), #455). Docs still load when Claude reads or edits a
+file, and `siyaq match TEXT` searches on demand. To load docs for prompts too, set
+`"prompts": true` in `.siyaq.json` for one project, or `SIYAQ_PROMPTS=on` for every project. The
+project's setting wins.
 
 Without a `min_score`, the Nexika profile's role sets it: 0.7 for a learner (more of the
 project's docs), 1.0 otherwise. `"mode": "off"` or `SIYAQ=off` disables it. CLAUDE.md and CHANGELOG.md are never indexed

@@ -19,14 +19,22 @@ def report():
     return bench.run()  # also fails if a label names a section the corpus doesn't have
 
 
-def test_no_prompt_the_baseline_got_right_is_now_wrong(report):
-    lost = bench.regressions(report, json.loads(bench.BASELINE.read_text(encoding="utf-8")))
+@pytest.mark.parametrize("name", sorted(bench.SETS))
+def test_no_prompt_the_baseline_got_right_is_now_wrong(name):
+    baseline = json.loads(bench.SETS[name][1].read_text(encoding="utf-8"))
+    lost = bench.regressions(bench.run(name), baseline)
     assert not lost, "siyaq got these right before and gets them wrong now:\n" + "\n".join(lost)
 
 
 def test_the_set_has_100_prompts_and_a_quarter_need_nothing(report):
     assert report["prompts"] == 100 and report["silent"] == 25
     assert report["sources"] == 30
+
+
+def test_the_held_out_set_shares_no_prompt_with_the_main_set():
+    main = {c["prompt"] for c in bench.load_prompts(bench.PROMPTS)}
+    held = [c["prompt"] for c in bench.load_prompts(bench.SETS["heldout"][0])]
+    assert len(held) == 40 and not main & set(held)
 
 
 def test_a_lost_prompt_and_a_lower_precision_are_reported(report):
