@@ -1,0 +1,97 @@
+# path	sections that help work on this file (source :: heading), or - for none
+README.md	-
+benchmarks/README.md	benchmarks/README.md :: Updating this page | benchmarks/README.md :: Two kinds of result | README.md :: How we know it works
+benchmarks/agent/README.md	benchmarks/README.md :: Agent benchmark: Claude Code alone vs with Nexika
+benchmarks/agent/context-0.4.md	benchmarks/README.md :: Session start size | benchmarks/agent/README.md :: Ablations, batches and the context cost
+benchmarks/agent/denials.py	benchmarks/agent/README.md :: What you get | benchmarks/agent/README.md :: Confounds it handles | benchmarks/agent/README.md :: Reading the result
+benchmarks/agent/haris-386.md	benchmarks/README.md :: Limits | plugins/haris/README.md :: Unattended sessions | benchmarks/agent/README.md :: Ablations, batches and the context cost
+benchmarks/hafiz/README.md	benchmarks/README.md :: hafiz: continuing after a break
+benchmarks/hafiz/bench.py	benchmarks/hafiz/README.md :: Run it | benchmarks/hafiz/README.md :: The tasks | benchmarks/hafiz/README.md :: Scoring
+benchmarks/hafiz/fixture/shelf/catalog.py	benchmarks/hafiz/fixture/README.md :: shelf | benchmarks/hafiz/README.md :: The tasks
+benchmarks/hafiz/fixture/shelf/cli.py	benchmarks/hafiz/fixture/README.md :: shelf | benchmarks/hafiz/README.md :: The tasks
+benchmarks/hafiz/fixture/shelf/money.py	benchmarks/hafiz/fixture/README.md :: shelf | benchmarks/hafiz/README.md :: The tasks
+benchmarks/hafiz/fixture/tests/test_catalog.py	benchmarks/hafiz/fixture/README.md :: shelf | benchmarks/hafiz/README.md :: The tasks
+benchmarks/hafiz/fixture/tests/test_cli.py	benchmarks/hafiz/fixture/README.md :: shelf | benchmarks/hafiz/README.md :: The tasks
+benchmarks/hafiz/fixture/tests/test_money.py	benchmarks/hafiz/fixture/README.md :: shelf | benchmarks/hafiz/README.md :: The tasks
+benchmarks/hafiz/runtests.py	benchmarks/hafiz/README.md :: Scoring | benchmarks/hafiz/README.md :: The tasks
+benchmarks/hafiz/score.py	benchmarks/hafiz/README.md :: Scoring | benchmarks/hafiz/README.md :: The quality guardrail: what hafiz's note costs
+benchmarks/hafiz/tasks.json	benchmarks/hafiz/README.md :: The tasks | benchmarks/hafiz/README.md :: Scoring
+benchmarks/hafiz/tasks/export/hidden_test.py	benchmarks/hafiz/README.md :: The tasks | benchmarks/hafiz/README.md :: Scoring
+benchmarks/hafiz/tasks/export/overlay/tests/test_money.py	benchmarks/hafiz/README.md :: The tasks | benchmarks/hafiz/README.md :: Scoring
+benchmarks/hafiz/tasks/loans/hidden_test.py	benchmarks/hafiz/README.md :: The tasks | benchmarks/hafiz/README.md :: Scoring
+benchmarks/hafiz/tasks/loans/overlay/data/loans.tsv	benchmarks/hafiz/README.md :: The tasks
+benchmarks/hafiz/tasks/models/hidden_test.py	benchmarks/hafiz/README.md :: The tasks | benchmarks/hafiz/README.md :: Scoring
+benchmarks/hafiz/tasks/models/overlay/tests/test_cli.py	benchmarks/hafiz/README.md :: The tasks | benchmarks/hafiz/README.md :: Scoring
+benchmarks/hafiz/tasks/search/hidden_test.py	benchmarks/hafiz/README.md :: The tasks | benchmarks/hafiz/README.md :: Scoring
+benchmarks/hafiz/tasks/search/overlay/tests/test_catalog.py	benchmarks/hafiz/README.md :: The tasks | benchmarks/hafiz/README.md :: Scoring
+benchmarks/haris/README.md	benchmarks/README.md :: haris: harmful commands stopped, and false alarms
+benchmarks/haris/bench.py	benchmarks/haris/README.md :: The cases | benchmarks/haris/README.md :: The guardrail
+benchmarks/routing/README.md	-
+benchmarks/routing/bench.py	benchmarks/routing/README.md :: How it works | benchmarks/routing/README.md :: Skill routing check
+benchmarks/routing/cases.tsv	benchmarks/routing/README.md :: How it works
+benchmarks/score/read-run.mjs	benchmarks/README.md :: Raw files and scoring again | benchmarks/README.md :: lawha: design to code, and brief to page
+benchmarks/score/read-run.test.mjs	benchmarks/README.md :: Raw files and scoring again
+benchmarks/score/score.mjs	benchmarks/README.md :: lawha: design to code, and brief to page | benchmarks/README.md :: Raw files and scoring again
+benchmarks/tabib/README.md	benchmarks/README.md :: tabib: the cause of a failed CI run
+benchmarks/tabib/bench.py	benchmarks/tabib/README.md :: The cases | benchmarks/tabib/README.md :: The guardrail | benchmarks/tabib/README.md :: What it measures
+common/background.py	common/README.md :: common | README.md :: The family profile: who the user is
+common/family.py	common/README.md :: common | README.md :: The family profile: who the user is
+plugins/bayan/README.md	-
+plugins/bayan/bayan/hooks.py	plugins/bayan/README.md :: What happens on its own | plugins/bayan/README.md :: Works with Claude Code's built-ins | plugins/bayan/README.md :: Commands (used by the skills; also handy in CI)
+plugins/bayan/guide/writing.md	plugins/bayan/README.md :: What happens on its own
+plugins/bayan/skills/check/SKILL.md	plugins/bayan/README.md :: Commands (used by the skills; also handy in CI) | plugins/bayan/README.md :: Honest limits
+plugins/bayan/skills/level/SKILL.md	plugins/bayan/README.md :: Commands (used by the skills; also handy in CI)
+plugins/bayan/skills/write/SKILL.md	plugins/bayan/README.md :: Commands (used by the skills; also handy in CI)
+plugins/hafiz/README.md	-
+plugins/hafiz/hafiz/capture.py	plugins/hafiz/README.md :: How it works | plugins/hafiz/README.md :: Limits | benchmarks/hafiz/README.md :: Found by the benchmark
+plugins/hafiz/hafiz/card.py	plugins/hafiz/README.md :: How it works | plugins/hafiz/README.md :: Works with Claude Code's built-ins | plugins/hafiz/README.md :: Configuration: `.hafiz.json` (optional, in the repo root)
+plugins/hafiz/hafiz/hooks.py	plugins/hafiz/README.md :: How it works | plugins/hafiz/README.md :: Configuration: `.hafiz.json` (optional, in the repo root)
+plugins/hafiz/hafiz/store.py	plugins/hafiz/README.md :: Built to be trusted | plugins/hafiz/README.md :: Configuration: `.hafiz.json` (optional, in the repo root) | plugins/hafiz/README.md :: Limits
+plugins/hafiz/hafiz/transcript.py	plugins/hafiz/README.md :: Limits | plugins/hafiz/README.md :: How it works
+plugins/haris/README.md	-
+plugins/haris/haris/classify.py	plugins/haris/README.md :: How it judges a command | plugins/haris/README.md :: What it protects | plugins/haris/README.md :: Code read from a file
+plugins/haris/haris/config.py	plugins/haris/README.md :: Settings | plugins/haris/README.md :: Profiles
+plugins/haris/haris/hooks.py	plugins/haris/README.md :: No self-approval | plugins/haris/README.md :: Prompt injection | plugins/haris/README.md :: Unattended sessions
+plugins/haris/haris/paths.py	plugins/haris/README.md :: What it protects | plugins/haris/README.md :: How it judges a command
+plugins/haris/haris/policy.py	plugins/haris/README.md :: Profiles | plugins/haris/README.md :: Settings | plugins/haris/README.md :: How it judges a command
+plugins/haris/haris/state.py	plugins/haris/README.md :: Data | plugins/haris/README.md :: No self-approval | plugins/haris/README.md :: Limits
+plugins/haris/haris/unattended.py	plugins/haris/README.md :: Unattended sessions
+plugins/itqan/scripts/itqan_learn.py	plugins/itqan/README.md :: Learning from your corrections | plugins/itqan/README.md :: Insights | plugins/itqan/README.md :: Data
+plugins/itqan/scripts/itqan_proof.py	plugins/itqan/README.md :: Works with the family | README.md :: Status files: how the plugins talk to each other | plugins/itqan/README.md :: What's inside
+plugins/itqan/skills/insights/SKILL.md	plugins/itqan/README.md :: Insights | plugins/itqan/README.md :: The guard
+plugins/itqan/skills/learn/SKILL.md	plugins/itqan/README.md :: Learning from your corrections
+plugins/itqan/skills/proof/SKILL.md	plugins/itqan/README.md :: What's inside | plugins/itqan/README.md :: Works with the family
+plugins/itqan/skills/ship/SKILL.md	plugins/itqan/README.md :: What's inside
+plugins/lawha/engine/test/store.test.mjs	plugins/lawha/README.md :: Limits
+plugins/manar/manar/cli.py	plugins/manar/README.md :: Commands (the helper the skills use) | plugins/manar/README.md :: Keys for measuring AI visibility (optional)
+plugins/manar/manar/hook.py	plugins/manar/README.md :: Quiet when the project is not a website | README.md :: Lean sessions: what each plugin adds, and turning one off per project
+plugins/manar/manar/visibility.py	plugins/manar/README.md :: Keys for measuring AI visibility (optional) | plugins/manar/README.md :: Why it's different | plugins/manar/README.md :: Honest limits
+plugins/mizan/mizan/family.py	plugins/mizan/README.md :: The Nexika family | README.md :: Status files: how the plugins talk to each other
+plugins/mizan/mizan/forge.py	plugins/mizan/README.md :: How it works | plugins/mizan/README.md :: Settings
+plugins/mizan/mizan/snapshot.py	plugins/mizan/README.md :: How it works | plugins/mizan/README.md :: Settings | plugins/mizan/README.md :: Commands
+plugins/prof/README.md	-
+plugins/prof/scripts/prof_courses.py	plugins/prof/README.md :: Lessons from Nexika's courses | plugins/prof/README.md :: Data (`~/.claude/nexika/prof/`)
+plugins/prof/scripts/prof_store.py	plugins/prof/README.md :: The learning loop | plugins/prof/README.md :: Data (`~/.claude/nexika/prof/`) | plugins/prof/README.md :: Lessons from Nexika's courses
+plugins/siyaq/siyaq/index.py	plugins/siyaq/README.md :: How it works | plugins/siyaq/README.md :: Hand-written entries | plugins/siyaq/README.md :: Configuration: `.siyaq.json`
+plugins/tabib/tabib/diagnosis.py	plugins/tabib/README.md :: Data | plugins/tabib/README.md :: Two steps | plugins/tabib/README.md :: Commands
+plugins/tabib/tabib/parse.py	plugins/tabib/README.md :: What it reads | plugins/tabib/README.md :: Untrusted logs
+tests/fixtures/hafiz_bench/fake_claude.py	benchmarks/hafiz/README.md :: Run it | benchmarks/hafiz/README.md :: The tasks
+tests/fixtures/hafiz_bench/fake_loans.py	benchmarks/hafiz/README.md :: Run it | benchmarks/hafiz/README.md :: The tasks
+tests/haris_corpus.tsv	plugins/haris/README.md :: Speed and testing | benchmarks/haris/README.md :: The cases
+tests/haris_world.py	benchmarks/haris/README.md :: The cases | benchmarks/haris/README.md :: Results after #434: modules haris reads, not names imported (2026-10-28)
+tests/test_agent_denials.py	-
+tests/test_hafiz.py	-
+tests/test_hafiz_bench.py	benchmarks/hafiz/README.md :: Run it | benchmarks/hafiz/README.md :: Scoring
+tests/test_haris.py	plugins/haris/README.md :: Speed and testing
+tests/test_haris_bench.py	benchmarks/haris/README.md :: The guardrail | benchmarks/haris/README.md :: The cases
+tests/test_haris_unattended.py	plugins/haris/README.md :: Unattended sessions
+tests/test_itqan.py	plugins/itqan/README.md :: The guard
+tests/test_lawha_bench_score.py	benchmarks/README.md :: Raw files and scoring again
+tests/test_lean_session.py	README.md :: Lean sessions: what each plugin adds, and turning one off per project | plugins/manar/README.md :: Quiet when the project is not a website | plugins/lawha/README.md :: Quiet in projects without a frontend
+tests/test_manar.py	-
+tests/test_prof_courses.py	plugins/prof/README.md :: Lessons from Nexika's courses
+tests/test_reliability.py	README.md :: Status files: how the plugins talk to each other
+tests/test_routing_bench.py	benchmarks/routing/README.md :: How it works
+tests/test_siyaq.py	-
+tests/test_tabib_bench.py	benchmarks/tabib/README.md :: The guardrail | benchmarks/tabib/README.md :: How the logs are stored
+tests/test_tabib_mocha.py	plugins/tabib/README.md :: What it reads
