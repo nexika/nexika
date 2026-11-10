@@ -50,3 +50,19 @@ def test_a_label_must_name_a_real_section():
     assert bench.resolve("README.md :: Installing", entries) == ["a"]
     assert bench.resolve("README.md :: Install", entries) == []
     assert bench.resolve("docs/README.md :: Installing", entries) == []
+
+
+def test_the_files_set_has_96_files_from_the_snapshot():
+    snapshot = set(bench.SNAPSHOT_FILES.read_text(encoding="utf-8").split())
+    paths = [c["prompt"] for c in bench.load_prompts(bench.SETS["files"][0])]
+    assert len(paths) == 96 == len(set(paths))
+    assert not [p for p in paths if p not in snapshot]
+
+
+def test_the_files_report_counts_files_and_uses_the_file_hook(monkeypatch):
+    seen = []
+    real = bench.rank.select_for_path
+    monkeypatch.setattr(bench.rank, "select_for_path", lambda *a: seen.append(a[1]) or real(*a))
+    report = bench.run("files")
+    assert report["kind"] == "files" and report["sources"] == 30
+    assert len(seen) == 96 and "96 files over" in bench.markdown(report)

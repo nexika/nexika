@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """siyaq relevance benchmark (#452): for 100 labelled prompts, does siyaq load the doc sections that help,
-and nothing when nothing helps? Offline, no model calls, a few seconds.
+and nothing when nothing helps? The same for 96 files Claude read or edited in real sessions.
+Offline, no model calls, a few seconds.
 
     python3 benchmarks/siyaq/bench.py                  # the report as Markdown
     python3 benchmarks/siyaq/bench.py --json           # the same as JSON, with every prompt
     python3 benchmarks/siyaq/bench.py --check          # exit 1 if a prompt right in the baseline is now wrong
     python3 benchmarks/siyaq/bench.py --save-baseline  # after a change that gets more right
     python3 benchmarks/siyaq/bench.py --set heldout    # the 40 held-out prompts (same options)
+    python3 benchmarks/siyaq/bench.py --set files      # 96 files read or edited (same options)
 """
 from __future__ import annotations
 
@@ -25,7 +27,10 @@ CORPUS = HERE / "corpus"
 PROMPTS = HERE / "prompts.tsv"
 BASELINE = HERE / "baseline.json"
 # heldout.tsv was labelled before #455's ranking experiments and is never used to tune siyaq
-SETS = {"main": (PROMPTS, BASELINE), "heldout": (HERE / "heldout.tsv", HERE / "baseline-heldout.json")}
+SETS = {"main": (PROMPTS, BASELINE), "heldout": (HERE / "heldout.tsv", HERE / "baseline-heldout.json"),
+        "files": (HERE / "files.tsv", HERE / "baseline-files.json")}
+# every file in the repo at the snapshot: a doc's path triggers only count files and folders that exist
+SNAPSHOT_FILES = HERE / "files-f20ce94.txt"
 sys.path.insert(0, str(REPO / "plugins" / "siyaq"))
 
 from siyaq import index as idx  # noqa: E402
@@ -33,7 +38,8 @@ from siyaq import rank, text  # noqa: E402
 
 
 def load_prompts(path: Path = PROMPTS) -> list[dict]:
-    """[{"line", "prompt", "relevant": ["source :: heading", ...]}]; an empty list: nothing should load."""
+    """[{"line", "prompt", "relevant": ["source :: heading", ...]}]; an empty list: nothing should load.
+    In files.tsv the "prompt" is the path of the file read or edited."""
     out = []
     for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         if not line.strip() or line.startswith("#"):
@@ -45,8 +51,12 @@ def load_prompts(path: Path = PROMPTS) -> list[dict]:
 
 
 def build_corpus(where: Path) -> Path:
-    """The snapshot as a git repo (siyaq knows git repos only): corpus/<path>.txt becomes <path>."""
+    """The snapshot as a git repo (siyaq knows git repos only): corpus/<path>.txt becomes <path>, and
+    every other file of the snapshot is there, empty."""
     root = where / "repo"
+    for rel in SNAPSHOT_FILES.read_text(encoding="utf-8").split():
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).touch()
     for f in CORPUS.rglob("*.txt"):
         dest = root / f.relative_to(CORPUS).with_suffix("")
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -68,6 +78,11 @@ def picks(index: dict, prompt: str, cfg: dict) -> list[dict]:
     if typed.startswith("/"):
         typed = typed.split(maxsplit=1)[1] if " " in typed else ""
     return rank.select_for_prompt(index, typed, cfg, {}) if typed else []
+
+
+def picks_for_file(index: dict, rel: str, cfg: dict) -> list[dict]:
+    """What the Read/Edit hook would inject for this file at the start of a session."""
+    return rank.select_for_path(index, rel, cfg, {})
 
 
 def run(name: str = "main") -> dict:
@@ -94,7 +109,7 @@ def run(name: str = "main") -> dict:
                 raise SystemExit(f"{prompts.name}:{case['line']}: no section matches {label!r}")
             wanted.update(found)
         start = time.perf_counter()
-        picked = picks(index, case["prompt"], cfg)
+        picked = (picks_for_file if name == "files" else picks)(index, case["prompt"], cfg)
         ms = (time.perf_counter() - start) * 1000
         loaded = [p["entry"]["id"] for p in picked]
         good = [i for i in loaded if i in wanted]
@@ -105,7 +120,7 @@ def run(name: str = "main") -> dict:
             # right: a silent prompt loads nothing; a labelled one loads at least one relevant section
             "right": (not loaded) if not wanted else bool(good),
         })
-    return summarise(rows, index)
+    return {**summarise(rows, index), "kind": "files" if name == "files" else "prompts"}
 
 
 def summarise(rows: list[dict], index: dict) -> dict:
@@ -137,16 +152,16 @@ def regressions(report: dict, baseline: dict) -> list[str]:
 def markdown(r: dict) -> str:
     pct = lambda a, b: f"{a}/{b} = {a / b:.0%}" if b else "-"  # noqa: E731
     lines = [
-        f"siyaq relevance: {r['prompts']} prompts over {r['entries']} sections from {r['sources']} docs",
+        f"siyaq relevance: {r['prompts']} {r['kind']} over {r['entries']} sections from {r['sources']} docs",
         "",
         "| Measure | Result |",
         "|---|---|",
         f"| Precision: loaded sections that are relevant (pass line 70%) "
         f"| {pct(r['relevant_loaded'], r['loaded'])} |",
-        f"| Labelled prompts with a relevant section loaded | {pct(r['found'], r['labelled'])} |",
-        f"| Prompts that need nothing and got nothing | {pct(r['quiet'], r['silent'])} |",
-        f"| Tokens added per prompt (mean) | {r['tokens_per_prompt']:.0f} |",
-        f"| Time per prompt (median) | {r['median_ms']:.1f} ms |",
+        f"| Labelled {r['kind']} with a relevant section loaded | {pct(r['found'], r['labelled'])} |",
+        f"| {r['kind'].capitalize()} that need nothing and got nothing | {pct(r['quiet'], r['silent'])} |",
+        f"| Tokens added per {r['kind'][:-1]} (mean) | {r['tokens_per_prompt']:.0f} |",
+        f"| Time per {r['kind'][:-1]} (median) | {r['median_ms']:.1f} ms |",
         "",
         "Wrong:",
     ]
@@ -163,7 +178,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--save-baseline", action="store_true")
-    ap.add_argument("--set", choices=sorted(SETS), default="main", help="main (100 prompts) or heldout (40)")
+    ap.add_argument("--set", choices=sorted(SETS), default="main",
+                    help="main (100 prompts), heldout (40) or files (96)")
     args = ap.parse_args(argv)
     report = run(args.set)
     baseline = SETS[args.set][1]
